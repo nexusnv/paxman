@@ -38,6 +38,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Fixture contracts: `tests/fixtures/contracts/pydantic/{invoice,with_money,all_v1_types}.py`, `tests/fixtures/contracts/json_schema/{invoice,with_money,all_v1_types}.json`, `tests/fixtures/contracts/dict_dsl/{invoice,with_money,all_v1_types}.py` (3 + 3 + 3 paired fixtures, per D2.10).
   - Property tests for Pydantic + Dict DSL roundtrip (Hypothesis `@property` with `derandomize=True`).
   - `import-linter` contract: `paxman.contract` and `paxman.contract.adapters` may NOT import from any of `paxman.{planner,executor,reconciler,artifact,capabilities,api}`.
+- **Sprint 3 — Planner + 3 Capabilities** (per [`docs/sprints/sprint-03-planner-and-capabilities.md`](docs/sprints/sprint-03-planner-and-capabilities.md)):
+  - **Capabilities subsystem** (`src/paxman/capabilities/`):
+    - `paxman.capabilities.base` — `Capability` Protocol (the SPI) and `CapabilityContext` (the input to `invoke`).
+    - `paxman.capabilities.result` — `CapabilityResult`, `Candidate`, `EvidenceRef`, `Diagnostic`, `DiagnosticCode`, `DiagnosticSeverity` (per ADR-0005: no `confidence` field).
+    - `paxman.capabilities.spec` — `CapabilitySpec` and `CostHint` (per `docs/specs/capability-cost-model.md` §2; V1 weights from §4.3).
+    - `paxman.capabilities.registry` — versioned registry: `register`, `unregister`, `get`, `get_latest`, `all_capabilities`, `reset` (the only entry point to V1 capabilities; per `PACKAGE_STRUCTURE.md` §2).
+    - `paxman.capabilities.v1.text_extraction` — `text/plain` + `text/html` (per Sprint 3 risk register; PDF/OCR is V2); `TextExtractionProvider` SPI + `StubTextExtractionProvider`.
+    - `paxman.capabilities.v1.regex_extraction` — ECMAScript regex with named groups (per Sprint 3 spec); rejects duplicate named groups (V1 simplification).
+    - `paxman.capabilities.v1.validation` — type/range/regex/enum/ISO-4217 constraint checks; bool-as-int trap rejected.
+    - `paxman.capabilities.v1.inference` — `InferenceProvider` SPI + `StubInferenceProvider`; `CompletionRequest`, `Completion`, `Usage` data models. V1 has no real provider.
+  - **Planner subsystem** (`src/paxman/planner/`):
+    - `paxman.planner.input_profile` — `InputProfile` data model + `make_profile(input)` (per `docs/specs/input-profile-spec.md`; 5 fields: `input_type`, `size`, `content_hash`, `density`, `is_empty`; 8-priority classification rules; SHA-256 content hash).
+    - `paxman.planner.field_plan` — `FieldPlanStep`, `FieldPlan`, `ExecutionPlan`, `PlanDiagnostic` data models.
+    - `paxman.planner.scoring` — `score_capability` per `docs/specs/capability-cost-model.md` §4.2 (tier × `TIER_WEIGHT=10000` + usd × `USD_WEIGHT=1000000` + ms × `MS_WEIGHT=1`).
+    - `paxman.planner.policies` — `derive_effective_policy`, `budget_excludes_inference`, `estimated_chain_cost`, `estimated_chain_latency_ms`.
+    - `paxman.planner.heuristics` — the 7-step heuristic chain (per `ARCHITECTURE.md` §4.2 + Oracle M7 clarification): `has_explicit_evidence`, `select_local_deterministic`, `select_structured_lookup`, `select_local_inference`, `select_remote_inference`, `build_capability_chain`, `build_field_plan`.
+    - `paxman.planner.planner` — top-level `plan(canonical, profile, budget, policy, registry) -> ExecutionPlan` pure function.
+    - `paxman.planner._registry` — internal handle to the global capability registry.
+  - **Test infrastructure**:
+    - `tests/unit/test_capability_result.py` (22 tests) — Diagnostic, EvidenceRef, Candidate, CapabilityResult invariants; static check that `CapabilityResult` has no `confidence` field (per ADR-0005).
+    - `tests/unit/test_capability_spec_registry.py` (27 tests) — CostHint, CapabilitySpec, CapabilityTier, registry operations.
+    - `tests/unit/test_capability_regex_extraction.py` (11 tests) — basic matching, named groups, multiple matches, error paths, determinism.
+    - `tests/unit/test_capability_validation.py` (31 tests) — type/range/regex/enum/ISO-4217 checks; bool-as-int trap.
+    - `tests/unit/test_capability_text_extraction.py` (12 tests) — `text/plain` + `text/html`; provider SPI; unsupported content type.
+    - `tests/unit/test_capability_inference.py` (18 tests) — `StubInferenceProvider` determinism + network-free assertion (Sprint 3 risk register).
+    - `tests/unit/test_planner_input_profile.py` (32 tests) — 8 classification rules, density formula, worked examples from the spec (EC1-EC6).
+    - `tests/unit/test_planner_field_plan.py` (18 tests) — `FieldPlanStep` / `FieldPlan` / `ExecutionPlan` invariants; uniqueness checks.
+    - `tests/unit/test_planner_scoring_policies.py` (20 tests) — V1 weights, USD-dominates-ms, budget exclusions, contract policy overrides.
+    - `tests/unit/test_planner_heuristics_planner.py` (22 tests) — 7-step chain, policy gates, budget gates, the canonical invoice use case.
+    - `tests/property/test_planner_determinism.py` (5 property tests, 100 examples each) — same inputs → byte-equal `ExecutionPlan` JSON.
+  - **Documentation**: `docs/concepts/planning.md` (skeleton; will be filled in Sprint 8).
+  - **import-linter contracts**: `planner/` and `capabilities/` may NOT import from any of `executor/`, `reconciler/`, `artifact/`, or `api/`.
 
 ### Fixed
 
@@ -64,6 +96,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   9. Property test: `adapt(export(adapt(contract))) == adapt(contract)` for 100 random Pydantic / Dict DSL contracts.
   10. `interrogate src/paxman/contract` reports 100 % on the public surface.
   11. `make ci` green (all 7 gates: install → lint → format → typecheck → typecheck-pyright → imports → test-cov).
+- **Sprint 3 exit criteria status (15/15 met)**:
+  1. `planner.plan(...)` is a pure function (no clock, no random, no I/O).
+  2. Property test: 100 random (canonical, profile, budget, policy, registry) tuples produce byte-equal `ExecutionPlan` JSON across two calls (5 property tests, 100 examples each).
+  3. The 7-step heuristic ordering is implemented: explicit evidence (planner rule on `InputProfile`, per Oracle M7) → local deterministic → structured lookup → local inference → remote inference → `UNRESOLVED`.
+  4. The Planner excludes remote inference when `Policy.allow_remote_inference=False` (heuristic step 6 dropped).
+  5. The Planner excludes local inference when `Policy.allow_local_inference=False` (heuristic step 5 dropped).
+  6. `text_extraction` capability handles `text/plain` and `text/html` inputs (≥1 unit test each).
+  7. `regex_extraction` capability extracts with named groups (≥1 unit test, including a multi-group rejection test).
+  8. `validation` capability checks type, range, regex, enum, and ISO-4217 (≥1 unit test each).
+  9. `CapabilityResult` does NOT have a `confidence` field (static test using `hasattr`/`getattr`).
+  10. `CapabilityResult.candidates` are returned with `value` (not yet `confidence`).
+  11. Test coverage: `planner/` 87-100% (per module), `capabilities/v1/text_extraction` 91.5%, `capabilities/v1/regex_extraction` 96.2%, `capabilities/v1/validation` 93.6% (all ≥ 85% target).
+  12. `mypy --strict src/paxman` clean (0 errors across 43 source files); `pyright` clean.
+  13. `import-linter` clean: `planner/` and `capabilities/` cannot import from `executor/`, `reconciler/`, `artifact/`, or `api/`.
+  14. `make ci` green (all 7 gates, **1057 tests, 93.76% coverage**).
+  15. `docs/concepts/planning.md` exists as a skeleton (will be filled in Sprint 8).
 
 ### Technical notes
 
@@ -71,5 +119,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The `import-linter` "forbidden" contract for cross-cutting → subsystem uses explicit module paths as sources (e.g., `paxman.errors`, `paxman.types`, ...) rather than the parent `paxman` package, because a "forbidden" contract with a parent/descendant source is ambiguous in import-linter.
 - **Pydantic v2 constraint extraction** is via `field_info.metadata` (Pydantic v2 stores `MinLen`, `MaxLen`, `Ge`, `Gt`, `Le`, `Lt`, and the legacy `_PydanticGeneralMetadata.pattern` as metadata objects, not as direct attributes). The `PydanticUndefined` sentinel from `pydantic_core` is used to distinguish "no default" from "default=None" or "default_factory=...".
 - **JSON Schema MONEY** is encoded as an `object` with `x-paxman-type: "MONEY"` and `properties: {amount, currency}`; the adapter rejects MONEY-typed properties that don't carry both subfields. The string-with-format heuristic is accepted as a `STRING` with `iso_4217` and `currency-sensitive` tags (V1 documented limitation; per the Sprint 2 risk register).
+- **Sprint 3 — InputProfile is bytes-only** (per `docs/specs/input-profile-spec.md`): it does not know about structured data. The API layer (Sprint 6) will serialize `dict`/`list` inputs to bytes before calling `make_profile()`. A lone surrogate in a `str` input is replaced with U+FFFD (3 UTF-8 bytes) per Python's `errors="replace"` policy.
+- **Sprint 3 — V1 inference is a stub** (per `EXTENDING.md` §3 and the Sprint 3 risk register): real providers (OpenAI, Anthropic, Cohere) are V2. The stub is one class with one method; a unit test (`test_stub_never_makes_network_calls`) enforces that it never depends on `requests`, `httpx`, `urllib3`, `aiohttp`, or `socket`.
+- **Sprint 3 — Validation rejects bool-as-int** (per Sprint 1's "no implicit coercion" precedent): `_to_float()` and `_to_length()` helpers check `isinstance(value, bool)` first and return `None`, preventing `True`/`False` from being silently treated as `1.0`/`0.0` in min_value/max_value comparisons.
+- **Sprint 3 — Capability tier assignment is a static spec field** (per `docs/specs/capability-cost-model.md` §4.1): the tier is part of the `CapabilitySpec`, not computed at plan time. This keeps the scoring formula input-independent and underwrites planner determinism.
 
 [Unreleased]: https://github.com/nexusnv/paxman/compare/v0.0.0...HEAD

@@ -265,6 +265,60 @@ forbidden_modules = [
     "paxman.api",
 ]
 
+# Sprint 3 deliverable D3.20 / exit criterion #13.
+# The planner subsystem must not import from executor, reconciler,
+# artifact, or api (per PACKAGE_STRUCTURE.md §2, §4, and §11.2).
+# It MAY import from contract, capabilities, and cross-cutting modules.
+# Each leaf module is listed explicitly (import-linter's "forbidden"
+# contract does not recurse into submodules of a listed source_module).
+[[tool.importlinter.contracts]]
+name = "Planner subsystem must not import from executor/reconciler/artifact/api"
+type = "forbidden"
+source_modules = [
+    "paxman.planner",
+    "paxman.planner._registry",
+    "paxman.planner.field_plan",
+    "paxman.planner.heuristics",
+    "paxman.planner.input_profile",
+    "paxman.planner.policies",
+    "paxman.planner.planner",
+    "paxman.planner.scoring",
+]
+forbidden_modules = [
+    "paxman.executor",
+    "paxman.reconciler",
+    "paxman.artifact",
+    "paxman.api",
+]
+
+# Sprint 3 deliverable D3.20 / exit criterion #13.
+# The capabilities subsystem must not import from planner, executor,
+# reconciler, artifact, or api (per PACKAGE_STRUCTURE.md §2, §5, and §11.2).
+# It MAY import from contract and cross-cutting modules.
+# Each leaf module is listed explicitly.
+[[tool.importlinter.contracts]]
+name = "Capabilities subsystem must not import from other subsystems"
+type = "forbidden"
+source_modules = [
+    "paxman.capabilities",
+    "paxman.capabilities.base",
+    "paxman.capabilities.registry",
+    "paxman.capabilities.result",
+    "paxman.capabilities.spec",
+    "paxman.capabilities.v1",
+    "paxman.capabilities.v1.inference",
+    "paxman.capabilities.v1.regex_extraction",
+    "paxman.capabilities.v1.text_extraction",
+    "paxman.capabilities.v1.validation",
+]
+forbidden_modules = [
+    "paxman.planner",
+    "paxman.executor",
+    "paxman.reconciler",
+    "paxman.artifact",
+    "paxman.api",
+]
+
 # --- uv (project manager) -----------------------------------------------------
 # PEP 735 dependency groups (replaces [tool.uv] dev-dependencies).
 

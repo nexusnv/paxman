@@ -1,0 +1,19 @@
+From: billing@acme-corp.example
+To: ap-team@globex.example
+Subject: Invoice INV-2026-005678 from ACME Corp
+Date: Mon, 20 Jan 2026 09:14:22 -0600
+
+Hi AP team,
+
+Please find attached invoice INV-2026-005678 for the January 2026 service
+period. Total is $1,250.00 USD, due 2026-02-20.
+
+Line items:
+- Consulting (40 hours @ $25.00): $1,000.00
+- Platform fee: $200.00
+- Tax: $50.00
+
+Wire transfer details on the attached PDF. Please confirm receipt.
+
+Best,
+ACME Corp Billing

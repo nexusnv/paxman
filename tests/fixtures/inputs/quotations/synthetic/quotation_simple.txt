@@ -1,0 +1,23 @@
+QUOTATION
+
+Quotation #: QT-2026-0042
+Issued: 2026-01-20
+Valid Until: 2026-03-20
+
+From: TechSupply Inc.
+To: BetaWorks LLC
+
+Item                                        Qty     Unit Price     Total
+----------------------------------------------------------------------
+Premium Widget (Model X)                     50      $25.00         $1,250.00
+Standard Widget (Model Y)                   100      $15.00         $1,500.00
+Shipping & Handling                           1      $75.00           $75.00
+
+Subtotal:                                                       $2,825.00
+Discount (5%):                                                    -$141.25
+Tax (8.5%):                                                        $228.02
+
+TOTAL DUE:                                                       $2,911.77 USD
+
+Payment terms: Net 30
+Delivery: 5-7 business days

@@ -1,0 +1,33 @@
+QUOTATION
+
+Quotation #: QT-2026-0099
+Issued: 2026-01-25
+Valid Until: 2026-04-25
+
+From: GlobalParts SA
+To: MegaCorp Industries
+
+[1] Hardware components
+  - Server unit A (qty 10) ............ $4,500.00
+  - Server unit B (qty 5) ............. $3,200.00
+  - Network switch (qty 8) ........... $1,800.00
+[2] Software licenses
+  - OS license per server ............. $250.00
+  - Monitoring suite (annual) ......... $1,200.00
+[3] Services
+  - Installation (on-site) ............ $5,000.00
+  - Training (3 days) ................. $3,600.00
+
+Subtotal: $19,550.00
+Volume discount (10%): -$1,955.00
+Tax (20% VAT, EU customer): $3,519.00
+TOTAL: $21,114.00 EUR
+
+NOTES:
+1. All prices in EUR. Conversion to other currencies is the buyer's responsibility.
+2. Volume discount applies only if total quantity exceeds 20 units across all line items.
+3. Installation includes 2 days on-site; additional days billed at $1,500/day.
+4. Training is non-refundable once scheduled.
+
+Payment terms: 30% on order, 70% on delivery.
+Lead time: 6-8 weeks.

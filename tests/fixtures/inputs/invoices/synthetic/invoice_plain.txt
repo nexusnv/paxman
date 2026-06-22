@@ -1,0 +1,28 @@
+ACME Corp
+123 Industrial Way
+Springfield, IL 62704
+United States
+
+INVOICE
+
+Invoice Number: INV-2026-001234
+Invoice Date: 2026-01-15
+Due Date: 2026-02-15
+PO Number: PO-9876
+
+Bill To:
+Globex Industries
+456 Commerce Blvd
+Chicago, IL 60601
+United States
+
+Items:
+1. Widget Pro        10 x $50.00    = $500.00
+2. Gadget Plus        5 x $30.00    = $150.00
+3. Service Fee        1 x $100.00   = $100.00
+
+Subtotal:                                 $750.00
+Tax (8.25%):                               $61.88
+Total Due:                                 $811.88 USD
+
+Payment Terms: Net 30

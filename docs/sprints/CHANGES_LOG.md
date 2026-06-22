@@ -429,6 +429,42 @@ Sprint 1 ("Foundation") was completed in a single sitting. The 23 deliverables f
 - **Sprint 2 first step**: implement `paxman/contract/canonical.py` (the `CanonicalContract` and `CanonicalField` data models per `PACKAGE_STRUCTURE.md §3.2`).
 - **Sprint 2 blocker watch**: import-linter contract for the subsystem DAG (currently only the cross-cutting → subsystem contract is enforced). Add subsystem-specific contracts as the `contract/` code lands.
 
+### 12.5 Post-Sprint 1 hotfix: SHA pins for GitHub Actions (2026-06-22)
+
+**Problem:** The Sprint 1 commit that introduced SHA pinning for `.github/workflows/ci.yml` (commit `361f046`, "Sprint 1: apply review fixes (17 valid findings)") used SHA values that were not present in the upstream action repositories. When the CI ran on PR #4, GitHub Actions failed to resolve `astral-sh/setup-uv` and `codecov/codecov-action` with errors of the form:
+
+```
+Error: Unable to resolve action `astral-sh/setup-uv@<sha>`, unable to find version `<sha>`.
+Error: Unable to resolve action `codecov/codecov-action@<sha>`, unable to find version `<sha>`.
+```
+
+`actions/checkout` was also pinned to a non-existent SHA, although GitHub's resolver was more lenient there.
+
+**Root cause:** The original SHA values were fabricated. The verification step (cross-checking each SHA against the upstream repo) was skipped. SHA pinning is a security control — it is important that the pin is a real, immutable commit SHA, not a placeholder.
+
+**Fix:** Replaced all 3 SHA pins in `.github/workflows/ci.yml` with SHAs verified via the GitHub API (`gh api repos/<owner>/<repo>/commits/<sha>`) to be real commit SHAs at the `v4` / `v5` tags:
+
+| Action | Old SHA (invalid) | New SHA (verified commit) | Tag |
+|---|---|---|---|
+| `actions/checkout` | `11bd71901bbe5b1630ceea73d27597364c9af683` | `34e114876b0b11c390a56381ad16ebd13914f8d5` | v4 |
+| `astral-sh/setup-uv` | `5ddc9ecc0485f9e3df9b2009b1530e8e90db3d5b` | `d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86` | v5 |
+| `codecov/codecov-action` | `0565863d31c81f2c932f9fdc2022c6954f5e2c84` | `b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238` | v4 |
+
+A 40-character SHA is **not enough** to verify a pin — the `gh api repos/<owner>/<repo>/git/refs/tags/<tag>` endpoint returns the SHA of the **annotated tag object** (if the tag is annotated), not the commit. The `setup-uv` v5 tag is annotated; the initial replacement used the tag-object SHA, which GitHub's resolver still accepted. The follow-up correction uses the actual commit SHA. Going forward, the verification procedure is:
+
+1. `gh api repos/<owner>/<repo>/git/refs/tags/<tag>` → returns `object.sha` (tag object)
+2. `gh api repos/<owner>/<repo>/git/tags/<tag-object-sha>` → returns the underlying commit SHA
+3. `gh api repos/<owner>/<repo>/commits/<commit-sha>` → returns the commit record (proof of existence)
+
+**Files changed:**
+- `.github/workflows/ci.yml` (5 `uses:` lines, no other changes)
+- `CHANGELOG.md` (added `### Fixed` section under `[Unreleased]`)
+- `docs/sprints/CHANGES_LOG.md` (this section)
+
+**No code, no architectural changes, no test changes. The fix is purely a CI-config correction.**
+
+**Lesson learned for future PRs:** Whenever a CI / security control depends on a specific external identifier (SHA, version, URL), the PR must include the verification step — i.e., the actual API/command run and its result — in the PR description or commit message, not just the new value.
+
 
 ---
 

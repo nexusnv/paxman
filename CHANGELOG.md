@@ -26,6 +26,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `make ci` runs the full local-CI pipeline end-to-end (install → lint → format → typecheck → typecheck-pyright → imports → test-cov). All 7 gates are green.
 - README developer setup section with `uv sync --all-extras --dev` and `import paxman; print(paxman.__version__)` smoke.
 
+### Fixed
+
+- `.github/workflows/ci.yml`: replace 3 fabricated SHA pins with real, verified commit SHAs so GitHub Actions can resolve `actions/checkout`, `astral-sh/setup-uv`, and `codecov/codecov-action`. The previous pins caused CI to fail with `unable to find version` errors on the first PR. Verified via `gh api repos/<owner>/<repo>/commits/<sha>` that each SHA corresponds to a real commit:
+  - `actions/checkout` → `34e114876b0b11c390a56381ad16ebd13914f8d5` (v4)
+  - `astral-sh/setup-uv` → `d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86` (v5)
+  - `codecov/codecov-action` → `b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238` (v4)
+
 ### Notes
 
 - The package is at version `0.0.0` and is **not importable by end users** beyond `paxman.__version__`. No public API is exposed yet. The `paxman.normalize()` and `paxman.replay()` entry points land in Sprint 6.

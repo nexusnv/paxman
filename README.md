@@ -152,9 +152,74 @@ See [PRD.md §7 Primary Use Cases](./PRD.md) for detailed examples.
 
 ## Status
 
+- **v0.0.0 (Sprint 1, foundation):** Build, CI, and 9 cross-cutting modules. **No public API yet** — `paxman.normalize()` and `paxman.replay()` land in Sprint 6. **In progress.**
 - **v0.1.0 (initial preview):** planner + one adapter + one capability work end-to-end. (Pending.)
 - **v0.5.0 (feature-complete beta):** 80% of V1 features. (Pending.)
 - **1.0.0:** All V1 acceptance criteria met. (Pending.)
+
+## Install (developer setup, Sprint 1)
+
+Paxman uses [`uv`](https://docs.astral.sh/uv/) for package management. The first preview is not published to PyPI yet; developers install the project from a working tree.
+
+```bash
+# Clone the repository
+git clone https://github.com/nexusnv/paxman.git
+cd paxman
+
+# Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Install the package + all dev dependencies (editable)
+uv sync --all-extras --dev
+
+# Verify the install
+uv run python -c "import paxman; print(f'paxman {paxman.__version__}')"
+```
+
+Expected output: `paxman 0.0.0`.
+
+## Local CI
+
+Run the full local-CI pipeline (the same checks run on GitHub Actions):
+
+```bash
+make ci
+```
+
+This runs, in order: `install-frozen → lint → format-check → typecheck → typecheck-pyright → imports → test-cov`. All checks must pass before opening a PR.
+
+## Project structure
+
+```
+paxman/
+├── src/paxman/              # the package (src-layout)
+│   ├── __init__.py          # exposes __version__
+│   ├── py.typed             # PEP 561 marker
+│   ├── errors.py            # 17-class PaxmanError hierarchy
+│   ├── types.py             # Status, ConfidenceBand, FieldType enums
+│   ├── protocols.py         # internal Protocol definitions
+│   ├── versioning.py        # version constants and helpers
+│   ├── logging.py           # structlog factory (no timestamps in replay)
+│   ├── budget.py            # Budget, Policy, CurrencyPolicy
+│   ├── clock.py             # injectable Clock + FakeClock
+│   ├── ids.py               # prefixed ID helpers
+│   ├── serialization.py     # stable JSON encoder (RFC 8785-style)
+│   ├── contract/            # (empty; Sprint 2)
+│   ├── planner/             # (empty; Sprint 3)
+│   ├── capabilities/        # (empty; Sprints 3-4)
+│   ├── executor/            # (empty; Sprint 4)
+│   ├── reconciler/          # (empty; Sprint 5)
+│   ├── artifact/            # (empty; Sprint 6)
+│   └── api/                 # (empty; Sprint 6)
+├── tests/                   # pytest test suite
+├── docs/                    # design specs, ADRs, sprint plan
+├── pyproject.toml           # PEP 621 metadata + tooling config
+├── Makefile                 # `make ci`, `make test`, `make build`, …
+├── .pre-commit-config.yaml
+├── LICENSE                  # MIT (per ADR-0008)
+└── CHANGELOG.md
+```
+
 
 See [V1_ACCEPTANCE_CRITERIA.md](./V1_ACCEPTANCE_CRITERIA.md) for the full definition of done.
 

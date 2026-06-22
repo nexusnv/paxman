@@ -1,0 +1,261 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "paxman"
+version = "0.0.0"
+description = "Contract-driven deterministic normalization engine for Python."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.11"
+authors = [{ name = "Paxman core team" }]
+keywords = [
+    "normalization",
+    "contracts",
+    "deterministic",
+    "evidence",
+    "replay",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+
+# Core dependencies (≤ 3 packages per DEPENDENCIES.md §1).
+# structlog is made core per Sprint 0 CHANGES_LOG §6 Q8 recommendation;
+# it is the canonical structured-logging framework per ARCHITECTURE.md §12.
+dependencies = [
+    "attrs>=23.0",
+    "typing-extensions>=4.0",
+    "structlog>=24.1",
+]
+
+[project.optional-dependencies]
+# Adapter extras (declared in DEPENDENCIES.md §3.1).
+pydantic = ["pydantic>=2.5"]
+json-schema = ["jsonschema>=4.20"]
+openapi = ["openapi-spec-validator>=0.6"]
+# Inference extras are V2; V1 ships a stub provider.
+# Convenience meta-extra.
+all = ["paxman[pydantic,json-schema,openapi]"]
+
+# Test extras (Sprint 2+ will start using hypothesis).
+test = ["hypothesis>=6.0"]
+
+[project.urls]
+Homepage = "https://github.com/nexusnv/paxman"
+Issues = "https://github.com/nexusnv/paxman/issues"
+Changelog = "https://github.com/nexusnv/paxman/blob/main/CHANGELOG.md"
+
+# --- Hatchling build configuration -------------------------------------------
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/paxman"]
+
+# Force-include py.typed (PEP 561 marker). Hatchling auto-includes files
+# inside the package directory, but the force-include makes the intent
+# explicit and survives edge cases (verified per pypa/hatch#820).
+[tool.hatch.build.targets.wheel.force-include]
+"src/paxman/py.typed" = "paxman/py.typed"
+
+[tool.hatch.build.targets.sdist]
+include = ["/src", "/tests", "/docs", "/README.md", "/CHANGELOG.md", "/LICENSE"]
+
+# --- Ruff (lint + format) ----------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [
+    "docs/",
+    ".venv/",
+    "build/",
+    "dist/",
+    # Top-level scripts/ is a vendoring tool, not library code; lint quality
+    # on it is enforced by its own subproject linting.
+    "scripts/",
+    # .agents/skills/ contains agent-skill scripts; not library code.
+    ".agents/skills/",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "ANN", # flake8-annotations
+    "ASYNC", # async-correctness
+    "S",   # flake8-bandit (security)
+    "RUF", # ruff-specific rules
+]
+ignore = [
+    "S101", # `assert` statements are allowed (pytest pattern)
+    "E501", # line length (handled by ruff format)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "ANN"]  # asserts + untyped fixtures are OK in tests
+"src/paxman/__init__.py" = ["F401"]  # re-exports may appear unused until populated in Sprint 6
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+# --- Mypy (strict mode) -------------------------------------------------------
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+files = ["src/paxman"]
+# attrs ships with a built-in mypy plugin since mypy 0.570; no explicit
+# plugin config needed. The plugin is auto-detected when @attrs.define or
+# @attr.s is used.
+warn_unused_ignores = true
+warn_return_any = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+# Re-enable typed annotations in `__init__.py` re-export shells.
+module = ["src/paxman/__init__", "src.paxman.__init__"]
+disallow_untyped_defs = false
+
+# --- Pytest ------------------------------------------------------------------
+
+[tool.pytest.ini_options]
+minversion = "7.4"
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "-q",
+    "--strict-markers",
+    "--strict-config",
+]
+markers = [
+    "deterministic: tests that verify deterministic behavior",
+    "replay: tests that verify replay equivalence",
+    "property: hypothesis property tests",
+    "slow: tests that take >1s",
+    "integration: tests that exercise the full pipeline",
+    "unit: fast, isolated unit tests",
+]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:importlib._bootstrap",
+]
+
+# --- Coverage (pytest-cov) ----------------------------------------------------
+
+[tool.coverage.run]
+branch = true
+source = ["src/paxman"]
+omit = [
+    "src/paxman/__init__.py",
+    "src/paxman/_version.py",
+]
+
+[tool.coverage.report]
+precision = 2
+show_missing = true
+skip_covered = false
+fail_under = 90
+# Per V1_ACCEPTANCE_CRITERIA.md §2.2:
+# - errors.py and versioning.py must be 100%
+# - contract/, planner/, executor/, reconciler/ must be ≥ 90%
+# - artifact/ must be ≥ 95%
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]
+
+# --- Interrogate (docstring coverage) ---------------------------------------
+
+[tool.interrogate]
+fail-under = 100
+ignore-init-module = true   # skip __init__.py re-exports
+ignore-init-method = true   # skip __init__ methods
+ignore-magic = true         # skip __str__, __repr__, etc.
+ignore-private = true       # skip _private methods
+ignore-semiprivate = true   # skip __dunder__ methods
+exclude = ["tests", "docs", "build", "dist", ".venv"]
+verbose = 2
+color = true
+
+# --- Import-linter (module DAG enforcement) ----------------------------------
+
+# Per PACKAGE_STRUCTURE.md §2, §11. The cross-cutting modules at the
+# package root may not import from any subsystem layer.
+# Start minimal in Sprint 1; subsystem-specific contracts are added in
+# Sprint 2+ as the subsystem code lands.
+[tool.importlinter]
+root_package = "paxman"
+
+[[tool.importlinter.contracts]]
+name = "Cross-cutting modules must not import from subsystems"
+type = "forbidden"
+# List the 9 cross-cutting module files explicitly as sources. We cannot
+# use the parent package ``paxman`` as the source because it is also the
+# parent of the forbidden subpackages (a "forbidden" contract with
+# parent/descendant sources is ambiguous in import-linter).
+source_modules = [
+    "paxman.errors",
+    "paxman.types",
+    "paxman.protocols",
+    "paxman.versioning",
+    "paxman.logging",
+    "paxman.budget",
+    "paxman.clock",
+    "paxman.ids",
+    "paxman.serialization",
+]
+forbidden_modules = [
+    "paxman.contract",
+    "paxman.planner",
+    "paxman.capabilities",
+    "paxman.executor",
+    "paxman.reconciler",
+    "paxman.artifact",
+    "paxman.api",
+]
+
+# --- uv (project manager) -----------------------------------------------------
+# PEP 735 dependency groups (replaces [tool.uv] dev-dependencies).
+
+[dependency-groups]
+dev = [
+    # Test
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pytest-xdist>=3.3",
+    "hypothesis>=6.0",
+    # Lint + format
+    "ruff>=0.4",
+    # Type check
+    "mypy>=1.10",
+    "pyright>=1.1",
+    # DAG + docstring
+    "import-linter>=2.0",
+    "interrogate>=1.7",
+    # Security
+    "bandit>=1.7",
+    "pip-audit>=2.6",
+    # Git hooks
+    "pre-commit>=3.5",
+    # Build
+    "hatchling",
+    "hatch",
+]

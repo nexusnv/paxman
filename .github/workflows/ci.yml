@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel in-progress runs for the same PR when a new commit is pushed.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Minimal permissions; jobs opt-in to more as needed.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies (frozen lockfile if present)
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+
+      - name: Format check (ruff format --check)
+        run: uv run ruff format --check .
+
+      - name: Type check (mypy --strict)
+        run: uv run mypy --strict src/paxman
+
+      - name: Type check (pyright cross-validation)
+        run: uv run pyright src/paxman
+        continue-on-error: true  # advisory; strict mypy is the gate
+
+      - name: Import-linter (module DAG enforcement)
+        run: uv run lint-imports
+
+      - name: Docstring coverage (interrogate, 100% on public surface)
+        run: uv run interrogate -vv src/paxman
+
+      - name: Security lint (bandit)
+        run: uv run bandit -r src/paxman -c pyproject.toml
+        continue-on-error: true  # advisory; bandit is noisy on greenfield
+
+      - name: Dependency audit (pip-audit)
+        run: uv run pip-audit
+        continue-on-error: true  # advisory; security advisories are tracked separately
+
+      - name: Run tests with coverage
+        run: uv run pytest --cov=paxman --cov-report=term-missing --cov-report=xml --cov-fail-under=90
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+
+  build:
+    name: build wheel + sdist
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install build dependencies
+        run: uv sync --frozen --dev
+
+      - name: Build (hatchling)
+        run: uv run hatchling build
+
+      - name: Inspect wheel (verify py.typed, no __pycache__)
+        run: |
+          python -c "
+          import zipfile, pathlib
+          wheel = sorted(pathlib.Path('dist').glob('*.whl'))[0]
+          contents = zipfile.ZipFile(wheel).namelist()
+          assert any('paxman/__init__.py' in c for c in contents), 'paxman/__init__.py missing from wheel'
+          assert any('paxman/py.typed' in c for c in contents), 'paxman/py.typed missing from wheel'
+          assert not any('__pycache__' in c for c in contents), '__pycache__ found in wheel'
+          print(f'OK: {wheel.name} has {len(contents)} entries')
+          "

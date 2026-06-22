@@ -1,0 +1,3 @@
+# Local dev artifacts (not for commit)
+.sisyphus/
+.codegraph/

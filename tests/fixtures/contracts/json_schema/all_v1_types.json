@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AllV1Types",
+  "type": "object",
+  "properties": {
+    "s": {
+      "type": "string",
+      "description": "STRING field."
+    },
+    "i": {
+      "type": "integer",
+      "description": "INTEGER field."
+    },
+    "d": {
+      "type": "number",
+      "description": "DECIMAL field."
+    },
+    "b": {
+      "type": "boolean",
+      "description": "BOOLEAN field."
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "DATE field (ISO 8601)."
+    },
+    "e": {
+      "type": "string",
+      "enum": ["a", "b", "c"],
+      "description": "ENUM field with three allowed values."
+    },
+    "o": {
+      "type": "object",
+      "description": "OBJECT field (arbitrary dict)."
+    },
+    "arr": {
+      "type": "array",
+      "items": {
+        "type": "integer"
+      },
+      "description": "ARRAY field of integers."
+    },
+    "m": {
+      "x-paxman-type": "MONEY",
+      "type": "object",
+      "description": "MONEY field (amount + ISO-4217 currency).",
+      "properties": {
+        "amount": {
+          "type": "string",
+          "pattern": "^-?\\d+(\\.\\d+)?"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        }
+      },
+      "required": ["amount", "currency"]
+    }
+  },
+  "required": ["s", "i", "d", "b", "date", "e", "o", "arr", "m"]
+}

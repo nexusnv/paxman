@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "MoneyRoundtrip",
+  "type": "object",
+  "properties": {
+    "amount": {
+      "x-paxman-type": "MONEY",
+      "type": "object",
+      "description": "Monetary amount with ISO-4217 currency.",
+      "properties": {
+        "amount": {
+          "type": "string",
+          "pattern": "^-?\\d+(\\.\\d+)?"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        }
+      },
+      "required": ["amount", "currency"]
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-form notes accompanying the money value."
+    }
+  },
+  "required": ["amount", "notes"]
+}

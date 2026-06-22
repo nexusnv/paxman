@@ -112,15 +112,15 @@ security-audit: ## Run pip-audit
 
 .PHONY: test-data-vendor
 test-data-vendor: ## Vendor the V1 test data corpus (~50 MB)
-	$(UV) run python scripts/fetch_test_data.py vendor
+	$(UV) run python scripts/fetch_test_data.py
 
 .PHONY: test-data-list
 test-data-list: ## List vendored datasets and licenses
-	$(UV) run python scripts/fetch_test_data.py list
+	$(UV) run python scripts/fetch_test_data.py --list
 
 .PHONY: test-data-verify
 test-data-verify: ## Verify vendored data is present (CI use)
-	$(UV) run python scripts/fetch_test_data.py verify
+	$(UV) run python scripts/fetch_test_data.py --verify
 
 # --- Documentation build (Sprint 8) ------------------------------------------
 

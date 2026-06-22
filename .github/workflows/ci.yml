@@ -27,10 +27,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@5ddc9ecc0485f9e3df9b2009b1530e8e90db3d5b # v5
         with:
           enable-cache: true
           cache-dependency-glob: |
@@ -74,7 +76,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == '3.12'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@0565863d31c81f2c932f9fdc2022c6954f5e2c84 # v4
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
@@ -86,10 +88,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@5ddc9ecc0485f9e3df9b2009b1530e8e90db3d5b # v5
         with:
           enable-cache: true
 

@@ -41,6 +41,23 @@ PLAN_PREFIX: typing.Final[str] = "plan_"
 _SUFFIX_LENGTH: typing.Final[int] = 12
 """Number of hex characters in the random suffix (48 bits of entropy)."""
 
+
+_HEX_DIGITS: typing.Final[frozenset[str]] = frozenset("0123456789abcdefABCDEF")
+"""Set of valid hex digits, used by :func:`_is_hex`."""
+
+
+def _is_hex(value: str) -> bool:
+    """Return True if *value* contains only hex digits (``0-9``, ``a-f``, ``A-F``).
+
+    Args:
+        value: The string to test.
+
+    Returns:
+        Whether *value* is non-empty and contains only hexadecimal digits.
+    """
+    return bool(value) and all(c in _HEX_DIGITS for c in value)
+
+
 # ---------------------------------------------------------------------------
 # Generation functions
 # ---------------------------------------------------------------------------
@@ -127,7 +144,11 @@ def is_field_id(value: str) -> bool:
         >>> is_field_id("cap_a1b2c3d4e5f6")
         False
     """
-    return value.startswith(FIELD_PREFIX) and len(value) == len(FIELD_PREFIX) + _SUFFIX_LENGTH
+    return (
+        value.startswith(FIELD_PREFIX)
+        and len(value) == len(FIELD_PREFIX) + _SUFFIX_LENGTH
+        and _is_hex(value[len(FIELD_PREFIX) :])
+    )
 
 
 def is_capability_id(value: str) -> bool:
@@ -147,6 +168,7 @@ def is_capability_id(value: str) -> bool:
     return (
         value.startswith(CAPABILITY_PREFIX)
         and len(value) == len(CAPABILITY_PREFIX) + _SUFFIX_LENGTH
+        and _is_hex(value[len(CAPABILITY_PREFIX) :])
     )
 
 
@@ -164,7 +186,11 @@ def is_artifact_id(value: str) -> bool:
         >>> is_artifact_id("art_a1b2c3d4e5f6")
         True
     """
-    return value.startswith(ARTIFACT_PREFIX) and len(value) == len(ARTIFACT_PREFIX) + _SUFFIX_LENGTH
+    return (
+        value.startswith(ARTIFACT_PREFIX)
+        and len(value) == len(ARTIFACT_PREFIX) + _SUFFIX_LENGTH
+        and _is_hex(value[len(ARTIFACT_PREFIX) :])
+    )
 
 
 def is_plan_id(value: str) -> bool:
@@ -181,7 +207,11 @@ def is_plan_id(value: str) -> bool:
         >>> is_plan_id("plan_a1b2c3d4e5f6")
         True
     """
-    return value.startswith(PLAN_PREFIX) and len(value) == len(PLAN_PREFIX) + _SUFFIX_LENGTH
+    return (
+        value.startswith(PLAN_PREFIX)
+        and len(value) == len(PLAN_PREFIX) + _SUFFIX_LENGTH
+        and _is_hex(value[len(PLAN_PREFIX) :])
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -217,7 +247,7 @@ def parse_id(value: str) -> tuple[str, str]:
     for prefix in _ALL_PREFIXES:
         if value.startswith(prefix):
             suffix = value[len(prefix) :]
-            if len(suffix) == _SUFFIX_LENGTH:
+            if len(suffix) == _SUFFIX_LENGTH and _is_hex(suffix):
                 return prefix, suffix
     msg = f"Unrecognised ID format: {value!r}"
     raise ValueError(msg)

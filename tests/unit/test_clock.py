@@ -5,12 +5,14 @@ from __future__ import annotations
 import datetime
 
 import pytest
+from attrs.exceptions import FrozenInstanceError
 
 from paxman.clock import Clock, FakeClock, SystemClock
 
 # --- Protocol structural typing ---------------------------------------------
 
 
+@pytest.mark.deterministic
 def test_fakeclock_satisfies_clock_protocol() -> None:
     """``FakeClock`` is structurally compatible with ``Clock`` (Protocol)."""
     fc = FakeClock()
@@ -19,6 +21,7 @@ def test_fakeclock_satisfies_clock_protocol() -> None:
     assert isinstance(clock, FakeClock)
 
 
+@pytest.mark.deterministic
 def test_systemclock_satisfies_clock_protocol() -> None:
     """``SystemClock`` is structurally compatible with ``Clock``."""
     sc = SystemClock()
@@ -29,18 +32,21 @@ def test_systemclock_satisfies_clock_protocol() -> None:
 # --- FakeClock determinism --------------------------------------------------
 
 
+@pytest.mark.deterministic
 def test_fakeclock_default_fixed_now() -> None:
     """``FakeClock()`` with no args returns 2026-01-01 UTC."""
     fc = FakeClock()
     assert fc.now() == datetime.datetime(2026, 1, 1, tzinfo=datetime.UTC)
 
 
+@pytest.mark.deterministic
 def test_fakeclock_default_monotonic() -> None:
     """``FakeClock()`` with no args returns monotonic_value=0.0."""
     fc = FakeClock()
     assert fc.monotonic() == 0.0
 
 
+@pytest.mark.deterministic
 def test_fakeclock_custom_fixed_now() -> None:
     """``FakeClock(fixed_now=...)`` returns the supplied time."""
     when = datetime.datetime(2026, 6, 22, 12, 0, 0, tzinfo=datetime.UTC)
@@ -48,12 +54,14 @@ def test_fakeclock_custom_fixed_now() -> None:
     assert fc.now() == when
 
 
+@pytest.mark.deterministic
 def test_fakeclock_custom_monotonic() -> None:
     """``FakeClock(monotonic_value=42.0)`` returns the supplied value."""
     fc = FakeClock(monotonic_value=42.0)
     assert fc.monotonic() == 42.0
 
 
+@pytest.mark.deterministic
 def test_fakeclock_deterministic_across_calls() -> None:
     """The same FakeClock returns the same value on every call (no I/O, no clock)."""
     when = datetime.datetime(2026, 6, 22, tzinfo=datetime.UTC)
@@ -63,16 +71,18 @@ def test_fakeclock_deterministic_across_calls() -> None:
         assert fc.monotonic() == 100.0
 
 
+@pytest.mark.deterministic
 def test_fakeclock_is_frozen() -> None:
     """``FakeClock`` is frozen (attrs.frozen)."""
     fc = FakeClock()
-    with pytest.raises(BaseException):  # FrozenInstanceError  # noqa: B017
+    with pytest.raises(FrozenInstanceError):
         fc.monotonic_value = 999.0  # type: ignore[misc]
 
 
 # --- SystemClock (production) -----------------------------------------------
 
 
+@pytest.mark.deterministic
 def test_systemclock_now_returns_timezone_aware_utc() -> None:
     """``SystemClock.now()`` returns a timezone-aware datetime in UTC."""
     sc = SystemClock()
@@ -82,6 +92,7 @@ def test_systemclock_now_returns_timezone_aware_utc() -> None:
     assert now.utcoffset() == datetime.timedelta(0)
 
 
+@pytest.mark.deterministic
 def test_systemclock_monotonic_returns_float() -> None:
     """``SystemClock.monotonic()`` returns a float."""
     sc = SystemClock()
@@ -89,17 +100,19 @@ def test_systemclock_monotonic_returns_float() -> None:
     assert isinstance(value, float)
 
 
+@pytest.mark.deterministic
 def test_systemclock_is_frozen() -> None:
     """``SystemClock`` is frozen (attrs.frozen)."""
     sc = SystemClock()
     # attrs.frozen with slots=True raises AttributeError, not FrozenInstanceError.
-    with pytest.raises(BaseException):  # noqa: B017  (intentionally blind)
+    with pytest.raises(AttributeError):
         object.__setattr__(sc, "_dummy", 1)  # type: ignore[attr-defined]
 
 
 # --- Fixed-now fixture (smoke) ---------------------------------------------
 
 
+@pytest.mark.deterministic
 def test_fixed_now_fixture_value() -> None:
     """The ``fixed_now`` fixture is defined in conftest.py."""
     # Fixtures are only available during pytest collection; this test

@@ -101,7 +101,6 @@ select = [
     "RUF", # ruff-specific rules
 ]
 ignore = [
-    "S101", # `assert` statements are allowed (pytest pattern)
     "E501", # line length (handled by ruff format)
 ]
 

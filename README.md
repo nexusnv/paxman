@@ -190,7 +190,7 @@ This runs, in order: `install-frozen → lint → format-check → typecheck →
 
 ## Project structure
 
-```
+```text
 paxman/
 ├── src/paxman/              # the package (src-layout)
 │   ├── __init__.py          # exposes __version__

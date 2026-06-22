@@ -11,6 +11,8 @@ These tests verify:
 
 from __future__ import annotations
 
+import pytest
+
 from paxman.protocols import (
     Capability,
     ContractAdapter,
@@ -21,6 +23,7 @@ from paxman.protocols import (
 # --- Import surface ---------------------------------------------------------
 
 
+@pytest.mark.deterministic
 def test_all_four_protocols_importable() -> None:
     """All four protocols are importable from ``paxman.protocols``."""
     assert ContractAdapter is not None
@@ -32,21 +35,25 @@ def test_all_four_protocols_importable() -> None:
 # --- ContractAdapter --------------------------------------------------------
 
 
+@pytest.mark.deterministic
 def test_contractadapter_has_format_id() -> None:
     """``ContractAdapter`` declares the ``format_id`` property."""
     assert hasattr(ContractAdapter, "format_id")
 
 
+@pytest.mark.deterministic
 def test_contractadapter_has_adapt() -> None:
     """``ContractAdapter`` declares the ``adapt`` method."""
     assert hasattr(ContractAdapter, "adapt")
 
 
+@pytest.mark.deterministic
 def test_contractadapter_has_export() -> None:
     """``ContractAdapter`` declares the ``export`` method."""
     assert hasattr(ContractAdapter, "export")
 
 
+@pytest.mark.deterministic
 def test_concrete_adapter_satisfies_protocol() -> None:
     """A class with the right structural shape satisfies ``ContractAdapter``."""
 
@@ -69,14 +76,17 @@ def test_concrete_adapter_satisfies_protocol() -> None:
 # --- Capability -------------------------------------------------------------
 
 
+@pytest.mark.deterministic
 def test_capability_has_spec_property() -> None:
     assert hasattr(Capability, "spec")
 
 
+@pytest.mark.deterministic
 def test_capability_has_invoke_method() -> None:
     assert hasattr(Capability, "invoke")
 
 
+@pytest.mark.deterministic
 def test_concrete_capability_satisfies_protocol() -> None:
     """A class with the right structural shape satisfies ``Capability``."""
 
@@ -95,10 +105,12 @@ def test_concrete_capability_satisfies_protocol() -> None:
 # --- Heuristic --------------------------------------------------------------
 
 
+@pytest.mark.deterministic
 def test_heuristic_has_select_method() -> None:
     assert hasattr(Heuristic, "select")
 
 
+@pytest.mark.deterministic
 def test_concrete_heuristic_satisfies_protocol() -> None:
     class MyHeuristic:
         def select(self, field: object, ctx: object) -> list[object]:
@@ -111,10 +123,12 @@ def test_concrete_heuristic_satisfies_protocol() -> None:
 # --- InferenceProvider ------------------------------------------------------
 
 
+@pytest.mark.deterministic
 def test_inferenceprovider_has_complete() -> None:
     assert hasattr(InferenceProvider, "complete")
 
 
+@pytest.mark.deterministic
 def test_concrete_provider_satisfies_protocol() -> None:
     class MyProvider:
         def complete(self, request: object) -> object:
@@ -127,6 +141,7 @@ def test_concrete_provider_satisfies_protocol() -> None:
 # --- Protocol bodies are stubs (no runtime check beyond structure) -----------
 
 
+@pytest.mark.deterministic
 def test_protocol_method_bodies_are_ellipsis() -> None:
     """The Protocol methods have ``...`` bodies (no implementation)."""
     import inspect

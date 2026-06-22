@@ -358,7 +358,7 @@ The sprint plan was reviewed by the **Oracle** consultant agent. **Verdict: APPR
 
 Sprint 1 ("Foundation") was completed in a single sitting. The 23 deliverables from `sprint-01-foundation.md` are all shipped: `pyproject.toml`, `Makefile`, `.pre-commit-config.yaml`, `LICENSE` (MIT), `CHANGELOG.md`, `src/paxman/` package skeleton (src-layout, `py.typed`), all 9 cross-cutting modules (errors, types, protocols, versioning, logging, budget, clock, ids, serialization), test infrastructure (`tests/conftest.py` + 9 test files, 395 tests, 96.31% coverage), GitHub Actions CI workflow, and README developer setup.
 
-### 12.1 Sprint 1 exit-criteria status (14/14 met)
+### 12.1 Sprint 1 exit-criteria status (12/14 met, 2 partially met)
 
 | # | Criterion | Status |
 |---|---|---|

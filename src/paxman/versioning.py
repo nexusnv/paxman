@@ -128,7 +128,8 @@ def format_version(major: int, minor: int, patch: int) -> str:
         A string of the form ``"MAJOR.MINOR.PATCH"``.
 
     Raises:
-        ValueError: If any component is negative.
+        ValueError: If any component is not an ``int`` (e.g., ``bool``,
+            ``float``, ``str``) or is a negative integer.
 
     Examples:
         >>> format_version(1, 2, 3)
@@ -137,6 +138,8 @@ def format_version(major: int, minor: int, patch: int) -> str:
         '0.0.0'
     """
     for name, value in [("major", major), ("minor", minor), ("patch", patch)]:
+        if type(value) is not int:  # explicit type check rejects bool
+            raise ValueError(f"{name} must be an int, got {type(value).__name__}: {value!r}")
         if value < 0:
             raise ValueError(f"{name} must be a non-negative integer, got {value}")
     return f"{major}.{minor}.{patch}"

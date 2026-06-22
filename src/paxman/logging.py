@@ -84,8 +84,12 @@ def configure_logging(
     if level not in _LEVELS:
         raise ValueError(f"Unknown log level: {level!r}")
 
+    numeric_level = _LEVELS[level]
+    logging.basicConfig(level=numeric_level, force=True)
+
     processors: list[structlog.types.Processor] = [
         structlog.contextvars.merge_contextvars,
+        structlog.stdlib.filter_by_level,
         structlog.processors.add_log_level,
     ]
 

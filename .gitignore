@@ -1,3 +1,72 @@
-# Local dev artifacts (not for commit)
+# --- Paxman Python .gitignore ---
+# Per sprint-01-foundation.md D1.4.
+# Patterns follow the Python gitignore template (https://github.com/github/gitignore)
+# plus Paxman-specific exclusions (tests/fixtures/generated/, .sisyphus/, .codegraph/).
+
+# Local dev artifacts
 .sisyphus/
 .codegraph/
+.understand-anything/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+build/
+dist/
+downloads/
+*.egg-info/
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Pytest
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+
+# mypy
+.mypy_cache/
+
+# pyright
+.pyright/
+
+# ruff
+.ruff_cache/
+
+# hypothesis
+.hypothesis/
+
+# uv (lockfile IS committed so CI can run `uv sync --frozen` deterministically)
+# uv.lock
+
+# IDEs / editors
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test data (Sprint 5+: programmatic fixtures)
+tests/fixtures/generated/

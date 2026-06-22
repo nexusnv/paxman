@@ -113,4 +113,4 @@ Paxman 1.0.0 ships when **all V1 acceptance criteria** in `V1_ACCEPTANCE_CRITERI
 - `../PRD.md` — product requirements and success metrics
 - `../V1_ACCEPTANCE_CRITERIA.md` — definition of done for 1.0
 - `../PACKAGE_STRUCTURE.md` — module layout (the source of truth for code structure)
-- `../docs/adr/` — 7 ADRs that constrain the design
+- `../docs/adr/` — 9 ADRs that constrain the design (7 from planning + 2 from Sprint 0: license, Dict DSL)

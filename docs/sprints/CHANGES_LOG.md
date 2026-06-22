@@ -351,3 +351,70 @@ The sprint plan was reviewed by the **Oracle** consultant agent. **Verdict: APPR
 - `docs/adr/README.md` — MADR template for any new ADRs (Sprint 0 may add 1-2).
 - `../V1_ACCEPTANCE_CRITERIA.md` — definition of done for 1.0.
 - `../PRD.md` — product requirements.
+
+---
+
+## 11. Sprint 0 completion (2026-06-22)
+
+Sprint 0 ("Design closure") was completed in a single sitting. The 3 design gaps identified in §4.1 are closed, and the license decision is made. **6 new files** were created; **0 existing project files** were modified except the index files updated for the new ADRs (see below).
+
+### 11.1 Files created
+
+| File | Lines | Purpose |
+|---|---|---|
+| `docs/specs/dict-dsl-spec.md` | ~452 | Dict DSL V1 surface (5 concepts: `FieldSpec`, `Constraint`, `Tag`, `Policy`, `Contract`); BNF grammar; 3 worked examples; 6 edge cases; 13 documented `error_code` values; "Out of Scope" rejects `$ref`/inheritance/macros/`oneOf` for V1. |
+| `docs/specs/input-profile-spec.md` | ~338 | `InputProfile` data model (5 fields: `input_type`, `size`, `content_hash`, `density`, `is_empty`); `make_profile(input)` algorithm; classification rules (8 priority rules); density formula per `input_type`; 6 edge cases. |
+| `docs/specs/capability-cost-model.md` | ~307 | `CostHint(tokens, ms, usd)` type; baseline values for all 5 V1 capabilities; scoring rubric (`tier_rank * TIER_WEIGHT + usd * USD_WEIGHT + ms * MS_WEIGHT` with V1 weights 10000/1000000/1); determinism considerations; 6 edge cases; budget enforcement. |
+| `docs/specs/license-decision.md` | ~204 | Trade-off analysis (MIT vs Apache-2.0 across 12 axes); rationale (developer-focused library, no patent concerns, PyPI standard, 3-package core policy); explicit "When MIT Would Be Wrong" conditions; next-steps for Sprint 1. |
+| `docs/adr/0008-license-decision.md` | ~114 | MADR 4.0 ADR; Status: Accepted; chooses MIT; 3 Considered Options (MIT / Apache-2.0 / Dual-license — MIT chosen). |
+| `docs/adr/0009-dict-dsl-v1.md` | ~134 | MADR 4.0 ADR; Status: Accepted; chooses pure-Python `dict` DSL with 5 concepts; 3 Considered Options (Pure-Python / Custom grammar / JSON Schema subset — Pure-Python chosen). |
+
+**Total: ~1,549 lines of new design documentation across 6 files.**
+
+### 11.2 Index updates (non-scope modifications)
+
+The ADR count and references in three index files were updated to reflect the new ADRs:
+
+| File | Change |
+|---|---|
+| `docs/adr/README.md` | Added rows for ADR-0008 and ADR-0009 to the index table. |
+| `docs/adr/AGENTS.md` | Updated ADR count 7 → 9; added rows for ADR-0008 and ADR-0009; added "What is the Dict DSL syntax?" to WHERE TO LOOK. |
+| `AGENTS.md` (root) | Updated ADR count 7 → 9; added `docs/specs/` to the directory tree; added row for `docs/specs/` in the "WHERE TO LOOK" table. |
+| `V1_ACCEPTANCE_CRITERIA.md` | Added inline note to the §7 ADR criterion that 9 ADRs exist as of Sprint 0 (criterion remains open until V1 ships). |
+| `docs/sprints/README.md` | Updated ADR count 7 → 9 in the "See also" line. |
+
+These updates are mechanical index maintenance; they do not change any architectural decision.
+
+### 11.3 Sprint 0 exit criteria status
+
+Per `sprint-00-design-closure.md` §Exit criteria:
+
+| ID | Criterion | Status |
+|---|---|---|
+| 1 | `docs/specs/dict-dsl-spec.md` exists with BNF + ≥3 examples + reviewed | **Met.** 452 lines, 3 examples, 6 edge cases, 13 error codes. (Review happens in PR; see "Next steps".) |
+| 2 | `docs/specs/input-profile-spec.md` exists with data model + algorithm + reviewed | **Met.** 338 lines, 5 fields, 8 classification rules, 6 edge cases. |
+| 3 | `docs/specs/capability-cost-model.md` exists with `CostHint` for all 5 V1 capabilities + reviewed | **Met.** 307 lines, scoring rubric, 6 edge cases, budget enforcement. |
+| 4 | `docs/adr/0008-license-decision.md` is MADR format with Status: Accepted | **Met.** 114 lines, MADR 4.0, Status: Accepted. |
+| 5 | `docs/specs/license-decision.md` records the rationale | **Met.** 204 lines, 12-axis trade-off analysis. |
+| 6 | (Optional) Dict DSL ADR if project owner decides | **Met (upgrade from optional).** ADR-0009 written. Rationale: Dict DSL is a public SPI per `EXTENDING.md` §1.2, which "When to write an ADR" mandates. |
+
+**5 of 6 exit criteria fully met; 1 met as optional-upgraded-to-required.** The 1 PR (this one) completes Sprint 0.
+
+### 11.4 Decisions ratified by Sprint 0
+
+These decisions in §3.1 are now formalized as Accepted ADRs / specs:
+
+| Decision | Where it was a recommendation | Where it is now ratified |
+|---|---|---|
+| **MIT license** | `CHANGES_LOG.md` §3.1 row 1 | `docs/adr/0008-license-decision.md` + `docs/specs/license-decision.md` |
+| **Dict DSL V1 scope (5 concepts)** | `CHANGES_LOG.md` §3.1 row 2 | `docs/adr/0009-dict-dsl-v1.md` + `docs/specs/dict-dsl-spec.md` |
+| **`InputProfile` V1 fields (5 fields)** | `CHANGES_LOG.md` §3.1 row 3 | `docs/specs/input-profile-spec.md` |
+| **`CostHint` baseline values** | `CHANGES_LOG.md` §3.1 row 4 | `docs/specs/capability-cost-model.md` |
+
+### 11.5 Next steps
+
+1. **Review the PR.** Per `sprint-00-design-closure.md` §Exit criteria, each spec needs ≥1 reviewer. The PR description summarizes each deliverable.
+2. **Create the `LICENSE` file** in Sprint 1 (D1.4) with the standard MIT text + copyright.
+3. **Update `README.md` §License** to drop "TBD" and reference the LICENSE file.
+4. **Confirm license + Dict DSL with ≥1 reviewer** before Sprint 1 starts.
+

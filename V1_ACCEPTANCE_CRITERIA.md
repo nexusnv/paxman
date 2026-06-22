@@ -148,7 +148,7 @@ V1 is the first **production-ready** release: a stable public API, replayable ar
 - [ ] [DEVELOPMENT.md](./DEVELOPMENT.md) — present, local dev setup.
 - [ ] [EXTENDING.md](./EXTENDING.md) — present, SPI usage guides.
 - [ ] [DEPENDENCIES.md](./DEPENDENCIES.md) — present, core vs optional.
-- [ ] [docs/adr/](./docs/adr/) — at least 7 ADRs, covering all major decisions.
+- [ ] [docs/adr/](./docs/adr/) — at least 7 ADRs, covering all major decisions. *(9 ADRs as of Sprint 0; criterion remains open until V1 ships.)*
 
 ---
 

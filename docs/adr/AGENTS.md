@@ -1,7 +1,7 @@
 # docs/adr/
 
 ## OVERVIEW
-7 Architecture Decision Records (MADR 4.0) + index. The **architectural source of truth** for V1. All Accepted, all dated 2026-06-22. ADRs are immutable once Accepted — to reverse a decision, write a new ADR and mark the old one Superseded.
+9 Architecture Decision Records (MADR 4.0) + index. The **architectural source of truth** for V1. All Accepted, all dated 2026-06-22. ADRs are immutable once Accepted — to reverse a decision, write a new ADR and mark the old one Superseded.
 
 ## INDEX (V1 PILLARS)
 
@@ -14,6 +14,8 @@
 | 0005 | Confidence Ownership | Accepted | **Reconciler is the sole confidence assigner.** Planner emits `target_confidence` (read-only threshold from contract) but never scores. **`CapabilityResult` has no `confidence` field.** Rejected "capabilities self-assess" and "planner assigns initial." |
 | 0006 | Sequential Execution in V1 | Accepted | V1 Executor runs field plans **sequentially in plan order**. Rejected parallel (non-deterministic, races). Parallelism is V2, opt-in for Planner-proven independent fields. Async API is V2. |
 | 0007 | V1 Contract Adapter Set | Accepted | **Required:** Pydantic, JSON Schema, Dict DSL. **Optional (best-effort):** OpenAPI. **Not in V1:** ERP, agent tool, wrapper. Dict DSL = internal escape hatch + test source of truth. |
+| 0008 | License Decision | Accepted | MIT chosen for V1. Apache-2.0 is the documented alternative if patent concerns emerge. See `docs/specs/license-decision.md` for the full trade-off analysis. |
+| 0009 | Dict DSL V1 Surface | Accepted | Pure-Python `dict` DSL with 5 concepts (FieldSpec, Constraint, Tag, Policy, Contract). Rejected custom grammar and JSON Schema subset. See `docs/specs/dict-dsl-spec.md` for the BNF grammar, examples, and error model. |
 
 ## WHERE TO LOOK
 
@@ -25,6 +27,8 @@
 | "Who assigns confidence?" | `0005-confidence-ownership.md` — Reconciler only |
 | "Why is V1 sequential, not parallel?" | `0006-sequential-execution-v1.md` |
 | "Which contract adapters are required vs optional?" | `0007-contract-adapter-set-v1.md` |
+| "Why MIT and not Apache-2.0?" | `0008-license-decision.md` + `docs/specs/license-decision.md` |
+| "What is the Dict DSL syntax?" | `0009-dict-dsl-v1.md` + `docs/specs/dict-dsl-spec.md` |
 | "When do I write a new ADR?" | `README.md` "When to write an ADR" |
 
 ## CONVENTIONS
@@ -44,5 +48,5 @@
 ## NOTES
 
 - ADRs are the **architectural source of truth**. When code and ADR conflict, the ADR wins; fix the code.
-- All 7 ADRs are Accepted as of `174d8dd` on `main`. None are Deprecated or Superseded.
+- All 9 ADRs are Accepted as of `main`. None are Deprecated or Superseded.
 - Significant public API / SPI / boundary changes require a new ADR before implementation (per `docs/adr/README.md` "When to write an ADR").

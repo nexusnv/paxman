@@ -8,7 +8,7 @@
 
 Paxman is a **contract-driven deterministic normalization engine for Python** (in design stage — no source code yet). Takes arbitrary input (PDFs, scans, emails, spreadsheets, free text) and a caller-owned contract (Pydantic / JSON Schema / OpenAPI / Dict DSL), produces an evidence-backed, replayable normalized artifact. Public API: `paxman.normalize()` and `paxman.replay()`.
 
-**Status: design-only.** `src/` does not exist. Zero implementation. 13 top-level files are Markdown specs; the 7 ADRs are the architectural source of truth.
+**Status: design-only.** `src/` does not exist. Zero implementation. 13 top-level files are Markdown specs + 4 design specs in `docs/specs/`; the 9 ADRs are the architectural source of truth.
 
 ## STRUCTURE
 
@@ -18,7 +18,7 @@ paxman/
 ├── GLOSSARY.md, V1_ACCEPTANCE_CRITERIA.md, REPLAY_AND_DETERMINISM.md
 ├── SECURITY.md, TESTING_STRATEGY.md, EXTENDING.md
 ├── DEPENDENCIES.md, DEVELOPMENT.md
-├── docs/{TEST_DATA.md, adr/}                # 7 ADRs → docs/adr/AGENTS.md
+├── docs/{TEST_DATA.md, adr/, specs/}        # 9 ADRs → docs/adr/AGENTS.md; 4 design specs → docs/specs/
 ├── scripts/fetch_test_data.py               # 50MB vendor (download is stubbed)
 ├── tests/fixtures/                          # 5-layer data → tests/fixtures/AGENTS.md
 └── .agents/skills/                          # 17 OpenCode project skills
@@ -42,6 +42,7 @@ paxman/
 | Architecture change | `docs/adr/` (MADR template; ADRs immutable once Accepted) |
 | Test data + licensing | `docs/TEST_DATA.md` |
 | Vocabulary | `GLOSSARY.md` |
+| Dict DSL / InputProfile / cost model / license decision | `docs/specs/` (4 design specs) |
 
 ## PLANNED CODE MAP (7 subsystems)
 

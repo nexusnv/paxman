@@ -31,6 +31,8 @@ Each ADR follows MADR 4.0 with the following sections:
 | [0005](./0005-confidence-ownership.md) | Confidence Ownership | Accepted | 2026-06-22 | Reconciler is the **sole** confidence assigner. Planner emits `target_confidence` only. Capabilities return no confidence. |
 | [0006](./0006-sequential-execution-v1.md) | Sequential Execution in V1 | Accepted | 2026-06-22 | V1 Executor runs field plans sequentially. Parallelism is V2. |
 | [0007](./0007-contract-adapter-set-v1.md) | V1 Contract Adapter Set | Accepted | 2026-06-22 | Required: Pydantic, JSON Schema, Dict DSL. Optional: OpenAPI. Not in V1: ERP, agent tool, wrapper. |
+| [0008](./0008-license-decision.md) | License Decision | Accepted | 2026-06-22 | MIT chosen for V1. Apache-2.0 is the documented alternative if patent concerns emerge. |
+| [0009](./0009-dict-dsl-v1.md) | Dict DSL V1 Surface | Accepted | 2026-06-22 | Pure-Python `dict` DSL with 5 concepts (FieldSpec, Constraint, Tag, Policy, Contract). Rejected custom grammar and JSON Schema subset. |
 
 ## Conventions
 

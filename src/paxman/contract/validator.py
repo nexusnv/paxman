@@ -38,7 +38,11 @@ from __future__ import annotations
 import typing
 
 from paxman.contract._types import Constraint, ConstraintKind
-from paxman.contract.canonical import CanonicalContract, CanonicalField
+from paxman.contract.canonical import (
+    _FIELD_PATH_PATTERN,
+    CanonicalContract,
+    CanonicalField,
+)
 from paxman.contract.semantics import validate_semantic_tags
 from paxman.errors import (
     InvalidConstraintError,
@@ -87,6 +91,21 @@ def validate_canonical_field(field: CanonicalField) -> None:
         raise TypeError(
             f"validate_canonical_field expects CanonicalField, got {type(field).__name__}"
         )
+    # Oracle review F15: defensive path-format check. ``CanonicalField``
+    # already validates in ``__attrs_post_init__``; this duplicate exists
+    # so the documented ``InvalidPathError`` contract holds for callers
+    # that build a field via ``object.__setattr__`` to bypass the
+    # constructor (see ``test_validate_contract_*``).
+    if not isinstance(field.path, str) or not _FIELD_PATH_PATTERN.match(field.path):
+        raise InvalidPathError(
+            f"field {field.name!r} has malformed path: {field.path!r}",
+            error_code="INVALID_PATH",
+            context={
+                "field_name": field.name,
+                "field_id": field.id,
+                "path": field.path,
+            },
+        )
     if not isinstance(field.type, FieldType):
         raise UnsupportedFieldTypeError(
             f"field {field.name!r} has a non-FieldType type: {field.type!r}",
@@ -125,8 +144,11 @@ def validate_canonical_field(field: CanonicalField) -> None:
     # raw tags will be caught here.
     try:
         normalized = validate_semantic_tags(field.semantic_tags)
-    except InvalidSemanticTagError:
-        # Re-raise with field context attached.
+    except InvalidSemanticTagError as e:
+        # Oracle review F16: actually attach field context before re-raising.
+        # The previous bare ``raise`` lost the field name and id.
+        e.context["field_name"] = field.name
+        e.context["field_id"] = field.id
         raise
     if normalized != field.semantic_tags:
         raise InvalidSemanticTagError(

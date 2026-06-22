@@ -199,7 +199,21 @@ class JsonSchemaAdapter:
                 error_code="INVALID_FIELD",
                 context={"contract_id": contract_id},
             )
-        required_set = {r for r in required_list if isinstance(r, str)}
+        # Oracle review F6: validate that every required entry is a string.
+        # Silently filtering non-strings hides malformed schemas.
+        for i, item in enumerate(required_list):
+            if not isinstance(item, str):
+                raise InvalidContractError(
+                    f"schema {contract_id!r} 'required[{i}]' must be a string, "
+                    f"got {type(item).__name__}: {item!r}",
+                    error_code="INVALID_FIELD",
+                    context={
+                        "contract_id": contract_id,
+                        "index": i,
+                        "value": repr(item),
+                    },
+                )
+        required_set = set(required_list)
         fields: list[CanonicalField] = []
         for prop_name, prop_schema in properties.items():
             if not isinstance(prop_schema, dict):
@@ -352,6 +366,28 @@ class JsonSchemaAdapter:
             )
         # Map type.
         json_type = schema.get("type", "string")
+        # Oracle review F9: handle list types like ``["string", "null"]`` (the
+        # form export() produces for nullable fields). Extract the non-null
+        # type and set ``nullable=True``.
+        if isinstance(json_type, list):
+            non_null = [t for t in json_type if t != "null"]
+            nullable = "null" in json_type
+            if not non_null:
+                raise InvalidContractError(
+                    f"property {name!r} in {contract_id!r} has empty type array",
+                    error_code="INVALID_FIELD",
+                    context={"contract_id": contract_id, "property": name, "type": json_type},
+                )
+            if len(non_null) > 1:
+                raise InvalidContractError(
+                    f"property {name!r} in {contract_id!r} has multiple non-null types "
+                    f"in type array: {non_null!r}",
+                    error_code="UNSUPPORTED_JSON_SCHEMA_FEATURE",
+                    context={"contract_id": contract_id, "property": name, "type": json_type},
+                )
+            json_type = non_null[0]
+        else:
+            nullable = False
         # "null" means nullable.
         if json_type == "null":
             field_type: FieldType = FieldType.STRING
@@ -370,7 +406,6 @@ class JsonSchemaAdapter:
                     },
                 )
             field_type = field_type_candidate
-            nullable = False
             required_flag = required
         # Build constraints.
         constraints = self._extract_constraints(name, schema, field_type, contract_id)
@@ -470,10 +505,29 @@ class JsonSchemaAdapter:
             amt = schema["default"].get("amount")
             cur = schema["default"].get("currency")
             if amt is not None and cur is not None:
-                default = MoneyValue(
-                    amount=decimal.Decimal(str(amt)),
-                    currency=str(cur),
-                )
+                try:
+                    default = MoneyValue(
+                        amount=decimal.Decimal(str(amt)),
+                        currency=str(cur),
+                    )
+                except (ValueError, TypeError, decimal.DecimalException) as e:
+                    # Oracle review F7: don't let raw decimal exceptions leak.
+                    # ``decimal.InvalidOperation`` is a ``DecimalException`` (an
+                    # ``ArithmeticError``) — not a ``ValueError`` — so we must
+                    # catch ``DecimalException`` explicitly.
+                    # Raise a structured InvalidContractError instead.
+                    raise InvalidContractError(
+                        f"MONEY property {name!r} in {contract_id!r} has invalid default "
+                        f"value: amount={amt!r}, currency={cur!r}",
+                        error_code="INVALID_FIELD",
+                        context={
+                            "contract_id": contract_id,
+                            "property": name,
+                            "amount": repr(amt),
+                            "currency": repr(cur),
+                            "decimal_error": type(e).__name__,
+                        },
+                    ) from e
         return CanonicalField(
             id=f"field_{contract_id}_{name}",
             path=name,
@@ -517,17 +571,34 @@ class JsonSchemaAdapter:
                 out.append(Constraint(kind=ConstraintKind.MAX_LENGTH, params={"max": ml}))
             # minItems / maxItems map to MIN/MAX_LENGTH for arrays.
             if "minItems" in schema and field_type is FieldType.ARRAY:
+                mi = schema["minItems"]
+                # Oracle review F8: validate before int() coercion. ``int("1.5")``
+                # silently truncates; ``int("abc")`` raises raw ``ValueError``;
+                # ``int(True)`` would be accepted as 1.
+                if not isinstance(mi, int) or isinstance(mi, bool) or mi < 0:
+                    raise InvalidContractError(
+                        f"property {name!r} 'minItems' must be a non-negative int, got {mi!r}",
+                        error_code="INVALID_CONSTRAINT",
+                        context={**ctx, "value": repr(mi)},
+                    )
                 out.append(
                     Constraint(
                         kind=ConstraintKind.MIN_LENGTH,
-                        params={"min": int(schema["minItems"])},
+                        params={"min": mi},
                     )
                 )
             if "maxItems" in schema and field_type is FieldType.ARRAY:
+                ma = schema["maxItems"]
+                if not isinstance(ma, int) or isinstance(ma, bool) or ma < 0:
+                    raise InvalidContractError(
+                        f"property {name!r} 'maxItems' must be a non-negative int, got {ma!r}",
+                        error_code="INVALID_CONSTRAINT",
+                        context={**ctx, "value": repr(ma)},
+                    )
                 out.append(
                     Constraint(
                         kind=ConstraintKind.MAX_LENGTH,
-                        params={"max": int(schema["maxItems"])},
+                        params={"max": ma},
                     )
                 )
         # Pattern

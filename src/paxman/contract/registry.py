@@ -82,6 +82,14 @@ def register(adapter: ContractAdapter, *, replace: bool = False) -> None:
             error_code="INVALID_ADAPTER",
             context={"adapter_type": type(adapter).__name__, "format_id": repr(fmt)},
         )
+    # Oracle review F14: SPI requires lowercase format_id (per
+    # ``ContractAdapter.format_id`` docstring). Reject mixed/upper case.
+    if fmt != fmt.lower():
+        raise InvalidContractError(
+            f"adapter format_id must be lowercase, got {fmt!r}",
+            error_code="INVALID_ADAPTER",
+            context={"adapter_type": type(adapter).__name__, "format_id": repr(fmt)},
+        )
     existing = _adapters.get(fmt)
     if existing is not None and existing is not adapter and not replace:
         raise InvalidContractError(

@@ -10,7 +10,7 @@
       "properties": {
         "amount": {
           "type": "string",
-          "pattern": "^-?\\d+(\\.\\d+)?"
+          "pattern": "^-?\\d+(\\.\\d+)?$"
         },
         "currency": {
           "type": "string",

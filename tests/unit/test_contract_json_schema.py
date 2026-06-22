@@ -1184,3 +1184,137 @@ def test_adapt_rejects_additional_properties_false() -> None:
         JsonSchemaAdapter().adapt(schema)
     assert excinfo.value.error_code == "UNSUPPORTED_JSON_SCHEMA_FEATURE"
     assert excinfo.value.context["keyword"] == "additionalProperties"
+
+
+# --- Oracle review F9: list-type handling for nullable round-trip ---------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_nullable_round_trips_via_type_array() -> None:
+    """A nullable field exported as ``type: ["string", "null"]`` re-adapts.
+
+    Oracle review F9: the previous code crashed on list types when calling
+    ``_JSON_TYPE_TO_FIELD_TYPE.get(["string", "null"])``. The fix extracts
+    the non-null type and sets ``nullable=True``.
+    """
+    from paxman.contract.canonical import CanonicalContract, CanonicalField
+
+    f = CanonicalField(
+        id="f1",
+        path="f",
+        name="f",
+        type=FieldType.STRING,
+        required=False,
+        nullable=True,
+    )
+    contract = CanonicalContract(id="x", fields=(f,))
+    exported = JsonSchemaAdapter().export(contract)
+    # Now re-adapt the exported schema. This used to crash.
+    c2 = JsonSchemaAdapter().adapt(exported)
+    assert c2.fields[0].nullable is True
+    assert c2.fields[0].type is FieldType.STRING
+
+
+# --- Oracle review F8: minItems / maxItems validation ---------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_min_items_string_raises() -> None:
+    """``minItems`` provided as a string raises InvalidContractError (not raw ValueError)."""
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {
+            "items": {"type": "array", "items": {"type": "string"}, "minItems": "3"},
+        },
+        "required": ["items"],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "INVALID_CONSTRAINT"
+    assert excinfo.value.context["value"] == "'3'"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_max_items_negative_raises() -> None:
+    """Negative ``maxItems`` is rejected with INVALID_CONSTRAINT."""
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {
+            "items": {"type": "array", "items": {"type": "string"}, "maxItems": -1},
+        },
+        "required": ["items"],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "INVALID_CONSTRAINT"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_min_items_float_truncation_rejected() -> None:
+    """Float ``minItems`` (which int() would silently truncate) is rejected."""
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {
+            "items": {"type": "array", "items": {"type": "string"}, "minItems": 1.5},
+        },
+        "required": ["items"],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "INVALID_CONSTRAINT"
+
+
+# --- Oracle review F6: required list validation ---------------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_required_non_string_raises() -> None:
+    """Non-string entries in the ``required`` list are rejected, not silently dropped."""
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {"f": {"type": "string"}},
+        "required": ["f", 42],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "INVALID_FIELD"
+    assert excinfo.value.context["index"] == 1
+
+
+# --- Oracle review F7: MoneyValue decimal conversion error handling -------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_money_default_non_numeric_amount_raises() -> None:
+    """Non-numeric ``amount`` in MONEY default raises InvalidContractError, not raw InvalidOperation."""
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {
+            "amount": {
+                "x-paxman-type": "MONEY",
+                "type": "object",
+                "properties": {
+                    "amount": {"type": "string", "pattern": r"^-?\d+(\.\d+)?$"},
+                    "currency": {"type": "string", "pattern": r"^[A-Z]{3}$"},
+                },
+                "required": ["amount", "currency"],
+                "default": {"amount": "not-a-number", "currency": "USD"},
+            },
+        },
+        "required": ["amount"],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "INVALID_FIELD"
+    assert "not-a-number" in excinfo.value.context["amount"]

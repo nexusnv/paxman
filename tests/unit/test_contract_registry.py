@@ -290,3 +290,32 @@ def test_adapt_unknown_format_raises_not_found() -> None:
     """``adapt`` with an unknown format_id raises ADAPTER_NOT_FOUND."""
     with pytest.raises(InvalidContractError, match="no adapter registered"):
         registry.adapt({}, format_id="nonexistent_format_xyz")
+
+
+# --- Oracle review F14: lowercase format_id enforcement -------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_register_rejects_mixed_case_format_id() -> None:
+    """``register`` rejects non-lowercase format_id (Oracle review F14).
+
+    SPI contract (per ``ContractAdapter.format_id`` docstring) requires
+    lowercase identifiers. A mixed-case format_id is silently
+    misregistered without this check.
+    """
+    from paxman.contract import registry
+
+    class MixedCaseAdapter:
+        @property
+        def format_id(self) -> str:
+            return "MixedCase"
+
+        def adapt(self, external):  # pragma: no cover
+            return external
+
+        def export(self, canonical):  # pragma: no cover
+            return canonical
+
+    with pytest.raises(InvalidContractError, match="format_id must be lowercase"):
+        registry.register(MixedCaseAdapter())

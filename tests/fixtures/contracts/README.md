@@ -65,7 +65,7 @@ the appropriate sprint when the corresponding feature lands.
 4. Reference it from the appropriate test file (e.g., `tests/unit/test_contract_dict_dsl.py`).
 5. If it has a corresponding input, place that under `tests/fixtures/inputs/`.
 6. If it has a corresponding expected artifact, place that under `tests/fixtures/artifacts/`.
-7. If the filename matches across formats (paired fixtures), keep the names synchronized.
+7. **Paired fixtures must share their filename across formats.** When a contract has the same purpose in `pydantic/`, `json_schema/`, and `dict_dsl/` (a paired fixture), the filename (stem) must match exactly.
 
 ## See also
 

@@ -487,6 +487,52 @@ def test_canonical_field_path_dotted_valid() -> None:
     assert f.path == "a.b"
 
 
+# --- Oracle review F12: array-segment path syntax ---------------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_canonical_field_path_array_segment_valid() -> None:
+    """``line_items[].price`` is a valid path (Oracle review F12)."""
+    f = CanonicalField(
+        id="f1",
+        path="line_items[].price",
+        name="price",
+        type=FieldType.DECIMAL,
+        required=True,
+    )
+    assert f.path == "line_items[].price"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_canonical_field_path_deeply_nested_array_valid() -> None:
+    """``a.b[].c.d`` is a valid nested path with array segment in the middle."""
+    f = CanonicalField(
+        id="f1",
+        path="a.b[].c.d",
+        name="d",
+        type=FieldType.STRING,
+        required=True,
+    )
+    assert f.path == "a.b[].c.d"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_canonical_field_path_malformed_array_raises() -> None:
+    """``a.[].b`` (dot before brackets) is rejected — the documented syntax
+    is ``name[].subname``, not ``name.[].subname``."""
+    with pytest.raises(ValueError, match="path must match"):
+        CanonicalField(
+            id="f1",
+            path="a.[].b",
+            name="b",
+            type=FieldType.STRING,
+            required=True,
+        )
+
+
 # --- CanonicalField: type / required / confidence_threshold -----------------
 
 

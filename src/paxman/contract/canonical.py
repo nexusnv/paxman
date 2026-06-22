@@ -129,10 +129,18 @@ class MoneyValue:
 
 
 #: Path-pattern for valid field paths. Top-level fields use ``name``; nested
-#: fields use ``name.subname`` and arrays use ``name[].subname``. This is a
-#: minimal JSON-Path-like subset — full JSON-Path is V2.
+#: fields use ``name.subname`` and arrays use ``name[].subname`` (brackets
+#: may follow a field name directly without a dot). This is a minimal
+#: JSON-Path-like subset — full JSON-Path is V2.
+#:
+#: Oracle review F12: the previous pattern required a dot before ``[]``,
+#: which rejected documented paths like ``line_items[].price``. The new
+#: pattern correctly accepts:
+#:   - ``a`` / ``a.b`` / ``a.b.c`` (dotted)
+#:   - ``a[]`` / ``a[].b`` / ``a.b[].c.d`` (with array segments)
+#: and rejects malformed forms like ``a.[].b``, ``a[]b``, ``.a``.
 _FIELD_PATH_PATTERN: typing.Final[re.Pattern[str]] = re.compile(
-    r"^[A-Za-z_][A-Za-z0-9_]*(?:\.(?:[A-Za-z_][A-Za-z0-9_]*|\[\]))*$"
+    r"^[A-Za-z_][A-Za-z0-9_]*(?:\[\])?(?:\.(?:[A-Za-z_][A-Za-z0-9_]*(?:\[\])?))*$"
 )
 
 
@@ -233,7 +241,7 @@ class CanonicalField:
         if not _FIELD_PATH_PATTERN.match(self.path):
             raise ValueError(
                 f"path must match the JSON-Path-like pattern "
-                f"([A-Za-z_][A-Za-z0-9_]*(?:.(name|[]))*), got {self.path!r}"
+                f"([A-Za-z_][A-Za-z0-9_]*(?:\\[\\])?(?:\\.[A-Za-z_][A-Za-z0-9_]*(?:\\[\\])?)*), got {self.path!r}"
             )
         # --- name ---
         if not isinstance(self.name, str) or not self.name:
@@ -300,7 +308,9 @@ class CanonicalField:
             raise ValueError(
                 f"STRING field {self.name!r} default must be str, got {type(self.default).__name__}"
             )
-        if self.type is FieldType.INTEGER and not isinstance(self.default, int):
+        # Oracle review F13: use exact type for INTEGER (bool is a subclass of int
+        # in Python; without this, ``True``/``False`` would be silently accepted).
+        if self.type is FieldType.INTEGER and (type(self.default) is not int):
             raise ValueError(
                 f"INTEGER field {self.name!r} default must be int, got {type(self.default).__name__}"
             )
@@ -320,6 +330,21 @@ class CanonicalField:
             raise ValueError(
                 f"ARRAY field {self.name!r} default must be a list, got {type(self.default).__name__}"
             )
+        # Oracle review F13: add missing DECIMAL and ENUM validations.
+        if self.type is FieldType.DECIMAL and (
+            not isinstance(self.default, (int, float, decimal.Decimal))
+            or isinstance(self.default, bool)
+        ):
+            raise ValueError(
+                f"DECIMAL field {self.name!r} default must be a number, "
+                f"got {type(self.default).__name__}"
+            )
+        if self.type is FieldType.ENUM:
+            if self.enum_values is None or self.default not in self.enum_values:
+                raise ValueError(
+                    f"ENUM field {self.name!r} default must be a valid enum value, "
+                    f"got {self.default!r}"
+                )
 
 
 # ---------------------------------------------------------------------------

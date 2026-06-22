@@ -436,6 +436,25 @@ def test_validate_contract_duplicate_path_raises_invalid_path() -> None:
         validate_canonical_contract(c)
 
 
+# --- Oracle review F15: malformed path validation -------------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_validate_contract_malformed_path_raises_invalid_path() -> None:
+    """A field with a malformed path raises InvalidPathError (Oracle review F15).
+
+    Uses ``object.__setattr__`` to bypass ``__attrs_post_init__`` (which
+    would also catch this), so the validator's defensive duplicate check
+    is what actually fires here.
+    """
+    f = CanonicalField(id="f1", path="ok", name="a", type=FieldType.STRING, required=True)
+    object.__setattr__(f, "path", "1bad")  # starts with a digit
+    c = CanonicalContract(id="c1", fields=(f,))
+    with pytest.raises(InvalidPathError, match="malformed path"):
+        validate_canonical_contract(c)
+
+
 # --- validate_canonical_contract: all 4 error types covered ------------------
 
 

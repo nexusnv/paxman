@@ -258,6 +258,7 @@ class DictDSLAdapter:
             raise InvalidContractError(
                 "Dict DSL contract is missing required 'id' key",
                 error_code="MISSING_CONTRACT_ID",
+                context={"contract_keys": sorted(external.keys())},
             )
         cid = external["id"]
         if not isinstance(cid, str) or not cid:
@@ -655,9 +656,11 @@ class DictDSLAdapter:
                 error_code="DEFAULT_TYPE_MISMATCH",
                 context={**ctx, "expected_type": "STRING", "actual_value": repr(value)},
             )
-        if field_type is FieldType.INTEGER and not isinstance(value, int):
+        if field_type is FieldType.INTEGER and (
+            not isinstance(value, int) or isinstance(value, bool)
+        ):
             raise InvalidContractError(
-                f"INTEGER field {field_name!r} default must be an int",
+                f"INTEGER field {field_name!r} default must be an int (bool is rejected)",
                 error_code="DEFAULT_TYPE_MISMATCH",
                 context={**ctx, "expected_type": "INTEGER", "actual_value": repr(value)},
             )
@@ -743,12 +746,37 @@ class DictDSLAdapter:
                 },
             )
         cf = raw.get("confidence_floor")
-        if cf is not None and (not isinstance(cf, (int, float)) or not 0.0 <= cf <= 1.0):
+        if cf is not None and (
+            not isinstance(cf, (int, float)) or isinstance(cf, bool) or not 0.0 <= cf <= 1.0
+        ):
             raise InvalidContractError(
                 f"contract {contract_id!r} 'confidence_floor' must be in [0.0, 1.0], got {cf!r}",
                 error_code="INVALID_CONFIDENCE_FLOOR",
                 context={"contract_id": contract_id, "value": cf},
             )
+        # Type validation (Oracle review F4): policy booleans must be bool,
+        # not arbitrary truthy values. ``ContractPolicy.__attrs_post_init__``
+        # also enforces this, but rejecting at the adapter boundary gives a
+        # clearer error pointing at the source contract.
+        for key in ("unresolved_acceptable", "stop_on_first_unresolved"):
+            v = raw.get(key)
+            if v is not None and not isinstance(v, bool):
+                raise InvalidContractError(
+                    f"contract {contract_id!r} 'policy.{key}' must be a bool, got {v!r}",
+                    error_code="INVALID_POLICY_KEY",
+                    context={
+                        "contract_id": contract_id,
+                        "key": key,
+                        "value": v,
+                        "valid_keys": sorted(
+                            {
+                                "unresolved_acceptable",
+                                "stop_on_first_unresolved",
+                                "confidence_floor",
+                            }
+                        ),
+                    },
+                )
         return ContractPolicy(
             confidence_floor=float(cf) if cf is not None else None,
             unresolved_acceptable=raw.get("unresolved_acceptable"),

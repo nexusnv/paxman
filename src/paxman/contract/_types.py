@@ -317,10 +317,33 @@ class ContractPolicy:
     stop_on_first_unresolved: bool | None = None
 
     def __attrs_post_init__(self) -> None:
-        """Validate ``confidence_floor`` is in ``[0.0, 1.0]`` when set.
+        """Validate field types and ``confidence_floor`` range.
 
         Raises:
+            TypeError: If a field has the wrong Python type.
             ValueError: If ``confidence_floor`` is outside the valid range.
         """
+        # Type validation (Oracle review F2): reject non-bool / non-float
+        # values that would otherwise be silently accepted due to Python's
+        # permissive type coercion (e.g., ``True`` being treated as ``1.0``).
+        if self.unresolved_acceptable is not None and not isinstance(
+            self.unresolved_acceptable, bool
+        ):
+            raise TypeError(
+                f"unresolved_acceptable must be a bool, got {type(self.unresolved_acceptable).__name__}: "
+                f"{self.unresolved_acceptable!r}"
+            )
+        if self.stop_on_first_unresolved is not None and not isinstance(
+            self.stop_on_first_unresolved, bool
+        ):
+            raise TypeError(
+                f"stop_on_first_unresolved must be a bool, got {type(self.stop_on_first_unresolved).__name__}: "
+                f"{self.stop_on_first_unresolved!r}"
+            )
+        if self.confidence_floor is not None and not isinstance(self.confidence_floor, float):
+            raise TypeError(
+                f"confidence_floor must be a float, got {type(self.confidence_floor).__name__}: "
+                f"{self.confidence_floor!r}"
+            )
         if self.confidence_floor is not None and not 0.0 <= self.confidence_floor <= 1.0:
             raise ValueError(f"confidence_floor must be in [0.0, 1.0], got {self.confidence_floor}")

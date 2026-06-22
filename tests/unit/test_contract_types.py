@@ -320,6 +320,34 @@ def test_contract_policy_confidence_floor_below_zero_raises() -> None:
         ContractPolicy(confidence_floor=-0.01)
 
 
+# --- Oracle review F2: type validation regression tests -------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_contract_policy_unresolved_acceptable_string_raises() -> None:
+    """A non-bool value for ``unresolved_acceptable`` raises TypeError."""
+    with pytest.raises(TypeError, match="unresolved_acceptable must be a bool"):
+        ContractPolicy(unresolved_acceptable="yes")  # type: ignore[arg-type]
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_contract_policy_stop_on_first_unresolved_int_raises() -> None:
+    """A non-bool value for ``stop_on_first_unresolved`` raises TypeError."""
+    with pytest.raises(TypeError, match="stop_on_first_unresolved must be a bool"):
+        ContractPolicy(stop_on_first_unresolved=1)  # type: ignore[arg-type]
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_contract_policy_confidence_floor_bool_raises() -> None:
+    """``confidence_floor=True`` (which is 1.0 in Python) raises TypeError
+    because we require an explicit float, not an int/bool."""
+    with pytest.raises(TypeError, match="confidence_floor must be a float"):
+        ContractPolicy(confidence_floor=True)  # type: ignore[arg-type]
+
+
 @pytest.mark.deterministic
 @pytest.mark.unit
 def test_contract_policy_is_frozen() -> None:

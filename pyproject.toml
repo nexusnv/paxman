@@ -107,6 +107,9 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "ANN"]  # asserts + untyped fixtures are OK in tests
 "src/paxman/__init__.py" = ["F401"]  # re-exports may appear unused until populated in Sprint 6
+# Adapters legitimately deal with `Any` (external contract types are arbitrary);
+# suppress ANN401 so the adapter signatures are not noisier than they need to be.
+"src/paxman/contract/adapters/*.py" = ["ANN401"]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -228,6 +231,37 @@ forbidden_modules = [
     "paxman.executor",
     "paxman.reconciler",
     "paxman.artifact",
+    "paxman.api",
+]
+
+# Sprint 2 deliverable D2.13 / exit criterion #8.
+# The contract subsystem is the ONLY layer that knows about external schemas;
+# it must not depend on any other subsystem (per PACKAGE_STRUCTURE.md §3 and
+# the boundary rule in AGENTS.md). Each leaf module is listed explicitly
+# because import-linter's "forbidden" contract does not recurse into
+# submodules of a listed source_module.
+[[tool.importlinter.contracts]]
+name = "Contract subsystem must not import from other subsystems"
+type = "forbidden"
+source_modules = [
+    "paxman.contract",
+    "paxman.contract._types",
+    "paxman.contract.canonical",
+    "paxman.contract.semantics",
+    "paxman.contract.validator",
+    "paxman.contract.registry",
+    "paxman.contract.adapters",
+    "paxman.contract.adapters.base",
+    "paxman.contract.adapters.dict_dsl",
+    "paxman.contract.adapters.pydantic",
+    "paxman.contract.adapters.json_schema",
+]
+forbidden_modules = [
+    "paxman.planner",
+    "paxman.executor",
+    "paxman.reconciler",
+    "paxman.artifact",
+    "paxman.capabilities",
     "paxman.api",
 ]
 

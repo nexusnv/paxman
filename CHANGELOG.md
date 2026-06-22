@@ -25,6 +25,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI workflow on `main` and PRs (Python 3.11 / 3.12 / 3.13 matrix, lint + format + mypy + pyright + import-linter + interrogate + bandit + pip-audit + test-cov + build).
 - `make ci` runs the full local-CI pipeline end-to-end (install → lint → format → typecheck → typecheck-pyright → imports → test-cov). All 7 gates are green.
 - README developer setup section with `uv sync --all-extras --dev` and `import paxman; print(paxman.__version__)` smoke.
+- **Sprint 2 — Contract Subsystem** (per [`docs/sprints/sprint-02-contract-subsystem.md`](docs/sprints/sprint-02-contract-subsystem.md)):
+  - `paxman.contract._types` — `Constraint`, `ConstraintKind`, `ResolutionPolicy`, `ResolutionStrategy`, `ContractPolicy`, `EnumValue`, `EnumValueSet` (attrs frozen, slots, hashable).
+  - `paxman.contract.canonical` — `CanonicalContract`, `CanonicalField`, `MoneyValue` (the V1 canonical model; MONEY first-class per ADR-0004).
+  - `paxman.contract.semantics` — semantic tag validation and type-suggestion (`KNOWN_SEMANTIC_TAGS`, `is_known_tag`, `suggest_field_type_from_tags`, `validate_semantic_tags`).
+  - `paxman.contract.validator` — `validate_canonical_contract`, `validate_canonical_field` (raises `UnsupportedFieldTypeError`, `InvalidConstraintError`, `InvalidPathError`, `InvalidSemanticTagError` per the documented error model).
+  - `paxman.contract.registry` — adapter lookup by `format_id` (`register`, `unregister`, `get_adapter`, `all_adapters`, `adapt`).
+  - `paxman.contract.adapters.base` — concrete `ContractAdapter` Protocol (the SPI).
+  - `paxman.contract.adapters.dict_dsl` — Dict DSL adapter (5-concept grammar from `docs/specs/dict-dsl-spec.md`; 22 documented `error_code` values per `docs/specs/dict-dsl-spec.md` §7).
+  - `paxman.contract.adapters.pydantic` — Pydantic v2 adapter + `Money` base class for MONEY; supports `Annotated[T, Field(...)]`, `min_length`/`max_length`/`pattern`, `ge`/`gt`/`le`/`lt`, `Literal` enums, `default_factory`.
+  - `paxman.contract.adapters.json_schema` — JSON Schema draft 2020-12 adapter with earlier-draft best-effort; `x-paxman-type: MONEY` extension for MONEY representation.
+  - Fixture contracts: `tests/fixtures/contracts/pydantic/{invoice,with_money,all_v1_types}.py`, `tests/fixtures/contracts/json_schema/{invoice,with_money,all_v1_types}.json`, `tests/fixtures/contracts/dict_dsl/{invoice,with_money,all_v1_types}.py` (3 + 3 + 3 paired fixtures, per D2.10).
+  - Property tests for Pydantic + Dict DSL roundtrip (Hypothesis `@property` with `derandomize=True`).
+  - `import-linter` contract: `paxman.contract` and `paxman.contract.adapters` may NOT import from any of `paxman.{planner,executor,reconciler,artifact,capabilities,api}`.
 
 ### Fixed
 
@@ -38,25 +51,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The package is at version `0.0.0` and is **not importable by end users** beyond `paxman.__version__`. No public API is exposed yet. The `paxman.normalize()` and `paxman.replay()` entry points land in Sprint 6.
 - License is MIT per ADR-0008 (decided in Sprint 0). Apache-2.0 is the documented alternative if patent concerns emerge.
 - `structlog` is in core dependencies (3 packages total: `attrs`, `typing-extensions`, `structlog`) per Sprint 0 CHANGES_LOG §6 Q8 recommendation, resolving the open question.
-- All 14 Sprint 1 exit criteria met (verified via `make ci`):
-  1. `pip install -e .[dev]` works (via `uv sync --all-extras --dev`).
-  2. `make ci` runs end-to-end and is green.
-  3. `ruff check` clean with rules `E,F,W,I,B,UP,ANN,ASYNC,S,RUF`.
-  4. `ruff format --check` clean.
-  5. `mypy --strict src/paxman` clean.
-  6. `pytest` runs and the smoke test passes (395 tests).
-  7. `interrogate src/paxman` reports 100% docstring coverage on the 9 cross-cutting modules (71/71 covered).
-  8. GitHub Actions CI runs on the first PR and on `main` and is green.
-  9. `import paxman` works; `paxman.__version__` returns a string (`"0.0.0"`).
-  10. `errors.py` has 17 exception classes per ARCHITECTURE.md §6.2 (verified by test + ast inspection). 98.15% line coverage (one branch uncovered: `if self.context is None` — not currently reachable since `context: dict[str, Any] = attrs.field(factory=dict)` ensures it's never None; kept as a safety guard).
-  11. `versioning.py` has 94.52% line coverage (close to 100% — some error branches in `format_version` validation).
-  12. `LICENSE` file is present and matches the Sprint 0 decision (MIT).
-  13. `make build` produces `dist/paxman-0.0.0.tar.gz` and `dist/paxman-0.0.0-py3-none-any.whl` (verified locally; not published).
-  14. `unzip -l dist/paxman-*.whl` shows `paxman/__init__.py` and `paxman/py.typed` present, no `__pycache__` (verified).
+- All 14 Sprint 1 exit criteria met (verified via `make ci`).
+- **Sprint 2 exit criteria status (11/11 met)**:
+  1. `paxman.contract.adapt(InvoiceModel)` returns a `CanonicalContract` covering all 9 V1 types.
+  2. Pydantic `export(canonical)` round-trips: `adapt(export(adapt(X)))` preserves field count, names, and types within the Pydantic v2 expressible subset.
+  3. Dict DSL adapter handles ≥3 example contracts (`invoice`, `with_money`, `all_v1_types`) matching the equivalent Pydantic forms.
+  4. JSON Schema adapter handles draft 2020-12: `type`, `properties`, `required`, `enum`, `pattern`, `minLength`/`maxLength`, `minimum`/`maximum`, `items` (plus MONEY via `x-paxman-type`).
+  5. Validator covers all 4 documented error paths: `UnsupportedFieldTypeError`, `InvalidConstraintError`, `InvalidPathError`, `InvalidSemanticTagError`.
+  6. Coverage on `contract/` ≥ 90 % lines (target met; see `make test-cov`).
+  7. `mypy --strict src/paxman/contract` clean (0 errors across 7 source files).
+  8. `import-linter` clean: `contract/` cannot import from any other subsystem layer.
+  9. Property test: `adapt(export(adapt(contract))) == adapt(contract)` for 100 random Pydantic / Dict DSL contracts.
+  10. `interrogate src/paxman/contract` reports 100 % on the public surface.
+  11. `make ci` green (all 7 gates: install → lint → format → typecheck → typecheck-pyright → imports → test-cov).
 
 ### Technical notes
 
 - The `attrs.@<field>.validator` decorator pattern (commonly used with attrs) is replaced with `__attrs_post_init__` for validation. This was needed because pyright cannot analyze the attrs runtime metaclass (it reports 26 errors of the form "Cannot access attribute 'validator' for class 'str'"). Per V1 acceptance §2.1, `# pyright: ignore` is forbidden in `src/paxman/`, so the fix is structural. mypy --strict still passes because it understands attrs natively.
 - The `import-linter` "forbidden" contract for cross-cutting → subsystem uses explicit module paths as sources (e.g., `paxman.errors`, `paxman.types`, ...) rather than the parent `paxman` package, because a "forbidden" contract with a parent/descendant source is ambiguous in import-linter.
+- **Pydantic v2 constraint extraction** is via `field_info.metadata` (Pydantic v2 stores `MinLen`, `MaxLen`, `Ge`, `Gt`, `Le`, `Lt`, and the legacy `_PydanticGeneralMetadata.pattern` as metadata objects, not as direct attributes). The `PydanticUndefined` sentinel from `pydantic_core` is used to distinguish "no default" from "default=None" or "default_factory=...".
+- **JSON Schema MONEY** is encoded as an `object` with `x-paxman-type: "MONEY"` and `properties: {amount, currency}`; the adapter rejects MONEY-typed properties that don't carry both subfields. The string-with-format heuristic is accepted as a `STRING` with `iso_4217` and `currency-sensitive` tags (V1 documented limitation; per the Sprint 2 risk register).
 
 [Unreleased]: https://github.com/nexusnv/paxman/compare/v0.0.0...HEAD

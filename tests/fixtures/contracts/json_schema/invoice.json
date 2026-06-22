@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Invoice",
+  "type": "object",
+  "properties": {
+    "supplier_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500,
+      "description": "Legal name of the supplier."
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO-4217 currency code for the invoice."
+    },
+    "total": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Total invoice amount."
+    },
+    "paid": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the invoice has been paid."
+    },
+    "invoice_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Invoice issue date (ISO 8601)."
+    },
+    "line_items": {
+      "type": "array",
+      "default": [],
+      "description": "Individual line items on the invoice.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of the goods or service."
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Quantity ordered."
+          },
+          "unit_price": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Per-unit price in the invoice currency."
+          }
+        },
+        "required": ["description", "quantity", "unit_price"]
+      }
+    }
+  },
+  "required": ["supplier_name", "currency", "total", "invoice_date"]
+}

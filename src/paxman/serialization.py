@@ -10,6 +10,7 @@ import datetime
 import decimal
 import enum
 import json
+import typing
 import uuid
 from typing import IO
 
@@ -48,7 +49,7 @@ def _default(obj: object) -> object:
     if isinstance(obj, enum.Enum):
         return obj.value
     if attrs.has(type(obj)):
-        return attrs.asdict(obj)  # type: ignore[arg-type]
+        return attrs.asdict(typing.cast(attrs.AttrsInstance, obj))
     if isinstance(obj, (set, frozenset)):
         return sorted(obj, key=repr)
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")

@@ -91,6 +91,26 @@ def test_parse_version_invalid_prerelease_rejected() -> None:
         parse_version("1.0.0-rc.1")
 
 
+def test_parse_version_invalid_empty_segment() -> None:
+    """``"1..3"`` (empty middle segment) raises ValueError."""
+    with pytest.raises(ValueError, match="Empty segment"):
+        parse_version("1..3")
+
+
+def test_parse_version_invalid_leading_zero() -> None:
+    """``"01.2.3"`` (leading zero in major) raises ValueError."""
+    with pytest.raises(ValueError, match="Leading zero"):
+        parse_version("01.2.3")
+
+
+def test_parse_version_zero_segment_is_allowed() -> None:
+    """``"0"`` (single zero) is valid; ``"0"`` is the only zero allowed per semver."""
+    assert parse_version("0.0.0") == (0, 0, 0)
+    # But "00" is not valid (leading zero in a multi-digit context).
+    with pytest.raises(ValueError, match="Leading zero"):
+        parse_version("1.00.0")
+
+
 # --- format_version ---------------------------------------------------------
 
 

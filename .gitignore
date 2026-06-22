@@ -53,8 +53,8 @@ coverage.xml
 # hypothesis
 .hypothesis/
 
-# uv (do NOT commit the lockfile in V1 per sprint decision; revisit in Sprint 9)
-uv.lock
+# uv (lockfile IS committed so CI can run `uv sync --frozen` deterministically)
+# uv.lock
 
 # IDEs / editors
 .idea/

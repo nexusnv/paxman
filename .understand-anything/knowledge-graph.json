@@ -1,0 +1,1995 @@
+{
+  "version": "1.0.0",
+  "project": {
+    "name": "paxman",
+    "languages": [
+      "markdown",
+      "python"
+    ],
+    "frameworks": [],
+    "description": "Contract-driven deterministic normalization engine for Python. Public API: paxman.normalize() and paxman.replay(). Takes arbitrary input (PDFs, scans, emails, spreadsheets, free text) and a caller-owned contract, produces an evidence-backed, replayable normalized artifact. In design stage — no source code yet.",
+    "analyzedAt": "2026-06-22T11:10:25.000Z",
+    "gitCommitHash": "0e378e57de051e92e9285227c472e2121875006a"
+  },
+  "nodes": [
+    {
+      "id": "document:.agents/skills/code-quality/MYPY_CONFIG.md",
+      "type": "document",
+      "name": "MYPY_CONFIG.md",
+      "filePath": ".agents/skills/code-quality/MYPY_CONFIG.md",
+      "summary": "Reference guide for configuring mypy static type checker in Python projects, covering strict configuration, gradual adoption strategies, common type error fixes, and type stub usage.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "code-quality",
+        "static-analysis"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/code-quality/RUFF_CONFIG.md",
+      "type": "document",
+      "name": "RUFF_CONFIG.md",
+      "filePath": ".agents/skills/code-quality/RUFF_CONFIG.md",
+      "summary": "Reference guide for configuring ruff linter and formatter in Python projects, including comprehensive configuration options, rule categories, and command usage.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "code-quality",
+        "linting"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/code-quality/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/code-quality/SKILL.md",
+      "summary": "Main skill instruction file for improving Python library code quality through ruff linting, mypy type checking, Pythonic idioms, and refactoring patterns.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "code-quality",
+        "refactoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/code-quality/TYPE_PATTERNS.md",
+      "type": "document",
+      "name": "TYPE_PATTERNS.md",
+      "filePath": ".agents/skills/code-quality/TYPE_PATTERNS.md",
+      "summary": "Reference guide for Python type hint patterns including basic types, function signatures, generics, protocols, type aliases, overloads, and TypedDict usage.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "code-quality",
+        "type-hints"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/project-setup/CI.md",
+      "type": "document",
+      "name": "CI.md",
+      "filePath": ".agents/skills/project-setup/CI.md",
+      "summary": "Reference guide for CI/CD configuration in Python projects, covering GitHub Actions workflows, pre-commit hooks, release automation, and .gitignore patterns.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "project-setup",
+        "ci-cd"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/project-setup/MAKEFILE.md",
+      "type": "document",
+      "name": "MAKEFILE.md",
+      "filePath": ".agents/skills/project-setup/MAKEFILE.md",
+      "summary": "Reference guide for Makefile configuration in Python projects, including standard targets for development, testing, linting, building, and publishing workflows.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "project-setup",
+        "build-system"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/project-setup/PYPROJECT.md",
+      "type": "document",
+      "name": "PYPROJECT.md",
+      "filePath": ".agents/skills/project-setup/PYPROJECT.md",
+      "summary": "Complete reference for pyproject.toml configuration in Python projects, covering build systems, project metadata, entry points, and dependency specifiers.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "project-setup",
+        "packaging"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/project-setup/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/project-setup/SKILL.md",
+      "summary": "Main skill instruction file for setting up professional Python library projects with modern tooling including pyproject.toml, uv, ruff, pytest, pre-commit, and GitHub Actions.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "project-setup",
+        "tooling"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/testing-strategy/FIXTURES.md",
+      "type": "document",
+      "name": "FIXTURES.md",
+      "filePath": ".agents/skills/testing-strategy/FIXTURES.md",
+      "summary": "Reference guide for pytest fixtures covering fixture scopes, common patterns like setup/teardown, factory fixtures, temporary files, mocking external services, and conftest.py organization.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "testing-strategy",
+        "fixtures"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/testing-strategy/HYPOTHESIS.md",
+      "type": "document",
+      "name": "HYPOTHESIS.md",
+      "filePath": ".agents/skills/testing-strategy/HYPOTHESIS.md",
+      "summary": "Reference guide for property-based testing with Hypothesis library, covering installation, basic usage, common strategies, filtering invalid data, settings configuration, and roundtrip testing examples.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "testing-strategy",
+        "property-based-testing"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/testing-strategy/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/testing-strategy/SKILL.md",
+      "summary": "Main skill instruction file for designing and implementing pytest test suites for Python libraries with fixtures, parametrization, mocking, Hypothesis property-based testing, and CI configuration.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "testing-strategy",
+        "pytest"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/web-app-architecture/AUTH.md",
+      "type": "document",
+      "name": "AUTH.md",
+      "filePath": ".agents/skills/web-app-architecture/AUTH.md",
+      "summary": "Reference guide for authentication in Python web apps covering password hashing, dependency guards, token strategies (Cookie-JWT, Bearer-JWT, magic links, OAuth), and CSRF protection.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "web-app-architecture",
+        "authentication"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/web-app-architecture/BACKGROUND_JOBS.md",
+      "type": "document",
+      "name": "BACKGROUND_JOBS.md",
+      "filePath": ".agents/skills/web-app-architecture/BACKGROUND_JOBS.md",
+      "summary": "Reference guide for background work patterns in Python web apps covering inline request handling, cron-as-worker patterns, Redis-backed job queues, and guidance on choosing the right approach.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "web-app-architecture",
+        "background-jobs"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/web-app-architecture/DEPLOYMENT.md",
+      "type": "document",
+      "name": "DEPLOYMENT.md",
+      "filePath": ".agents/skills/web-app-architecture/DEPLOYMENT.md",
+      "summary": "Reference guide for deploying Python web apps with Docker, covering single-image multi-role deployment, pre-deploy migrations, Terraform infrastructure as code, secrets management, health checks, and CI integration.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "web-app-architecture",
+        "deployment"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/web-app-architecture/FRONTEND.md",
+      "type": "document",
+      "name": "FRONTEND.md",
+      "filePath": ".agents/skills/web-app-architecture/FRONTEND.md",
+      "summary": "Reference guide for frontend approaches in Python web apps covering server-rendered Jinja with Tailwind/Alpine.js and decoupled SPA patterns, with guidance on choosing between them.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "web-app-architecture",
+        "frontend"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/web-app-architecture/PAYMENTS.md",
+      "type": "document",
+      "name": "PAYMENTS.md",
+      "filePath": ".agents/skills/web-app-architecture/PAYMENTS.md",
+      "summary": "Reference guide for implementing Stripe payments in Python web apps covering SDK isolation, checkout sessions, webhook verification, idempotent handling, Terraform provisioning, and marketplace split payments.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "web-app-architecture",
+        "payments"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/web-app-architecture/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/web-app-architecture/SKILL.md",
+      "summary": "Main skill instruction file for building production Python web apps with FastAPI, async SQLAlchemy, Postgres, pydantic-settings, Stripe billing, and Docker deployment on managed platforms.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "web-app-architecture",
+        "fastapi"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/web-app-architecture/STACK.md",
+      "type": "document",
+      "name": "STACK.md",
+      "filePath": ".agents/skills/web-app-architecture/STACK.md",
+      "summary": "Copy-pasteable templates for Python web app stack components including pyproject.toml, pydantic-settings config, async SQLAlchemy database layer, declarative models, Alembic migrations, and Makefile.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "python",
+        "web-app-architecture",
+        "templates"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "AGENTS.md",
+      "summary": "Project knowledge base for AI agents working on Paxman. Contains the overview, planned code map, project-specific conventions, anti-patterns, unique styles, and planned commands for the design-only normalization engine.",
+      "tags": [
+        "project-knowledge-base",
+        "agent-instructions",
+        "entry-point"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:ARCHITECTURE.md",
+      "type": "document",
+      "name": "ARCHITECTURE.md",
+      "filePath": "ARCHITECTURE.md",
+      "summary": "Comprehensive system architecture specification for Paxman covering seven subsystems (contract, planner, capabilities, executor, reconciler, artifact, api), error model, configuration model, truth resolution, versioning, testing, concurrency, observability, security, performance, and extension model.",
+      "tags": [
+        "architecture",
+        "subsystem-design",
+        "design-spec"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:DEPENDENCIES.md",
+      "type": "document",
+      "name": "DEPENDENCIES.md",
+      "filePath": "DEPENDENCIES.md",
+      "summary": "Dependency policy document defining core dependencies (attrs, typing-extensions), optional extras for adapters and inference providers, dev dependencies via PEP 735, and rules for adding, pinning, and scanning dependencies.",
+      "tags": [
+        "dependencies",
+        "packaging",
+        "design-spec"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:DEVELOPMENT.md",
+      "type": "document",
+      "name": "DEVELOPMENT.md",
+      "filePath": "DEVELOPMENT.md",
+      "summary": "Development guide covering environment setup with uv, repository layout, Makefile targets, test execution, code style (ruff, mypy), module DAG enforcement, documentation standards, package building, release process, and debugging tips.",
+      "tags": [
+        "development",
+        "dev-workflow",
+        "design-spec"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:EXTENDING.md",
+      "type": "document",
+      "name": "EXTENDING.md",
+      "filePath": "EXTENDING.md",
+      "summary": "Step-by-step guide for extending Paxman with new contract adapters, capabilities, and inference providers. Covers the ContractAdapter, Capability, and InferenceProvider SPIs with MUST/MUST NOT rules, testing guidance, and distribution advice.",
+      "tags": [
+        "extension-guide",
+        "design-spec"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:GLOSSARY.md",
+      "type": "document",
+      "name": "GLOSSARY.md",
+      "filePath": "GLOSSARY.md",
+      "summary": "Single source of truth for Paxman vocabulary. Defines all project terms alphabetically from Adapter through W3C PROV, including Artifact, CanonicalContract, Capability, Confidence, Determinism, Evidence, MONEY, Reconciler, Replay, and TruthLayer.",
+      "tags": [
+        "vocabulary",
+        "terminology",
+        "reference"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:PACKAGE_STRUCTURE.md",
+      "type": "document",
+      "name": "PACKAGE_STRUCTURE.md",
+      "filePath": "PACKAGE_STRUCTURE.md",
+      "summary": "Stable v1 source of truth for module-level design. Defines the seven subsystem zones, module dependency DAG, per-subsystem structure/public surface/invariants/testing strategy, system boundary rules, cross-cutting concerns, public protocols, build strategy, and test layout.",
+      "tags": [
+        "package-layout",
+        "module-design",
+        "design-spec"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:PRD.md",
+      "type": "document",
+      "name": "PRD.md",
+      "filePath": "PRD.md",
+      "summary": "Product Requirements Document defining Paxman's vision as a contract-driven deterministic normalization engine. Covers problem statement, product philosophy, target personas, use cases, functional and non-functional requirements, V1 acceptance criteria, success metrics, and risk register.",
+      "tags": [
+        "product-vision",
+        "requirements",
+        "design-spec"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Project README introducing Paxman as a contract-driven deterministic normalization engine for Python. Includes quickstart example, feature highlights, documentation index, use cases, status timeline, and contribution links.",
+      "tags": [
+        "documentation",
+        "entry-point",
+        "overview"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:REPLAY_AND_DETERMINISM.md",
+      "type": "document",
+      "name": "REPLAY_AND_DETERMINISM.md",
+      "filePath": "REPLAY_AND_DETERMINISM.md",
+      "summary": "Deep dive on replay and determinism in Paxman. Defines determinism vs reproducibility vs replay, explains the SHA-256 replay hash composition, replay protocol, version compatibility matrix, and what determinism does and does not guarantee.",
+      "tags": [
+        "replay",
+        "determinism",
+        "design-spec"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:SECURITY.md",
+      "type": "document",
+      "name": "SECURITY.md",
+      "filePath": "SECURITY.md",
+      "summary": "Threat model and PII handling policy for Paxman. Covers environmental assumptions, defended and non-defended threat vectors, raw input logging defaults, secrets-by-reference model, inference I/O handling, prompt injection posture, and vulnerability reporting.",
+      "tags": [
+        "security",
+        "threat-model",
+        "design-spec"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:TESTING_STRATEGY.md",
+      "type": "document",
+      "name": "TESTING_STRATEGY.md",
+      "filePath": "TESTING_STRATEGY.md",
+      "summary": "Test strategy defining the 4-layer test pyramid (property, unit, integration, E2E), test seams per subsystem, property-based testing with Hypothesis for determinism claims, replay equality tests, fixture data model, coverage targets, and CI integration.",
+      "tags": [
+        "testing",
+        "test-strategy",
+        "design-spec"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:V1_ACCEPTANCE_CRITERIA.md",
+      "type": "document",
+      "name": "V1_ACCEPTANCE_CRITERIA.md",
+      "filePath": "V1_ACCEPTANCE_CRITERIA.md",
+      "summary": "Definition of done for Paxman V1 (1.0.0). Lists testable acceptance criteria across contract adapters (4), capabilities (5), subsystems (7), replay, determinism, testing, security, packaging, and documentation.",
+      "tags": [
+        "acceptance-criteria",
+        "definition-of-done"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:skills-lock.json",
+      "type": "config",
+      "name": "skills-lock.json",
+      "filePath": "skills-lock.json",
+      "summary": "Lock file enumerating 14 project-installed agent skills with GitHub source references and SHA-256 version pins for reproducible skill resolution.",
+      "tags": [
+        "configuration",
+        "skills-manifest",
+        "agent-skills"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/adr/0001-field-centric-planning.md",
+      "type": "document",
+      "name": "0001-field-centric-planning.md",
+      "filePath": "docs/adr/0001-field-centric-planning.md",
+      "summary": "ADR-0001: Decides that each required field gets its own FieldPlan (field-centric) rather than parsing the entire document in one pass (document-centric). Chosen for cost optimization, targeted inference, deterministic execution, and selective capability invocation.",
+      "tags": [
+        "adr",
+        "architecture-decision",
+        "field-centric-planning"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/adr/0002-rule-based-planner-v1.md",
+      "type": "document",
+      "name": "0002-rule-based-planner-v1.md",
+      "filePath": "docs/adr/0002-rule-based-planner-v1.md",
+      "summary": "ADR-0002: Decides that the V1 Planner is a pure function using a fixed heuristic chain (no LLM in the critical path). Rejects LLM-based and hybrid planners to preserve determinism, replayability, and a tiny API surface.",
+      "tags": [
+        "adr",
+        "architecture-decision",
+        "rule-based-planner"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/adr/0003-separate-reconciler.md",
+      "type": "document",
+      "name": "0003-separate-reconciler.md",
+      "filePath": "docs/adr/0003-separate-reconciler.md",
+      "summary": "ADR-0003: Decides that the Reconciler is a separate subsystem (paxman.reconciler) that never executes capabilities, never reads raw input, and never sees external schemas. Takes CandidateResult[] to ResolvedResult[] as the sole truth authority.",
+      "tags": [
+        "adr",
+        "architecture-decision",
+        "separate-reconciler"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/adr/0004-money-first-class-type.md",
+      "type": "document",
+      "name": "0004-money-first-class-type.md",
+      "filePath": "docs/adr/0004-money-first-class-type.md",
+      "summary": "ADR-0004: Decides that MONEY is a first-class field type carrying Decimal amount + ISO-4217 currency + optional precision, rather than a DECIMAL with a semantic tag. Enables explicit CurrencyPolicy and Decimal arithmetic for finance use cases.",
+      "tags": [
+        "adr",
+        "architecture-decision",
+        "money-first-class"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/adr/0005-confidence-ownership.md",
+      "type": "document",
+      "name": "0005-confidence-ownership.md",
+      "filePath": "docs/adr/0005-confidence-ownership.md",
+      "summary": "ADR-0005: Decides that the Reconciler is the sole confidence assigner. Planner emits target_confidence (read-only threshold) but never scores. CapabilityResult has no confidence field. Rejects capabilities self-assessing or planner assigning initial confidence.",
+      "tags": [
+        "adr",
+        "architecture-decision",
+        "confidence-ownership"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/adr/0006-sequential-execution-v1.md",
+      "type": "document",
+      "name": "0006-sequential-execution-v1.md",
+      "filePath": "docs/adr/0006-sequential-execution-v1.md",
+      "summary": "ADR-0006: Decides that V1 Executor runs field plans sequentially in plan order. Rejects parallel execution (non-deterministic, race conditions) and configurable sequential/parallel (complexity). Parallelism deferred to V2.",
+      "tags": [
+        "adr",
+        "architecture-decision",
+        "sequential-execution"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/adr/0007-contract-adapter-set-v1.md",
+      "type": "document",
+      "name": "0007-contract-adapter-set-v1.md",
+      "filePath": "docs/adr/0007-contract-adapter-set-v1.md",
+      "summary": "ADR-0007: Decides the V1 contract adapter set: required Pydantic, JSON Schema, Dict DSL; optional (best-effort) OpenAPI; not in V1: ERP, agent tool, wrapper. Dict DSL serves as internal escape hatch and test source of truth.",
+      "tags": [
+        "adr",
+        "architecture-decision",
+        "contract-adapter-set"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/adr/AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "docs/adr/AGENTS.md",
+      "summary": "Agent instructions for the docs/adr/ directory. Provides an index of all 7 ADRs with decision summaries, a lookup table for common architectural questions, and conventions/anti-patterns for ADR management.",
+      "tags": [
+        "agent-instructions",
+        "adr-index"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/adr/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "docs/adr/README.md",
+      "summary": "ADR index and guide. Documents the MADR 4.0 format, lists all 7 accepted ADRs with status and summaries, defines conventions (numbering, immutability, status transitions), and specifies when to write a new ADR with a template.",
+      "tags": [
+        "documentation",
+        "adr-index"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/CHANGES_LOG.md",
+      "type": "document",
+      "name": "CHANGES_LOG.md",
+      "filePath": "docs/sprints/CHANGES_LOG.md",
+      "summary": "Documentation changes log from the sprint planning exercise. Records new files created, decisions made (with rationale), documentation gaps identified, recommendations to project owners, open questions, and Oracle review findings.",
+      "tags": [
+        "changelog",
+        "sprint-tracking"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:docs/sprints/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "docs/sprints/README.md",
+      "summary": "Sprint plan index for Paxman V1 release. Defines 10 sprints (~5.5 months with 4 engineers), critical-path dependency chain, parallelization matrix, sprint exit gates, and pre-Sprint-0 design decisions needed from project owners.",
+      "tags": [
+        "documentation",
+        "sprint-index"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-00-design-closure.md",
+      "type": "document",
+      "name": "sprint-00-design-closure.md",
+      "filePath": "docs/sprints/sprint-00-design-closure.md",
+      "summary": "Sprint 0 plan for closing 3 design gaps (Dict DSL syntax, InputProfile spec, CostHint values) and resolving the license decision (MIT vs Apache-2.0). Produces specification documents only — no code, no CI.",
+      "tags": [
+        "sprint-plan",
+        "sprint-00",
+        "design-closure"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-01-foundation.md",
+      "type": "document",
+      "name": "sprint-01-foundation.md",
+      "filePath": "docs/sprints/sprint-01-foundation.md",
+      "summary": "Sprint 1 plan for standing up build, CI, and cross-cutting foundations. Covers pyproject.toml, src/paxman/ skeleton, 9 cross-cutting modules, Makefile, pre-commit, GitHub Actions CI, and test infrastructure skeleton.",
+      "tags": [
+        "sprint-plan",
+        "sprint-01",
+        "foundation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-02-contract-subsystem.md",
+      "type": "document",
+      "name": "sprint-02-contract-subsystem.md",
+      "filePath": "docs/sprints/sprint-02-contract-subsystem.md",
+      "summary": "Sprint 2 plan for implementing the contract subsystem end-to-end: CanonicalContract, validator, semantics, registry, and 3 required adapters (Pydantic, JSON Schema, Dict DSL). First sprint where the package becomes meaningfully useful.",
+      "tags": [
+        "sprint-plan",
+        "sprint-02",
+        "contract-subsystem"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-03-planner-and-capabilities.md",
+      "type": "document",
+      "name": "sprint-03-planner-and-capabilities.md",
+      "filePath": "docs/sprints/sprint-03-planner-and-capabilities.md",
+      "summary": "Sprint 3 plan for implementing the field-centric planner (deterministic, rule-based) and first 3 capabilities (text_extraction, regex_extraction, validation). Ends with a planner that produces ExecutionPlan but does not execute it.",
+      "tags": [
+        "sprint-plan",
+        "sprint-03",
+        "planner-and-capabilities"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-04-executor-and-capabilities.md",
+      "type": "document",
+      "name": "sprint-04-executor-and-capabilities.md",
+      "filePath": "docs/sprints/sprint-04-executor-and-capabilities.md",
+      "summary": "Sprint 4 plan for implementing the Executor (sequential, deterministic runner) and final 2 V1 capabilities (lookup, inference with stub provider). Makes the end-to-end pipeline functional: input to plan to execute to candidates.",
+      "tags": [
+        "sprint-plan",
+        "sprint-04",
+        "executor-and-capabilities"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-05-reconciler-and-money.md",
+      "type": "document",
+      "name": "sprint-05-reconciler-and-money.md",
+      "filePath": "docs/sprints/sprint-05-reconciler-and-money.md",
+      "summary": "Sprint 5 plan for implementing the Reconciler (sole confidence authority per ADR-0005), MONEY arithmetic (first-class per ADR-0004), and completing fetch_test_data.py. Adds honest confidence to the pipeline.",
+      "tags": [
+        "sprint-plan",
+        "sprint-05",
+        "reconciler-and-money"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-06-artifact-and-api.md",
+      "type": "document",
+      "name": "sprint-06-artifact-and-api.md",
+      "filePath": "docs/sprints/sprint-06-artifact-and-api.md",
+      "summary": "Sprint 6 plan for implementing the Artifact subsystem and public API (paxman.normalize() and paxman.replay()). Produces the first end-to-end working pipeline and the initial v0.1.0-alpha internally usable build.",
+      "tags": [
+        "sprint-plan",
+        "sprint-06",
+        "artifact-and-api"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-07-integration-and-property-tests.md",
+      "type": "document",
+      "name": "sprint-07-integration-and-property-tests.md",
+      "filePath": "docs/sprints/sprint-07-integration-and-property-tests.md",
+      "summary": "Sprint 7 plan for building the full test pyramid: property tests with Hypothesis, integration tests, E2E fixtures, golden artifacts, and the paxman.testing module. Proves determinism and replay claims with high confidence.",
+      "tags": [
+        "sprint-plan",
+        "sprint-07",
+        "integration-and-property-tests"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-08-docs-ci-hardening.md",
+      "type": "document",
+      "name": "sprint-08-docs-ci-hardening.md",
+      "filePath": "docs/sprints/sprint-08-docs-ci-hardening.md",
+      "summary": "Sprint 8 plan for building documentation (concepts + how-tos), adding community files (CONTRIBUTING, CODE_OF_CONDUCT), hardening CI (import-linter, pyright, interrogate, bandit, pip-audit), and verifying the README quickstart end-to-end.",
+      "tags": [
+        "sprint-plan",
+        "sprint-08",
+        "docs-ci-hardening"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-09-production-hardening.md",
+      "type": "document",
+      "name": "sprint-09-production-hardening.md",
+      "filePath": "docs/sprints/sprint-09-production-hardening.md",
+      "summary": "Sprint 9 plan for production hardening: performance benchmarking (p50/p99 targets), security audit (bandit, pip-audit), OIDC trusted publishing setup, branch protection, and issue/PR templates. Makes Paxman publishable to PyPI.",
+      "tags": [
+        "sprint-plan",
+        "sprint-09",
+        "production-hardening"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:docs/sprints/sprint-10-release.md",
+      "type": "document",
+      "name": "sprint-10-release.md",
+      "filePath": "docs/sprints/sprint-10-release.md",
+      "summary": "Sprint 10 plan for the final release cycle: TestPyPI publish, RC validation with 3 target personas, v1.0.0 PyPI publish via OIDC, external user validation (3+ users), GitHub release, and post-release retrospective.",
+      "tags": [
+        "sprint-plan",
+        "sprint-10",
+        "release"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:tests/fixtures/AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "tests/fixtures/AGENTS.md",
+      "summary": "Agent instructions for the tests/fixtures/ directory. Describes the 5-layer test data model (hand-written, programmatic, curated, vendored, production), directory structure, conventions, and anti-patterns for test fixture management.",
+      "tags": [
+        "agent-instructions",
+        "test-fixtures"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:tests/fixtures/DATASET_LICENSES.md",
+      "type": "document",
+      "name": "DATASET_LICENSES.md",
+      "filePath": "tests/fixtures/DATASET_LICENSES.md",
+      "summary": "Single source of truth for license and attribution of every vendored dataset in tests/fixtures/. Catalogs 10 vendorable datasets (CORD, InvoiceBenchmark, wildreceipt, OQO, etc.) and 5 research-only datasets excluded from vending.",
+      "tags": [
+        "licensing",
+        "test-data",
+        "reference"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:tests/fixtures/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "tests/fixtures/README.md",
+      "summary": "Test fixtures directory guide. Documents the directory structure (contracts, inputs, artifacts, generated), what goes where, how to add fixtures, how to run the test suite, and licensing terms for vendored data.",
+      "tags": [
+        "documentation",
+        "test-fixtures"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:tests/fixtures/inputs/adversarial/empty_input.txt",
+      "type": "document",
+      "name": "empty_input.txt",
+      "filePath": "tests/fixtures/inputs/adversarial/empty_input.txt",
+      "summary": "Adversarial test fixture: empty input file (0 lines) used to verify Paxman handles zero-length input gracefully.",
+      "tags": [
+        "test-fixture",
+        "adversarial-input",
+        "edge-case"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/inputs/adversarial/mismatched_currency.txt",
+      "type": "document",
+      "name": "mismatched_currency.txt",
+      "filePath": "tests/fixtures/inputs/adversarial/mismatched_currency.txt",
+      "summary": "Adversarial test fixture: dummy invoice with conflicting currency information (header says USD, body also USD but structured to test currency mismatch detection).",
+      "tags": [
+        "test-fixture",
+        "adversarial-input",
+        "edge-case"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/inputs/adversarial/prompt_injection.txt",
+      "type": "document",
+      "name": "prompt_injection.txt",
+      "filePath": "tests/fixtures/inputs/adversarial/prompt_injection.txt",
+      "summary": "Adversarial test fixture: invoice text containing a prompt-injection payload designed to test that Paxman's inference layer ignores instruction overrides embedded in input data.",
+      "tags": [
+        "test-fixture",
+        "adversarial-input",
+        "edge-case"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/inputs/adversarial/unicode_only.txt",
+      "type": "document",
+      "name": "unicode_only.txt",
+      "filePath": "tests/fixtures/inputs/adversarial/unicode_only.txt",
+      "summary": "Adversarial test fixture: input containing only non-ASCII characters (CJK, Arabic, Hindi, Hebrew, Russian, emoji, Greek) to verify Unicode handling without any Latin text.",
+      "tags": [
+        "test-fixture",
+        "adversarial-input",
+        "edge-case"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "table:tests/fixtures/inputs/invoices/synthetic/invoice_csv.csv:invoice_csv",
+      "type": "table",
+      "name": "invoice_csv",
+      "filePath": "tests/fixtures/inputs/invoices/synthetic/invoice_csv.csv",
+      "summary": "CSV fixture representing synthetic invoices with header row and 5 line items across multiple currencies (USD, EUR, JPY, NOK) and countries.",
+      "tags": [
+        "test-fixture",
+        "data",
+        "csv",
+        "synthetic-invoice"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/inputs/invoices/synthetic/invoice_email.txt",
+      "type": "document",
+      "name": "invoice_email.txt",
+      "filePath": "tests/fixtures/inputs/invoices/synthetic/invoice_email.txt",
+      "summary": "Synthetic test fixture: invoice embedded in an email body from ACME Corp billing to a customer's AP team, containing line items for consulting, platform fee, and tax totaling $1,250.00 USD.",
+      "tags": [
+        "test-fixture",
+        "input-data",
+        "synthetic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/inputs/invoices/synthetic/invoice_plain.txt",
+      "type": "document",
+      "name": "invoice_plain.txt",
+      "filePath": "tests/fixtures/inputs/invoices/synthetic/invoice_plain.txt",
+      "summary": "Synthetic test fixture: plain-text invoice from ACME Corp to Globex Industries with 3 line items (Widget Pro, Gadget Plus, Service Fee), subtotal $750.00, tax 8.25%, total $811.88 USD.",
+      "tags": [
+        "test-fixture",
+        "input-data",
+        "synthetic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.agents/skills/api-design/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/api-design/SKILL.md",
+      "summary": "Agent skill reference for Python API design: covers core principles, progressive disclosure, naming conventions, error handling, deprecation strategies, anti-patterns, and a review checklist.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "api-design"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/cli-development/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/cli-development/SKILL.md",
+      "summary": "Agent skill reference for Python CLI development: covers framework selection (Click/Typer), entry points, common patterns, CliRunner testing, shell completion, and a CLI checklist.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "cli-development"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/community/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/community/SKILL.md",
+      "summary": "Agent skill reference for Python library community management: covers CONTRIBUTING.md, CODE_OF_CONDUCT.md, issue/PR templates, GitHub Actions automation, labels, and contributor workflows.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "community"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/documentation/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/documentation/SKILL.md",
+      "summary": "Agent skill reference for Python library documentation: covers Google-style docstrings, Sphinx setup, pyproject.toml dependencies, README templates, ReadTheDocs configuration, and documentation checklists.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "sphinx"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/git-hygiene/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/git-hygiene/SKILL.md",
+      "summary": "Agent skill reference for keeping git repositories clean: covers secret detection, .gitignore auditing, credential rotation, history scrubbing, and preventing accidental commits of sensitive files.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "git-hygiene"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/library-review/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/library-review/SKILL.md",
+      "summary": "Agent skill reference for comprehensive Python library reviews: covers quick health checks, review dimensions, red/green flags, report templates, and best practices checklists across project structure, packaging, code quality, testing, security, and documentation.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "library-review"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/packaging/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/packaging/SKILL.md",
+      "summary": "Agent skill reference for Python library packaging: covers pyproject.toml essentials, building with hatchling/setuptools, PyPI publishing with trusted publishing, GitHub Actions workflows, and dependency best practices.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "packaging"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/performance/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/performance/SKILL.md",
+      "summary": "Agent skill reference for Python performance optimization: covers profiling (cProfile, PyInstrument), memory analysis (memray, tracemalloc), benchmarking (pytest-benchmark), common optimizations, and algorithm complexity analysis.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "performance"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:.agents/skills/project-setup/scripts/create_project.py",
+      "type": "file",
+      "name": "create_project.py",
+      "filePath": ".agents/skills/project-setup/scripts/create_project.py",
+      "summary": "CLI script that scaffolds a new Python library project with modern best practices: creates src-layout package structure, pyproject.toml, tests, README, LICENSE, .gitignore, Makefile, GitHub Actions CI, and CHANGELOG.",
+      "tags": [
+        "entry-point",
+        "cli",
+        "project-scaffolding"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:.agents/skills/project-setup/scripts/create_project.py:create_project",
+      "type": "function",
+      "name": "create_project",
+      "filePath": ".agents/skills/project-setup/scripts/create_project.py",
+      "lineRange": [
+        15,
+        338
+      ],
+      "summary": "Creates a complete Python library project directory structure including src-layout package, pyproject.toml, tests, documentation, CI config, license, and changelog files.",
+      "tags": [
+        "project-scaffolding",
+        "file-generation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:.agents/skills/project-setup/scripts/create_project.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": ".agents/skills/project-setup/scripts/create_project.py",
+      "lineRange": [
+        341,
+        367
+      ],
+      "summary": "CLI entry point that parses arguments (project name, author, email, description) and invokes create_project to scaffold a new Python library.",
+      "tags": [
+        "entry-point",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.agents/skills/python-testing-patterns/references/advanced-patterns.md",
+      "type": "document",
+      "name": "advanced-patterns.md",
+      "filePath": ".agents/skills/python-testing-patterns/references/advanced-patterns.md",
+      "summary": "Advanced Python testing patterns reference: covers async code testing, monkeypatching, temporary files/directories, custom fixtures/conftest, property-based testing (Hypothesis), database testing, and CI/CD integration.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "testing-patterns"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:.agents/skills/python-testing-patterns/references/details.md",
+      "type": "document",
+      "name": "details.md",
+      "filePath": ".agents/skills/python-testing-patterns/references/details.md",
+      "summary": "Detailed Python testing patterns reference with worked examples: covers basic pytest tests, fixtures, parameterized tests, mocking with unittest.mock, testing exceptions, and test design principles.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "testing-patterns"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:.agents/skills/python-testing-patterns/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/python-testing-patterns/SKILL.md",
+      "summary": "Agent skill reference for Python testing patterns: covers test types (unit/integration/e2e), AAA structure, coverage, isolation, naming conventions, retry behavior testing, freezegun mocking, markers, and coverage reporting.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "testing-patterns"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:.agents/skills/release-management/scripts/bump_version.py",
+      "type": "file",
+      "name": "bump_version.py",
+      "filePath": ".agents/skills/release-management/scripts/bump_version.py",
+      "summary": "CLI script for bumping semantic version numbers in Python project files: reads current version from pyproject.toml, calculates new version (major/minor/patch/specific), updates version strings across pyproject.toml, __init__.py, and setup.cfg, and optionally updates CHANGELOG.md.",
+      "tags": [
+        "entry-point",
+        "cli",
+        "version-management"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:.agents/skills/release-management/scripts/bump_version.py:get_current_version",
+      "type": "function",
+      "name": "get_current_version",
+      "filePath": ".agents/skills/release-management/scripts/bump_version.py",
+      "lineRange": [
+        17,
+        25
+      ],
+      "summary": "Reads the current version string from pyproject.toml using regex extraction.",
+      "tags": [
+        "version-management",
+        "file-parsing"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:.agents/skills/release-management/scripts/bump_version.py:bump_version",
+      "type": "function",
+      "name": "bump_version",
+      "filePath": ".agents/skills/release-management/scripts/bump_version.py",
+      "lineRange": [
+        36,
+        52
+      ],
+      "summary": "Calculates the new version string based on the bump type (major/minor/patch) or validates and returns a specific version string.",
+      "tags": [
+        "version-management",
+        "calculation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:.agents/skills/release-management/scripts/bump_version.py:update_file",
+      "type": "function",
+      "name": "update_file",
+      "filePath": ".agents/skills/release-management/scripts/bump_version.py",
+      "lineRange": [
+        55,
+        74
+      ],
+      "summary": "Updates version strings in a file using regex substitution, with optional dry-run mode that reports changes without writing.",
+      "tags": [
+        "version-management",
+        "file-update"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:.agents/skills/release-management/scripts/bump_version.py:update_version",
+      "type": "function",
+      "name": "update_version",
+      "filePath": ".agents/skills/release-management/scripts/bump_version.py",
+      "lineRange": [
+        77,
+        115
+      ],
+      "summary": "Updates version strings across all relevant project files (pyproject.toml, __init__.py files, setup.cfg) by calling update_file for each target.",
+      "tags": [
+        "version-management",
+        "multi-file-update"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:.agents/skills/release-management/scripts/bump_version.py:update_changelog",
+      "type": "function",
+      "name": "update_changelog",
+      "filePath": ".agents/skills/release-management/scripts/bump_version.py",
+      "lineRange": [
+        118,
+        147
+      ],
+      "summary": "Updates CHANGELOG.md by replacing the [Unreleased] section header with a new version entry including the current date.",
+      "tags": [
+        "version-management",
+        "changelog"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:.agents/skills/release-management/scripts/bump_version.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": ".agents/skills/release-management/scripts/bump_version.py",
+      "lineRange": [
+        150,
+        234
+      ],
+      "summary": "CLI entry point that parses bump type or specific version, reads current version, calculates new version, updates all version files, and optionally updates the changelog.",
+      "tags": [
+        "entry-point",
+        "cli"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/release-management/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/release-management/SKILL.md",
+      "summary": "Agent skill reference for Python release management: covers semantic versioning, Keep a Changelog format, version in code patterns, GitHub Actions release workflows, deprecation processes, and release checklists.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "release-management"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:.agents/skills/security-audit/scripts/security_scan.py",
+      "type": "file",
+      "name": "security_scan.py",
+      "filePath": ".agents/skills/security-audit/scripts/security_scan.py",
+      "summary": "CLI script for running comprehensive security scans on Python projects: orchestrates Bandit static analysis, pip-audit dependency checking, Safety vulnerability scanning, and detect-secrets credential detection, producing a unified report.",
+      "tags": [
+        "entry-point",
+        "cli",
+        "security-scanning"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:.agents/skills/security-audit/scripts/security_scan.py:ScanResult",
+      "type": "class",
+      "name": "ScanResult",
+      "filePath": ".agents/skills/security-audit/scripts/security_scan.py",
+      "lineRange": [
+        19,
+        23
+      ],
+      "summary": "Dataclass that holds the result of a single security scan tool execution: tool name, success flag, findings list, and optional error message.",
+      "tags": [
+        "data-model",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:.agents/skills/security-audit/scripts/security_scan.py:run_bandit",
+      "type": "function",
+      "name": "run_bandit",
+      "filePath": ".agents/skills/security-audit/scripts/security_scan.py",
+      "lineRange": [
+        26,
+        60
+      ],
+      "summary": "Runs Bandit static security analysis on the project's src directory, parses JSON output, and returns a ScanResult with findings or error details.",
+      "tags": [
+        "security-scanning",
+        "static-analysis"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:.agents/skills/security-audit/scripts/security_scan.py:run_pip_audit",
+      "type": "function",
+      "name": "run_pip_audit",
+      "filePath": ".agents/skills/security-audit/scripts/security_scan.py",
+      "lineRange": [
+        63,
+        97
+      ],
+      "summary": "Runs pip-audit to check installed dependencies for known vulnerabilities, parses JSON output, and returns a ScanResult with vulnerability findings.",
+      "tags": [
+        "security-scanning",
+        "dependency-audit"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:.agents/skills/security-audit/scripts/security_scan.py:run_safety",
+      "type": "function",
+      "name": "run_safety",
+      "filePath": ".agents/skills/security-audit/scripts/security_scan.py",
+      "lineRange": [
+        100,
+        134
+      ],
+      "summary": "Runs Safety check to scan dependencies for known vulnerabilities, parses JSON output, and returns a ScanResult with vulnerability details.",
+      "tags": [
+        "security-scanning",
+        "dependency-audit"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:.agents/skills/security-audit/scripts/security_scan.py:check_secrets",
+      "type": "function",
+      "name": "check_secrets",
+      "filePath": ".agents/skills/security-audit/scripts/security_scan.py",
+      "lineRange": [
+        137,
+        178
+      ],
+      "summary": "Runs detect-secrets to scan the project for hardcoded secrets and credentials, parses JSON output, and returns a ScanResult with secret locations and types.",
+      "tags": [
+        "security-scanning",
+        "secret-detection"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:.agents/skills/security-audit/scripts/security_scan.py:format_report",
+      "type": "function",
+      "name": "format_report",
+      "filePath": ".agents/skills/security-audit/scripts/security_scan.py",
+      "lineRange": [
+        181,
+        234
+      ],
+      "summary": "Formats an array of ScanResult objects into a human-readable security scan report with sections per tool, finding details, and a total findings count.",
+      "tags": [
+        "reporting",
+        "formatting"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:.agents/skills/security-audit/scripts/security_scan.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": ".agents/skills/security-audit/scripts/security_scan.py",
+      "lineRange": [
+        237,
+        315
+      ],
+      "summary": "CLI entry point that parses arguments, runs selected security scanners (Bandit, pip-audit, Safety, detect-secrets), prints the formatted report, optionally saves JSON output, and exits with error code if high-severity issues are found.",
+      "tags": [
+        "entry-point",
+        "cli"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.agents/skills/security-audit/SKILL.md",
+      "type": "document",
+      "name": "SKILL.md",
+      "filePath": ".agents/skills/security-audit/SKILL.md",
+      "summary": "Agent skill reference for Python security auditing: covers Bandit, pip-audit, Semgrep, and detect-secrets setup, common vulnerabilities (SQL injection, command injection, hardcoded credentials, weak cryptography), secure patterns, CI integration, and audit checklists.",
+      "tags": [
+        "agent-skill",
+        "documentation",
+        "security"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:.sisyphus/ralph-loop.local.md",
+      "type": "document",
+      "name": "ralph-loop.local.md",
+      "filePath": ".sisyphus/ralph-loop.local.md",
+      "summary": "Sisyphus Ralph loop configuration: defines a sprint planning agent task to analyze the Paxman project and prepare 10 sprint documentation plans for V1 completion, with iteration tracking and ultrawork strategy.",
+      "tags": [
+        "agent-instructions",
+        "ralph-loop"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.understand-anything/.understandignore",
+      "type": "document",
+      "name": ".understandignore",
+      "filePath": ".understand-anything/.understandignore",
+      "summary": "Configuration file for the understand-anything plugin: defines gitignore-style patterns for files and directories to exclude from codebase analysis, with commented-out suggestions for tests, docs, scripts, and test file patterns.",
+      "tags": [
+        "configuration",
+        "ignore-patterns"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docs/TEST_DATA.md",
+      "type": "document",
+      "name": "TEST_DATA.md",
+      "filePath": "docs/TEST_DATA.md",
+      "summary": "Comprehensive test data strategy document: defines the 5-layer test data model (synthetic through real), V1 dataset catalog with 20+ datasets and licenses, licensing policy, vendor procedure, attribution requirements, security/PII rules, programmatic fixture design, and corpus growth roadmap from 0 MB to 1 GB.",
+      "tags": [
+        "documentation",
+        "test-data-policy"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:scripts/fetch_test_data.py",
+      "type": "file",
+      "name": "fetch_test_data.py",
+      "filePath": "scripts/fetch_test_data.py",
+      "summary": "CLI script for vendoring, verifying, and validating Paxman's V1 test data corpus: manages 13 datasets with license gating, supports listing/vendoring/verifying/license-validation commands, and enforces allowed-license policy for CI safety.",
+      "tags": [
+        "entry-point",
+        "cli",
+        "test-data-management"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:scripts/fetch_test_data.py:DatasetSpec",
+      "type": "class",
+      "name": "DatasetSpec",
+      "filePath": "scripts/fetch_test_data.py",
+      "lineRange": [
+        64,
+        73
+      ],
+      "summary": "Frozen dataclass defining a vendored dataset specification: name, source URL, license, V1 use case, target subdirectory, file count, HuggingFace token requirement, manual download flag, and notes.",
+      "tags": [
+        "data-model",
+        "test-data"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/fetch_test_data.py:cmd_vendor",
+      "type": "function",
+      "name": "cmd_vendor",
+      "filePath": "scripts/fetch_test_data.py",
+      "lineRange": [
+        213,
+        256
+      ],
+      "summary": "Vendors one or all allowed-license datasets by iterating the catalog, checking license eligibility, creating target directories, and calling vendor_one for each dataset. Tracks and reports failures.",
+      "tags": [
+        "test-data-management",
+        "dataset-vendoring"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/fetch_test_data.py:vendor_one",
+      "type": "function",
+      "name": "vendor_one",
+      "filePath": "scripts/fetch_test_data.py",
+      "lineRange": [
+        259,
+        289
+      ],
+      "summary": "Downloads and extracts a single dataset to its target directory. Currently raises NotImplementedError as a stub, with documented implementation contract for HuggingFace, GitHub, and direct URL downloads.",
+      "tags": [
+        "test-data-management",
+        "dataset-download"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/fetch_test_data.py:cmd_verify",
+      "type": "function",
+      "name": "cmd_verify",
+      "filePath": "scripts/fetch_test_data.py",
+      "lineRange": [
+        311,
+        333
+      ],
+      "summary": "Verifies that all allowed-license datasets have been vendored by checking for .VENDORED marker files in each target directory. Used by CI to ensure test data is present.",
+      "tags": [
+        "test-data-management",
+        "verification"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:scripts/fetch_test_data.py:cmd_validate_licenses",
+      "type": "function",
+      "name": "cmd_validate_licenses",
+      "filePath": "scripts/fetch_test_data.py",
+      "lineRange": [
+        336,
+        371
+      ],
+      "summary": "Validates that every file under tests/fixtures/ is attributed in DATASET_LICENSES.md by scanning the catalog entries and checking each file against them. Used by CI to enforce license compliance.",
+      "tags": [
+        "test-data-management",
+        "license-validation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:scripts/fetch_test_data.py:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "scripts/fetch_test_data.py",
+      "lineRange": [
+        374,
+        427
+      ],
+      "summary": "CLI entry point that parses arguments (--dataset, --update, --dev-only, --list, --verify, --validate-licenses, -v) and dispatches to the appropriate command handler.",
+      "tags": [
+        "entry-point",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/artifacts/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "tests/fixtures/artifacts/README.md",
+      "summary": "Documentation for golden ExecutionArtifacts directory: explains why golden artifacts matter for replay-equality tests, lists 9 planned V1 artifacts (invoice, quotation, procurement scenarios), current status (empty), and procedures for using and regenerating goldens.",
+      "tags": [
+        "documentation",
+        "test-fixtures",
+        "artifacts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:tests/fixtures/contracts/AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "tests/fixtures/contracts/AGENTS.md",
+      "summary": "Agent navigation guide for the test fixtures contracts directory: describes the structure of curated contract fixtures in 4 formats (Pydantic, JSON Schema, Dict DSL, OpenAPI), conventions, and anti-patterns.",
+      "tags": [
+        "documentation",
+        "test-fixtures",
+        "contracts"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/contracts/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "tests/fixtures/contracts/README.md",
+      "summary": "Documentation for curated contract fixtures: describes what goes in each format directory (Pydantic, JSON Schema, Dict DSL, OpenAPI), file naming conventions, planned V1 contracts for invoices/quotations/procurement, and edge cases.",
+      "tags": [
+        "documentation",
+        "test-fixtures",
+        "contracts"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/generated/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "tests/fixtures/generated/README.md",
+      "summary": "Documentation for Layer 2 programmatic fixtures directory: explains that this gitignored directory holds factory_boy/faker/hypothesis-generated test data, covers reproducibility via fixed seeds, and why it's excluded from version control.",
+      "tags": [
+        "documentation",
+        "test-fixtures",
+        "generated"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/inputs/AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "tests/fixtures/inputs/AGENTS.md",
+      "summary": "Agent navigation guide for the test fixtures inputs directory: describes the raw input structure organized by use case (invoices, receipts, quotations, procurement, adversarial), conventions for synthetic vs vendored inputs, and anti-patterns for data governance.",
+      "tags": [
+        "documentation",
+        "test-fixtures",
+        "inputs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/inputs/quotations/synthetic/quotation_simple.txt",
+      "type": "document",
+      "name": "quotation_simple.txt",
+      "filePath": "tests/fixtures/inputs/quotations/synthetic/quotation_simple.txt",
+      "summary": "Synthetic test fixture: simple quotation from TechSupply Inc. to BetaWorks LLC with 3 line items (Premium Widget, Standard Widget, Shipping), 5% discount, 8.5% tax, total $2,911.77 USD.",
+      "tags": [
+        "test-fixture",
+        "input-data",
+        "synthetic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/inputs/quotations/synthetic/quotation_with_footnotes.txt",
+      "type": "document",
+      "name": "quotation_with_footnotes.txt",
+      "filePath": "tests/fixtures/inputs/quotations/synthetic/quotation_with_footnotes.txt",
+      "summary": "Synthetic test fixture: complex quotation from GlobalParts SA to MegaCorp Industries with footnoted sections (hardware, software, services), 10% volume discount, 20% EU VAT, total $21,114.00 EUR.",
+      "tags": [
+        "test-fixture",
+        "input-data",
+        "synthetic"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:tests/fixtures/inputs/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "tests/fixtures/inputs/README.md",
+      "summary": "Documentation for the test fixtures inputs directory: lists all subdirectories (invoices, receipts, quotations, procurement, multi_page, adversarial), vendored dataset catalog with licenses, synthetic input inventory, and procedures for adding new inputs.",
+      "tags": [
+        "documentation",
+        "test-fixtures",
+        "inputs"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:.agents/skills/project-setup/scripts/create_project.py",
+      "target": "function:.agents/skills/project-setup/scripts/create_project.py:create_project",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/project-setup/scripts/create_project.py",
+      "target": "function:.agents/skills/project-setup/scripts/create_project.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/project-setup/scripts/create_project.py",
+      "target": "function:.agents/skills/project-setup/scripts/create_project.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:.agents/skills/release-management/scripts/bump_version.py",
+      "target": "function:.agents/skills/release-management/scripts/bump_version.py:get_current_version",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/release-management/scripts/bump_version.py",
+      "target": "function:.agents/skills/release-management/scripts/bump_version.py:bump_version",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/release-management/scripts/bump_version.py",
+      "target": "function:.agents/skills/release-management/scripts/bump_version.py:update_file",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/release-management/scripts/bump_version.py",
+      "target": "function:.agents/skills/release-management/scripts/bump_version.py:update_version",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/release-management/scripts/bump_version.py",
+      "target": "function:.agents/skills/release-management/scripts/bump_version.py:update_changelog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/release-management/scripts/bump_version.py",
+      "target": "function:.agents/skills/release-management/scripts/bump_version.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/release-management/scripts/bump_version.py",
+      "target": "function:.agents/skills/release-management/scripts/bump_version.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:.agents/skills/security-audit/scripts/security_scan.py",
+      "target": "class:.agents/skills/security-audit/scripts/security_scan.py:ScanResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/security-audit/scripts/security_scan.py",
+      "target": "function:.agents/skills/security-audit/scripts/security_scan.py:run_bandit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/security-audit/scripts/security_scan.py",
+      "target": "function:.agents/skills/security-audit/scripts/security_scan.py:run_pip_audit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/security-audit/scripts/security_scan.py",
+      "target": "function:.agents/skills/security-audit/scripts/security_scan.py:run_safety",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/security-audit/scripts/security_scan.py",
+      "target": "function:.agents/skills/security-audit/scripts/security_scan.py:check_secrets",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/security-audit/scripts/security_scan.py",
+      "target": "function:.agents/skills/security-audit/scripts/security_scan.py:format_report",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/security-audit/scripts/security_scan.py",
+      "target": "function:.agents/skills/security-audit/scripts/security_scan.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:.agents/skills/security-audit/scripts/security_scan.py",
+      "target": "function:.agents/skills/security-audit/scripts/security_scan.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:scripts/fetch_test_data.py",
+      "target": "class:scripts/fetch_test_data.py:DatasetSpec",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/fetch_test_data.py",
+      "target": "function:scripts/fetch_test_data.py:cmd_vendor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/fetch_test_data.py",
+      "target": "function:scripts/fetch_test_data.py:vendor_one",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/fetch_test_data.py",
+      "target": "function:scripts/fetch_test_data.py:cmd_verify",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/fetch_test_data.py",
+      "target": "function:scripts/fetch_test_data.py:cmd_validate_licenses",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/fetch_test_data.py",
+      "target": "function:scripts/fetch_test_data.py:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:scripts/fetch_test_data.py",
+      "target": "function:scripts/fetch_test_data.py:main",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ],
+  "layers": [
+    {
+      "id": "layer:project-knowledge",
+      "name": "Project Knowledge Base",
+      "description": "Top-level AGENTS.md entry point providing AI agents with project overview, planned code map, conventions, anti-patterns, and commands for the Paxman normalization engine.",
+      "nodeIds": [
+        "document:AGENTS.md"
+      ]
+    },
+    {
+      "id": "layer:design-specs",
+      "name": "Design Specifications",
+      "description": "Root-level product and technical design documents covering product vision, system architecture, module layout, vocabulary, acceptance criteria, replay model, security, testing strategy, extension guides, dependency policy, development workflow, and test data strategy.",
+      "nodeIds": [
+        "document:README.md",
+        "document:PRD.md",
+        "document:ARCHITECTURE.md",
+        "document:PACKAGE_STRUCTURE.md",
+        "document:GLOSSARY.md",
+        "document:V1_ACCEPTANCE_CRITERIA.md",
+        "document:REPLAY_AND_DETERMINISM.md",
+        "document:SECURITY.md",
+        "document:TESTING_STRATEGY.md",
+        "document:EXTENDING.md",
+        "document:DEPENDENCIES.md",
+        "document:DEVELOPMENT.md",
+        "document:docs/TEST_DATA.md"
+      ]
+    },
+    {
+      "id": "layer:architecture-decisions",
+      "name": "Architecture Decision Records",
+      "description": "Immutable MADR-format ADRs documenting key architectural decisions (field-centric planning, rule-based planner, separate reconciler, MONEY type, confidence ownership, sequential execution, contract adapter set) plus their index and agent navigation guide.",
+      "nodeIds": [
+        "document:docs/adr/0001-field-centric-planning.md",
+        "document:docs/adr/0002-rule-based-planner-v1.md",
+        "document:docs/adr/0003-separate-reconciler.md",
+        "document:docs/adr/0004-money-first-class-type.md",
+        "document:docs/adr/0005-confidence-ownership.md",
+        "document:docs/adr/0006-sequential-execution-v1.md",
+        "document:docs/adr/0007-contract-adapter-set-v1.md",
+        "document:docs/adr/AGENTS.md",
+        "document:docs/adr/README.md"
+      ]
+    },
+    {
+      "id": "layer:sprint-planning",
+      "name": "Sprint Planning",
+      "description": "Sprint-by-sprint implementation roadmap for Paxman V1 (10 sprints covering design closure through release), the sprint index with dependency chains and parallelization matrix, and the changes log tracking decisions made during planning.",
+      "nodeIds": [
+        "document:docs/sprints/README.md",
+        "document:docs/sprints/CHANGES_LOG.md",
+        "document:docs/sprints/sprint-00-design-closure.md",
+        "document:docs/sprints/sprint-01-foundation.md",
+        "document:docs/sprints/sprint-02-contract-subsystem.md",
+        "document:docs/sprints/sprint-03-planner-and-capabilities.md",
+        "document:docs/sprints/sprint-04-executor-and-capabilities.md",
+        "document:docs/sprints/sprint-05-reconciler-and-money.md",
+        "document:docs/sprints/sprint-06-artifact-and-api.md",
+        "document:docs/sprints/sprint-07-integration-and-property-tests.md",
+        "document:docs/sprints/sprint-08-docs-ci-hardening.md",
+        "document:docs/sprints/sprint-09-production-hardening.md",
+        "document:docs/sprints/sprint-10-release.md"
+      ]
+    },
+    {
+      "id": "layer:test-fixtures",
+      "name": "Test Fixtures & Data",
+      "description": "Test fixture directory with 5-layer data model documentation, synthetic test inputs (invoices, quotations), adversarial edge-case inputs (empty, unicode, prompt injection, currency mismatch), contract and artifact fixture scaffolds, dataset license catalog, and agent navigation guides.",
+      "nodeIds": [
+        "document:tests/fixtures/AGENTS.md",
+        "document:tests/fixtures/DATASET_LICENSES.md",
+        "document:tests/fixtures/README.md",
+        "document:tests/fixtures/artifacts/README.md",
+        "document:tests/fixtures/contracts/AGENTS.md",
+        "document:tests/fixtures/contracts/README.md",
+        "document:tests/fixtures/generated/README.md",
+        "document:tests/fixtures/inputs/AGENTS.md",
+        "document:tests/fixtures/inputs/README.md",
+        "document:tests/fixtures/inputs/adversarial/empty_input.txt",
+        "document:tests/fixtures/inputs/adversarial/mismatched_currency.txt",
+        "document:tests/fixtures/inputs/adversarial/prompt_injection.txt",
+        "document:tests/fixtures/inputs/adversarial/unicode_only.txt",
+        "table:tests/fixtures/inputs/invoices/synthetic/invoice_csv.csv:invoice_csv",
+        "document:tests/fixtures/inputs/invoices/synthetic/invoice_email.txt",
+        "document:tests/fixtures/inputs/invoices/synthetic/invoice_plain.txt",
+        "document:tests/fixtures/inputs/quotations/synthetic/quotation_simple.txt",
+        "document:tests/fixtures/inputs/quotations/synthetic/quotation_with_footnotes.txt"
+      ]
+    },
+    {
+      "id": "layer:first-party-code",
+      "name": "First-Party Code",
+      "description": "First-party Python scripts implementing project-specific tooling: test data corpus management with license gating (fetch_test_data.py), project scaffolding (create_project.py), semantic version bumping (bump_version.py), and multi-tool security scanning (security_scan.py).",
+      "nodeIds": [
+        "file:scripts/fetch_test_data.py",
+        "file:.agents/skills/project-setup/scripts/create_project.py",
+        "file:.agents/skills/release-management/scripts/bump_version.py",
+        "file:.agents/skills/security-audit/scripts/security_scan.py"
+      ]
+    },
+    {
+      "id": "layer:agent-skills",
+      "name": "Agent Skills",
+      "description": "Reusable agent skill instructions and reference documentation for Python development workflows: code quality (mypy, ruff, type patterns), project setup (CI, Makefile, pyproject), testing strategy (fixtures, Hypothesis), web app architecture (auth, payments, deployment, frontend, stack), and cross-cutting skills (API design, CLI dev, community, docs, git hygiene, library review, packaging, performance, release management, security audit, testing patterns).",
+      "nodeIds": [
+        "document:.agents/skills/code-quality/MYPY_CONFIG.md",
+        "document:.agents/skills/code-quality/RUFF_CONFIG.md",
+        "document:.agents/skills/code-quality/SKILL.md",
+        "document:.agents/skills/code-quality/TYPE_PATTERNS.md",
+        "document:.agents/skills/project-setup/CI.md",
+        "document:.agents/skills/project-setup/MAKEFILE.md",
+        "document:.agents/skills/project-setup/PYPROJECT.md",
+        "document:.agents/skills/project-setup/SKILL.md",
+        "document:.agents/skills/testing-strategy/FIXTURES.md",
+        "document:.agents/skills/testing-strategy/HYPOTHESIS.md",
+        "document:.agents/skills/testing-strategy/SKILL.md",
+        "document:.agents/skills/web-app-architecture/AUTH.md",
+        "document:.agents/skills/web-app-architecture/BACKGROUND_JOBS.md",
+        "document:.agents/skills/web-app-architecture/DEPLOYMENT.md",
+        "document:.agents/skills/web-app-architecture/FRONTEND.md",
+        "document:.agents/skills/web-app-architecture/PAYMENTS.md",
+        "document:.agents/skills/web-app-architecture/SKILL.md",
+        "document:.agents/skills/web-app-architecture/STACK.md",
+        "document:.agents/skills/api-design/SKILL.md",
+        "document:.agents/skills/cli-development/SKILL.md",
+        "document:.agents/skills/community/SKILL.md",
+        "document:.agents/skills/documentation/SKILL.md",
+        "document:.agents/skills/git-hygiene/SKILL.md",
+        "document:.agents/skills/library-review/SKILL.md",
+        "document:.agents/skills/packaging/SKILL.md",
+        "document:.agents/skills/performance/SKILL.md",
+        "document:.agents/skills/python-testing-patterns/references/advanced-patterns.md",
+        "document:.agents/skills/python-testing-patterns/references/details.md",
+        "document:.agents/skills/python-testing-patterns/SKILL.md",
+        "document:.agents/skills/release-management/SKILL.md",
+        "document:.agents/skills/security-audit/SKILL.md"
+      ]
+    },
+    {
+      "id": "layer:project-config",
+      "name": "Project Configuration",
+      "description": "Project-level configuration files: agent skills version lock (skills-lock.json), understand-anything analysis ignore rules (.understandignore), and Sisyphus Ralph loop local configuration for sprint planning automation.",
+      "nodeIds": [
+        "config:skills-lock.json",
+        "document:.understand-anything/.understandignore",
+        "document:.sisyphus/ralph-loop.local.md"
+      ]
+    }
+  ],
+  "tour": [
+    {
+      "order": 1,
+      "title": "Project Overview",
+      "description": "Start with the README to understand what Paxman is — a contract-driven deterministic normalization engine for Python. The quickstart example shows the two-call API (`paxman.normalize()` and `paxman.replay()`) and the documentation index maps every spec you'll encounter in this tour.",
+      "nodeIds": [
+        "document:README.md"
+      ]
+    },
+    {
+      "order": 2,
+      "title": "Product Vision & PRD",
+      "description": "The PRD defines *why* Paxman exists and *what* it must do. It covers the problem statement (arbitrary input → normalized artifacts), the five product philosophies (contract-driven, field-centric, evidence-backed, replayable, honest), target personas, and the success metrics that drive every design decision downstream.",
+      "nodeIds": [
+        "document:PRD.md"
+      ]
+    },
+    {
+      "order": 3,
+      "title": "System Architecture",
+      "description": "ARCHITECTURE.md is the technical backbone. It defines the seven subsystems (contract, planner, capabilities, executor, reconciler, artifact, api), the sequence diagram showing how data flows through them, the error model, truth resolution layers, and the extension boundaries. Read this to understand the 'shape' of the system before diving into specifics.",
+      "nodeIds": [
+        "document:ARCHITECTURE.md"
+      ]
+    },
+    {
+      "order": 4,
+      "title": "Module Layout & Package Structure",
+      "description": "PACKAGE_STRUCTURE.md translates the architectural vision into a concrete module plan: the src/paxman/ directory tree, the dependency DAG between subsystems, public vs. private API surfaces, cross-cutting concerns (errors, types, protocols), and the test layout. This is the source of truth for where every piece of code will live.",
+      "nodeIds": [
+        "document:PACKAGE_STRUCTURE.md"
+      ],
+      "languageLesson": "The module dependency DAG enforces that lower layers never import from higher ones. This is checked at CI time with import-linter — a Python tool that validates directed import graphs against a declared contract."
+    },
+    {
+      "order": 5,
+      "title": "Canonical Vocabulary",
+      "description": "GLOSSARY.md is the single source of truth for Paxman's domain language. Terms like CanonicalContract, FieldPlan, Capability, TruthLayer, Confidence, and MONEY have precise definitions that every spec and ADR relies on. Skim this now and refer back as you read deeper — the vocabulary is the connective tissue of the entire design.",
+      "nodeIds": [
+        "document:GLOSSARY.md"
+      ]
+    },
+    {
+      "order": 6,
+      "title": "Architecture Decision Records",
+      "description": "The 7 ADRs document *how* and *why* the design was decided. ADR-0001 (field-centric planning) and ADR-0002 (rule-based planner) define the core execution model. ADR-0003 (separate reconciler) and ADR-0005 (confidence ownership) establish the truth-resolution boundary. ADR-0004 (MONEY type), ADR-0006 (sequential execution), and ADR-0007 (contract adapter set) close out the V1 design surface. Read the index first, then the ADRs that interest you most.",
+      "nodeIds": [
+        "document:docs/adr/AGENTS.md",
+        "document:docs/adr/0001-field-centric-planning.md",
+        "document:docs/adr/0002-rule-based-planner-v1.md",
+        "document:docs/adr/0003-separate-reconciler.md",
+        "document:docs/adr/0004-money-first-class-type.md",
+        "document:docs/adr/0005-confidence-ownership.md",
+        "document:docs/adr/0006-sequential-execution-v1.md",
+        "document:docs/adr/0007-contract-adapter-set-v1.md"
+      ],
+      "languageLesson": "ADRs use the MADR 4.0 format (Markdown Any Decision Records). Each ADR has a title, status (Accepted/Superseded/Deprecated), context, decision, and consequences. Once Accepted, ADRs are immutable — new decisions require a new ADR that references the old one."
+    },
+    {
+      "order": 7,
+      "title": "Replay & Determinism",
+      "description": "Replay is Paxman's signature capability: rehydrate a normalized artifact from the artifact alone, without re-executing the pipeline. This spec defines the SHA-256 replay hash composition, the replay protocol, version compatibility matrix, and the precise guarantees determinism provides (and does not provide). This is the core differentiator that separates Paxman from every other extraction tool.",
+      "nodeIds": [
+        "document:REPLAY_AND_DETERMINISM.md"
+      ],
+      "languageLesson": "Determinism ≠ reproducibility. Determinism means the same inputs always produce the same outputs (no hidden state). Reproducibility means you can re-run and get the same result (but may depend on external state). Paxman guarantees determinism, which implies reproducibility, but the reverse is not true."
+    },
+    {
+      "order": 8,
+      "title": "V1 Acceptance Criteria",
+      "description": "This is the definition of done for the 1.0 release. It lists testable criteria across contract adapters (4 formats), capabilities (5 atomic operations), all 7 subsystems, replay, determinism, testing, security, packaging, and documentation. Use this as a checklist to understand what 'complete' means for V1.",
+      "nodeIds": [
+        "document:V1_ACCEPTANCE_CRITERIA.md"
+      ]
+    },
+    {
+      "order": 9,
+      "title": "Implementation Roadmap",
+      "description": "The sprint plan breaks V1 into 10 sprints (~5.5 months with 4 engineers). Sprint 0 closes design gaps, Sprint 1 lays the foundation, Sprints 2-6 build subsystems end-to-end, Sprint 7 proves determinism with property tests, and Sprints 8-10 harden and release. The index shows the critical-path dependency chain and parallelization matrix.",
+      "nodeIds": [
+        "document:docs/sprints/README.md"
+      ]
+    },
+    {
+      "order": 10,
+      "title": "Test Data & First-Party Code",
+      "description": "TEST_DATA.md defines the 5-layer test data model (synthetic → real) and catalogs 20+ datasets with licensing rules. The test fixtures directory contains synthetic invoices, quotations, and adversarial inputs (empty, unicode, prompt injection). The only first-party code is scripts/fetch_test_data.py — a CLI that vendors, verifies, and validates test datasets with license gating.",
+      "nodeIds": [
+        "document:docs/TEST_DATA.md",
+        "document:tests/fixtures/README.md",
+        "file:scripts/fetch_test_data.py"
+      ]
+    }
+  ]
+}

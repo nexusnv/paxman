@@ -180,7 +180,7 @@ These are recommendations that emerged from the planning exercise but are **outs
 
 ### 5.1 Pre-Sprint-0 (before any sprint starts)
 
-1. **Recruit 3 external users for the v1.0.0 validation in Sprint 10.** The single highest-risk prerequisite. The 3 users should be from the target personas (`PRD.md` §6.1). Recruit at least 2 weeks before Sprint 10 starts.
+1. **Recruit 3 external users for the v1.0.0 validation in Sprint 10.** The single highest-risk prerequisite. The 3 users should be from the target personas (`PRD.md` §6.1). **Begin recruiting during Sprint 0; secure commitments by Sprint 5; confirm availability by Sprint 8** (per Oracle review M4 — 2 weeks before Sprint 10 is dangerously late).
 
 2. **Create a real PyPI account** (or claim the `paxman` project name on TestPyPI first). The OIDC trusted publisher is configured in Sprint 9; the project name must be reserved by Sprint 9.
 
@@ -241,6 +241,16 @@ These are questions that arose during the planning exercise but were not answere
    - `SECURITY.md` §2.1 says evidence contains "Capability id and version", "Source span", "Field path", "Timestamp" — but the storage format (JSON in the artifact? separate file? reference by ID?) is not specified.
    - **Recommendation:** Evidence is a list of `EvidenceRef` objects embedded in the artifact's `FieldResult`. Each `EvidenceRef` has `capability_id`, `capability_version`, `field_path`, `span` (optional), `model_id` (optional for inference), `timestamp` (optional, default: redact in replay path). **Document in `artifact/evidence.py` docstring.**
 
+8. **Q8: Should `structlog` be a core dependency or a dev/optional dependency? (added per Oracle review C3)**
+   - `DEPENDENCIES.md` §2 lists `structlog` under dev dependencies; core is `attrs` + `typing-extensions` (2 packages). Sprint 1 D1.14 treats `structlog` as a core dep.
+   - **Recommendation:** **Make `structlog` a core dep** (3 packages total, still within policy). It simplifies deterministic logging and avoids DI overhead in V1. Update `DEPENDENCIES.md` §2 to list it. If the project owner prefers minimal core, move `structlog` to the `dev` extras; in that case, `paxman.logging` accepts an injected logger abstraction (already per `ARCHITECTURE.md` §12.3 "or an injected logger").
+   - **Decision needed before Sprint 1.**
+
+9. **Q9: What is the fallback if external users are not available for Sprint 10? (added per Oracle review M5)**
+   - `V1_ACCEPTANCE_CRITERIA.md` §5.4 hard-gates v1.0.0 on ≥3 external users.
+   - **Recommendation:** If fewer than 3 users are confirmed by Sprint 8, ship `v1.0.0-rc.2` with the user-validation gate waived and document the waiver in the release notes. The 1.0.0 release notes must state that the external-validation gate was deferred to v1.0.1.
+   - **Decision needed before Sprint 5** (so the Sprint 8 check-in can be planned).
+
 ---
 
 ## 7. V1 acceptance criteria checklist (planning-time status)
@@ -271,7 +281,7 @@ The 80% threshold for `v0.5.0` is met by Sprints 2-7 (functional criteria 80% co
 | 8 | 14 | 2 × 2 weeks | Weeks 16-17 |
 | 9 | 12 | 2 × 2 weeks | Weeks 18-19 |
 | 10 | 8 (1-2 eng) + 1 week external user feedback | 1-2 × 3 weeks | Weeks 20-22 |
-| **Total** | **~146 id-ed** | — | **~22 weeks (5.5 months)** |
+| **Total** | **~241 id-ed** (sum of per-sprint deliverable tables) | — | **~22 weeks (5.5 months)** with 2-week buffer → **~24 weeks (6 months)** |
 
 The total is less than the initial audit estimate of 190 id-ed because of **parallelization** within sprints. The realistic calendar timeline is 5-5.5 months with a 4-person team.
 
@@ -286,6 +296,38 @@ To be explicit about scope:
 3. **Did not create any ADRs** (the Dict DSL and InputProfile ADRs are listed as **optional** in Sprint 0; the project owner decides).
 4. **Did not recruit external users.** This is a prerequisite for Sprint 10 and is the project owner's responsibility.
 5. **Did not commit to a specific PyPI publication date.** The 5.5-month calendar estimate assumes no major delays; the project owner should add a 4-week buffer for unexpected issues.
+
+---
+
+## 10. Oracle review (2026-06-22)
+
+The sprint plan was reviewed by the **Oracle** consultant agent. **Verdict: APPROVED WITH MINOR REVISIONS.** All 4 critical issues (C1-C4) and 7 minor revisions (M1-M7) have been applied in the same commit as this review.
+
+### Critical issues fixed
+
+| ID | Issue | Resolution |
+|---|---|---|
+| **C1** | `CapabilityNotFoundError` required by `V1_ACCEPTANCE_CRITERIA.md` §1.5 but missing from Sprint 6 exit criteria and `ARCHITECTURE.md` §6.2 hierarchy. | Added to Sprint 1 D1.10 (error hierarchy, 17 classes) and Sprint 6 D6.10 (public error re-exports) and Sprint 6 exit criteria #4b. |
+| **C2** | Ideal-engineering-day numbers were inconsistent: README said ~146 / ~190; per-sprint docs sum to ~241. | README updated to use **241 id-ed** with parallelization explained; **6-month** total (22 weeks + 2-week buffer before Sprint 10). CHANGES_LOG §8 updated. |
+| **C3** | `structlog` core-vs-dev status contradicted `DEPENDENCIES.md`. | **Decision deferred to project owner as Q8.** Recommendation: make `structlog` a core dep (3 packages, still within policy). |
+| **C4** | Sprint 1 said "13 exception classes" but `ARCHITECTURE.md` §6.2 has 17. | Sprint 1 D1.10 updated to "**17 classes**" with breakdown; exit criterion #10 updated. |
+
+### Minor revisions applied
+
+| ID | Revision |
+|---|---|
+| **M1** | README Sprint 4 exit artifact changed from `normalize()` (Sprint 6) to `executor.run()` (Sprint 4's actual deliverable). |
+| **M2** | Sprint 0 spec output path changed from `docs/sprints/v0-specs/` to `docs/specs/` (project-wide taxonomy). |
+| **M3** | Sprint 1 hatchling fallback changed from `setuptools>=68` to `flit-core`. |
+| **M4** | External-user recruitment timeline extended: begin in Sprint 0, secure by Sprint 5, confirm by Sprint 8. |
+| **M5** | Sprint 10 fallback added: if <3 users by Sprint 8, ship `v1.0.0-rc.2` with user-validation gate waived. |
+| **M6** | Sprint 9: 5-platform wheel note added — Paxman is pure-Python; `hatchling` produces a universal `py3-none-any` wheel satisfying all 5 platforms automatically. |
+| **M7** | Sprint 3 exit criterion #3 clarified: "explicit evidence" is a planner rule on `InputProfile`, not a `text_extraction` capability dependency. |
+
+### New open questions (added per Oracle)
+
+- **Q8:** Should `structlog` be core or dev dependency? (per C3)
+- **Q9:** What is the fallback if external users are not available? (per M5)
 
 ---
 

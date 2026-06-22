@@ -65,7 +65,7 @@
 | D6.7 | `artifact/_hash.py` — SHA-256 internals | 1.0 |
 | D6.8 | `artifact/replay.py` — rehydration + version checks | 3.0 |
 | D6.9 | `api/types.py` — re-exports | 2.0 |
-| D6.10 | `api/errors.py` — re-exports | 1.0 |
+| D6.10 | `api/errors.py` — re-exports (12 public errors per `V1_ACCEPTANCE_CRITERIA.md` §1.4: `PaxmanError`, `InvalidContractError`, `ExecutionError`, `CapabilityError`, `InferenceProviderError`, `BudgetExceededError`, `ReconciliationError`, `ReplayError`, `VersionMismatchError`, `HashMismatchError`, `ConfigurationError`, **`CapabilityNotFoundError`** [added per Oracle review C1 — required by `V1_ACCEPTANCE_CRITERIA.md` §1.5]) | 1.0 |
 | D6.11 | `api/protocols.py` — re-exports | 1.0 |
 | D6.12 | `api/registry.py` — `register_adapter`, `register_capability` | 1.0 |
 | D6.13 | `api/version.py` — `__version__` | 0.5 |
@@ -113,6 +113,7 @@ None.
 2. `paxman.replay(artifact, contract)` returns a byte-equal artifact.
 3. Modifying any field of the artifact (via `dataclasses.replace`) and calling `paxman.replay` raises `HashMismatchError`.
 4. `paxman.replay` with a different Paxman version (mocked) raises `VersionMismatchError`.
+4b. `paxman.replay` raises `CapabilityNotFoundError` when a pinned capability is no longer registered (per `V1_ACCEPTANCE_CRITERIA.md` §1.5). `CapabilityNotFoundError` is a subclass of `ReplayError` (added in Sprint 1 D1.10).
 5. `paxman.register_adapter(MyAdapter())` and `paxman.register_capability(MyCapability())` work.
 6. The public API surface is exactly: `paxman.normalize`, `paxman.replay`, `paxman.register_adapter`, `paxman.register_capability`, `paxman.__version__`, plus the public types and errors listed in `V1_ACCEPTANCE_CRITERIA.md` §1.4.
 7. `tests/public_api/test_public_api.py` fails if any new symbol is added to `paxman/__init__.py` without an ADR.

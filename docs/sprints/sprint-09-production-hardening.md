@@ -65,7 +65,8 @@
 | D9.9 | PyPI trusted publisher configured (OIDC) | 1.0 |
 | D9.10 | `.github/workflows/release.yml` — publish on tag | 1.0 |
 | D9.11 | TestPyPI publish (v0.5.0 or v0.7.0 candidate) | 0.5 |
-| D9.12 | Verify the TestPyPI wheel works on Linux, macOS, Windows | 1.0 |
+| D9.12 | Verify the TestPyPI wheel installs on Linux, macOS, and Windows | 1.0 |
+| D9.12a | **5-platform note (per Oracle M6):** Paxman is a pure-Python library with **zero compiled extensions**. `hatchling` produces a universal `py3-none-any` wheel that satisfies `V1_ACCEPTANCE_CRITERIA.md` §3.1 ("linux/amd64, linux/arm64, osx/amd64, osx/arm64, win/amd64") automatically — no per-platform build matrix required. Document this in the release notes to avoid future confusion. | 0.0 (note, not new work) |
 | D9.13 | `.github/CODEOWNERS` | 0.2 |
 | D9.14 | `.github/dependabot.yml` (or `renovate.json`) | 0.3 |
 | D9.15 | `docs/MAINTAINERS.md` | 0.3 |

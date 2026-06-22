@@ -18,7 +18,7 @@ Plus:
 
 ## Scope (in)
 
-- 4 specification documents created in `docs/sprints/v0-specs/`:
+- 4 specification documents created in `docs/specs/` (per Oracle review M2 — consistent with the project-wide `docs/` taxonomy, not nested under `docs/sprints/`):
   - `dict-dsl-spec.md`
   - `input-profile-spec.md`
   - `capability-cost-model.md`
@@ -36,10 +36,10 @@ Plus:
 
 | ID | Deliverable | Location | Format |
 |---|---|---|---|
-| D0.1 | Dict DSL syntax specification | `docs/sprints/v0-specs/dict-dsl-spec.md` | Markdown; BNF-like grammar + 3 worked examples + 5 edge cases |
-| D0.2 | Input Profile module spec | `docs/sprints/v0-specs/input-profile-spec.md` | Markdown; `InputProfile` data model + `make_profile(input) -> InputProfile` algorithm |
-| D0.3 | Capability cost model | `docs/sprints/v0-specs/capability-cost-model.md` | Markdown; `CostHint` values for all 5 V1 capabilities + scoring rubric |
-| D0.4 | License decision document | `docs/sprints/v0-specs/license-decision.md` | Markdown; MIT vs Apache-2.0 trade-off analysis + recommendation |
+| D0.1 | Dict DSL syntax specification | `docs/specs/dict-dsl-spec.md` | Markdown; BNF-like grammar + 3 worked examples + 5 edge cases |
+| D0.2 | Input Profile module spec | `docs/specs/input-profile-spec.md` | Markdown; `InputProfile` data model + `make_profile(input) -> InputProfile` algorithm |
+| D0.3 | Capability cost model | `docs/specs/capability-cost-model.md` | Markdown; `CostHint` values for all 5 V1 capabilities + scoring rubric |
+| D0.4 | License decision document | `docs/specs/license-decision.md` | Markdown; MIT vs Apache-2.0 trade-off analysis + recommendation |
 | D0.5 | License ADR | `docs/adr/0008-license-decision.md` | MADR 4.0 template |
 | D0.6 | (Optional) ADR for Dict DSL if deemed architectural | `docs/adr/0009-dict-dsl-v1.md` | MADR 4.0 (optional; project owner decides) |
 
@@ -62,11 +62,11 @@ None.
 
 ## Exit criteria
 
-1. `docs/sprints/v0-specs/dict-dsl-spec.md` exists, has BNF grammar + ≥3 worked examples, and is reviewed by ≥1 other engineer.
-2. `docs/sprints/v0-specs/input-profile-spec.md` exists, has the `InputProfile` data model and `make_profile()` algorithm, and is reviewed.
-3. `docs/sprints/v0-specs/capability-cost-model.md` exists with explicit `CostHint(tokens, ms, usd)` for all 5 V1 capabilities (`text_extraction`, `regex_extraction`, `lookup`, `inference`, `validation`), reviewed.
+1. `docs/specs/dict-dsl-spec.md` exists, has BNF grammar + ≥3 worked examples, and is reviewed by ≥1 other engineer.
+2. `docs/specs/input-profile-spec.md` exists, has the `InputProfile` data model and `make_profile()` algorithm, and is reviewed.
+3. `docs/specs/capability-cost-model.md` exists with explicit `CostHint(tokens, ms, usd)` for all 5 V1 capabilities (`text_extraction`, `regex_extraction`, `lookup`, `inference`, `validation`), reviewed.
 4. `docs/adr/0008-license-decision.md` is in the MADR format and has Status: Accepted.
-5. `docs/sprints/v0-specs/license-decision.md` records the rationale.
+5. `docs/specs/license-decision.md` records the rationale.
 6. (Optional, if project owner decides) Dict DSL ADR exists.
 
 ## Risk register

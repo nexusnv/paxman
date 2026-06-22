@@ -41,7 +41,7 @@
 | D1.7 | `src/paxman/` directory tree (all 7 subsystem dirs + cross-cutting) | `src/paxman/` | 0.2 |
 | D1.8 | `src/paxman/py.typed` (empty) | `src/paxman/py.typed` | 0.1 |
 | D1.9 | `src/paxman/__init__.py` (version only) | `src/paxman/__init__.py` | 0.2 |
-| D1.10 | `src/paxman/errors.py` (PaxmanError hierarchy, 13 classes per `ARCHITECTURE.md` §6.2) | `src/paxman/errors.py` | 3.0 |
+| D1.10 | `src/paxman/errors.py` (PaxmanError hierarchy, **17 classes** per `ARCHITECTURE.md` §6.2: base + 4 InvalidContractError children + 3 ExecutionError children + 2 ReplayError children + 2 ConfigurationError children; the 11 listed in `V1_ACCEPTANCE_CRITERIA.md` §1.4 are the *public* subset re-exported in `api/errors.py`) | `src/paxman/errors.py` | 3.0 |
 | D1.11 | `src/paxman/types.py` (shared enums: `Status`, `ConfidenceBand`, `FieldType`) | `src/paxman/types.py` | 1.0 |
 | D1.12 | `src/paxman/protocols.py` (internal Protocols) | `src/paxman/protocols.py` | 1.0 |
 | D1.13 | `src/paxman/versioning.py` (version constants, helpers; 100% test coverage) | `src/paxman/versioning.py` | 2.0 |
@@ -107,7 +107,7 @@ None required for Sprint 1. **OIDC trusted publishing** for PyPI is configured i
 7. `interrogate src/paxman` reports 100% docstring coverage on the public surface (currently empty, but the gate must be set up).
 8. GitHub Actions CI runs on the first PR and on `main` and is green.
 9. `import paxman` works; `paxman.__version__` returns a string.
-10. The `errors.py` module has 13 exception classes per `ARCHITECTURE.md` §6.2 and the test `test_errors.py` covers every error path (target: 100% line coverage on `errors.py`).
+10. The `errors.py` module has **17 exception classes** per `ARCHITECTURE.md` §6.2 (1 base + 16 subclasses) and the test `test_errors.py` covers every error path (target: 100% line coverage on `errors.py`). The 11 classes re-exported via `api/errors.py` (Sprint 6) are the public subset per `V1_ACCEPTANCE_CRITERIA.md` §1.4.
 11. `versioning.py` has 100% line coverage (V1 acceptance criterion §2.2).
 12. The `LICENSE` file is present and matches the Sprint 0 decision.
 13. The package can be built: `make build` produces `dist/paxman-0.0.0.tar.gz` and `dist/paxman-0.0.0-py3-none-any.whl` (the wheel is **not** published yet — just built locally to verify the build backend works).
@@ -117,7 +117,7 @@ None required for Sprint 1. **OIDC trusted publishing** for PyPI is configured i
 
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
-| `hatchling` config has a subtle bug (e.g., `py.typed` not in wheel) | Medium | High | Sprint 1 must include a manual `unzip -l dist/...` verification (D1.14, exit criterion #14). If hatchling is found unfit, switch to `setuptools>=68` (last resort). |
+| `hatchling` config has a subtle bug (e.g., `py.typed` not in wheel) | Medium | High | Sprint 1 must include a manual `unzip -l dist/...` verification (D1.14, exit criterion #14). If hatchling is found unfit, switch to **`flit-core`** (per Oracle review M3 — smaller, simpler, also PEP 517-compliant) rather than `setuptools`. |
 | `mypy --strict` on empty modules generates confusing errors | Low | Low | Set `[[tool.mypy.overrides]] module = ["src/paxman/errors.py"] strict = true` etc. as modules are added. |
 | `import-linter` config is too strict and blocks legitimate cross-cutting imports | Low | Medium | Start with one minimal contract: cross-cutting modules may not import from subsystems. Add subsystem-specific contracts in Sprint 2. |
 | `interrogate` 100% gate is too strict for `__init__.py` re-exports | Low | Low | Exclude `__init__.py` from interrogate (it documents via the symbols it re-exports). |

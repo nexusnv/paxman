@@ -113,7 +113,7 @@ None new. Sprint 10 uses the existing stack.
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | An external user finds a critical bug during validation | Medium | High | The 3-week sprint allows time to fix. If the bug is severe, cut `v1.0.0-rc.2` and re-validate. Worst case: delay v1.0.0 to v1.0.1. |
-| External users are not available on short notice | High | High | **This is the most critical prerequisite.** Recruit users at least 2 weeks before Sprint 10 starts. If users are not available, v1.0.0 is blocked. |
+| External users are not available on short notice | High | High | **This is the most critical prerequisite.** Begin recruiting during Sprint 0; secure commitments by Sprint 5; confirm availability by Sprint 8. **Fallback (per Oracle review M5):** if fewer than 3 users are confirmed by Sprint 8, ship `v1.0.0-rc.2` with the user-validation gate waived and document the waiver in the release notes. |
 | PyPI publish fails (OIDC misconfiguration) | Low | High | Test with TestPyPI first. Have a manual fallback ready. Read the PyPI error log carefully. |
 | The v1.0.0-rc.1 has a `replay_hash` that is not stable across two Python invocations | Low | High | This is the single hardest criterion. If it fails, investigate the source of non-determinism (likely: set iteration order, wall-clock timestamp, random number generator). |
 | The PyPI project description is malformed (long_description_content_type wrong) | Low | Medium | Test with `twine check dist/*` before publishing. Use Markdown (`text/markdown`). |

@@ -97,7 +97,7 @@ None. The stub inference provider returns hard-coded completions; no real provid
 
 1. `planner.plan(canonical_contract, profile, budget, policy, registry) -> ExecutionPlan` is a pure function (no clock, no random, no I/O).
 2. Property test: for 100 random `(canonical, profile, budget, policy, registry)` tuples, the same tuple produces byte-equal `ExecutionPlan` JSON across two calls.
-3. The 7-step heuristic ordering is implemented: explicit evidence → local deterministic → structured lookup → derived computation → local inference → remote inference → `UNRESOLVED`.
+3. The 7-step heuristic ordering is implemented: explicit evidence → local deterministic → structured lookup → derived computation → local inference → remote inference → `UNRESOLVED`. **Note (per Oracle M7):** "explicit evidence" in step 1 is a *planner rule* (deciding whether to skip capability invocation if the input already contains the value); it does not require a `text_extraction` capability to detect it — the planner checks the `InputProfile` (from Sprint 0 spec) for pre-extracted evidence. The planner's `scoring.py` is the module that implements this rule.
 4. The Planner excludes remote inference when `Policy.allow_remote_inference=False` (heuristic step 6 dropped).
 5. The Planner excludes local inference when `Policy.allow_local_inference=False` (heuristic step 5 dropped).
 6. `text_extraction` capability handles `text/plain` and `text/html` inputs (≥1 unit test each).

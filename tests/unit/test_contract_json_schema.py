@@ -1069,3 +1069,118 @@ def test_adapt_supported_draft_07() -> None:
     }
     c = JsonSchemaAdapter().adapt(schema)
     assert c.id == "x"
+
+
+# --- V2-only keyword rejection (Oracle review F3/F8) ------------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_rejects_const_keyword() -> None:
+    """``const`` is V2-only; rejected with UNSUPPORTED_JSON_SCHEMA_FEATURE.
+
+    Oracle review F8: the docstring previously claimed `const` mapped to
+    STRING (literal), but no code handled it. The fix is to reject it
+    explicitly so the caller knows the schema is not fully representable.
+    """
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {"f": {"const": "hello"}},
+        "required": ["f"],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "UNSUPPORTED_JSON_SCHEMA_FEATURE"
+    assert excinfo.value.context["keyword"] == "const"
+    assert excinfo.value.context["property"] == "f"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_rejects_oneof_keyword() -> None:
+    """``oneOf`` is V2-only; rejected with UNSUPPORTED_JSON_SCHEMA_FEATURE."""
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {
+            "f": {"oneOf": [{"type": "string"}, {"type": "integer"}]},
+        },
+        "required": ["f"],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "UNSUPPORTED_JSON_SCHEMA_FEATURE"
+    assert excinfo.value.context["keyword"] == "oneOf"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_rejects_anyof_keyword() -> None:
+    """``anyOf`` is V2-only; rejected with UNSUPPORTED_JSON_SCHEMA_FEATURE."""
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {
+            "f": {"anyOf": [{"type": "string"}, {"type": "integer"}]},
+        },
+        "required": ["f"],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "UNSUPPORTED_JSON_SCHEMA_FEATURE"
+    assert excinfo.value.context["keyword"] == "anyOf"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_rejects_allof_keyword() -> None:
+    """``allOf`` is V2-only; rejected with UNSUPPORTED_JSON_SCHEMA_FEATURE."""
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {
+            "f": {"allOf": [{"type": "string"}, {"minLength": 1}]},
+        },
+        "required": ["f"],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "UNSUPPORTED_JSON_SCHEMA_FEATURE"
+    assert excinfo.value.context["keyword"] == "allOf"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_rejects_ref_keyword() -> None:
+    """``$ref`` is V2-only; rejected with UNSUPPORTED_JSON_SCHEMA_FEATURE."""
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {"f": {"$ref": "#/$defs/Other"}},
+        "required": ["f"],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "UNSUPPORTED_JSON_SCHEMA_FEATURE"
+    assert excinfo.value.context["keyword"] == "$ref"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_rejects_additional_properties_false() -> None:
+    """``additionalProperties: false`` is a constraint we cannot represent.
+
+    Accepted but not enforced in V1, so the conservative choice is to
+    reject rather than silently drop the constraint.
+    """
+    schema = {
+        "title": "x",
+        "type": "object",
+        "properties": {"f": {"type": "string", "additionalProperties": False}},
+        "required": ["f"],
+    }
+    with pytest.raises(InvalidContractError) as excinfo:
+        JsonSchemaAdapter().adapt(schema)
+    assert excinfo.value.error_code == "UNSUPPORTED_JSON_SCHEMA_FEATURE"
+    assert excinfo.value.context["keyword"] == "additionalProperties"

@@ -7,6 +7,14 @@
 ## Scope (in)
 
 - `src/paxman/contract/_types.py` — `FieldType` enum, `Constraint`, `ResolutionPolicy` data models
+
+  > **Note (added per Oracle review F2):** `FieldType` was placed in
+  > `paxman.types` during Sprint 1 (cross-cutting module, single source
+  > of truth). `paxman.contract._types` re-exports it via
+  > `from paxman.types import FieldType` so the contract layer uses it
+  > without redefining it. The implementation matches the Sprint 1
+  > decision; this spec was written before Sprint 1 finalised the
+  > placement.
 - `src/paxman/contract/canonical.py` — `CanonicalContract`, `CanonicalField`, `MoneyValue` attrs data models
 - `src/paxman/contract/validator.py` — rejects invalid contracts → `InvalidContractError` family
 - `src/paxman/contract/semantics.py` — semantic tag handling (e.g., "iso4217", "email")

@@ -407,19 +407,28 @@ All errors raised by the Dict DSL adapter are `InvalidContractError` instances. 
 
 | Error code | When | Context keys |
 |---|---|---|
-| `MISSING_FIELD_NAME` | Field dict has no `name` key, or `name` is empty/None | `field_index` |
-| `MISSING_TYPE` | Field dict has no `type` key | `field_name` |
-| `MISSING_REQUIRED_FLAG` | Field dict has no `required` key | `field_name` |
-| `UNKNOWN_FIELD_TYPE` | `type` value is not one of the 9 V1 literals | `field_name`, `type` |
-| `DEFAULT_TYPE_MISMATCH` | `default` value does not match `type` | `field_name`, `expected_type`, `actual_value` |
+| `MISSING_CONTRACT_ID` | Contract has no `id`/`name` key, or it is empty/None | `contract` |
+| `EMPTY_FIELDS` | `fields` is an empty list | `contract_id` |
+| `MISSING_FIELDS` | Contract has no `fields` key, or `fields` is not a list | `contract_id` |
 | `DUPLICATE_FIELD` | Two fields share the same `name` | `field_name`, `first_index`, `second_index` |
+| `INVALID_CONTRACT` | Top-level contract shape is wrong (not a dict, wrong outer keys) | `contract` |
+| `INVALID_VERSION` | `version` key is present but not a non-empty string | `version` |
+| `MISSING_FIELD_NAME` | Field dict has no `name` key, or `name` is empty/None | `field_index` |
+| `INVALID_FIELD` | Field dict shape is wrong (not a dict, wrong keys) | `field_index` |
+| `MISSING_TYPE` | Field dict has no `type` key | `field_name` |
+| `UNKNOWN_FIELD_TYPE` | `type` value is not one of the 9 V1 literals | `field_name`, `type` |
+| `MISSING_REQUIRED_FLAG` | Field dict has no `required` key | `field_name` |
+| `INVALID_SEMANTIC_TAG` | A `tags` entry is not a non-empty string, or a known tag is misspelled | `field_name`, `tag`, `known_tags` |
+| `MISSING_ENUM_VALUES` | `ENUM` field has no `enum_values` key, or the list is empty | `field_name` |
 | `UNKNOWN_CONSTRAINT_KIND` | `kind` is not one of the 7 V1 constraint kinds | `kind`, `field_name` (or `None` for contract-level) |
 | `CONSTRAINT_PARAM_MISSING` | A required param key is missing from `params` | `kind`, `param`, `field_name` |
+| `INVALID_CONSTRAINT` | A constraint is malformed (wrong param type, value out of range) | `kind`, `field_name`, `details` |
+| `INVALID_REGEX_PATTERN` | `pattern` constraint has an invalid regex | `field_name`, `regex`, `parse_error` |
 | `MONEY_REQUIRES_CURRENCY` | MONEY default is missing `currency` key | `field_name` |
 | `INVALID_ISO_4217` | Currency code is not a valid ISO-4217 code | `field_name`, `currency` |
-| `INVALID_REGEX_PATTERN` | `pattern` constraint has an invalid regex | `field_name`, `regex`, `parse_error` |
-| `INVALID_CONFIDENCE_FLOOR` | `confidence_floor` is outside `[0.0, 1.0]` | `value` |
+| `DEFAULT_TYPE_MISMATCH` | `default` value does not match `type` | `field_name`, `expected_type`, `actual_value` |
 | `INVALID_POLICY_KEY` | `policy` dict contains an unknown key | `key`, `valid_keys` |
+| `INVALID_CONFIDENCE_FLOOR` | `confidence_floor` is outside `[0.0, 1.0]` | `value` |
 
 ---
 

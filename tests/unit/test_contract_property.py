@@ -170,6 +170,8 @@ def test_pydantic_round_trip(model: type) -> None:
     c1 = adapter.adapt(model)
     M2 = adapter.export(c1)
     c2 = adapter.adapt(M2)
+    # Oracle review F10: also assert field count so dropping a field is caught.
+    assert len(c1.fields) == len(c2.fields)
     assert [f.name for f in c1.fields] == [f.name for f in c2.fields]
     assert [f.type for f in c1.fields] == [f.type for f in c2.fields]
 

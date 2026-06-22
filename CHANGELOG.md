@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `paxman.contract.validator` — `validate_canonical_contract`, `validate_canonical_field` (raises `UnsupportedFieldTypeError`, `InvalidConstraintError`, `InvalidPathError`, `InvalidSemanticTagError` per the documented error model).
   - `paxman.contract.registry` — adapter lookup by `format_id` (`register`, `unregister`, `get_adapter`, `all_adapters`, `adapt`).
   - `paxman.contract.adapters.base` — concrete `ContractAdapter` Protocol (the SPI).
-  - `paxman.contract.adapters.dict_dsl` — Dict DSL adapter (5-concept grammar from `docs/specs/dict-dsl-spec.md`; 13 documented `error_code` values).
+  - `paxman.contract.adapters.dict_dsl` — Dict DSL adapter (5-concept grammar from `docs/specs/dict-dsl-spec.md`; 22 documented `error_code` values per `docs/specs/dict-dsl-spec.md` §7).
   - `paxman.contract.adapters.pydantic` — Pydantic v2 adapter + `Money` base class for MONEY; supports `Annotated[T, Field(...)]`, `min_length`/`max_length`/`pattern`, `ge`/`gt`/`le`/`lt`, `Literal` enums, `default_factory`.
   - `paxman.contract.adapters.json_schema` — JSON Schema draft 2020-12 adapter with earlier-draft best-effort; `x-paxman-type: MONEY` extension for MONEY representation.
   - Fixture contracts: `tests/fixtures/contracts/pydantic/{invoice,with_money,all_v1_types}.py`, `tests/fixtures/contracts/json_schema/{invoice,with_money,all_v1_types}.json`, `tests/fixtures/contracts/dict_dsl/{invoice,with_money,all_v1_types}.py` (3 + 3 + 3 paired fixtures, per D2.10).

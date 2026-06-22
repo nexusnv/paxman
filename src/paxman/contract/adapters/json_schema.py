@@ -36,7 +36,6 @@ V1 type mapping (draft 2020-12 → ``FieldType``):
 - ``"array"`` → ``ARRAY``
 - ``"object"`` → ``OBJECT``
 - ``"enum": [...]`` → ``ENUM`` (with ``enum_values``)
-- ``"const"`` → ``STRING`` (literal)
 
 V1 constraint mapping:
 
@@ -48,6 +47,20 @@ V1 constraint mapping:
 - ``"enum"`` → ``ENUM`` (also drives the ENUM type detection)
 - ``"minItems"`` / ``"maxItems"`` → ``MIN_LENGTH`` / ``MAX_LENGTH`` on ``ARRAY``
 
+V1 reject-list (V2 features; explicitly rejected to fail fast instead of
+silently dropping information):
+
+- ``"const"`` — has no V1 canonical equivalent; rejected with
+  ``UNSUPPORTED_JSON_SCHEMA_FEATURE``. Use ``"enum": [<literal>]`` to
+  express a single-value constraint.
+- ``"oneOf"`` / ``"anyOf"`` / ``"allOf"`` — composition is V2; rejected
+  with ``UNSUPPORTED_JSON_SCHEMA_FEATURE``.
+- ``"$ref"`` — reference resolution is V2 (use the Pydantic adapter for
+  shared models); rejected with ``UNSUPPORTED_JSON_SCHEMA_FEATURE``.
+- ``"additionalProperties"`` — not enforced in V1; accepted but not
+  honored. ``UNSUPPORTED_JSON_SCHEMA_FEATURE`` is raised only when set
+  to ``false`` (which would imply a constraint we cannot represent).
+
 Error model
 -----------
 
@@ -58,8 +71,10 @@ one of the following ``error_code`` values:
 - ``INVALID_CONSTRAINT`` — a constraint is malformed (e.g., wrong type).
 - ``INVALID_FIELD`` — the field shape is wrong.
 - ``INVALID_VERSION`` — the ``$schema`` is unrecognized.
-- ``UNSUPPORTED_PYDANTIC_FEATURE`` — reused for unsupported JSON Schema
-  features (e.g., ``oneOf`` / ``anyOf`` / ``allOf`` are V2).
+- ``UNSUPPORTED_JSON_SCHEMA_FEATURE`` — a V2-only keyword (``const``,
+  ``oneOf``, ``anyOf``, ``allOf``, ``$ref``, or
+  ``additionalProperties: false``) was used. Fail-fast so the caller
+  knows the schema is not fully representable in V1.
 """
 
 from __future__ import annotations
@@ -271,6 +286,34 @@ class JsonSchemaAdapter:
         contract_id: str,
     ) -> CanonicalField:
         """Adapt a single JSON Schema property to :class:`CanonicalField`."""
+        # Fail fast on V2-only keywords (Oracle review F3/F8). The V1 canonical
+        # model cannot represent these and silently dropping them would lose
+        # information; explicit rejection tells the caller the schema is
+        # not fully representable in V1.
+        for keyword in ("const", "oneOf", "anyOf", "allOf", "$ref"):
+            if keyword in schema:
+                raise InvalidContractError(
+                    f"property {name!r} in {contract_id!r} uses V2-only keyword "
+                    f"{keyword!r}; not supported by the V1 JSON Schema adapter",
+                    error_code="UNSUPPORTED_JSON_SCHEMA_FEATURE",
+                    context={
+                        "contract_id": contract_id,
+                        "property": name,
+                        "keyword": keyword,
+                    },
+                )
+        # additionalProperties: false is a constraint we cannot represent; reject.
+        if schema.get("additionalProperties") is False:
+            raise InvalidContractError(
+                f"property {name!r} in {contract_id!r} uses "
+                "'additionalProperties: false', which is not enforced in V1",
+                error_code="UNSUPPORTED_JSON_SCHEMA_FEATURE",
+                context={
+                    "contract_id": contract_id,
+                    "property": name,
+                    "keyword": "additionalProperties",
+                },
+            )
         # Detect MONEY via x-paxman-type.
         if schema.get(_PAXMAN_TYPE_KEY) == "MONEY":
             return self._adapt_money_property(

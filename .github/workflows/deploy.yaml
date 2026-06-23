@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        
       - name: Deploy via Cloudflare SSH
         uses: and-fm/cloudflared-ssh-action@v3
         with:

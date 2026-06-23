@@ -40,8 +40,6 @@ Boundary rules
   :mod:`paxman.planner.field_plan`, :mod:`paxman.planner.input_profile`,
   and the other cross-cutting modules.
 - :mod:`paxman.executor` may NOT import from:
-  :mod:`paxman.contract.adapters.*` (the Executor does not know
-  about external contract formats),
   :mod:`paxman.reconciler`, :mod:`paxman.artifact`, or
   :mod:`paxman.api`.
 

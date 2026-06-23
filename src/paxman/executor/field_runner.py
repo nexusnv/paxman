@@ -54,7 +54,7 @@ from paxman.capabilities.result import (
     DiagnosticCode,
     DiagnosticSeverity,
 )
-from paxman.capabilities.spec import CapabilityTier
+from paxman.capabilities.spec import CapabilitySpec, CapabilityTier
 from paxman.errors import CapabilityError
 from paxman.executor.budget_tracker import BudgetTracker
 from paxman.executor.context import ContextBuilder
@@ -267,7 +267,6 @@ class FieldRunner:
             capability = registry.get((step.capability_id, step.capability_version))
             if capability is None:
                 # Capability not registered. Emit a diagnostic
-                # Capability not registered. Emit a diagnostic
                 # and continue. The Executor must not crash
                 # because a step points at a missing capability.
                 diagnostics_list.append(
@@ -293,12 +292,7 @@ class FieldRunner:
             # Build the per-step context. The context is fresh per
             # invocation so the capability cannot affect the
             # executor's state.
-            spec = capability.spec
-            # The ``Capability`` Protocol declares ``spec -> object``,
-            # so narrow it to the concrete ``CapabilitySpec``.
-            from paxman.capabilities.spec import CapabilitySpec as _CapSpec
-
-            spec = typing.cast(_CapSpec, spec)
+            spec = typing.cast(CapabilitySpec, capability.spec)
             tier = spec.tier
             field_path = _field_path_from_plan(field_plan)
             try:

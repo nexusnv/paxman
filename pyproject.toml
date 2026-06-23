@@ -405,6 +405,9 @@ dev = [
     "pytest-cov>=4.1",
     "pytest-xdist>=3.3",
     "hypothesis>=6.0",
+    "datasets",
+    "huggingface-hub",
+    "pytest-benchmark",
     # Lint + format
     "ruff>=0.4",
     # Type check

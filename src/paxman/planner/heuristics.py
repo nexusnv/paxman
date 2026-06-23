@@ -275,6 +275,39 @@ def _accepts_field_type(spec: CapabilitySpec, field: CanonicalField) -> bool:
     return field.type.name in spec.input_types
 
 
+def _version_key(version: str) -> tuple[int, ...]:
+    """Return a sortable key for a semver string.
+
+    Splits the version on ``.`` and converts each component to
+    ``int``. Non-numeric components fall back to ``0`` so the
+    function is total (no exception on weird input). Numeric
+    comparison is the desired semantic; lexicographic would
+    rank ``"1.10"`` before ``"1.9"``.
+
+    Args:
+        version: A version string (e.g., ``"1.2.3"``).
+
+    Returns:
+        A tuple of non-negative integers (e.g., ``(1, 2, 3)``).
+        Mixed-length version tuples compare correctly via
+        Python's lexicographic tuple comparison (e.g.,
+        ``(1, 10) > (1, 9)`` and ``(2,) > (1, 99)``).
+    """
+    parts = version.split(".")
+    out: list[int] = []
+    for p in parts:
+        try:
+            out.append(int(p))
+        except ValueError:
+            out.append(0)
+    return tuple(out)
+
+
+def _version_gte(a: str, b: str) -> bool:
+    """Return True if version *a* >= version *b* (semver-aware)."""
+    return _version_key(a) >= _version_key(b)
+
+
 def build_capability_chain(
     field: CanonicalField,
     profile: InputProfile,
@@ -321,10 +354,13 @@ def build_capability_chain(
             registry = all_capabilities()
         spec: object = None
         chosen_key: tuple[str, str] | None = None
+        # Compare versions numerically (semver-aware) so that
+        # "1.10" beats "1.9". A naive tuple comparison would do
+        # lexicographic ordering, which gets semver wrong.
         for key, _cap in registry.items():
             if key[0] != "text_extraction":
                 continue
-            if chosen_key is None or key > chosen_key:
+            if chosen_key is None or _version_gte(key[1], chosen_key[1]):
                 chosen_key = key
         if chosen_key is not None:
             spec = getattr(registry[chosen_key], "spec", None)

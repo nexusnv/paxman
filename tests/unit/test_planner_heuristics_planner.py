@@ -13,6 +13,8 @@ from paxman.budget import Budget, Policy
 from paxman.capabilities.registry import register, reset
 from paxman.capabilities.spec import (
     CapabilitySpec,
+    CapabilityTier,
+    CostHint,
 )
 from paxman.capabilities.v1.inference import InferenceCapability
 from paxman.capabilities.v1.regex_extraction import RegexExtractionCapability
@@ -22,6 +24,8 @@ from paxman.contract._types import ContractPolicy
 from paxman.contract.canonical import CanonicalContract, CanonicalField
 from paxman.planner.field_plan import FieldPlan
 from paxman.planner.heuristics import (
+    _version_gte,
+    _version_key,
     build_capability_chain,
     build_field_plan,
     has_explicit_evidence,
@@ -380,3 +384,87 @@ def attrs_replace_policies(
     from attrs import evolve
 
     return evolve(contract, policies=policies)
+
+
+# --- _version_key / _version_gte (semver-aware comparison) ---------------
+
+
+def test_version_key_sorts_numerically() -> None:
+    """``_version_key`` is a tuple of ints; comparison is numeric, not lex."""
+    assert _version_key("1.10") > _version_key("1.9")
+    assert _version_key("2.0") > _version_key("1.99")
+    assert _version_key("1.2.3") == (1, 2, 3)
+
+
+def test_version_gte_basic() -> None:
+    """``_version_gte`` is True when the left side >= the right side."""
+    assert _version_gte("1.10", "1.9")
+    assert _version_gte("2.0", "2.0")
+    assert not _version_gte("1.9", "1.10")
+    assert _version_gte("1.0", "1.0-rc")  # non-numeric parts become 0
+
+
+def test_build_capability_chain_picks_highest_semver_text_extraction() -> None:
+    """The heuristic picks the semver-highest text_extraction, not the lex-highest.
+
+    Regression test: a naive ``key > chosen_key`` would rank
+    ``"1.10"`` below ``"1.9"`` because ``"1.10" < "1.9"`` as strings.
+    The semver-aware helper must pick ``"1.10"``.
+    """
+    from paxman.capabilities.base import CapabilityContext
+    from paxman.capabilities.result import CapabilityResult
+
+    class _SpecCap:
+        """Minimal capability wrapper that exposes a custom spec."""
+
+        def __init__(self, spec: CapabilitySpec) -> None:
+            self._spec = spec
+
+        @property
+        def spec(self) -> CapabilitySpec:
+            return self._spec
+
+        def invoke(self, ctx: CapabilityContext) -> CapabilityResult:  # pragma: no cover
+            return CapabilityResult()
+
+    reset()
+    register(
+        _SpecCap(
+            CapabilitySpec(
+                id="text_extraction",
+                version="1.9",
+                cost_estimate=CostHint(0, 5, 0.0),
+                tier=CapabilityTier.LOCAL_DETERMINISTIC,
+            )
+        )
+    )
+    register(
+        _SpecCap(
+            CapabilitySpec(
+                id="text_extraction",
+                version="1.10",
+                cost_estimate=CostHint(0, 5, 0.0),
+                tier=CapabilityTier.LOCAL_DETERMINISTIC,
+            )
+        )
+    )
+    field = CanonicalField(
+        id="f1",
+        path="f1",
+        name="f1",
+        type=FieldType.STRING,
+        required=True,
+    )
+    profile = make_profile(b"ACME Corp")
+    chain = build_capability_chain(field, profile, Policy(), None)
+    # Find the text_extraction step in the chain.
+    text_steps = [s for s in chain if s.capability_id == "text_extraction"]
+    assert text_steps, "expected a text_extraction step"
+    # The semver-highest "1.10" must win over "1.9".
+    assert text_steps[0].capability_version == "1.10"
+    reset()
+    # Re-register the real V1 capability so other tests are unaffected.
+    register(RegexExtractionCapability())
+    register(ValidationCapability())
+    register(TextExtractionCapability())
+    register(InferenceCapability())

@@ -55,6 +55,7 @@ from paxman.errors import InferenceProviderError
 __all__ = [
     "Completion",
     "CompletionRequest",
+    "CyclingStubInferenceProvider",
     "InferenceCapability",
     "InferenceProvider",
     "StubInferenceProvider",
@@ -225,6 +226,125 @@ class StubInferenceProvider:
         """
         text = f"<stub: {request.prompt[:64]}>"
         return Completion(text=text, model="stub-v1", usage=Usage())
+
+
+#: The 3 fixed completions the cycling stub rotates through. The
+#: strings are deliberately distinctive so tests can assert which
+#: "cycle position" produced a given response. Per the Sprint 4
+#: risk register, the cycling stub simulates the non-determinism
+#: of a real provider: the same prompt on a fresh provider may
+#: return any of these three strings.
+_DEFAULT_CYCLE_TEXTS: typing.Final[tuple[str, ...]] = (
+    "ACME Corp",
+    "Globex Industries",
+    "Initech LLC",
+)
+
+
+class CyclingStubInferenceProvider:
+    """Test-only :class:`InferenceProvider` that cycles through 3 fixed strings.
+
+    The Sprint 4 risk register flags that a "stub provider
+    accidentally returns the same completion on every call" would
+    defeat non-determinism tests. This cycling stub is the
+    countermeasure: it returns one of three pre-defined strings,
+    selected by the call index (modulo 3).
+
+    The cycling is **deterministic given the call order**: the
+    first call returns ``_DEFAULT_CYCLE_TEXTS[0]``, the second
+    returns ``_DEFAULT_CYCLE_TEXTS[1]``, etc. Two calls to
+    :meth:`complete` in the same order produce the same results.
+    This is **not** real non-determinism, but it is enough to
+    exercise the V1 capability's "different completions on
+    different calls" path.
+
+    The provider records its own call count via
+    :attr:`call_count`; tests can reset it with
+    :meth:`reset`.
+
+    Like :class:`StubInferenceProvider`, this stub **never makes
+    network calls**. The same Sprint 3
+    ``test_stub_never_makes_network_calls`` test (parametrized
+    over the stub classes) pins this.
+
+    Examples:
+        >>> stub = CyclingStubInferenceProvider()
+        >>> stub.complete(CompletionRequest(prompt="x")).text
+        'ACME Corp'
+        >>> stub.complete(CompletionRequest(prompt="x")).text
+        'Globex Industries'
+        >>> stub.complete(CompletionRequest(prompt="x")).text
+        'Initech LLC'
+        >>> stub.complete(CompletionRequest(prompt="x")).text
+        'ACME Corp'
+    """
+
+    def __init__(
+        self,
+        texts: tuple[str, ...] = _DEFAULT_CYCLE_TEXTS,
+        model_id: str = "stub-cycle-v1",
+    ) -> None:
+        """Initialize the cycling stub.
+
+        Args:
+            texts: The fixed tuple of completions to cycle
+                through. Must be non-empty. Defaults to the
+                V1 cycling stub's 3 vendor names.
+            model_id: The model identifier reported in
+                completions. Defaults to ``"stub-cycle-v1"``.
+        """
+        if not isinstance(texts, tuple):
+            raise TypeError(f"texts must be a tuple, got {type(texts).__name__}")
+        if not texts:
+            raise ValueError("texts must be non-empty")
+        for i, t in enumerate(texts):
+            if not isinstance(t, str):
+                raise TypeError(f"texts[{i}] must be a str, got {type(t).__name__}: {t!r}")
+        if not isinstance(model_id, str) or not model_id:
+            raise ValueError(f"model_id must be a non-empty str, got {model_id!r}")
+        self._texts: tuple[str, ...] = texts
+        self._model_id: str = model_id
+        self._call_count: int = 0
+
+    @property
+    def call_count(self) -> int:
+        """The number of :meth:`complete` calls made so far."""
+        return self._call_count
+
+    def reset(self) -> None:
+        """Reset the call count to 0. The next call returns
+        ``texts[0]``."""
+        self._call_count = 0
+
+    def complete(self, request: CompletionRequest) -> Completion:
+        """Return the next cycled :class:`Completion`.
+
+        Args:
+            request: The :class:`CompletionRequest`. Only the
+                ``prompt`` is read to satisfy the signature;
+                the cycling is **prompt-independent** so the
+                same provider returns different completions
+                for the same prompt across calls.
+
+        Returns:
+            A :class:`Completion` with text drawn from
+            ``texts[call_count mod len(texts)]``, plus a
+            :class:`Usage` record with ``prompt_tokens=len(prompt)``
+            and ``completion_tokens=len(text)`` so the cycle
+            is observable from the artifact.
+        """
+        idx = self._call_count % len(self._texts)
+        self._call_count += 1
+        text = self._texts[idx]
+        return Completion(
+            text=text,
+            model=self._model_id,
+            usage=Usage(
+                prompt_tokens=len(request.prompt),
+                completion_tokens=len(text),
+                total_tokens=len(request.prompt) + len(text),
+            ),
+        )
 
 
 #: The default :class:`InferenceProvider` used when no provider is

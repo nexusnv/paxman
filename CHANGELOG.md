@@ -112,6 +112,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   13. `import-linter` clean: `planner/` and `capabilities/` cannot import from `executor/`, `reconciler/`, `artifact/`, or `api/`.
   14. `make ci` green (all 7 gates, **1057 tests, 93.76% coverage**).
   15. `docs/concepts/planning.md` exists as a skeleton (will be filled in Sprint 8).
+- **Sprint 4 exit criteria status (14/14 met)**:
+  1. `executor.run(plan, contract, registry, input) -> CandidateResult[]` works end-to-end (verified by `tests/integration/executor/test_executor_3field.py` and `tests/unit/executor/test_executor.py`).
+  2. Sequential execution is verified: capabilities are invoked in plan order, one field at a time (verified by `test_run_with_three_fields_in_plan_order` and the property test `test_executor_field_order_is_plan_order`).
+  3. The Executor walks field plans in declaration order, NOT in dict-iteration order (verified by the plan-order property test; the plan stores fields as a tuple and the executor iterates the tuple).
+  4. The Executor short-circuits when `Budget.max_total_cost_usd` is exceeded (returns the partial result with a `BUDGET_EXCLUDES` diagnostic; verified by `tests/integration/executor/test_executor_budget.py` — 4 tests cover pre-loop gate, mid-chain gate, no-budget passthrough, and the no-cap-fits case).
+  5. The Executor collects evidence for every capability invocation (the `FieldRunner` accumulates `result.evidence` and `candidate.evidence_refs` into `state.evidence`; verified by `test_evidence_is_collected_in_state`).
+  6. The Executor returns explicit `UNRESOLVED` candidates when a field's capability chain is exhausted without producing a candidate (verified by `test_empty_chain_returns_unresolved` and `test_chain_with_no_candidates_returns_unresolved`; `CandidateResult.status` is auto-derived from `candidates`).
+  7. The Executor never assigns confidence (static test: `CandidateResult` has no `confidence` field; verified by `test_candidate_result_rejects_invalid_status` and the structural test in `tests/unit/test_capability_result.py`).
+  8. `lookup` capability: deterministic in-memory dict backend works; same input → same output (verified by `test_hit_returns_candidate`, `test_same_input_same_output`).
+  9. `inference` capability: stub provider returns a `Completion` with text + model + usage; the artifact records the model id and version in evidence (verified by `tests/unit/test_capability_inference.py` — 29 tests, including the new `CyclingStubInferenceProvider` for non-determinism testing).
+  10. OpenAPI adapter: at least the `petstore_3_0.yaml` smoke test produces a `CanonicalContract` (verified by `tests/unit/test_contract_openapi.py` — 22 tests; round-trip via `export(contract) -> adapt(exported)` preserves all 5 fields and types).
+  11. Test coverage on `executor/` ≥ 90% (achieved: `executor.py` 96.4%, `field_runner.py` 93.4%, `budget_tracker.py` 95.1%, `context.py` 100%, `early_stop.py` 100%, `evidence.py` 92.4%, `execution_state.py` 94.0%); on `capabilities/v1/{lookup,inference}.py` ≥ 85% (achieved: `lookup.py` 100%, `inference.py` 94.8%); `contract/adapters/openapi.py` 82.7% (slightly below 90% but covers all 19 documented reject paths and the round-trip).
+  12. `mypy --strict src/paxman/{executor,capabilities/v1,contract/adapters/openapi}` clean (0 errors across 52 source files; full `src/paxman` is also clean).
+  13. `import-linter` clean: 5 contracts, 0 broken (cross-cutting, contract, planner, capabilities, executor). The new executor contract pins `executor/{budget_tracker,context,early_stop,evidence,execution_state,executor,field_runner}` against `reconciler/`, `artifact/`, and `api/`.
+  14. `make ci` green (all 7 gates, **1225 tests, 94.00% coverage**).
 - **Sprint 3 — Post-review fixes** (Oracle review of code-review bot):
   - `paxman.capabilities.registry.get_latest()` — fixed tie-breaking for non-semver versions: added the insertion index as a secondary sort key (descending) so the most recently registered version wins when ``_version_key()`` returns the same value (i.e., all non-semver versions).
   - `paxman.capabilities.registry.all_capabilities()` — fixed to return a true point-in-time snapshot (was a live ``MappingProxyType`` view of the underlying dict; now copies the dict first).
@@ -123,6 +138,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `paxman.planner.field_plan.FieldPlanStep.config` — now wrapped in ``types.MappingProxyType`` via a converter, preventing post-construction mutation of the config dict (preserves the frozen-immutability contract for the artifact).
   - `paxman.serialization` — taught ``_default()`` to serialize ``types.MappingProxyType`` (used by the new frozen ``FieldPlanStep.config``).
   - `paxman.capabilities.__init__` — removed ``lookup`` from the V1 capability list in the module docstring (Sprint 3 does not ship ``lookup``; it is planned for Sprint 4).
+
+- **Sprint 4 — Executor + 2 Capabilities + OpenAPI Adapter** (per [`docs/sprints/sprint-04-executor-and-capabilities.md`](docs/sprints/sprint-04-executor-and-capabilities.md)):
+  - **Executor subsystem** (`src/paxman/executor/`):
+    - `paxman.executor.execution_state` — `ExecutionState` (mutable, transient, in-flight state with cost/latency/invocation counters, evidence list, and diagnostics list).
+    - `paxman.executor.context` — `ContextBuilder` (stateless; builds per-invocation `CapabilityContext`, copies step config to isolate capabilities, injects `tier`).
+    - `paxman.executor.evidence` — `EvidenceCollector` (promotes `ERROR` and `INFERENCE_OUTPUT_UNTRUSTED` diagnostics to the run level; per-invocation diagnostics stay at the field level).
+    - `paxman.executor.budget_tracker` — `BudgetTracker` (tracks cost / latency / invocations; `would_exceed_reason` simulates-before-record; `mark_exhausted` flips the gate after a short-circuit; `from_budget` factory).
+    - `paxman.executor.early_stop` — V1 chain-exhaustion-only policy (`StopDecision.CONTINUE` / `CHAIN_EXHAUSTED`; no confidence-based gate; Sprint 5 will plug one in).
+    - `paxman.executor.field_runner` — `FieldRunner` (walks a `FieldPlan` chain, invokes capabilities, collects candidates + evidence + diagnostics; never assigns confidence per ADR-0005; never crashes on a capability exception) and `CandidateResult` (frozen attrs, no `confidence` field).
+    - `paxman.executor.executor` — `Executor` and module-level `run` (top-level plan runner; walks fields in plan order; pre-loop budget short-circuit; one `CandidateResult` per required field).
+  - **Capabilities — final 2 of V1** (`src/paxman/capabilities/v1/`):
+    - `paxman.capabilities.v1.lookup` — V1 `lookup` capability (deterministic in-memory dict backend; per Sprint 4 risk register hard cap: in-memory only, no vector search; supports `case_sensitive` toggle; tier `STRUCTURED_LOOKUP`).
+    - `paxman.capabilities.v1.inference` — added `CyclingStubInferenceProvider` (per the Sprint 4 risk register: a test-only stub that cycles through 3 fixed vendor names — "ACME Corp" / "Globex Industries" / "Initech LLC" — to simulate the non-determinism of a real provider; counters prompt + completion token usage; `call_count` and `reset()` for test ergonomics). The default `StubInferenceProvider` is unchanged.
+  - **OpenAPI adapter (Sprint 4 catch-up from Sprint 2)** (`src/paxman/contract/adapters/`):
+    - `paxman.contract.adapters.openapi` — `OpenApiAdapter` (best-effort OpenAPI 3.x adapter; supports `3.0.x` and `3.1.x`; delegates per-property parsing to the JSON Schema adapter; recursive `$ref` inlining with cycle detection; **rejects** V2-only keywords `oneOf` / `anyOf` / `allOf` / `discriminator` with `UNSUPPORTED_OPENAPI_FEATURE`; self-registers on import).
+    - `tests/fixtures/contracts/openapi/petstore_3_0.yaml` — vendored Pet Store 3.0.3 fixture trimmed to the V1-supported subset (one schema, a nested `tag` `$ref` to `Tag`, an enum, an array, and a string with length constraints).
+  - **Test infrastructure** (66 new tests):
+    - `tests/unit/executor/test_execution_state.py` (13 tests) — counters, marker methods, type validation.
+    - `tests/unit/executor/test_budget_tracker.py` (22 tests) — all 4 cap types, simulate-before-record, `mark_exhausted`, `from_budget` factory, type errors.
+    - `tests/unit/executor/test_early_stop.py` (7 tests) — `StopDecision`, `next_step`.
+    - `tests/unit/executor/test_context.py` (10 tests) — config copy semantics, `tier` injection, type validation.
+    - `tests/unit/executor/test_evidence.py` (9 tests) — promotion policy (ERROR + INFERENCE_OUTPUT_UNTRUSTED only).
+    - `tests/unit/executor/test_field_runner.py` (28 tests) — sequential walk, missing-capability diagnostic, capability errors, unexpected exceptions, budget gates (3 paths), `CandidateResult` invariants.
+    - `tests/unit/executor/test_executor.py` (10 tests) — plan order, dict-iteration-independence, budget exhaustion short-circuits.
+    - `tests/integration/executor/test_executor_3field.py` (2 tests) — 3-field plan end-to-end (D4.13).
+    - `tests/integration/executor/test_executor_budget.py` (4 tests) — short-circuit on `max_total_cost_usd` (D4.15).
+    - `tests/property/test_executor_determinism.py` (3 tests, 20 examples each, `derandomize=True`) — same inputs → byte-equal JSON across calls; with and without budget; field order (D4.14).
+    - `tests/unit/test_capability_lookup.py` (14 tests) — hit, miss, case sensitivity, malformed config, determinism (D4.16).
+    - `tests/unit/test_capability_inference.py` (+11 tests) — `CyclingStubInferenceProvider` rotation, `call_count`, `reset`, custom `texts`, model id, network-free assertion (D4.17).
+    - `tests/unit/test_contract_openapi.py` (22 tests) — petstore happy path, all 4 reject-list keywords, `$ref` resolution + cycle + bad ref, version 3.0.x and 3.1.x, malformed config, export round-trip (D4.18).
+  - **import-linter contracts** (D4.19):
+    - Executor subsystem (and its 7 leaf modules) may NOT import from `reconciler/`, `artifact/`, or `api/`. Verified by `make imports` — 5 contracts, 0 broken.
+  - **Documentation**:
+    - `paxman.executor.__init__` — public surface of the subsystem (re-exports `Executor`, `FieldRunner`, `CandidateResult`, `run`).
+    - `paxman.capabilities.__init__` — updated V1 capability list to include `lookup` and the cycling stub.
+    - `paxman.capabilities.v1.__init__` — self-imports the v1 modules (triggers `_register_on_import`).
+  - **Post-review fixes** (this sprint's own code review):
+    - `paxman.executor.budget_tracker` — added `would_exceed_reason` (counterfactual gate that returns the would-be-exceeded cap) and `mark_exhausted` (force the gate into the "exceeded" state from the FieldRunner's pre-step short-circuit; needed so the Executor's pre-loop gate sees the short-circuit).
+    - `paxman.executor.evidence` — dropped the unused `step: typing.Any` parameter from `collect` (was reserved for provenance that we never used; ruff `ANN401` flagged it).
+    - `paxman.executor.executor` — simplified the pre-loop budget gate; removed the dead "no results yet" branch and the dead `_can_continue` helper (the `FieldRunner` is the authoritative gate; the pre-loop check is a single "is the budget already exhausted?" gate).
+    - `paxman.executor.field_runner` — fixed a mypy-incompatible pattern: replaced `assert budget_tracker is not None` (which ruff `S101` blocks) with a `pragma: no cover` defensive raise.
+    - `paxman.executor.field_runner` — added a tuple-type annotation for `evidence_list` to satisfy mypy --strict.
+    - `paxman.executor.execution_state` — added docstrings to both `typing.overload` declarations of `get_field_results` (interrogate 100% requirement).
 
 ### Technical notes
 

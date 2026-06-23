@@ -307,6 +307,7 @@ source_modules = [
     "paxman.capabilities.spec",
     "paxman.capabilities.v1",
     "paxman.capabilities.v1.inference",
+    "paxman.capabilities.v1.lookup",
     "paxman.capabilities.v1.regex_extraction",
     "paxman.capabilities.v1.text_extraction",
     "paxman.capabilities.v1.validation",
@@ -318,6 +319,40 @@ forbidden_modules = [
     "paxman.artifact",
     "paxman.api",
 ]
+
+# Sprint 4 deliverable D4.19 / exit criterion #13.
+# The executor subsystem must not import from reconciler, artifact,
+# or api (per PACKAGE_STRUCTURE.md §2, §6, and §11.4). It MAY
+# import from contract, capabilities, planner, and cross-cutting
+# modules. Each leaf module is listed explicitly (import-linter's
+# "forbidden" contract does not recurse into submodules of a
+# listed source_module).
+[[tool.importlinter.contracts]]
+name = "Executor subsystem must not import from reconciler/artifact/api"
+type = "forbidden"
+source_modules = [
+    "paxman.executor",
+    "paxman.executor.budget_tracker",
+    "paxman.executor.context",
+    "paxman.executor.early_stop",
+    "paxman.executor.evidence",
+    "paxman.executor.execution_state",
+    "paxman.executor.executor",
+    "paxman.executor.field_runner",
+]
+forbidden_modules = [
+    "paxman.reconciler",
+    "paxman.artifact",
+    "paxman.api",
+]
+
+# Sprint 4 deliverable D4.10 / exit criterion #10.
+# The OpenAPI adapter is a sibling of the JSON Schema adapter inside
+# ``contract/adapters/``. It may import from any other contract
+# submodule (including the JSON Schema adapter) but must NOT
+# import from any other subsystem. This is already covered by
+# the "Contract subsystem must not import from other subsystems"
+# contract above; no separate contract needed.
 
 # --- uv (project manager) -----------------------------------------------------
 # PEP 735 dependency groups (replaces [tool.uv] dev-dependencies).

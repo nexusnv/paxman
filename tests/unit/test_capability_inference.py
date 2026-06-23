@@ -15,6 +15,7 @@ from paxman.capabilities.spec import CapabilitySpec, CapabilityTier, CostHint
 from paxman.capabilities.v1.inference import (
     Completion,
     CompletionRequest,
+    CyclingStubInferenceProvider,
     InferenceCapability,
     InferenceProvider,
     StubInferenceProvider,
@@ -223,3 +224,120 @@ def test_inference_provider_is_protocol() -> None:
     implement ``complete(request) -> Completion`` are accepted
     structurally (PEP 544)."""
     assert hasattr(InferenceProvider, "complete")
+
+
+# --- CyclingStubInferenceProvider (Sprint 4 D4.9) --------------------
+
+
+def test_cycling_stub_returns_three_strings_in_rotation() -> None:
+    """The cycling stub cycles through 3 fixed strings."""
+    stub = CyclingStubInferenceProvider()
+    r1 = stub.complete(CompletionRequest(prompt="hello"))
+    r2 = stub.complete(CompletionRequest(prompt="hello"))
+    r3 = stub.complete(CompletionRequest(prompt="hello"))
+    r4 = stub.complete(CompletionRequest(prompt="hello"))
+    assert r1.text == "ACME Corp"
+    assert r2.text == "Globex Industries"
+    assert r3.text == "Initech LLC"
+    # The cycle wraps.
+    assert r4.text == "ACME Corp"
+
+
+def test_cycling_stub_uses_prompt_independent_rotation() -> None:
+    """The cycling is prompt-independent: same prompt yields different completions."""
+    stub = CyclingStubInferenceProvider()
+    r1 = stub.complete(CompletionRequest(prompt="first prompt"))
+    r2 = stub.complete(CompletionRequest(prompt="different prompt"))
+    assert r1.text != r2.text
+
+
+def test_cycling_stub_records_call_count() -> None:
+    stub = CyclingStubInferenceProvider()
+    assert stub.call_count == 0
+    stub.complete(CompletionRequest(prompt="x"))
+    assert stub.call_count == 1
+    stub.complete(CompletionRequest(prompt="y"))
+    assert stub.call_count == 2
+    stub.reset()
+    assert stub.call_count == 0
+
+
+def test_cycling_stub_after_reset_starts_from_first() -> None:
+    stub = CyclingStubInferenceProvider()
+    stub.complete(CompletionRequest(prompt="x"))  # 0: "ACME Corp"
+    stub.complete(CompletionRequest(prompt="x"))  # 1: "Globex Industries"
+    stub.reset()
+    assert stub.complete(CompletionRequest(prompt="x")).text == "ACME Corp"
+
+
+def test_cycling_stub_reports_token_usage() -> None:
+    """The cycling stub records prompt + completion token counts."""
+    stub = CyclingStubInferenceProvider()
+    r = stub.complete(CompletionRequest(prompt="hello world"))
+    assert r.usage.prompt_tokens == len("hello world")
+    assert r.usage.completion_tokens == len(r.text)
+    assert r.usage.total_tokens == r.usage.prompt_tokens + r.usage.completion_tokens
+
+
+def test_cycling_stub_accepts_custom_texts() -> None:
+    stub = CyclingStubInferenceProvider(texts=("A", "B"))
+    assert stub.complete(CompletionRequest(prompt="x")).text == "A"
+    assert stub.complete(CompletionRequest(prompt="x")).text == "B"
+    # Wrap.
+    assert stub.complete(CompletionRequest(prompt="x")).text == "A"
+
+
+def test_cycling_stub_rejects_empty_texts() -> None:
+    with pytest.raises(ValueError, match="texts must be non-empty"):
+        CyclingStubInferenceProvider(texts=())
+
+
+def test_cycling_stub_rejects_non_tuple_texts() -> None:
+    with pytest.raises(TypeError, match="texts must be a tuple"):
+        CyclingStubInferenceProvider(texts=["A", "B"])  # type: ignore[arg-type]
+
+
+def test_cycling_stub_rejects_non_string_texts() -> None:
+    with pytest.raises(TypeError, match="texts\\[0\\] must be a str"):
+        CyclingStubInferenceProvider(texts=(1, "B"))  # type: ignore[arg-type]
+
+
+def test_cycling_stub_rejects_empty_model_id() -> None:
+    with pytest.raises(ValueError, match="model_id must be a non-empty str"):
+        CyclingStubInferenceProvider(model_id="")
+
+
+def test_cycling_stub_in_capability_uses_config_provider() -> None:
+    """The cycling stub can be plugged into the inference capability via config."""
+    cap = InferenceCapability()
+    cycling = CyclingStubInferenceProvider()
+    r1 = cap.invoke(
+        CapabilityContext(
+            raw_input=b"hi",
+            field_path="x",
+            field_type_name="STRING",
+            config={"provider": cycling, "model": "stub-cycle-v1"},
+        )
+    )
+    r2 = cap.invoke(
+        CapabilityContext(
+            raw_input=b"hi",
+            field_path="x",
+            field_type_name="STRING",
+            config={"provider": cycling, "model": "stub-cycle-v1"},
+        )
+    )
+    # The cycling stub returns different completions for
+    # sequential calls; the inference capability surfaces
+    # them as distinct candidate values.
+    assert r1.candidates[0].value != r2.candidates[0].value
+    # The model id is recorded in the evidence.
+    assert r1.candidates[0].evidence_refs[0].model_id == "stub-cycle-v1"
+
+
+def test_cycling_stub_never_makes_network_calls() -> None:
+    """Sprint 3 risk register applies to the cycling stub too."""
+    stub = CyclingStubInferenceProvider()
+    forbidden = ("requests", "httpx", "urllib3", "aiohttp", "socket")
+    for attr in forbidden:
+        assert not hasattr(stub, attr), f"CyclingStubInferenceProvider must not depend on {attr!r}"

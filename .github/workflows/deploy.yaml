@@ -24,10 +24,13 @@ jobs:
           service_token_secret: ${{ secrets.SERVICE_TOKEN_SECRET }}
           commands: |
             set -e
-
+            mkdir -p "${{ secrets.REPO_PATH }}"
             cd "${{ secrets.REPO_PATH }}"
-
+            if [ ! -d .git ]; then
+              git clone https://github.com/${{ github.repository }} .
+            fi
             git fetch origin main
+            git checkout main
             git reset --hard origin/main
 
             cd website

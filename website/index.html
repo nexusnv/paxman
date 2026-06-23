@@ -1,0 +1,1167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paxman — Contract-driven deterministic normalization engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;550;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:      oklch(6% 0.012 260);
+      --surface: oklch(12% 0.015 260);
+      --surface-2: oklch(16% 0.018 260);
+      --fg:      oklch(93% 0.004 260);
+      --muted:   oklch(48% 0.012 260);
+      --border:  oklch(18% 0.012 260);
+      --accent:  oklch(68% 0.18 170);
+      --accent-glow: oklch(68% 0.18 170 / 0.15);
+
+      --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+      --font-body:    'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Text', system-ui, sans-serif;
+      --font-mono:    'JetBrains Mono', 'IBM Plex Mono', 'SF Mono', ui-monospace, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font: 16px/1.6 var(--font-body);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { opacity: 0.8; }
+    img, svg { display: block; max-width: 100%; }
+    code, pre { font-family: var(--font-mono); }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ─── Navigation ─── */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: oklch(6% 0.012 260 / 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+    }
+    .nav-logo {
+      font: 600 18px/1 var(--font-display);
+      letter-spacing: -0.01em;
+      color: var(--fg);
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      list-style: none;
+    }
+    .nav-links a {
+      font-size: 14px;
+      font-weight: 450;
+      color: var(--muted);
+      letter-spacing: 0.01em;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--fg); }
+    .nav-links .btn-nav {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 18px;
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 6px;
+      font-weight: 550;
+      font-size: 14px;
+      letter-spacing: 0.02em;
+      transition: opacity 0.2s;
+    }
+    .nav-links .btn-nav:hover { opacity: 0.85; color: var(--bg); }
+    .mobile-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--fg);
+      font-size: 24px;
+      cursor: pointer;
+      padding: 4px;
+    }
+
+    /* ─── Hero ─── */
+    .hero {
+      padding: 160px 56px 120px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      min-height: 85vh;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -400px;
+      right: -100px;
+      width: 900px;
+      height: 900px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -200px;
+      left: -200px;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, oklch(68% 0.18 170 / 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      align-items: center;
+    }
+    .hero-left { max-width: 600px; }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: oklch(68% 0.18 170 / 0.1);
+      border: 1px solid oklch(68% 0.18 170 / 0.2);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .hero h1 {
+      font: 700 clamp(40px, 5vw, 64px)/1.05 var(--font-display);
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+    .hero h1 .highlight {
+      background: linear-gradient(135deg, var(--accent), oklch(75% 0.16 200));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: clamp(17px, 1.4vw, 20px);
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.6;
+      margin-bottom: 36px;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 0;
+    }
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: var(--accent);
+      color: var(--bg);
+      border-radius: 8px;
+      font-weight: 550;
+      font-size: 15px;
+      letter-spacing: 0.02em;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.85; color: var(--bg); }
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 28px;
+      background: transparent;
+      color: var(--fg);
+      border-radius: 8px;
+      font-weight: 450;
+      font-size: 15px;
+      letter-spacing: 0.02em;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    .btn-secondary:hover { border-color: var(--muted); }
+
+    /* Hero terminal */
+    .hero-terminal {
+      background: oklch(8% 0.015 260);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      width: 100%;
+    }
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .terminal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .terminal-dot:nth-child(1) { background: #ff5f57; }
+    .terminal-dot:nth-child(2) { background: #ffbd2e; }
+    .terminal-dot:nth-child(3) { background: #28c840; }
+    .terminal-title {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      margin-left: 8px;
+    }
+    .terminal-body {
+      padding: 20px 24px;
+      font: 500 14px/1.8 var(--font-mono);
+      color: oklch(80% 0.01 260);
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .terminal-body .prompt { color: var(--accent); }
+    .terminal-body .keyword { color: oklch(70% 0.12 220); }
+    .terminal-body .string { color: oklch(75% 0.12 140); }
+    .terminal-body .comment { color: var(--muted); }
+    .terminal-body .output { color: var(--fg); }
+    .terminal-cursor {
+      display: inline-block;
+      width: 8px;
+      height: 16px;
+      background: var(--accent);
+      animation: blink 1s step-end infinite;
+      vertical-align: text-bottom;
+      margin-left: 2px;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* ─── Section shared ─── */
+    section { padding: 100px 0; }
+    .section-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      background: oklch(68% 0.18 170 / 0.08);
+      border: 1px solid oklch(68% 0.18 170 / 0.15);
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font: 600 clamp(28px, 3.5vw, 40px)/1.2 var(--font-display);
+      letter-spacing: -0.02em;
+      margin-bottom: 14px;
+    }
+    .section-sub {
+      font-size: 17px;
+      color: var(--muted);
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    /* ─── Motivation ─── */
+    .motivation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      margin-top: 48px;
+      align-items: start;
+    }
+    .motivation-text h3 {
+      font: 550 20px/1.3 var(--font-display);
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+    }
+    .motivation-text p {
+      color: var(--muted);
+      margin-bottom: 20px;
+      max-width: 55ch;
+    }
+    .fail-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .fail-table th {
+      text-align: left;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .fail-table td {
+      padding: 12px 14px;
+      font-size: 14px;
+      color: var(--fg);
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .fail-table td:last-child {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    /* ─── Features ─── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      margin-top: 48px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .feature-card {
+      background: var(--surface);
+      padding: 32px 28px;
+      transition: background 0.3s;
+    }
+    .feature-card:hover { background: var(--surface-2); }
+    .feature-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: oklch(68% 0.18 170 / 0.1);
+      display: grid;
+      place-items: center;
+      margin-bottom: 16px;
+      color: var(--accent);
+    }
+    .feature-icon svg { width: 18px; height: 18px; }
+    .feature-card h3 {
+      font: 550 17px/1.3 var(--font-display);
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+    }
+    .feature-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ─── Code Example ─── */
+    .code-example {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-top: 48px;
+    }
+    .code-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .code-tab {
+      padding: 12px 24px;
+      font-size: 13px;
+      font-weight: 450;
+      font-family: var(--font-mono);
+      color: var(--muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .code-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .code-tab:hover { color: var(--fg); }
+    .code-panel {
+      display: none;
+      padding: 24px 28px;
+      font: 500 13px/1.9 var(--font-mono);
+      white-space: pre;
+      overflow-x: auto;
+      background: oklch(8% 0.015 260);
+      color: oklch(80% 0.01 260);
+    }
+    .code-panel.active { display: block; }
+    .code-panel .comment { color: #71717a; font-style: italic; }
+    .code-panel .keyword { color: oklch(75% 0.12 240); }
+    .code-panel .fn { color: oklch(78% 0.14 200); }
+    .code-panel .str { color: oklch(75% 0.12 140); }
+    .code-panel .cls { color: oklch(75% 0.14 80); }
+    .code-panel .num { color: oklch(78% 0.14 30); }
+    .code-panel .op { color: oklch(72% 0.10 260); }
+    .code-panel .highlight-line {
+      background: oklch(68% 0.18 170 / 0.06);
+      display: block;
+      margin: 0 -28px;
+      padding: 0 28px;
+    }
+
+    /* ─── Architecture ─── */
+    .arch-diagram {
+      margin-top: 48px;
+      padding: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow-x: auto;
+    }
+    .arch-svg-wrapper {
+      min-width: 700px;
+    }
+    .arch-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .arch-box {
+      padding: 12px 20px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font: 500 13px/1 var(--font-mono);
+      color: var(--fg);
+      text-align: center;
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+    .arch-box.accent {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: oklch(68% 0.18 170 / 0.06);
+    }
+    .arch-box.muted {
+      color: var(--muted);
+    }
+    .arch-arrow {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 22px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .arch-arrow svg { width: 20px; height: 12px; }
+    .arch-label {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .arch-gap { height: 16px; }
+    .arch-divider {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 28px;
+      color: var(--border);
+    }
+    .arch-divider svg { width: 24px; height: 24px; }
+
+    /* ─── Use Cases ─── */
+    .usecases-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+    }
+    .usecase-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px;
+      transition: border-color 0.3s;
+    }
+    .usecase-card:hover { border-color: var(--accent); }
+    .usecase-card .uc-icon {
+      width: 32px;
+      height: 32px;
+      margin-bottom: 12px;
+      color: var(--accent);
+    }
+    .usecase-card h3 {
+      font: 550 16px/1.3 var(--font-display);
+      letter-spacing: -0.01em;
+      margin-bottom: 8px;
+    }
+    .usecase-card p {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ─── Status ─── */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2px;
+      margin-top: 48px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .stat-card {
+      background: var(--surface);
+      padding: 36px 28px;
+      text-align: center;
+    }
+    .stat-number {
+      font: 600 clamp(28px, 3vw, 40px)/1 var(--font-display);
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, var(--fg), oklch(68% 0.18 170 / 0.6));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .stat-sub {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      margin-top: 4px;
+    }
+
+    /* ─── Roadmap ─── */
+    .roadmap {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 32px;
+    }
+    .roadmap-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      position: relative;
+    }
+    .roadmap-item .version {
+      font: 600 14px/1 var(--font-mono);
+      color: var(--accent);
+      letter-spacing: 0.02em;
+      margin-bottom: 8px;
+    }
+    .roadmap-item .status-tag {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .status-tag.done { background: oklch(68% 0.18 170 / 0.12); color: var(--accent); }
+    .status-tag.next { background: oklch(60% 0.15 60 / 0.12); color: oklch(65% 0.15 60); }
+    .status-tag.future { background: oklch(60% 0.02 260 / 0.1); color: var(--muted); }
+    .roadmap-item ul {
+      list-style: none;
+      margin-top: 8px;
+    }
+    .roadmap-item li {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 3px 0;
+      padding-left: 14px;
+      position: relative;
+    }
+    .roadmap-item li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 10px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    /* ─── Footer ─── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px 0 32px;
+    }
+    footer .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .footer-left { display: flex; flex-direction: column; gap: 4px; }
+    .footer-brand {
+      font: 600 16px/1 var(--font-display);
+      letter-spacing: -0.01em;
+    }
+    .footer-brand span { color: var(--accent); }
+    .footer-copy { font-size: 13px; color: var(--muted); }
+    .footer-links {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+    .footer-links a {
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .footer-links a:hover { color: var(--fg); }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 900px) {
+      .motivation-grid { grid-template-columns: 1fr; gap: 32px; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .status-grid { grid-template-columns: repeat(2, 1fr); }
+      .roadmap { grid-template-columns: 1fr; }
+      .usecases-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      nav .container { height: 48px; }
+      .nav-links { display: none; }
+      .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 48px; left: 0; right: 0; background: var(--bg); border-bottom: 1px solid var(--border); padding: 16px 24px; gap: 16px; align-items: flex-start; }
+      .mobile-toggle { display: block; }
+      .hero { padding: 120px 24px 80px; min-height: auto; }
+      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .hero-left { max-width: 100%; }
+      .hero p { max-width: 100%; }
+      .features-grid { grid-template-columns: 1fr; }
+      .status-grid { grid-template-columns: 1fr 1fr; }
+      section { padding: 60px 0; }
+      .arch-diagram { padding: 20px; }
+      footer .container { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ─── Scroll-triggered reveal ─── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation -->
+  <nav>
+    <div class="container">
+      <a href="#" class="nav-logo">pax<span>man</span></a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#motivation">Why</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#code">Code</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#usecases">Use Cases</a></li>
+        <li><a href="#status">Status</a></li>
+        <li><a href="https://github.com/nexusnv/paxman" target="_blank" class="btn-nav">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+          GitHub
+        </a></li>
+      </ul>
+      <button class="mobile-toggle" id="mobileToggle" aria-label="Menu">☰</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero" id="hero">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-badge reveal">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="3" fill="currentColor"/></svg>
+          v0.0.0 &middot; Active Development
+        </div>
+        <h1 class="reveal" style="transition-delay:0.05s">
+          Contract-driven<br>
+          <span class="highlight">deterministic normalization</span><br>
+          for Python.
+        </h1>
+        <p class="reveal" style="transition-delay:0.1s">
+          You bring a contract, you bring the data. Paxman gives you a normalized,
+          evidence-backed, replayable artifact — or tells you exactly which fields
+          it could not resolve and why.
+        </p>
+        <div class="hero-actions reveal" style="transition-delay:0.15s">
+          <a href="https://github.com/nexusnv/paxman" target="_blank" class="btn-primary">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+            View on GitHub
+          </a>
+          <a href="https://pypi.org/project/paxman/" target="_blank" class="btn-secondary">
+            pip install paxman
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 3l5 5-5 5"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="hero-terminal reveal" style="transition-delay:0.2s">
+        <div class="terminal-header">
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-dot"></span>
+          <span class="terminal-title">paxman-quickstart.py</span>
+        </div>
+        <div class="terminal-body" id="terminalBody"><span class="comment"># Contract-driven normalization in action</span>
+<span class="keyword">import</span> paxman
+<span class="keyword">from</span> pydantic <span class="keyword">import</span> BaseModel
+
+<span class="keyword">class</span> <span class="cls">Invoice</span>(BaseModel):
+    supplier_name: <span class="keyword">str</span>
+    total_amount: <span class="keyword">float</span>
+    currency_code: <span class="keyword">str</span>
+
+result = paxman.<span class="fn">normalize</span>(
+    input_data=raw_invoice_bytes,
+    contract=<span class="cls">Invoice</span>,
+    budget=paxman.<span class="cls">Budget</span>(max_total_cost_usd=<span class="num">0.10</span>),
+)
+
+<span class="keyword">print</span>(result.normalized_data)
+<span class="output">{'supplier_name': 'ACME Corp', 'total_amount': 1234.56, 'currency_code': 'USD'}</span>
+<span class="keyword">print</span>(result.unresolved_fields)
+<span class="output">[]</span>
+<span class="keyword">print</span>(result.replay_hash)
+<span class="output">'a1b2c3d4...'</span><span class="terminal-cursor"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Motivation -->
+  <section id="motivation">
+    <div class="container">
+      <div class="section-label reveal">Why Paxman</div>
+      <h2 class="section-title reveal" style="transition-delay:0.05s">Normalization without silent failure</h2>
+      <p class="section-sub reveal" style="transition-delay:0.1s">
+        Existing approaches force you to choose between brittle hand-rolled pipelines,
+        unverifiable LLM calls, and schema-only validators that can't extract a thing.
+      </p>
+      <div class="motivation-grid">
+        <div class="motivation-text reveal">
+          <h3>What goes wrong today</h3>
+          <table class="fail-table">
+            <tr><th>Failure mode</th><th>Cost</th></tr>
+            <tr><td>Hand-rolled per-source pipelines</td><td>High maintenance</td></tr>
+            <tr><td>"Just call an LLM" — no evidence, no replay</td><td>Untraceable</td></tr>
+            <tr><td>Schema-validators without extraction</td><td>Write extractors per source</td></tr>
+            <tr><td>Auto-schema that hallucinates fields</td><td>Data corruption</td></tr>
+            <tr><td>Monolithic document services</td><td>Vendor lock-in</td></tr>
+          </table>
+        </div>
+        <div class="motivation-text reveal" style="transition-delay:0.05s">
+          <h3>The Paxman philosophy</h3>
+          <p><strong>No contract, no normalization.</strong> Paxman cannot normalize without a target contract. The contract describes <em>what</em>, not <em>how</em> — planning and execution decide how to satisfy requirements.</p>
+          <p><strong>Paxman does not guess silently.</strong> Every inferred value carries evidence, confidence, and resolution metadata. Unresolved fields are always explicit with a reason.</p>
+          <p><strong>Determinism is required.</strong> Same inputs + contract + configuration must yield the same plan and replayable result. Every artifact carries a replay hash (SHA-256) for tamper detection.</p>
+          <p><strong>Cost is a first-class concern.</strong> Paxman prefers the cheapest sufficient path that still satisfies accuracy policy.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section id="features">
+    <div class="container">
+      <div class="section-label reveal">Capabilities</div>
+      <h2 class="section-title reveal" style="transition-delay:0.05s">Everything you need, nothing you don't</h2>
+      <p class="section-sub reveal" style="transition-delay:0.1s">A tiny public API backed by a principled seven-subsystem architecture.</p>
+      <div class="features-grid">
+        <div class="feature-card reveal">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3>Contract-Driven</h3>
+          <p>You bring the contract — Pydantic, JSON Schema, OpenAPI, or Dict DSL. Paxman canonicalizes it and plans per-field extraction. It never owns your schema.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.03s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+          </div>
+          <h3>Deterministic Planning</h3>
+          <p>Each required field gets its own plan through a 7-step heuristic chain: explicit evidence, regex, structured lookup, derived computation, local inference, remote inference, or UNRESOLVED.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.06s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 12l2 2 4-4"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          </div>
+          <h3>Evidence-Backed Output</h3>
+          <p>Every resolved fact carries provenance — capability ID, source span, model ID. Inferred values are distinguishable from directly observed ones.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.09s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4l16 16M4 20L20 4"/></svg>
+          </div>
+          <h3>Deterministic Replay</h3>
+          <p>Replay from the artifact alone — no recomputation. SHA-256 replay hash guards against tampering. Version checks prevent cross-version replay mismatches.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.12s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+          </div>
+          <h3>Budget Awareness</h3>
+          <p>Hard caps on cost (USD), latency (ms), remote inference calls, and total capability invocations. Soft policy on confidence floors, currency rules, and remote inference.</p>
+        </div>
+        <div class="feature-card reveal" style="transition-delay:0.15s">
+          <div class="feature-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          </div>
+          <h3>Extensible by Design</h3>
+          <p>Public SPIs for ContractAdapter, Capability, Heuristic, and InferenceProvider. Register your own adapters and capabilities — Paxman does the orchestration.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Code Example -->
+  <section id="code">
+    <div class="container">
+      <div class="section-label reveal">Code</div>
+      <h2 class="section-title reveal" style="transition-delay:0.05s">See it in action</h2>
+      <p class="section-sub reveal" style="transition-delay:0.1s">Three examples that cover the full workflow — normalize, replay, and extend.</p>
+      <div class="code-example reveal">
+        <div class="code-tabs">
+          <button class="code-tab active" data-tab="basic">basic.py</button>
+          <button class="code-tab" data-tab="advanced">advanced.py</button>
+          <button class="code-tab" data-tab="extend">extend.py</button>
+        </div>
+        <div class="code-panel active" id="panel-basic"><span class="comment"># === Basic normalization ===</span>
+<span class="keyword">import</span> paxman
+<span class="keyword">from</span> pydantic <span class="keyword">import</span> BaseModel
+
+<span class="keyword">class</span> <span class="cls">Invoice</span>(BaseModel):
+    supplier_name: <span class="keyword">str</span>
+    total_amount: <span class="keyword">float</span>
+    currency_code: <span class="keyword">str</span>
+    line_items: <span class="keyword">list</span>[<span class="cls">LineItem</span>]
+
+result = paxman.<span class="fn">normalize</span>(
+    input_data=raw_invoice_bytes,
+    contract=<span class="cls">Invoice</span>,
+    budget=paxman.<span class="cls">Budget</span>(max_total_cost_usd=<span class="num">0.10</span>),
+    policy=paxman.<span class="cls">Policy</span>(allow_remote_inference=<span class="keyword">True</span>),
+)
+
+<span class="keyword">print</span>(result.normalized_data)       <span class="comment"># matches the Invoice shape</span>
+<span class="keyword">print</span>(result.unresolved_fields)     <span class="comment"># fields Paxman could not resolve</span>
+<span class="keyword">print</span>(result.replay_hash)           <span class="comment"># deterministic signature</span>
+
+<span class="comment"># Replay later from the artifact alone</span>
+rehydrated = paxman.<span class="fn">replay</span>(result, contract=<span class="cls">Invoice</span>)
+<span class="keyword">assert</span> rehydrated == result  <span class="comment"># byte-equal</span></div>
+        <div class="code-panel" id="panel-advanced"><span class="comment"># === Budget & Policy controls ===</span>
+<span class="keyword">import</span> paxman
+<span class="keyword">from</span> pydantic <span class="keyword">import</span> BaseModel, Field
+
+<span class="keyword">class</span> <span class="cls">Invoice</span>(BaseModel):
+    supplier_name: <span class="keyword">str</span> = <span class="cls">Field</span>(..., description=<span class="str">"Supplier name"</span>)
+    total_amount: <span class="keyword">float</span> = <span class="cls">Field</span>(..., description=<span class="str">"Total amount"</span>)
+    currency_code: <span class="keyword">str</span> = <span class="cls">Field</span>(..., description=<span class="str">"ISO-4217 code"</span>)
+
+artifact = paxman.<span class="fn">normalize</span>(
+    input_data=raw_invoice,
+    contract=<span class="cls">Invoice</span>,
+    budget=paxman.<span class="cls">Budget</span>(
+        max_total_cost_usd=<span class="num">0.10</span>,
+        max_total_latency_ms=<span class="num">5_000</span>,
+        max_remote_inference_calls=<span class="num">2</span>,
+    ),
+    policy=paxman.<span class="cls">Policy</span>(
+        allow_remote_inference=<span class="keyword">True</span>,
+        confidence_floor=<span class="num">0.80</span>,
+        unresolved_acceptable=<span class="keyword">False</span>,
+    ),
+)
+
+<span class="keyword">print</span>(artifact.status)              <span class="comment"># Status.SUCCESS or PARTIAL_SUCCESS</span>
+<span class="keyword">print</span>(artifact.normalized_data)
+<span class="keyword">assert</span> artifact.unresolved_fields == []</div>
+        <div class="code-panel" id="panel-extend"><span class="comment"># === Custom capability ===</span>
+<span class="keyword">from</span> paxman.protocols <span class="keyword">import</span> CapabilitySpec, CapabilityContext
+<span class="keyword">from</span> paxman <span class="keyword">import</span> FieldType, CostHint
+
+<span class="keyword">class</span> <span class="cls">DateParserCapability</span>:
+    <span class="keyword">def</span> <span class="fn">spec</span>(<span class="keyword">self</span>):
+        <span class="keyword">return</span> <span class="cls">CapabilitySpec</span>(
+            id=<span class="str">"date_parser"</span>,
+            version=<span class="str">"1.0"</span>,
+            input_type=<span class="cls">FieldType</span>.<span class="keyword">STRING</span>,
+            output_type=<span class="cls">FieldType</span>.<span class="keyword">DATE</span>,
+            cost_estimate=<span class="cls">CostHint</span>(tokens=<span class="num">0</span>, ms=<span class="num">10</span>, usd=<span class="num">0.0</span>),
+            deterministic=<span class="keyword">True</span>,
+            required_providers=[],
+        )
+
+    <span class="keyword">def</span> <span class="fn">invoke</span>(<span class="keyword">self</span>, ctx: <span class="cls">CapabilityContext</span>):
+        <span class="comment"># Parse date from input text ...</span>
+        <span class="keyword">return</span> <span class="cls">CapabilityResult</span>(
+            candidates=[<span class="cls">Candidate</span>(value=parsed_date)],
+            evidence_refs=[...],
+            diagnostics=[],
+        )
+
+<span class="comment"># Register it</span>
+paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserCapability</span>())</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture -->
+  <section id="architecture">
+    <div class="container">
+      <div class="section-label reveal">Under the hood</div>
+      <h2 class="section-title reveal" style="transition-delay:0.05s">Seven subsystems, strict layering</h2>
+      <p class="section-sub reveal" style="transition-delay:0.1s">Each subsystem has a single responsibility. Dependencies flow in one direction — from API down through contract, planner, capabilities, executor, reconciler, to artifact.</p>
+      <div class="arch-diagram reveal">
+        <div class="arch-svg-wrapper">
+          <div class="arch-label">Public API</div>
+          <div class="arch-row">
+            <div class="arch-box accent">api/</div>
+          </div>
+          <div class="arch-arrow">
+            <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 0v10M5 7l7 5 7-5"/></svg>
+          </div>
+
+          <div class="arch-label">Internal Subsystems</div>
+          <div class="arch-row">
+            <div class="arch-box">contract/</div>
+            <div class="arch-box">planner/</div>
+            <div class="arch-box">capabilities/</div>
+          </div>
+          <div class="arch-arrow">
+            <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 0v10M5 7l7 5 7-5"/></svg>
+          </div>
+          <div class="arch-row">
+            <div class="arch-box">executor/</div>
+            <div class="arch-box">reconciler/</div>
+          </div>
+          <div class="arch-arrow">
+            <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 0v10M5 7l7 5 7-5"/></svg>
+          </div>
+          <div class="arch-row">
+            <div class="arch-box">artifact/</div>
+          </div>
+          <div class="arch-gap"></div>
+
+          <div class="arch-label">Cross-Cutting</div>
+          <div class="arch-row" style="gap:4px;flex-wrap:wrap">
+            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">errors.py</div>
+            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">types.py</div>
+            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">budget.py</div>
+            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">serialization.py</div>
+            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">protocols.py</div>
+            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">clock.py</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Cases -->
+  <section id="usecases">
+    <div class="container">
+      <div class="section-label reveal">Applications</div>
+      <h2 class="section-title reveal" style="transition-delay:0.05s">Built for real-world pipelines</h2>
+      <p class="section-sub reveal" style="transition-delay:0.1s">Paxman fits where auditable, evidence-backed normalization meets production requirements.</p>
+      <div class="usecases-grid">
+        <div class="usecase-card reveal">
+          <div class="uc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          <h3>Invoice & Procurement</h3>
+          <p>Normalize invoices, quotations, and purchase orders across suppliers and currencies. Compare offers side-by-side with traceable field-level evidence.</p>
+        </div>
+        <div class="usecase-card reveal" style="transition-delay:0.05s">
+          <div class="uc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          </div>
+          <h3>Agentic Ingestion</h3>
+          <p>Auditable, evidence-backed extraction for RAG pipelines and agent workflows. Every value carries provenance — no silent hallucinations in downstream systems.</p>
+        </div>
+        <div class="usecase-card reveal" style="transition-delay:0.1s">
+          <div class="uc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/></svg>
+          </div>
+          <h3>Document Understanding SaaS</h3>
+          <p>Wrap Paxman inside your service without giving up replay or evidence. Your customers get traceable results; you get a predictable, extensible normalization core.</p>
+        </div>
+        <div class="usecase-card reveal" style="transition-delay:0.15s">
+          <div class="uc-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3>Multi-Source Data Pipelines</h3>
+          <p>Normalize email, OCR, CSV, and API payloads into one canonical schema. Paxman's field-centric planning adapts to each source automatically.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Status -->
+  <section id="status">
+    <div class="container">
+      <div class="section-label reveal">Project Status</div>
+      <h2 class="section-title reveal" style="transition-delay:0.05s">Active development, open foundation</h2>
+      <p class="section-sub reveal" style="transition-delay:0.1s">Sprint 1 is complete. Core architecture, contract subsystem, planner, and capabilities are implemented and tested.</p>
+      <div class="status-grid reveal">
+        <div class="stat-card">
+          <div class="stat-number">395+</div>
+          <div class="stat-label">Tests</div>
+          <div class="stat-sub">93–96% coverage</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">9</div>
+          <div class="stat-label">V1 Field Types</div>
+          <div class="stat-sub">STRING to MONEY</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">5</div>
+          <div class="stat-label">V1 Capabilities</div>
+          <div class="stat-sub">extraction to validation</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">17</div>
+          <div class="stat-label">Error Classes</div>
+          <div class="stat-sub">hierarchical errors</div>
+        </div>
+      </div>
+
+      <div class="roadmap">
+        <div class="roadmap-item reveal">
+          <div class="version">v0.0.0</div>
+          <div class="status-tag done">Complete</div>
+          <ul>
+            <li>Contract subsystem (Pydantic, JSON Schema, Dict DSL)</li>
+            <li>Field-centric planner (7-step heuristic chain)</li>
+            <li>V1 capabilities (text_extraction, regex, lookup, inference, validation)</li>
+            <li>Budget & Policy system</li>
+            <li>9 cross-cutting modules</li>
+          </ul>
+        </div>
+        <div class="roadmap-item reveal" style="transition-delay:0.05s">
+          <div class="version">v0.1.0</div>
+          <div class="status-tag next">Next</div>
+          <ul>
+            <li>End-to-end normalize() workflow</li>
+            <li>Executor subsystem</li>
+            <li>Reconciler subsystem</li>
+            <li>Artifact finalization</li>
+            <li>PyPI publication</li>
+          </ul>
+        </div>
+        <div class="roadmap-item reveal" style="transition-delay:0.1s">
+          <div class="version">v1.0.0</div>
+          <div class="status-tag future">Roadmap</div>
+          <ul>
+            <li>All V1 acceptance criteria met</li>
+            <li>Full replay determinism</li>
+            <li>MONEY type with cross-currency arithmetic</li>
+            <li>OpenAPI adapter</li>
+            <li>Production documentation</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-left">
+        <div class="footer-brand">pax<span>man</span></div>
+        <div class="footer-copy">&copy; 2026 <a href="https://www.nexusnv.net" target="_blank">Nexus Envision Sdn Bhd</a>. MIT License.</div>
+      </div>
+      <div class="footer-links">
+        <a href="https://github.com/nexusnv/paxman" target="_blank">GitHub</a>
+        <a href="https://github.com/azaharizaman" target="_blank">Developer</a>
+        <a href="https://www.nexusnv.net" target="_blank">nexusnv.net</a>
+        <span style="font-size:12px;color:var(--muted);font-family:var(--font-mono)">by Azahari Zaman</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      // ─── Mobile nav toggle ───
+      var toggle = document.getElementById('mobileToggle');
+      var links = document.getElementById('navLinks');
+      if (toggle) {
+        toggle.addEventListener('click', function () {
+          links.classList.toggle('open');
+        });
+      }
+
+      // ─── Code tabs ───
+      var tabs = document.querySelectorAll('.code-tab');
+      tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+          tabs.forEach(function (t) { t.classList.remove('active'); });
+          tab.classList.add('active');
+          var panels = document.querySelectorAll('.code-panel');
+          panels.forEach(function (p) { p.classList.remove('active'); });
+          var target = document.getElementById('panel-' + tab.getAttribute('data-tab'));
+          if (target) target.classList.add('active');
+        });
+      });
+
+      // ─── Scroll reveal ───
+      var revealEls = document.querySelectorAll('.reveal');
+      var observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+          }
+        });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+      revealEls.forEach(function (el) { observer.observe(el); });
+    })();
+  </script>
+</body>
+</html>

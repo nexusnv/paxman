@@ -159,14 +159,6 @@ def _reset_registry() -> None:
     reset()
 
 
-@pytest.fixture(autouse=True)
-def _reset_registry() -> None:
-    """Reset the global registry between tests."""
-    reset()
-    yield
-    reset()
-
-
 def test_register_and_get() -> None:
     """Register a capability, then get it back."""
     s = _spec(id="alpha", version="1.0")
@@ -225,6 +217,18 @@ def test_get_latest() -> None:
     assert cap.spec.version == "2.0"
 
 
+def test_get_latest_prefers_most_recently_registered_non_semver() -> None:
+    """For non-semver versions, get_latest returns the most recently registered."""
+    # Register in order; the second is "more recent" by the secondary key.
+    cap1 = _SampleCapability(_spec(id="alpha", version="1.0-rc1"))
+    cap2 = _SampleCapability(_spec(id="alpha", version="1.0-rc2"))
+    register(cap1)
+    register(cap2)
+    cap = get_latest("alpha")
+    # cap2 was registered later, so it should be preferred.
+    assert cap is cap2
+
+
 def test_get_latest_unknown_raises() -> None:
     with pytest.raises(InvalidContractError) as exc_info:
         get_latest("nope")
@@ -239,6 +243,23 @@ def test_all_capabilities_returns_readonly_snapshot() -> None:
     assert ("alpha", "1.0") in snap
     with pytest.raises(TypeError):
         snap[("alpha", "1.0")] = None  # type: ignore[index]
+
+
+def test_all_capabilities_is_a_point_in_time_snapshot() -> None:
+    """A new registration after a snapshot does not affect the snapshot."""
+    s1 = _spec(id="alpha", version="1.0")
+    register(_SampleCapability(s1))
+    snap_before = all_capabilities()
+    assert ("alpha", "1.0") in snap_before
+    # Register a new capability.
+    s2 = _spec(id="beta", version="1.0")
+    register(_SampleCapability(s2))
+    # The snapshot is unchanged.
+    assert ("alpha", "1.0") in snap_before
+    assert ("beta", "1.0") not in snap_before
+    # A fresh call returns the new state.
+    snap_after = all_capabilities()
+    assert ("beta", "1.0") in snap_after
 
 
 def test_register_rejects_missing_spec_attribute() -> None:

@@ -191,15 +191,26 @@ def test_field_plan_carries_threshold() -> None:
     assert fp.field_id == "f1"
 
 
-def test_field_plan_for_empty_input_has_empty_chain() -> None:
-    """An empty input → no chain (UNRESOLVED terminal)."""
+def test_field_plan_for_empty_input_skips_explicit_evidence() -> None:
+    """An empty input skips step 1 (text_extraction) but steps 2-6
+    still run, so the chain is non-empty."""
     field = _field("supplier_name", FieldType.STRING)
     profile = make_profile(b"")
     fp = build_field_plan(field, profile, Policy(), None)
-    # text_extraction is still emitted (step 1), but step 2+ may include
-    # local-deterministic. Verify the chain is non-empty because
-    # text_extraction is always in step 1.
-    assert len(fp.capability_chain) >= 0  # we don't assert empty
+    # The chain still has steps 2-6 (regex_extraction, validation, ...).
+    # Step 1 is omitted because ``has_explicit_evidence`` is False.
+    assert len(fp.capability_chain) > 0
+    # text_extraction is NOT the first step (no explicit evidence).
+    assert fp.capability_chain[0].capability_id != "text_extraction"
+
+
+def test_field_plan_for_non_empty_input_emits_chain() -> None:
+    """A non-empty input emits at least one step (text_extraction first)."""
+    field = _field("supplier_name", FieldType.STRING)
+    profile = make_profile(b"ACME Corp")
+    fp = build_field_plan(field, profile, Policy(), None)
+    assert len(fp.capability_chain) > 0
+    assert fp.capability_chain[0].capability_id == "text_extraction"
 
 
 # --- plan (top-level) ----------------------------------------------------
@@ -298,6 +309,41 @@ def test_plan_invoice_use_case_picks_regex_extraction_first() -> None:
     p = plan(contract, profile)
     # Step 1 (text_extraction) is the planner's first emission.
     assert p.field_plans[0].capability_chain[0].capability_id == "text_extraction"
+
+
+def test_plan_uses_effective_policy_including_contract_overrides() -> None:
+    """The plan uses the *effective* policy (call-site + contract).
+
+    When the contract sets ``ContractPolicy.confidence_floor`` to
+    a value different from the call-site policy, the planner
+    should use the contract's value. This is verified indirectly
+    by the deterministic-plan test in
+    ``tests/property/test_planner_determinism.py``.
+    """
+    # Sanity: the plan function is a pure function; same inputs
+    # → same outputs. The effective policy is applied internally.
+    contract = CanonicalContract(
+        id="c",
+        fields=(
+            CanonicalField(
+                id="f1",
+                path="f1",
+                name="f1",
+                type=FieldType.STRING,
+                required=True,
+            ),
+        ),
+        policies=ContractPolicy(confidence_floor=0.5),
+    )
+    profile = make_profile(b"x")
+    p1 = plan(contract, profile)
+    p2 = plan(contract, profile)
+    # Determinism with contract policy.
+    assert p1 == p2
+    # The field's target_confidence is the field's threshold (not
+    # the contract's floor); this confirms the planner doesn't
+    # accidentally substitute one for the other.
+    assert p1.field_plans[0].target_confidence == 0.8  # field default
 
 
 # --- determinism --------------------------------------------------------

@@ -202,7 +202,14 @@ def test_planner_input_content_hash_matches_profile(raw: bytes) -> None:
 
 @pytest.mark.property
 def test_planner_with_contract_policy_is_deterministic() -> None:
-    """A contract-level ContractPolicy is honored and is deterministic."""
+    """A contract-level ContractPolicy is honored and is deterministic.
+
+    The field's ``confidence_threshold`` and the contract's
+    ``ContractPolicy.confidence_floor`` are deliberately set to
+    *different* values (0.95 and 0.80) so the assertion can detect
+    a regression where the planner accidentally substitutes one
+    for the other.
+    """
     contract = CanonicalContract(
         id="c",
         fields=(
@@ -215,7 +222,7 @@ def test_planner_with_contract_policy_is_deterministic() -> None:
                 confidence_threshold=0.95,
             ),
         ),
-        policies=ContractPolicy(confidence_floor=0.95),
+        policies=ContractPolicy(confidence_floor=0.80),
     )
     profile = make_profile(b"hello world")
     p1 = plan(contract, profile)

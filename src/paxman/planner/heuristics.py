@@ -60,11 +60,12 @@ from __future__ import annotations
 import typing
 
 from paxman.budget import Budget, Policy
-from paxman.capabilities.registry import all_capabilities, get
+from paxman.capabilities.registry import all_capabilities
 from paxman.capabilities.spec import CapabilitySpec, CapabilityTier
 from paxman.contract.canonical import CanonicalField
 from paxman.planner.field_plan import FieldPlan, FieldPlanStep
 from paxman.planner.input_profile import InputProfile
+from paxman.planner.policies import EffectivePolicy
 from paxman.planner.scoring import score_capability
 
 __all__ = [
@@ -277,7 +278,7 @@ def _accepts_field_type(spec: CapabilitySpec, field: CanonicalField) -> bool:
 def build_capability_chain(
     field: CanonicalField,
     profile: InputProfile,
-    policy: Policy,
+    policy: Policy | EffectivePolicy,
     budget: Budget | None,
     registry: typing.Mapping[tuple[str, str], object] | None = None,
 ) -> tuple[FieldPlanStep, ...]:
@@ -312,18 +313,30 @@ def build_capability_chain(
         # The planner emits a text_extraction step (V1's "source")
         # IF text_extraction is registered. If not, the chain is
         # still empty (no text_extraction available).
-        try:
-            spec = get("text_extraction", "1.0").spec
-        except Exception:
-            # text_extraction not registered; the planner rule
-            # cannot emit a step. The remaining steps (2-6) will
-            # be tried below.
-            spec = None
-        if isinstance(spec, CapabilitySpec) and _accepts_field_type(spec, field):
+        # Pick the highest-version ``text_extraction`` from the
+        # supplied registry (or the global one when ``registry`` is
+        # None). This avoids hard-pinning to ``"1.0"`` so future
+        # versions are picked up automatically.
+        if registry is None:
+            registry = all_capabilities()
+        spec: object = None
+        chosen_key: tuple[str, str] | None = None
+        for key, _cap in registry.items():
+            if key[0] != "text_extraction":
+                continue
+            if chosen_key is None or key > chosen_key:
+                chosen_key = key
+        if chosen_key is not None:
+            spec = getattr(registry[chosen_key], "spec", None)
+        if (
+            isinstance(spec, CapabilitySpec)
+            and _accepts_field_type(spec, field)
+            and chosen_key is not None
+        ):
             chain.append(
                 FieldPlanStep(
                     capability_id="text_extraction",
-                    capability_version="1.0",
+                    capability_version=chosen_key[1],
                     config={"content_type": profile.input_type},
                     note="explicit-evidence step 1 (planner rule on InputProfile)",
                 )
@@ -364,7 +377,7 @@ def _budget_excludes_inference(budget: Budget | None) -> bool:
 def build_field_plan(
     field: CanonicalField,
     profile: InputProfile,
-    policy: Policy,
+    policy: Policy | EffectivePolicy,
     budget: Budget | None,
     registry: typing.Mapping[tuple[str, str], object] | None = None,
 ) -> FieldPlan:
@@ -382,7 +395,10 @@ def build_field_plan(
     Args:
         field: The :class:`CanonicalField`.
         profile: The :class:`InputProfile`.
-        policy: The call-site :class:`Policy`.
+        policy: The effective policy: the call-site :class:`Policy`
+            or a pre-computed :class:`EffectivePolicy` (call-site
+            combined with the contract-level
+            :class:`~paxman.contract._types.ContractPolicy`).
         budget: The :class:`Budget` (optional).
         registry: Optional capability registry (defaults to global).
 

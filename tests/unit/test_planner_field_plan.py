@@ -132,6 +132,36 @@ def test_execution_plan_rejects_short_hash() -> None:
         )
 
 
+def test_execution_plan_rejects_non_hex_hash() -> None:
+    """A 64-character hash that contains non-hex characters is rejected."""
+    bad_hash = "z" * 64  # 64 chars but not hex
+    with pytest.raises(ValueError, match="input_content_hash must be 64 lowercase hex chars"):
+        ExecutionPlan(
+            field_plans=(FieldPlan(field_id="f1"),),
+            input_content_hash=bad_hash,
+        )
+
+
+def test_execution_plan_rejects_uppercase_hex() -> None:
+    """A 64-character hash with uppercase characters is rejected."""
+    bad_hash = "A" * 64
+    with pytest.raises(ValueError, match="input_content_hash must be 64 lowercase hex chars"):
+        ExecutionPlan(
+            field_plans=(FieldPlan(field_id="f1"),),
+            input_content_hash=bad_hash,
+        )
+
+
+def test_execution_plan_rejects_non_plan_diagnostic_in_diagnostics() -> None:
+    """A non-PlanDiagnostic in the diagnostics tuple is rejected."""
+    with pytest.raises(TypeError, match="diagnostics entries must be PlanDiagnostic"):
+        ExecutionPlan(
+            field_plans=(FieldPlan(field_id="f1"),),
+            input_content_hash="a" * 64,
+            diagnostics=("not a PlanDiagnostic",),  # type: ignore[arg-type]
+        )
+
+
 def test_execution_plan_allows_empty_hash() -> None:
     """An empty input_content_hash is allowed (e.g., for tests)."""
     plan = ExecutionPlan(

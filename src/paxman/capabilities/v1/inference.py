@@ -134,6 +134,8 @@ class CompletionRequest:
         uses the same range)."""
         if not isinstance(self.prompt, str):
             raise TypeError(f"prompt must be a str, got {type(self.prompt).__name__}")
+        if not self.prompt:
+            raise ValueError("prompt must be a non-empty str")
         if not isinstance(self.model, str) or not self.model:
             raise ValueError(f"model must be a non-empty str, got {self.model!r}")
         if not isinstance(self.temperature, (int, float)) or isinstance(self.temperature, bool):

@@ -76,6 +76,12 @@ def test_completion_request_rejects_non_str_prompt() -> None:
         CompletionRequest(prompt=42)  # type: ignore[arg-type]
 
 
+def test_completion_request_rejects_empty_prompt() -> None:
+    """An empty prompt is rejected (matches the documented contract)."""
+    with pytest.raises(ValueError, match="prompt must be a non-empty str"):
+        CompletionRequest(prompt="")
+
+
 def test_completion_request_rejects_invalid_temperature() -> None:
     with pytest.raises(ValueError, match="temperature must be in"):
         CompletionRequest(prompt="x", temperature=-0.1)

@@ -152,6 +152,12 @@ def get_latest(capability_id: str) -> Capability:
     registered, the most recently registered version wins
     (fallback for non-semver versions like ``"1.0-rc"``).
 
+    The tie-break is the **insertion index** (descending) so that,
+    when multiple non-semver versions are registered, the most
+    recently registered one is preferred. Without this secondary
+    key, Python's stable sort would preserve insertion order, which
+    is the opposite of "latest."
+
     Args:
         capability_id: The capability's id.
 
@@ -163,7 +169,9 @@ def get_latest(capability_id: str) -> Capability:
             *capability_id* at all.
     """
     matches = [
-        (version, cap) for (cid, version), cap in _capabilities.items() if cid == capability_id
+        (i, version, cap)
+        for i, ((cid, version), cap) in enumerate(_capabilities.items())
+        if cid == capability_id
     ]
     if not matches:
         raise InvalidContractError(
@@ -171,9 +179,12 @@ def get_latest(capability_id: str) -> Capability:
             error_code="CAPABILITY_NOT_FOUND",
             context={"capability_id": capability_id},
         )
-    # Prefer semver sort; fall back to insertion order.
-    matches.sort(key=lambda vc: _version_key(vc[0]), reverse=True)
-    return matches[0][1]
+    # Sort by (semver key descending, insertion index descending). The
+    # secondary key ensures that non-semver versions (all sharing
+    # the same ``(-1,)`` semver key) prefer the most recently
+    # registered one.
+    matches.sort(key=lambda ivc: (_version_key(ivc[1]), ivc[0]), reverse=True)
+    return matches[0][2]
 
 
 def _version_key(version: str) -> tuple[int, ...]:
@@ -197,6 +208,12 @@ def _version_key(version: str) -> tuple[int, ...]:
 def all_capabilities() -> types.MappingProxyType[tuple[str, str], Capability]:
     """Return a read-only snapshot of all registered capabilities.
 
+    The returned mapping is a **point-in-time snapshot**: subsequent
+    registrations (or unregistrations) do not affect it. Without
+    the copy, :class:`types.MappingProxyType` would be a live
+    view of :data:`_capabilities` (read-only but reflecting
+    future mutations), defeating the "snapshot" contract.
+
     Returns:
         A read-only mapping of ``(id, version)`` → :class:`Capability`,
         in registration order.
@@ -205,7 +222,7 @@ def all_capabilities() -> types.MappingProxyType[tuple[str, str], Capability]:
         >>> sorted(all_capabilities().keys())  # doctest: +SKIP
         [('regex_extraction', '1.0'), ('text_extraction', '1.0')]
     """
-    return types.MappingProxyType(_capabilities)
+    return types.MappingProxyType(dict(_capabilities))
 
 
 def reset() -> None:

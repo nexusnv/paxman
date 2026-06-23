@@ -122,9 +122,10 @@ def plan(
 
     p = policy or Policy()
     cp: ContractPolicy | None = canonical.policies
-    # Effective policy is currently used only by the diagnostics loop.
-    # It's reserved for future per-field policy filtering.
-    _effective = derive_effective_policy(p, cp)
+    # Combine call-site and contract policies so that contract-level
+    # overrides (e.g. ``ContractPolicy.confidence_floor``) are
+    # honored downstream.
+    effective = derive_effective_policy(p, cp)
 
     field_plans: list[FieldPlan] = []
     diagnostics: list[PlanDiagnostic] = []
@@ -170,10 +171,10 @@ def plan(
 
     # Walk the contract's required fields and build a plan for each.
     for field in canonical.required_fields():
-        # Pass the call-site policy through so the heuristic chain
-        # can apply policy-level exclusions (allow_remote_inference,
-        # allow_local_inference, budget cap).
-        fp = build_field_plan(field, profile, p, budget, registry)
+        # Pass the **effective** policy (call-site + contract) so the
+        # heuristic chain applies contract-level overrides
+        # (e.g. ``ContractPolicy.confidence_floor``).
+        fp = build_field_plan(field, profile, effective, budget, registry)
         field_plans.append(fp)
         # Per-field UNRESOLVED diagnostic if the chain is empty.
         if not fp.capability_chain:

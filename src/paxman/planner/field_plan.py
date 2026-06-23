@@ -19,6 +19,9 @@ These data models are **frozen attrs with slots** (per
 
 from __future__ import annotations
 
+import types
+import typing
+
 import attrs
 
 from paxman.contract._types import ResolutionPolicy
@@ -30,6 +33,24 @@ __all__ = [
     "FieldPlanStep",
     "PlanDiagnostic",
 ]
+
+
+#: Valid lowercase hex characters (0-9, a-f) for content-hash validation.
+_HEX_LOWER: typing.Final[frozenset[str]] = frozenset("0123456789abcdef")
+
+
+def _freeze_config(config: object) -> types.MappingProxyType[str, object]:
+    """Validate and freeze a ``FieldPlanStep.config`` mapping.
+
+    Returns a read-only :class:`types.MappingProxyType` view of a
+    *copy* of the input. The copy is required so that subsequent
+    mutations of the caller's dict do not leak into the frozen
+    plan. If the input is already a mapping (e.g. a previous
+    ``MappingProxyType``), it is unwrapped via ``dict(...)``.
+    """
+    if not isinstance(config, typing.Mapping):
+        raise TypeError(f"config must be a dict or mapping, got {type(config).__name__}")
+    return types.MappingProxyType(dict(config))
 
 
 @attrs.frozen(slots=True)
@@ -61,7 +82,16 @@ class FieldPlanStep:
 
     capability_id: str = attrs.field()
     capability_version: str = attrs.field()
-    config: dict[str, object] = attrs.field(factory=dict)
+    # Wrap the user-supplied dict in a MappingProxyType so callers
+    # cannot mutate the configuration after the plan is frozen.
+    # Without this, the field would be a frozen attrs class
+    # containing a mutable inner dict, breaking the immutability
+    # contract that downstream consumers (e.g. the artifact hash)
+    # rely on.
+    config: typing.Mapping[str, object] = attrs.field(
+        converter=_freeze_config,
+        factory=lambda: types.MappingProxyType({}),
+    )
     note: str = ""
 
     def __attrs_post_init__(self) -> None:
@@ -76,8 +106,8 @@ class FieldPlanStep:
             raise ValueError(
                 f"capability_version must be a non-empty string, got {self.capability_version!r}"
             )
-        if not isinstance(self.config, dict):
-            raise TypeError(f"config must be a dict, got {type(self.config).__name__}")
+        if not isinstance(self.config, typing.Mapping):
+            raise TypeError(f"config must be a mapping, got {type(self.config).__name__}")
 
 
 @attrs.frozen(slots=True)
@@ -276,15 +306,26 @@ class ExecutionPlan:
             )
         if not isinstance(self.diagnostics, tuple):
             raise TypeError(f"diagnostics must be a tuple, got {type(self.diagnostics).__name__}")
+        for d in self.diagnostics:
+            if not isinstance(d, PlanDiagnostic):
+                raise TypeError(
+                    f"diagnostics entries must be PlanDiagnostic, got {type(d).__name__}"
+                )
         if not isinstance(self.input_content_hash, str):
             raise TypeError(
                 f"input_content_hash must be a str, got {type(self.input_content_hash).__name__}"
             )
-        if self.input_content_hash and len(self.input_content_hash) != 64:
-            raise ValueError(
-                f"input_content_hash must be 64 hex chars or empty, got "
-                f"{len(self.input_content_hash)} chars"
-            )
+        if self.input_content_hash:
+            if len(self.input_content_hash) != 64:
+                raise ValueError(
+                    f"input_content_hash must be 64 hex chars or empty, got "
+                    f"{len(self.input_content_hash)} chars"
+                )
+            if not all(c in _HEX_LOWER for c in self.input_content_hash):
+                raise ValueError(
+                    f"input_content_hash must be 64 lowercase hex chars, got "
+                    f"{self.input_content_hash!r}"
+                )
         if not isinstance(self.contract_id, str):
             raise TypeError(f"contract_id must be a str, got {type(self.contract_id).__name__}")
 

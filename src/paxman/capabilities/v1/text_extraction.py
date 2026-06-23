@@ -210,7 +210,14 @@ class TextExtractionCapability:
             with the full input span.
         """
         provider = ctx.config.get("provider", _DEFAULT_PROVIDER)
-        if not hasattr(provider, "extract"):
+        # Check both that the attribute exists AND that it is
+        # callable. ``hasattr`` alone accepts a property or any
+        # other descriptor; if we passed that to ``provider.extract(...)``
+        # Python would raise ``TypeError: 'X' object is not
+        # callable`` at the call site. Checking ``callable`` up
+        # front lets us return a structured diagnostic instead.
+        extract = getattr(provider, "extract", None)
+        if extract is None or not callable(extract):
             return CapabilityResult(
                 candidates=(),
                 diagnostics=(
@@ -229,7 +236,7 @@ class TextExtractionCapability:
             content_type = "text"
 
         try:
-            text = provider.extract(ctx.raw_input, content_type)
+            text = extract(ctx.raw_input, content_type)
         except CapabilityError as e:
             return CapabilityResult(
                 candidates=(),

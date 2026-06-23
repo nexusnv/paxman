@@ -112,6 +112,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   13. `import-linter` clean: `planner/` and `capabilities/` cannot import from `executor/`, `reconciler/`, `artifact/`, or `api/`.
   14. `make ci` green (all 7 gates, **1057 tests, 93.76% coverage**).
   15. `docs/concepts/planning.md` exists as a skeleton (will be filled in Sprint 8).
+- **Sprint 3 — Post-review fixes** (Oracle review of code-review bot):
+  - `paxman.capabilities.registry.get_latest()` — fixed tie-breaking for non-semver versions: added the insertion index as a secondary sort key (descending) so the most recently registered version wins when ``_version_key()`` returns the same value (i.e., all non-semver versions).
+  - `paxman.capabilities.registry.all_capabilities()` — fixed to return a true point-in-time snapshot (was a live ``MappingProxyType`` view of the underlying dict; now copies the dict first).
+  - `paxman.planner.planner.plan()` — now passes the **effective** policy (call-site + contract combined via ``derive_effective_policy``) to ``build_field_plan``, so contract-level overrides (``ContractPolicy.confidence_floor``, etc.) are honored. Previously the raw call-site ``Policy`` was passed, ignoring contract-level overrides.
+  - `paxman.planner.heuristics.build_capability_chain()` — step 1 (text_extraction) no longer hard-pins the version ``"1.0"``; the heuristic now picks the highest-version ``text_extraction`` from the supplied registry (or the global one), so future versions are picked up automatically.
+  - `paxman.capabilities.v1.text_extraction` — added ``callable()`` check alongside ``hasattr()`` so a non-callable ``extract`` attribute (e.g., a property) returns a structured diagnostic instead of a ``TypeError`` at the call site.
+  - `paxman.capabilities.v1.inference` — added empty-prompt check in ``CompletionRequest.__attrs_post_init__`` to match the documented contract.
+  - `paxman.planner.field_plan.ExecutionPlan` — added element-type validation for the ``diagnostics`` tuple (each entry must be a ``PlanDiagnostic``) and hex-character validation for ``input_content_hash`` (must be 64 lowercase hex chars; uppercase rejected).
+  - `paxman.planner.field_plan.FieldPlanStep.config` — now wrapped in ``types.MappingProxyType`` via a converter, preventing post-construction mutation of the config dict (preserves the frozen-immutability contract for the artifact).
+  - `paxman.serialization` — taught ``_default()`` to serialize ``types.MappingProxyType`` (used by the new frozen ``FieldPlanStep.config``).
+  - `paxman.capabilities.__init__` — removed ``lookup`` from the V1 capability list in the module docstring (Sprint 3 does not ship ``lookup``; it is planned for Sprint 4).
 
 ### Technical notes
 

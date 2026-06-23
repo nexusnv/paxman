@@ -239,3 +239,6 @@ MIT (or Apache-2.0 — final TBD by the team). See `LICENSE`.
 - [GLOSSARY.md](./GLOSSARY.md) — vocabulary
 - [REPLAY_AND_DETERMINISM.md](./REPLAY_AND_DETERMINISM.md) — replay model
 - [SECURITY.md](./SECURITY.md) — threat model
+- [DeepWiki](https://deepwiki/nexusnv/paxman) - Discover Paxman with AI Q&A
+- [Paxman Website](https://paxman.nexusnv.net) - Visit out website
+- [NexusNV Website](https://nexusnv.net) - The people behind Paxman

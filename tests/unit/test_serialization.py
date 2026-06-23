@@ -229,3 +229,12 @@ def test_dump_to_file_and_load(tmp_path) -> None:
         stable_dump(data, f)
     with path.open() as f:
         assert stable_load(f) == data
+
+
+def test_dumps_supports_mappingproxy() -> None:
+    """``types.MappingProxyType`` is serializable (used by frozen configs)."""
+    import types
+
+    mp = types.MappingProxyType({"a": 1, "b": 2})
+    out = stable_dumps(mp)
+    assert out == '{"a":1,"b":2}'

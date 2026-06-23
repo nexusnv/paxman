@@ -1,0 +1,15 @@
+ACME COFFEE SHOP
+123 Main St
+Springfield, IL 62701
+
+Receipt #R-2026-001234
+Date: 2026-01-15 09:14:22
+
+Latte (large)        $4.75 USD
+Croissant            $3.25 USD
+Tax                  $0.64 USD
+-----------------------
+Total:               $8.64 USD
+
+Payment: VISA ****1234
+Thank you!

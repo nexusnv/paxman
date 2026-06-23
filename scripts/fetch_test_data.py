@@ -25,7 +25,11 @@ import argparse
 import hashlib
 import json
 import logging
+import shutil
+import subprocess
 import sys
+import tempfile
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional

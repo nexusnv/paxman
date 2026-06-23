@@ -32,18 +32,14 @@ jobs:
             git fetch origin main
             git checkout main
             git reset --hard origin/main
-
             cd website
-
             docker build -t "${{ secrets.CONTAINER_NAME }}" .
-
             docker rm -f "${{ secrets.CONTAINER_NAME }}" || true
-
             docker run -d \
               --name "${{ secrets.CONTAINER_NAME }}" \
-              --restart unless-stopped \
               --network proxy \
-              --label "traefik.docker.network=proxy" \
+              --label traefik.enable=true \
+              --label traefik.docker.network=proxy \
               --label "traefik.http.routers."${{ secrets.CONTAINER_NAME }}".rule=Host(\`paxman.nexusnv.net\`)" \
               --label "traefik.http.services."${{ secrets.CONTAINER_NAME }}".loadbalancer.server.port=80" \
               "${{ secrets.CONTAINER_NAME }}"

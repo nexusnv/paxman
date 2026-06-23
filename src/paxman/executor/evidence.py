@@ -34,6 +34,7 @@ from paxman.capabilities.result import (
     CapabilityResult,
     Diagnostic,
     DiagnosticCode,
+    DiagnosticSeverity,
     EvidenceRef,
 )
 from paxman.executor.execution_state import ExecutionState
@@ -119,8 +120,6 @@ def _should_promote_to_run_level(diagnostic: Diagnostic) -> bool:
     Returns:
         ``True`` if the diagnostic belongs in the run-level list.
     """
-    from paxman.capabilities.result import DiagnosticSeverity
-
     if diagnostic.severity is DiagnosticSeverity.ERROR:
         return True
     if (

@@ -12,6 +12,7 @@ V1 capabilities) so the property test is fully self-contained.
 from __future__ import annotations
 
 import attrs
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -23,7 +24,7 @@ from paxman.executor.executor import Executor
 from paxman.planner.field_plan import ExecutionPlan, FieldPlan, FieldPlanStep
 from paxman.serialization import stable_dumps
 
-pytestmark = [__import__("pytest").mark.property]
+pytestmark = [pytest.mark.property]
 
 
 # --- mock capability -------------------------------------------------

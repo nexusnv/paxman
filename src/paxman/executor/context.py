@@ -115,9 +115,9 @@ class ContextBuilder:
             raise ValueError(f"field_path must be a non-empty string, got {field_path!r}")
         if not isinstance(field_type_name, str) or not field_type_name:
             raise ValueError(f"field_type_name must be a non-empty string, got {field_type_name!r}")
-        if not isinstance(input_profile_type, str):
+        if not isinstance(input_profile_type, str) or not input_profile_type:
             raise TypeError(
-                f"input_profile_type must be a str, got {type(input_profile_type).__name__}"
+                f"input_profile_type must be a non-empty str, got {input_profile_type!r}"
             )
         if not isinstance(tier, CapabilityTier):
             raise TypeError(f"tier must be a CapabilityTier, got {type(tier).__name__}")

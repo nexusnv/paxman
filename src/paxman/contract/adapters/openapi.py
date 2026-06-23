@@ -9,10 +9,14 @@ Hard caps (per the Sprint 4 risk register):
 
 - **No ``oneOf`` / ``anyOf`` / ``allOf``** — composition is V2.
   Reject with ``UNSUPPORTED_OPENAPI_FEATURE``.
-- **No ``$ref`` resolution** — V2. The V1 adapter does not walk
-  ``$ref`` pointers; references are surfaced as a diagnostic and
-  the referenced schema is treated as ``OBJECT`` (best-effort).
-  This is the documented V1 simplification; tests assert it.
+- **``$ref`` resolution is best-effort.** ``$ref`` to
+  ``#/components/schemas/<name>`` is inlined recursively with
+  cycle detection (see ``_inline_refs_impl``). ``$ref`` to
+  any other target (paths, external URLs) is rejected with
+  ``UNSUPPORTED_OPENAPI_FEATURE``. Chained ``$ref`` chains
+  (``A`` → ``B`` → ``A``) are detected and rejected with
+  ``INVALID_REF``. This is the V1 simplification: a future
+  sprint may add a fuller JSON Reference resolver.
 - **No path operation parsing** — V1 only reads
   ``components.schemas``. ``paths`` / ``requestBody`` / ``parameters``
   / ``responses`` are accepted but ignored in V1.

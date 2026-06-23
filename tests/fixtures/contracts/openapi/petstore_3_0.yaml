@@ -8,11 +8,13 @@ info:
     subset the V1 adapter is expected to handle:
 
     - A `Pet` schema with a nested `Category` object.
-    - A `Tag` schema referenced from `Pet`.
+    - A `Tag` schema referenced from `Pet` via `$ref` to
+      `#/components/schemas/Tag` (the V1 adapter inlines this
+      best-effort, per the openapi.py Hard caps note).
     - A `status` enum field on `Pet`.
     - A `name` field with `minLength` / `maxLength` constraints.
     - A `photoUrls` array of strings.
-    - No `oneOf` / `anyOf` / `$ref` (V1 hard cap; see ADR-0007).
+    - No `oneOf` / `anyOf` / `allOf` (V1 hard cap; see ADR-0007).
 
     Anything the V1 adapter cannot represent (e.g., `allOf`
     composition, response objects, request bodies, parameters)

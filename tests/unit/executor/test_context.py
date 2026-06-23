@@ -156,13 +156,26 @@ def test_build_rejects_empty_field_type_name() -> None:
 
 def test_build_rejects_non_str_input_profile_type() -> None:
     builder = ContextBuilder()
-    with pytest.raises(TypeError, match="input_profile_type must be a str"):
+    with pytest.raises(TypeError, match="input_profile_type must be a non-empty str"):
         builder.build(
             step=_step(),
             raw_input=b"",
             field_path="x",
             field_type_name="STRING",
             input_profile_type=123,  # type: ignore[arg-type]
+            tier=CapabilityTier.LOCAL_DETERMINISTIC,
+        )
+
+
+def test_build_rejects_empty_input_profile_type() -> None:
+    builder = ContextBuilder()
+    with pytest.raises(TypeError, match="input_profile_type must be a non-empty str"):
+        builder.build(
+            step=_step(),
+            raw_input=b"",
+            field_path="x",
+            field_type_name="STRING",
+            input_profile_type="",
             tier=CapabilityTier.LOCAL_DETERMINISTIC,
         )
 

@@ -155,16 +155,13 @@ def test_run_short_circuits_on_cost_budget() -> None:
         registry={("mock", "1.0"): expensive},
         budget=Budget(max_total_cost_usd=0.10),
     )
-    # The first call exceeds the budget. The Executor records
-    # the first field as RESOLVED (it ran before the gate was
-    # triggered — the budget check is pre-invocation, so the
-    # first step is gated and never runs).
-    # Actually: the budget is 0.10; the first call's would-be
-    # cost is 0.50; the gate triggers before invocation.
-    # So the first field is also UNRESOLVED.
+    # The budget is 0.10 but the first call's would-be cost
+    # is 0.50; the FieldRunner's pre-invocation gate triggers
+    # before the capability is called, so the first field is
+    # UNRESOLVED with a BUDGET_EXCLUDES diagnostic. Subsequent
+    # fields are also UNRESOLVED (the budget is now exhausted).
     assert results[0].status == "UNRESOLVED"
     assert results[0].candidates == ()
-    # Subsequent fields also UNRESOLVED, with BUDGET_EXCLUDES diagnostic.
     assert results[1].status == "UNRESOLVED"
     assert results[2].status == "UNRESOLVED"
     # The expensive capability was never invoked.

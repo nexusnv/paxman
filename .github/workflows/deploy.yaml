@@ -1,21 +1,27 @@
-name: Deploy website
+name: CI / Deploy
 
 on:
   push:
     branches:
       - main
-    paths:
-      - "website/**"
 
 jobs:
-  deploy:
+  build:
+    name: Build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         
-      - name: Deploy via Cloudflare SSH
+  deploy:
+    name: Deploy via Cloudflared SSH
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to remote server via Cloudflared SSH
         uses: and-fm/cloudflared-ssh-action@v3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -35,7 +41,6 @@ jobs:
             git fetch origin main
             git checkout main
             git reset --hard origin/main
-            cd website
             docker build -t "${{ secrets.CONTAINER_NAME }}" .
             docker rm -f "${{ secrets.CONTAINER_NAME }}" || true
             docker run -d \
@@ -44,5 +49,5 @@ jobs:
               --label traefik.enable=true \
               --label traefik.docker.network=proxy \
               --label "traefik.http.routers."${{ secrets.CONTAINER_NAME }}".rule=Host(\`paxman.nexusnv.net\`)" \
-              --label "traefik.http.services."${{ secrets.CONTAINER_NAME }}".loadbalancer.server.port=80" \
+              --label "traefik.http.services."${{ secrets.CONTAINER_NAME }}".loadbalancer.server.port=3000" \
               "${{ secrets.CONTAINER_NAME }}"

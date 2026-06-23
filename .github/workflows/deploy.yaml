@@ -2,27 +2,17 @@ name: Deploy website
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
       - "website/**"
 
 jobs:
-  build:
-    name: Build
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-        
-  deploy:
-    name: Deploy via Cloudflase SSH
-    needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Deploy to remote server via Cloudfase SSH
+      - name: Deploy via Cloudflare SSH
         uses: and-fm/cloudflared-ssh-action@v3
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -34,17 +24,23 @@ jobs:
           service_token_secret: ${{ secrets.SERVICE_TOKEN_SECRET }}
           commands: |
             set -e
-            cd ${{ secrets.REPO_PATH }}
+
+            cd "${{ secrets.REPO_PATH }}"
+
             git fetch origin main
-            git checkout main
             git reset --hard origin/main
+
             cd website
+
             docker build -t "${{ secrets.CONTAINER_NAME }}" .
+
             docker rm -f "${{ secrets.CONTAINER_NAME }}" || true
+
             docker run -d \
               --name "${{ secrets.CONTAINER_NAME }}" \
+              --restart unless-stopped \
               --network proxy \
-              --label traefik.docker.network=proxy \
-              --label "traefik.http.routers."${{ secrets.CONTAINER_NAME }}".rule=Host(\`paxman.nexusnv.net\`)" \
-              --label "traefik.http.services."${{ secrets.CONTAINER_NAME }}".loadbalancer.server.port=80" \
-              "${{ secrets.CONTANER_NAME }}"
+              --label "traefik.docker.network=proxy" \
+              --label "traefik.http.routers.${{ secrets.CONTAINER_NAME }}.rule=Host(\`paxman.nexusnv.net\`)" \
+              --label "traefik.http.services.${{ secrets.CONTAINER_NAME }}.loadbalancer.server.port=80" \
+              "${{ secrets.CONTAINER_NAME }}"

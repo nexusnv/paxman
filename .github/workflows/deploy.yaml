@@ -1,0 +1,53 @@
+name: CI / Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+  deploy:
+    name: Deploy via Cloudflared SSH
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to remote server via Cloudflared SSH
+        uses: and-fm/cloudflared-ssh-action@v3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          private_key_filename: ${{ secrets.SSH_PRIVATE_KEY_FILENAME }}
+          private_key_value: ${{ secrets.SSH_PRIVATE_KEY_VALUE }}
+          port: ${{ secrets.SSH_PORT }}
+          service_token_id: ${{ secrets.SERVICE_TOKEN_ID }}
+          service_token_secret: ${{ secrets.SERVICE_TOKEN_SECRET }}
+          commands: |
+            set -e
+            mkdir -p "${{ secrets.REPO_PATH }}"
+            cd "${{ secrets.REPO_PATH }}"
+            if [ ! -d .git ]; then
+              git clone https://github.com/${{ github.repository }} .
+            fi
+            git fetch origin main
+            git checkout main
+            git reset --hard origin/main
+            docker build -t "${{ secrets.CONTAINER_NAME }}" .
+            docker rm -f "${{ secrets.CONTAINER_NAME }}" || true
+            docker run -d \
+              --name "${{ secrets.CONTAINER_NAME }}" \
+              --network proxy \
+              --label traefik.enable=true \
+              --label traefik.docker.network=proxy \
+              --label "traefik.http.routers."${{ secrets.CONTAINER_NAME }}".rule=Host(\`paxman.nexusnv.net\`)" \
+              --label "traefik.http.services."${{ secrets.CONTAINER_NAME }}".loadbalancer.server.port=80" \
+              "${{ secrets.CONTAINER_NAME }}"

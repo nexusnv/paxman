@@ -1,0 +1,15 @@
+services:
+  paxman-website:
+    build: .
+    container_name: paxman-website
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.paxman.rule=Host(`paxman.nexusnv.net`)"
+      - "traefik.http.routers.paxman.entrypoints=web"
+      - "traefik.http.services.paxman.loadbalancer.server.port=80"
+
+networks:
+  proxy:
+    external: true

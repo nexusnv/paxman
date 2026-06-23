@@ -10,10 +10,9 @@ machinery that makes them first-class:
 - :mod:`paxman.capabilities.result` — :class:`CapabilityResult`,
   :class:`Candidate`, :class:`EvidenceRef`, :class:`Diagnostic`.
 - :mod:`paxman.capabilities.registry` — versioned capability registry.
-- :mod:`paxman.capabilities.v1` — concrete V1 capability implementations
-  (``text_extraction``, ``regex_extraction``, ``validation``,
-  ``inference`` SPI + stub) shipped in Sprint 3. ``lookup`` is the
-  fifth V1 capability, planned for Sprint 4.
+- :mod:`paxman.capabilities.v1` — concrete V1 capability implementations:
+  ``text_extraction``, ``regex_extraction``, ``validation``, ``lookup``,
+  and ``inference`` (SPI + stub + cycling stub).
 
 Boundary rules (per ``PACKAGE_STRUCTURE.md`` §5.4):
 

@@ -1,0 +1,106 @@
+openapi: 3.0.3
+info:
+  title: Petstore
+  description: |
+    A trimmed Pet Store OpenAPI 3.0 document, used as the V1
+    OpenAPI adapter smoke test (per `docs/sprints/sprint-04-executor-and-capabilities.md`
+    D4.11). The full Pet Store is intentionally reduced to the
+    subset the V1 adapter is expected to handle:
+
+    - A `Pet` schema with a nested `Category` object.
+    - A `Tag` schema referenced from `Pet`.
+    - A `status` enum field on `Pet`.
+    - A `name` field with `minLength` / `maxLength` constraints.
+    - A `photoUrls` array of strings.
+    - No `oneOf` / `anyOf` / `$ref` (V1 hard cap; see ADR-0007).
+
+    Anything the V1 adapter cannot represent (e.g., `allOf`
+    composition, response objects, request bodies, parameters)
+    is intentionally **omitted** so the smoke test exercises
+    only the documented V1 happy path.
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+paths:
+  /pets:
+    get:
+      summary: List all pets
+      operationId: listPets
+      tags:
+        - pets
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: An array of pets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+    post:
+      summary: Create a pet
+      operationId: createPet
+      tags:
+        - pets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+      responses:
+        '201':
+          description: Null response
+components:
+  schemas:
+    Pet:
+      type: object
+      required:
+        - id
+        - name
+        - photoUrls
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the Pet
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: The name of the pet
+        tag:
+          $ref: '#/components/schemas/Tag'
+        photoUrls:
+          type: array
+          minItems: 1
+          maxItems: 10
+          items:
+            type: string
+        status:
+          type: string
+          description: Pet status in the store
+          enum:
+            - available
+            - pending
+            - sold
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50

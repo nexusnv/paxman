@@ -10,8 +10,8 @@ and ``ARCHITECTURE.md`` §4.3):
 - :mod:`paxman.capabilities.v1.lookup` — deterministic in-memory
   table lookup (Sprint 4).
 - :mod:`paxman.capabilities.v1.inference` — model-backed extraction
-  (LLM is a provider; Sprint 4 wires the lookup & inference real
-  providers; this sprint ships only the SPI + stub).
+  (LLM is a provider; Sprint 3 SPI + stub; Sprint 4 adds the
+  ``CyclingStubInferenceProvider`` for non-determinism testing).
 - :mod:`paxman.capabilities.v1.validation` — verify a candidate
   value against a constraint (deterministic).
 
@@ -30,4 +30,22 @@ keeps the planner decoupled from the concrete implementations.
 
 from __future__ import annotations
 
-__all__: list[str] = []
+# Importing the v1 modules triggers their ``_register_on_import``
+# hooks, which register the capabilities with the global
+# capability registry. This is the V1 convention: capabilities
+# self-register on import.
+from paxman.capabilities.v1 import (
+    inference,
+    lookup,
+    regex_extraction,
+    text_extraction,
+    validation,
+)
+
+__all__: list[str] = [
+    "inference",
+    "lookup",
+    "regex_extraction",
+    "text_extraction",
+    "validation",
+]

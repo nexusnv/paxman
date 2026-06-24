@@ -1,0 +1,417 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tibr.ai/open-schema/oqo.json",
+  "title": "Open-Quote Object (OQO)",
+  "description": "An open JSON Schema for representing quotes and proposals for goods and services. Designed for interoperability across construction, procurement and service industries.",
+  "type": "object",
+  "required": ["oqoVersion", "quoteId", "status", "issuer", "client", "items", "currency", "totals", "dates"],
+  "properties": {
+    "oqoVersion": {
+      "type": "string",
+      "const": "2.0.0",
+      "description": "OQO schema version."
+    },
+    "quoteId": {
+      "type": "string",
+      "description": "Unique identifier for this quote."
+    },
+    "quoteReference": {
+      "type": ["string", "null"],
+      "description": "Human-readable reference code (e.g. QR-2025-0042)."
+    },
+    "quoteVersion": {
+      "type": ["integer", "null"],
+      "minimum": 1,
+      "description": "Revision number. Increments each time the quote is reissued."
+    },
+    "name": {
+      "type": "string",
+      "description": "Short title or name for the quote."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "sent", "accepted", "declined", "archived"],
+      "description": "Current lifecycle status of the quote."
+    },
+
+    "issuer": {
+      "$ref": "#/$defs/party",
+      "description": "The company or individual issuing the quote."
+    },
+
+    "client": {
+      "type": "object",
+      "description": "The client / recipient of the quote.",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Client display name or individual name."
+        },
+        "companyName": {
+          "type": ["string", "null"],
+          "description": "Registered company or trading name."
+        },
+        "legalName": {
+          "type": ["string", "null"],
+          "description": "Legal entity name if different from trading name."
+        },
+        "industry": {
+          "type": ["string", "null"],
+          "description": "Industry sector of the client."
+        },
+        "website": {
+          "type": ["string", "null"],
+          "format": "uri"
+        },
+        "taxId": {
+          "type": ["string", "null"],
+          "description": "Tax or VAT registration number."
+        },
+        "accountType": {
+          "type": ["string", "null"],
+          "enum": ["customer", "prospect", "partner", null],
+          "description": "Relationship type."
+        },
+        "contact": {
+          "$ref": "#/$defs/contact",
+          "description": "Primary contact person at the client."
+        },
+        "address": {
+          "$ref": "#/$defs/address",
+          "description": "Client billing/main address."
+        },
+        "externalId": {
+          "type": ["string", "null"],
+          "description": "Identifier from an external CRM or ERP system."
+        }
+      }
+    },
+
+    "siteAddress": {
+      "$ref": "#/$defs/address",
+      "description": "Physical location where the work or delivery takes place, if different from the client address."
+    },
+
+    "project": {
+      "type": "object",
+      "description": "Project-level metadata associated with the quote.",
+      "properties": {
+        "projectType": {
+          "type": ["string", "null"],
+          "description": "Category of project (e.g. new-build, refurbishment, fitout)."
+        },
+        "projectArea": {
+          "type": ["string", "null"],
+          "description": "Area or scope description (e.g. 450 m2)."
+        },
+        "startDate": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Planned project start date (YYYY-MM-DD)."
+        },
+        "endDate": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Planned project completion date (YYYY-MM-DD)."
+        },
+        "approxLeadTime": {
+          "type": ["string", "null"],
+          "description": "Estimated lead time (e.g. 6-8 weeks)."
+        },
+        "drawingRef": {
+          "type": ["string", "null"],
+          "description": "Reference to architectural or engineering drawings."
+        }
+      }
+    },
+
+    "people": {
+      "type": "object",
+      "description": "Key personnel assigned to this quote.",
+      "properties": {
+        "salesPerson": {
+          "type": ["string", "null"],
+          "description": "Name of the sales representative."
+        },
+        "estimator": {
+          "type": ["string", "null"],
+          "description": "Name of the estimator or quantity surveyor."
+        },
+        "designer": {
+          "type": ["string", "null"],
+          "description": "Name of the designer."
+        },
+        "projectManager": {
+          "type": ["string", "null"],
+          "description": "Name of the project manager."
+        }
+      }
+    },
+
+    "items": {
+      "type": "array",
+      "description": "Hierarchical list of quote line items. Items may be nested via parentId to form sections, groups and sub-items.",
+      "items": {
+        "$ref": "#/$defs/lineItem"
+      }
+    },
+
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "ISO 4217 currency code (e.g. GBP, USD, EUR, CAD)."
+    },
+
+    "totals": {
+      "type": "object",
+      "description": "Quote-level financial totals.",
+      "required": ["totalSell"],
+      "properties": {
+        "totalSell": {
+          "type": "number",
+          "description": "Total selling price presented to the client."
+        },
+        "totalBuy": {
+          "type": ["number", "null"],
+          "description": "Total cost / buy price (internal, may be omitted from client-facing exports)."
+        }
+      }
+    },
+
+    "discount": {
+      "type": ["object", "null"],
+      "description": "Quote-level discount applied to the total.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["percentage", "fixed"],
+          "description": "Whether the discount is a percentage of the total or a fixed monetary amount."
+        },
+        "percentage": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Discount percentage (when type is 'percentage')."
+        },
+        "value": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Discount monetary value (when type is 'fixed')."
+        },
+        "text": {
+          "type": ["string", "null"],
+          "description": "Descriptive label for the discount shown on the quote."
+        }
+      }
+    },
+
+    "dates": {
+      "type": "object",
+      "description": "Key dates for the quote.",
+      "required": ["issueDate"],
+      "properties": {
+        "issueDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Date the quote was issued (YYYY-MM-DD)."
+        },
+        "validUntil": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Expiration date of the quote (YYYY-MM-DD)."
+        }
+      }
+    },
+
+    "paymentTerms": {
+      "type": ["string", "null"],
+      "description": "Payment terms text (e.g. Net 30, 50% upfront / 50% on completion)."
+    },
+
+    "notes": {
+      "type": ["string", "null"],
+      "description": "Free-text notes or terms and conditions."
+    },
+
+    "customText": {
+      "type": ["string", "null"],
+      "description": "Optional custom text block included in the printed quote."
+    },
+
+    "metadata": {
+      "type": "object",
+      "description": "Arbitrary key-value metadata for system-specific extensions. Consumers should ignore unrecognised keys.",
+      "additionalProperties": true
+    }
+  },
+
+  "$defs": {
+    "party": {
+      "type": "object",
+      "description": "A company or individual party to the quote.",
+      "required": ["name"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Company or individual name."
+        },
+        "companyName": {
+          "type": ["string", "null"],
+          "description": "Registered company name."
+        },
+        "address": {
+          "$ref": "#/$defs/address"
+        },
+        "contact": {
+          "$ref": "#/$defs/contact"
+        },
+        "taxId": {
+          "type": ["string", "null"],
+          "description": "Tax / VAT registration number."
+        },
+        "website": {
+          "type": ["string", "null"],
+          "format": "uri"
+        }
+      }
+    },
+
+    "contact": {
+      "type": "object",
+      "description": "A contact person.",
+      "properties": {
+        "salutation": {
+          "type": ["string", "null"],
+          "description": "Title (Mr, Mrs, Dr, etc.)."
+        },
+        "firstName": {
+          "type": ["string", "null"]
+        },
+        "lastName": {
+          "type": ["string", "null"]
+        },
+        "email": {
+          "type": ["string", "null"],
+          "format": "email"
+        },
+        "phone": {
+          "type": ["string", "null"]
+        },
+        "mobile": {
+          "type": ["string", "null"]
+        },
+        "jobTitle": {
+          "type": ["string", "null"]
+        },
+        "department": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+
+    "address": {
+      "type": "object",
+      "description": "A postal address.",
+      "properties": {
+        "addressLine1": {
+          "type": ["string", "null"]
+        },
+        "addressLine2": {
+          "type": ["string", "null"]
+        },
+        "city": {
+          "type": ["string", "null"]
+        },
+        "stateProvince": {
+          "type": ["string", "null"],
+          "description": "State, province, county or region."
+        },
+        "postalCode": {
+          "type": ["string", "null"]
+        },
+        "country": {
+          "type": ["string", "null"]
+        }
+      }
+    },
+
+    "lineItem": {
+      "type": "object",
+      "description": "A single line item in the quote. Items can be nested to form a tree via parentId.",
+      "required": ["id", "text"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for this item within the quote."
+        },
+        "parentId": {
+          "type": ["string", "null"],
+          "description": "ID of the parent item. Null or absent for top-level items."
+        },
+        "text": {
+          "type": "string",
+          "description": "Description of the line item."
+        },
+        "quantity": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Quantity."
+        },
+        "unit": {
+          "type": ["string", "null"],
+          "description": "Unit of measure (e.g. each, m2, hours, kg, lm)."
+        },
+        "buy": {
+          "type": ["number", "null"],
+          "description": "Unit cost / buy price (internal). May be omitted in client-facing exports."
+        },
+        "sell": {
+          "type": ["number", "null"],
+          "description": "Unit selling price."
+        },
+        "gpPercent": {
+          "type": ["number", "null"],
+          "description": "Gross profit percentage. Derived from buy and sell if not set explicitly."
+        },
+        "totalBuy": {
+          "type": ["number", "null"],
+          "description": "Extended cost (buy * quantity)."
+        },
+        "totalSell": {
+          "type": ["number", "null"],
+          "description": "Extended selling price (sell * quantity)."
+        },
+        "partNo": {
+          "type": ["string", "null"],
+          "description": "Part number, SKU or product code."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["include", "exclude", "optional"],
+          "default": "include",
+          "description": "Whether the item is included in the quote total, excluded, or marked as optional."
+        },
+        "isGroup": {
+          "type": "boolean",
+          "default": false,
+          "description": "True if this item is a section header or grouping row rather than a priced line."
+        },
+        "comment": {
+          "type": ["string", "null"],
+          "description": "Internal comment or note on this line item."
+        },
+        "dontPrintChildren": {
+          "type": "boolean",
+          "default": false,
+          "description": "If true, child items are hidden on printed output and only the parent total is shown."
+        },
+        "metadata": {
+          "type": "object",
+          "description": "Arbitrary key-value metadata for this item.",
+          "additionalProperties": true
+        }
+      }
+    }
+  }
+}

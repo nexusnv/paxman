@@ -1,0 +1,22 @@
+ACME GLOBAL SERVICES
+Quotation Q-2026-001234
+Date: 2026-01-20
+
+Bill To: Globex Corporation
+Project: Annual Service Contract 2026
+
+Line Items:
+1. Consulting Services (160 hours)         $40,000.00 USD
+2. Platform Subscription (annual)         €12,000.00 EUR
+3. On-site Training (5 days)              £7,500.00 GBP
+4. Support Package (premium)              ¥900,000.00 JPY
+
+Notes:
+- Quote valid for 30 days from issuance
+- All amounts exclude local taxes
+- Payment terms: Net 30
+
+Subtotal (USD): $40,000.00
+Currency: USD
+
+Contact: sales@acme-global.example

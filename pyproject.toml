@@ -85,6 +85,8 @@ extend-exclude = [
     "scripts/",
     # .agents/skills/ contains agent-skill scripts; not library code.
     ".agents/skills/",
+    # tests/fixtures/ contains vendored third-party test data; not our code.
+    "tests/fixtures/",
 ]
 
 [tool.ruff.lint]
@@ -354,6 +356,47 @@ forbidden_modules = [
 # the "Contract subsystem must not import from other subsystems"
 # contract above; no separate contract needed.
 
+# Sprint 5 deliverable D5.19 / exit criterion #14.
+# The reconciler subsystem must not import from artifact or api
+# (per PACKAGE_STRUCTURE.md §2, §7, and §11.5). It MAY import
+# from contract, capabilities, executor, planner, and cross-cutting
+# modules. Each leaf module is listed explicitly (import-linter's
+# "forbidden" contract does not recurse into submodules of a
+# listed source_module).
+[[tool.importlinter.contracts]]
+name = "Reconciler subsystem must not import from artifact/api"
+type = "forbidden"
+source_modules = [
+    "paxman.reconciler",
+    "paxman.reconciler.truth",
+    "paxman.reconciler.confidence",
+    "paxman.reconciler.merge",
+    "paxman.reconciler.conflict",
+    "paxman.reconciler.evidence_compare",
+    "paxman.reconciler.unresolved",
+    "paxman.reconciler.validation",
+    "paxman.reconciler.money",
+    "paxman.reconciler.reconciler",
+]
+forbidden_modules = [
+    "paxman.artifact",
+    "paxman.api",
+]
+
+# Sprint 5 deliverable D5.8 / exit criterion #6.
+# ``reconciler/money.py`` is the only module in the reconciler
+# subsystem that may import ``decimal`` directly. This is a
+# structural guarantee: every other reconciler module must use
+# ``MoneyValue`` (the contract-level type) rather than raw
+# ``Decimal`` arithmetic.
+#
+# We enforce this with an ``independent`` AST-walk test (see
+# ``tests/unit/test_reconciler_static_checks.py``) rather than a
+# second import-linter ``forbidden`` contract, because import-linter
+# ``forbidden`` rules are transitive — they would also catch
+# legitimate transitive imports through ``paxman.contract.canonical``
+# (which legitimately needs ``decimal`` for ``MoneyValue``).
+
 # --- uv (project manager) -----------------------------------------------------
 # PEP 735 dependency groups (replaces [tool.uv] dev-dependencies).
 
@@ -364,6 +407,9 @@ dev = [
     "pytest-cov>=4.1",
     "pytest-xdist>=3.3",
     "hypothesis>=6.0",
+    "datasets",
+    "huggingface-hub",
+    "pytest-benchmark",
     # Lint + format
     "ruff>=0.4",
     # Type check

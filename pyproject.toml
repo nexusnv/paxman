@@ -85,6 +85,8 @@ extend-exclude = [
     "scripts/",
     # .agents/skills/ contains agent-skill scripts; not library code.
     ".agents/skills/",
+    # tests/fixtures/ contains vendored third-party test data; not our code.
+    "tests/fixtures/",
 ]
 
 [tool.ruff.lint]

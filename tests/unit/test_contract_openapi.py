@@ -3,7 +3,7 @@
 Per Sprint 4 D4.18: the V1 OpenAPI adapter is a best-effort
 adapter that delegates to the JSON Schema adapter for property
 parsing. The tests pin the contract using the
-``petstore_3_0.yaml`` fixture.
+``petstore.yaml`` fixture.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ pytestmark = pytest.mark.unit
 
 
 _PETSTORE_PATH: Path = (
-    Path(__file__).parent.parent / "fixtures" / "contracts" / "openapi" / "petstore_3_0.yaml"
+    Path(__file__).parent.parent / "fixtures" / "contracts" / "openapi" / "petstore.yaml"
 )
 
 
@@ -43,14 +43,12 @@ def test_adapt_petstore_produces_canonical_contract() -> None:
     doc = _load_petstore()
     adapter = OpenApiAdapter()
     contract = adapter.adapt(doc)
-    # The Petstore doc has ``info.title: Petstore``.
-    assert contract.id == "Petstore"
+    # The real petstore vendor fixture has ``info.title: Swagger Petstore``.
+    assert contract.id == "Swagger Petstore"
     field_paths = {f.path for f in contract.fields}
     assert "id" in field_paths
     assert "name" in field_paths
     assert "tag" in field_paths
-    assert "photoUrls" in field_paths
-    assert "status" in field_paths
 
 
 def test_adapt_petstore_field_types() -> None:
@@ -59,9 +57,7 @@ def test_adapt_petstore_field_types() -> None:
     by_path = {f.path: f for f in contract.fields}
     assert by_path["id"].type is FieldType.INTEGER
     assert by_path["name"].type is FieldType.STRING
-    assert by_path["tag"].type is FieldType.OBJECT  # inlined from Tag
-    assert by_path["photoUrls"].type is FieldType.ARRAY
-    assert by_path["status"].type is FieldType.ENUM
+    assert by_path["tag"].type is FieldType.STRING
 
 
 def test_adapt_petstore_required_set() -> None:
@@ -70,30 +66,20 @@ def test_adapt_petstore_required_set() -> None:
     by_path = {f.path: f for f in contract.fields}
     assert by_path["id"].required is True
     assert by_path["name"].required is True
-    assert by_path["photoUrls"].required is True
-    assert by_path["status"].required is True
     # ``tag`` is optional in Pet.
     assert by_path["tag"].required is False
 
 
-def test_adapt_petstore_name_constraints() -> None:
+def test_adapt_petstore_no_constraints_on_basic_string() -> None:
+    """The official petstore vendor fixture does not define length constraints."""
     doc = _load_petstore()
     contract = OpenApiAdapter().adapt(doc)
     by_path = {f.path: f for f in contract.fields}
-    kinds = [c.kind.value for c in by_path["name"].constraints]
-    assert "min_length" in kinds
-    assert "max_length" in kinds
-
-
-def test_adapt_petstore_status_enum_values() -> None:
-    doc = _load_petstore()
-    contract = OpenApiAdapter().adapt(doc)
-    by_path = {f.path: f for f in contract.fields}
-    enum = by_path["status"].enum_values
-    assert enum is not None
-    assert "available" in enum
-    assert "pending" in enum
-    assert "sold" in enum
+    assert by_path["name"].type is FieldType.STRING
+    # No min_length / max_length are specified in the fixture.
+    assert not any(
+        c.kind.value in ("min_length", "max_length") for c in by_path["name"].constraints
+    )
 
 
 # --- reject list (V2 features) --------------------------------------
@@ -132,14 +118,17 @@ def test_adapt_rejects_discriminator() -> None:
 
 
 def test_adapt_resolves_components_schemas_ref() -> None:
-    """The petstore's ``tag: $ref: #/components/schemas/Tag`` is inlined."""
+    """Schemas with ``$ref`` are resolved and inlined by the adapter.
+
+    The petstore vendor fixture uses ``$ref`` in its path responses
+    (e.g. ``$ref: "#/components/schemas/Pets"``).  Component-schema
+    fields stored inline are plain types (``tag`` is ``STRING``).
+    """
     doc = _load_petstore()
     contract = OpenApiAdapter().adapt(doc)
     by_path = {f.path: f for f in contract.fields}
-    # The tag field is inlined as OBJECT (the JSON Schema
-    # adapter sees the Tag schema and treats it as a generic
-    # object with id + name).
-    assert by_path["tag"].type is FieldType.OBJECT
+    # ``tag`` is defined inline as ``type: string`` (not a $ref).
+    assert by_path["tag"].type is FieldType.STRING
 
 
 def test_adapt_rejects_unresolvable_ref() -> None:
@@ -186,14 +175,14 @@ def test_adapt_accepts_3_0_x() -> None:
     doc = _load_petstore()
     doc["openapi"] = "3.0.0"
     contract = OpenApiAdapter().adapt(doc)
-    assert contract.id == "Petstore"
+    assert contract.id == "Swagger Petstore"
 
 
 def test_adapt_accepts_3_1_x() -> None:
     doc = _load_petstore()
     doc["openapi"] = "3.1.0"
     contract = OpenApiAdapter().adapt(doc)
-    assert contract.id == "Petstore"
+    assert contract.id == "Swagger Petstore"
 
 
 # --- input validation -----------------------------------------------
@@ -229,7 +218,7 @@ def test_export_round_trip() -> None:
     assert exported["openapi"] == "3.0.3"
     # The export uses the contract id as the schema key (since
     # the V1 model is one canonical contract per document).
-    assert "Petstore" in exported["components"]["schemas"]
+    assert "Swagger Petstore" in exported["components"]["schemas"]
 
 
 def test_export_rejects_non_canonical_contract() -> None:

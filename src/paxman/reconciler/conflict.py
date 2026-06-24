@@ -179,7 +179,7 @@ def detect_conflicts(
                 field_path=field.path,
                 candidate_values=tuple(distinct),
                 conflict_type=CONFLICT_TYPE_CURRENCY_MISMATCH,
-                candidate_count=len(candidates),
+                candidate_count=len(concrete),
             )
         # All MONEY values share a currency: no currency conflict. The
         # amount differences are handled by the merge strategy, not here.
@@ -191,14 +191,11 @@ def detect_conflicts(
     first = values[0]
     if all(_values_equal(first, v) for v in values[1:]):
         return None
-    # Conflict: collect distinct values (dedup while preserving insertion order).
-    seen: set[int] = set()
+    # Conflict: collect distinct values (dedup by value equality, not identity)
+    # so equal-but-distinct objects from different capabilities are merged.
     distinct_values: list[typing.Any] = []
     for v in values:
-        # Use id() for hashability fallback (not all values are hashable).
-        key = id(v)
-        if key not in seen:
-            seen.add(key)
+        if not any(_values_equal(v, existing) for existing in distinct_values):
             distinct_values.append(v)
     # Sanity: a value conflict requires >= 2 distinct values.
     if len(distinct_values) < 2:
@@ -207,5 +204,5 @@ def detect_conflicts(
         field_path=field.path,
         candidate_values=tuple(distinct_values),
         conflict_type=CONFLICT_TYPE_VALUE_MISMATCH,
-        candidate_count=len(candidates),
+        candidate_count=len(concrete),
     )

@@ -107,26 +107,31 @@ def _most_common_value(
     Returns ``None`` if all candidates have ``None`` values. Ties
     resolve to the value of the earliest candidate (deterministic).
     """
-    counts: dict[int, tuple[typing.Any, int]] = {}
-    for _idx, c in enumerate(candidates):
+    values: list[typing.Any] = []
+    for c in candidates:
         if not isinstance(c, Candidate) or c.value is None:
             continue
-        key = id(c.value)
-        if key in counts:
-            value, n = counts[key]
-            counts[key] = (value, n + 1)
-        else:
-            counts[key] = (c.value, 1)
-    if not counts:
+        values.append(c.value)
+    if not values:
         return None
-    # Sort by (count desc, first-seen index asc) for deterministic tiebreak.
-    best_value: typing.Any = None
-    best_count = -1
-    for _key, (value, n) in counts.items():
-        if n > best_count:
-            best_value = value
-            best_count = n
-    return (best_value, best_count)
+    # Count by value equality (not identity) so equal-but-distinct objects
+    # from different capabilities are grouped together.
+    counts: list[tuple[typing.Any, int]] = []
+    for v in values:
+        found = False
+        for i, (existing_val, n) in enumerate(counts):
+            if _values_equal(existing_val, v):
+                counts[i] = (existing_val, n + 1)
+                found = True
+                break
+        if not found:
+            counts.append((v, 1))
+    # Pick the value with the highest count; ties resolve to earliest.
+    best: tuple[typing.Any, int] = counts[0]
+    for item in counts[1:]:
+        if item[1] > best[1]:
+            best = item
+    return best
 
 
 def _do_money_merge(

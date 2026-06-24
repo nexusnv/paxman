@@ -13,7 +13,7 @@ mapping from evidence characteristics to a float in ``[0.0, 1.0]``. The
 rubric is fixed in V1 (changing it requires an ADR):
 
 - **Base:** ``0.50`` (start at MEDIUM)
-- **+0.10** per additional agreeing candidate (cap at 3 → +0.20)
+- **+0.10** per agreeing candidate (cap at 3 → +0.30)
 - **+0.05** per evidence ref (cap at 5 → +0.25)
 - **+0.10** if validation passed
 - **-0.15** if conflict was detected
@@ -40,6 +40,7 @@ is exclusive (except CERTAIN, which includes 1.0). This matches the
 
 from __future__ import annotations
 
+import collections.abc
 import typing
 
 from paxman.types import ConfidenceBand
@@ -114,7 +115,7 @@ def assign_confidence(
     The scoring rubric is fixed in V1 (see module docstring):
 
     - Base: ``0.50``
-    - +0.10 per additional agreeing candidate (cap at 3 → +0.20)
+    - +0.10 per agreeing candidate (cap at 3 → +0.30)
     - +0.05 per evidence ref (cap at 5 → +0.25)
     - +0.10 if validation passed
     - -0.15 if conflict detected
@@ -165,7 +166,7 @@ def assign_confidence(
         raise TypeError(f"has_conflict must be a bool, got {type(has_conflict).__name__}")
     if isinstance(base_confidence, bool) or not isinstance(base_confidence, (int, float)):
         raise TypeError(f"base_confidence must be a number, got {type(base_confidence).__name__}")
-    if not isinstance(capability_ids, typing.Iterable):
+    if not isinstance(capability_ids, collections.abc.Iterable):
         raise TypeError(f"capability_ids must be iterable, got {type(capability_ids).__name__}")
     for cid in capability_ids:
         if not isinstance(cid, str):
@@ -181,7 +182,7 @@ def assign_confidence(
 
     # --- scoring rubric ---
     confidence = float(base_confidence)
-    # +0.10 per additional agreeing candidate (cap at 3 → +0.20)
+    # +0.10 per agreeing candidate (cap at 3 → +0.30)
     confidence += 0.10 * min(candidate_count, 3)
     # +0.05 per evidence ref (cap at 5 → +0.25)
     confidence += 0.05 * min(evidence_count, 5)

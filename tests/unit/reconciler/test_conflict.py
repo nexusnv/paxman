@@ -396,10 +396,10 @@ class TestDetectConflictsValueMismatch:
         )
         assert result is not None
         assert result.conflict_type == CONFLICT_TYPE_VALUE_MISMATCH
-        assert result.candidate_count == 3  # total candidates, not filtered
+        assert result.candidate_count == 2  # concrete candidates, None filtered
 
-    def test_candidate_count_reflects_total(self) -> None:
-        """candidate_count in ConflictInfo is the total, not just concrete."""
+    def test_candidate_count_reflects_concrete(self) -> None:
+        """candidate_count in ConflictInfo counts concrete candidates only."""
         result = detect_conflicts(
             candidates=(
                 _candidate("ACME"),
@@ -410,7 +410,7 @@ class TestDetectConflictsValueMismatch:
             field=_field(),
         )
         assert result is not None
-        assert result.candidate_count == 4
+        assert result.candidate_count == 2
 
 
 # ============================================================================
@@ -456,7 +456,7 @@ class TestDetectConflictsCurrencyMismatch:
         )
         assert result is not None
         assert result.conflict_type == CONFLICT_TYPE_CURRENCY_MISMATCH
-        assert result.candidate_count == 4
+        assert result.candidate_count == 2  # concrete candidates, None filtered
 
     def test_bare_currency_code_strings(self) -> None:
         """Bare 3-letter currency code strings are detected as currency mismatch."""

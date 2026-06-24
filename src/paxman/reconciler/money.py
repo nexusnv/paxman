@@ -497,6 +497,12 @@ def resolve_money_candidates(
     # Cross-currency path.
     if policy is CurrencyPolicy.STRICT_MATCH:
         return None
+    # A single scalar fx_rate cannot correctly cross-convert more than
+    # two distinct currency pairs (e.g. EUR→USD and GBP→USD would need
+    # different rates). Reject multi-currency scenarios explicitly.
+    distinct_currencies = {c.currency for c in candidates}
+    if len(distinct_currencies) > 2:
+        return None
     rate = _validate_fx_rate(fx_rate, allow_none=False)
     total = base.amount
     for c in candidates[1:]:

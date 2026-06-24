@@ -1,0 +1,23 @@
+From: noreply@acme-coffee.example
+To: customer@example.com
+Subject: Your receipt from ACME COFFEE SHOP
+Date: Wed, 15 Jan 2026 09:14:22 -0600
+
+Hi Valued Customer,
+
+Thank you for visiting ACME COFFEE SHOP at 123 Main St, Springfield, IL 62701.
+
+Receipt #: R-2026-005678
+Date: 2026-01-15 09:14:22
+
+Items:
+- Cappuccino (medium): $4.25
+- Muffin (blueberry): $3.50
+- Tax: $0.62
+
+Total: $8.37 USD
+
+Payment method: MasterCard ****5678
+
+Have a great day!
+ACME COFFEE SHOP

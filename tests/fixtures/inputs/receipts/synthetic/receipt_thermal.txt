@@ -1,0 +1,15 @@
+ACME COFFEE SHOP
+123 Main St
+---
+2026-01-15 09:14
+R-2026-009999
+---
+Latte        4.75
+Croissant    3.25
+Bagel        2.50
+Tax          0.84
+===================
+TOTAL       11.34 USD
+---
+VISA ****4321
+THANK YOU

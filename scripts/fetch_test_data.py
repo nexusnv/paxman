@@ -25,7 +25,11 @@ import argparse
 import hashlib
 import json
 import logging
+import shutil
+import subprocess
 import sys
+import tempfile
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
@@ -121,7 +125,7 @@ DATASETS: dict[str, DatasetSpec] = {
     ),
     "petstore_3_0": DatasetSpec(
         name="OpenAPI Petstore (v3.0)",
-        source_url="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/examples/v3.0/petstore.yaml",
+        source_url="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/main/_archive_/schemas/v3.0/pass/petstore.yaml",
         license="MIT",
         v1_use="OpenAPI adapter smoke test",
         target_subdir=Path("contracts/openapi"),
@@ -256,6 +260,71 @@ def cmd_vendor(args: argparse.Namespace) -> int:
     return 0
 
 
+def _parse_hf_repo_id(url: str) -> str:
+    """Extract HuggingFace repo ID from a dataset URL.
+
+    Example:
+        https://huggingface.co/datasets/naver-clova-ix/cord-v1
+        → naver-clova-ix/cord-v1
+    """
+    prefix = "https://huggingface.co/datasets/"
+    if not url.startswith(prefix):
+        raise ValueError(f"Not a HuggingFace dataset URL: {url}")
+    return url[len(prefix) :].rstrip("/")
+
+
+def _vendor_hf_dataset(source_url: str, target: Path) -> None:
+    """Vendor a HuggingFace dataset via ``snapshot_download()``."""
+    from huggingface_hub import snapshot_download
+
+    repo_id = _parse_hf_repo_id(source_url)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        logger.info("  Downloading HF dataset %s ...", repo_id)
+        snapshot_download(
+            repo_id=repo_id,
+            repo_type="dataset",
+            local_dir=str(tmp_path),
+            local_dir_use_symlinks=False,
+        )
+        _copy_to_target(tmp_path, target)
+
+
+def _vendor_github_repo(source_url: str, target: Path) -> None:
+    """Vendor a GitHub repository via ``git clone --depth 1``."""
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_path = Path(tmp)
+        logger.info("  Cloning %s ...", source_url)
+        subprocess.run(
+            ["git", "clone", "--depth", "1", source_url, str(tmp_path)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        _copy_to_target(tmp_path, target)
+
+
+def _vendor_direct_url(source_url: str, target: Path) -> None:
+    """Vendor a single file from a direct URL via ``urlretrieve``."""
+    filename = source_url.rsplit("/", 1)[-1]
+    target_file = target / filename
+    logger.info("  Downloading %s -> %s", source_url, target_file)
+    urllib.request.urlretrieve(source_url, str(target_file))
+
+
+def _copy_to_target(src: Path, dst: Path) -> None:
+    """Copy every entry from *src* into *dst* (merge, skip .git)."""
+    dst.mkdir(parents=True, exist_ok=True)
+    for item in src.iterdir():
+        if item.name == ".git":
+            continue
+        dest = dst / item.name
+        if item.is_dir():
+            shutil.copytree(str(item), str(dest), dirs_exist_ok=True)
+        else:
+            shutil.copy2(str(item), str(dest))
+
+
 def vendor_one(spec: DatasetSpec, target: Path, update: bool) -> None:
     marker_file = target / ".VENDORED"
     if marker_file.exists() and not update:
@@ -279,14 +348,21 @@ def vendor_one(spec: DatasetSpec, target: Path, update: bool) -> None:
     logger.info("  Target: %s", target)
     logger.info("  License: %s", spec.license)
 
-    raise NotImplementedError(
-        f"Download logic for {spec.name} not yet implemented. "
-        f"See docs/TEST_DATA.md §6 for the implementation contract: "
-        f"download files to {target}, verify checksums, write a .VENDORED "
-        f"marker, and update DATASET_LICENSES.md. Use "
-        f"huggingface_hub.snapshot_download for HF datasets, "
-        f"gh release download for GitHub, urllib.request for direct URLs."
-    )
+    source_url = spec.source_url
+
+    # Dispatch to the correct download strategy based on URL pattern.
+    if "huggingface.co/datasets/" in source_url:
+        _vendor_hf_dataset(source_url, target)
+    elif "github.com" in source_url and "raw.githubusercontent.com" not in source_url:
+        _vendor_github_repo(source_url, target)
+    elif source_url.startswith("http"):
+        _vendor_direct_url(source_url, target)
+    else:
+        raise ValueError(f"Unsupported source URL for {spec.name}: {source_url}")
+
+    # Write the .VENDORED marker so cmd_verify / subsequent runs detect it.
+    marker_file.write_text("")
+    logger.info("Successfully vendored %s", spec.name)
 
 
 def log_success(name: str, spec: DatasetSpec) -> None:
@@ -344,11 +420,17 @@ def cmd_validate_licenses(_: argparse.Namespace) -> int:
         if line.startswith("### "):
             catalog_entries.add(line[4:].strip().lower())
 
-    known_safe_files = {"README.md", ".gitignore", "DATASET_LICENSES.md", "DOWNLOAD_LOG.md"}
+    known_safe_files = {
+        "README.md", ".gitignore", "DATASET_LICENSES.md", "DOWNLOAD_LOG.md",
+        "AGENTS.md", "__init__.py",
+    }
     errors: list[str] = []
 
     for path in FIXTURES_DIR.rglob("*"):
         if not path.is_file():
+            continue
+        # Skip __pycache__ directories entirely
+        if "__pycache__" in path.parts:
             continue
         if path.name in known_safe_files:
             continue

@@ -1,0 +1,347 @@
+notice_id,publication_date,buyer_id,cpv_code,lot_id,lot_name,lot_description,award_value,final_value,best_value,best_value_source,currency,source_file,cpv_label
+f2e59b9a-32d0-4fbe-b23f-8a6916f35386,2025-07-01+02:00,ORG-0001,33184100.0,LOT-0004,Část 4 - Síťkové implantáty pro laparoskopickou plastiku tříselné kýly preformované (3D),Předmětem veřejné zakázky jsou průběžné dodávky síťkových implantátů pro všeobecnou chirurgii pro potřeby Fakultní nemocnice Hradec Králové na období 4 let. Síťkové implantáty pro laparoskopickou plastiku tříselné kýly preformované (3D),1320000.0,,1320000.0,EstimatedOverallContractAmount,CZK,00422167_2025.xml,Surgical implants
+f2e59b9a-32d0-4fbe-b23f-8a6916f35386,2025-07-01+02:00,ORG-0001,33184100.0,LOT-0005,Část 5 - Síťkové implantáty parastomální – nesmáčivý povrch,Předmětem veřejné zakázky jsou průběžné dodávky síťkových implantátů pro všeobecnou chirurgii pro potřeby Fakultní nemocnice Hradec Králové na období 4 let. Síťkové implantáty parastomální – nesmáčivý povrch,2577800.0,,2577800.0,EstimatedOverallContractAmount,CZK,00422167_2025.xml,Surgical implants
+f2e59b9a-32d0-4fbe-b23f-8a6916f35386,2025-07-01+02:00,ORG-0001,33184100.0,LOT-0003,Část 3 - Síťkové implantáty pro laparoskopické operování – nesmáčivý povrch,Předmětem veřejné zakázky jsou průběžné dodávky síťkových implantátů pro všeobecnou chirurgii pro potřeby Fakultní nemocnice Hradec Králové na období 4 let. Síťkové implantáty pro laparoskopické operování – nesmáčivý povrch,1570100.0,,1570100.0,EstimatedOverallContractAmount,CZK,00422167_2025.xml,Surgical implants
+f2e59b9a-32d0-4fbe-b23f-8a6916f35386,2025-07-01+02:00,ORG-0001,33184100.0,LOT-0002,Část 2 - Síťkové implantáty pro otevřené operování – nesmáčivý povrch,Předmětem veřejné zakázky jsou průběžné dodávky síťkových implantátů pro všeobecnou chirurgii pro potřeby Fakultní nemocnice Hradec Králové na období 4 let. Síťkové implantáty pro otevřené operování – nesmáčivý povrch,2291000.0,,2291000.0,EstimatedOverallContractAmount,CZK,00422167_2025.xml,Surgical implants
+f2e59b9a-32d0-4fbe-b23f-8a6916f35386,2025-07-01+02:00,ORG-0001,33184100.0,LOT-0001,Část 1 - Síťkové implantáty pro otevřené operování,Předmětem veřejné zakázky jsou průběžné dodávky síťkových implantátů pro všeobecnou chirurgii pro potřeby Fakultní nemocnice Hradec Králové na období 4 let. Síťkové implantáty pro otevřené operování.,1327269.6,,1327269.6,EstimatedOverallContractAmount,CZK,00422167_2025.xml,Surgical implants
+49d94535-81dd-4f37-865c-1ceaffce47b0,2025-07-01+02:00,ORG-0001,32000000.0,LOT-0001,Dodávka audiovizuální techniky - I. etapa,"Předmětem plnění veřejné zakázky je dodávka audiovizuální techniky. Součástí dodávky je instalace, uvedení do provozu a nakonfigurování, v rozsahu a v souladu se zadávacími podmínkami.",2619216.0,,2619216.0,EstimatedOverallContractAmount,CZK,00422168_2025.xml,"Radio, television, communication, telecommunication and related equipment"
+8c74ecde-a032-41f7-9842-eae77ce1f5ec,2025-07-01+02:00,ORG-0001,90910000.0,LOT-0011,Chantier 130,130 Bibliothèque de Genève - Promenade des Bastions 8 - 1204 Genève,,8085.88,8085.88,NoticeResult,EUR,00422169_2025.xml,Cleaning services
+90e56e25-0b65-47e1-ac38-92d455bb2bdc,2025-07-01+02:00,ORG-0003,50750000.0,LOT-0001,Servicio de mantenimiento preventivo y correctivo de los ascensores interiores y plataformas elevadoras municipales del municipio de Basauri,Servicio de mantenimiento preventivo y correctivo de los ascensores interiores y plataformas elevadoras municipales del municipio de Basauri,,,,missing,EUR,00422170_2025.xml,Lift-maintenance services
+bf46b967-2c56-4c4d-8ad8-a7e61b915c09,2025-07-01+02:00,ORG-0001,50334400.0,LOT-0001,Tehnična podpora in vzdrževanje omrežnih stikal proizvajalca Extreme Networks,Sklop 1: Tehnična podpora in vzdrževanje omrežnih stikal proizvajalca Extreme Networks,,,,missing,EUR,00422171_2025.xml,Communications system maintenance services
+bf46b967-2c56-4c4d-8ad8-a7e61b915c09,2025-07-01+02:00,ORG-0001,50334400.0,LOT-0002,Tehnična podpora in vzdrževanje brezžičnega komunikacijskega sistema proizvajalca Cisco Systems,Sklop 2: Tehnična podpora in vzdrževanje brezžičnega komunikacijskega sistema proizvajalca Cisco Systems,,,,missing,EUR,00422171_2025.xml,Communications system maintenance services
+bf46b967-2c56-4c4d-8ad8-a7e61b915c09,2025-07-01+02:00,ORG-0001,50334400.0,LOT-0003,Tehnična podpora in vzdrževanje požarnih pregrad proizvajalca Juniper Networks,Sklop 3: Tehnična podpora in vzdrževanje požarnih pregrad proizvajalca Juniper Networks,,,,missing,EUR,00422171_2025.xml,Communications system maintenance services
+bf46b967-2c56-4c4d-8ad8-a7e61b915c09,2025-07-01+02:00,ORG-0001,50334400.0,LOT-0004,Tehnična podpora in vzdrževanje brezžičnih naprav proizvajalca Peplink,Sklop 4: Tehnična podpora in vzdrževanje brezžičnih naprav proizvajalca Peplink,,,,missing,EUR,00422171_2025.xml,Communications system maintenance services
+d467b034-dcd6-4b6f-9e94-6e7cb537efd1,2025-07-01+02:00,ORG-0001,45000000.0,LOT-0000,Snow sheltering the Bergen Line,"The snow shelter project on the Bergen Line shall, in the period 2026-2030, carry out systematic renewal of the snow shelter on the high mountains along the Bergen Line and the upper part of the Flåmsbana. Snow shelters in good condition are a critical factor in ensuring safe train journeys in the mountains in the winter even with a lot of snow.  
+The renewal of older snow shelters in wood constructions for new steel buildings with glass window areas shall ensure that the snow shelters can tolerate winter and snow at the same time as a risk of fire in buildings being removed when possible.  
+The renewal of the snow shelters improves safety in incidents and facilitates better options for evacuation. The project would also like to improve selected points for water and ice problems.",,84000000.0,84000000.0,NoticeResult,EUR,00422172_2025.xml,Construction work
+c75b744e-409f-4843-a4e8-62cf899d915d,2025-07-01+02:00,ORG-0001,35110000.0,LOT-0001,Dostawa platform sprzętowych do realizacji szkoleń specjalistycznych realizowanych w zakresie podstawowym - 22 szt.,"1. Przedmiotem zamówienia jest dostawa platform sprzętowych do realizacji szkoleń specjalistycznych realizowanych w zakresie podstawowym - 22 szt.
+
+2. Zamawiający wymaga, aby dostarczony sprzęt stanowiący przedmiot zamówienia był fabrycznie nowy, nieużywany, znajdował się w stanie nieuszkodzonym, technicznie sprawnym, kompletnym i gotowym do użytkowania oraz spełniał wymagane polskim prawem normy i był wolny od wad prawnych. 
+3. Sposób transportu oraz opakowanie sprzętów muszą zapewniać zabezpieczenie przed uszkodzeniami. Za szkody powstałe z winy nienależytego opakowania oraz/lub transportu winę ponosi Wykonawca.
+
+4. Dostawa każdej 1 szt. platfromy sprzętowej do realizacji szkoleń specjalistycznych realizowanych w zakresie podstawowym  (zestawu wykazanego w tabeli), opisanego w załączniku nr 4 do SWZ musi zostać zrealizowana do jednostek organizacyjnych Skarbu Państwa określonych w dokumentach zamówienia.
+
+5. Szczegółowy zakres usług, sposób realizacji zamówienia oraz obowiązki wykonawcy określają następujące dokumenty: - załącznik nr 4 do SWZ tj. Opis Przedmiotu Zamówienia (w skrócie OPZ) oraz - załącznik nr 3 do SWZ tj. Projektowane Postanowienia Umowy wraz z załącznikami 
+6. Zakup realizowany w ramach Projektu pn.: „Zwiększenie skuteczności prowadzenia długotrwałych akcji ratowniczych – etap II”. 
+7. Wykonawca zobowiązuje się do wykonania przedmiotu zamówienia
+zgodnie z zakresem i wymaganiami wskazanymi w Opisie Przedmiotu Zamówienia stanowiącym załącznik nr 4 do SWZ, z obowiązującymi w tym zakresie przepisami i normami, aktualnym poziomem wiedzy technicznej oraz projektowanymi postanowieniami umowy, a także przy dołożeniu należytej staranności. 
+8. Zamawiający dopuszcza możliwości realizacji przedmiotowego zamówienia przez Wykonawcę z wykorzystaniem podwykonawców, których zobowiązany jest wskazać w sekcji D w części II. własnego formularza jednolitego dokumentu (JEDZ-a), o którym mowa w pkt 9.2 SWZ oraz w treści pkt 2 Formularza
+ofertowego. 
+9. Wykonawca zobowiązuje się wydać przedmiot umowy w terminie do max. 180 dni od daty podpisania umowy. Dostawa może zostać zrealizowana nie wcześniej niż 9 stycznia 2026 r. Szczegółowe uregulowania w załączniku nr 3 do SWZ – PPU. Powyższe terminy wynikają z potrzeby planowania procedury odbiorowej dla wszystkich zadań realizowanych w ramach projektu „Zwiększenie skuteczności prowadzenia długotrwałych akcji ratowniczych – etap II” co pozwoli Zamawiającemu na organizację procedury związanej z
+finansowaniem zamówienia. Termin 09.01.2026 r. odnosi się do  najwcześniejszego możliwego terminu wydania przedmiotu umowy. Nie wyklucza natomiast możliwości wykonywania innych czynności przez Zamawiającego i Odbiorcę/Użytkownika, przewidzianych podczas realizacji
+umowy, a w szczególności odbioru techniczno-jakościowego i szkolenia z zakresu obsługi przedmiotu umowy.",,,,missing,EUR,00422173_2025.xml,"Firefighting, rescue and safety equipment"
+ca5bfb22-75fe-4744-a75f-d04baf1f87e7,2025-07-01+02:00,ORG-0001,45234110.0,LOT-0001,Rekonstrukce nástupišť ŽST Semily - D3,"Předmětem veřejné zakázky je zhotovení stavby „Rekonstrukce nástupišť ŽST Semily“ v rozsahu: zhotovení stavby dle zadávací dokumentace, zpracování Realizační dokumentace stavby, vypracování Dokumentace skutečného provedení stavby včetně geodetické části, zajištění vytyčení všech drážních a inženýrských sítí v místě stavby, zajištění notifikace po realizaci stavby. Bližší specifikace předmětu plnění veřejné zakázky je upravena v dalších částech zadávací dokumentace.",,221003146.46,221003146.46,NoticeResult,EUR,00422174_2025.xml,Intercity railway works
+9c6dce91-1122-42a1-914f-2c7d3fd4372a,2025-07-01+02:00,ORG-0001,77320000.0,LOT-0000,Ridderkerk,Het uit te voeren werken is gelegen binnen de gemeentegrenzen van Ridderkerk.,1.0,1.0,1.0,EstimatedOverallContractAmount,EUR,00422175_2025.xml,Sports fields maintenance services
+365765ed-1304-4e6c-9895-c6c68e58d747,2025-07-01+02:00,ORG-0004,79713000.0,LOT-0001,"Lot 1 – A10, AIUD - TURDA km 0+000 - km 70 + 000 si CIC Dumbrava, km 61+350 /CIM Teius km 26+000","Lot 1 – A10, AIUD - TURDA km 0+000 - km 70 + 000 si CIC Dumbrava, km 61+350 /CIM Teius km 26+000 
+•	Valoarea maxima a acordului cadru este de 3.177.497,28 lei fara TVA;
+•	Valoarea minima a acordului cadru este de 1.588.748,64 lei fara TVA.
+    Frecvența și valoarea contractelor subsecvente care urmează să fie atribuite: 1 pe an.
+    Astfel valoarea celui mai mare contract subsecvent va fi de: 1.588.748,64 lei fără TVA.
+Cantitatile minime si maxime ale Acordului cadru sunt conform Anexelor la Documentatia de atribuire",,7685450.36,7685450.36,NoticeResult,EUR,00422176_2025.xml,Guard services
+365765ed-1304-4e6c-9895-c6c68e58d747,2025-07-01+02:00,ORG-0004,79713000.0,LOT-0002,"Lot 2 – A3, CAMPIA TURZII - TURDA – GILAU – NADASELU km 0 + 000 - km 61 + 200 si CIC Gilau km 51+000 ; P.S. Savadisla km 39+094 ; District Turda DN15 km 2+000","Lot 2 – A3, CAMPIA TURZII - TURDA – GILAU – NADASELU km 0 + 000 - km 61 + 200 si CIC Gilau km 51+000 ; P.S. Savadisla km 39+094 ; District Turda DN15 km 2+000
+•	Valoarea maxima a acordului cadru este de 3.613.745,28 lei fara TVA;
+•	Valoarea minima a acordului cadru este de 1.588748,64 lei fara TVA.
+    Frecvența și valoarea contractelor subsecvente care urmează să fie atribuite: 1 pe an. 
+    Astfel valoarea celui mai mare contract subsecvent va fi de: 1.806.872,64 lei fără TVA.
+Cantitatile minime si maxime ale Acordului cadru sunt conform Anexelor la Documentatia de atribuire",,7685450.36,7685450.36,NoticeResult,EUR,00422176_2025.xml,Guard services
+9ccd0d81-29f8-46db-8914-22b71978fc2d,2025-07-01+02:00,ORG-0001,45221111.0,LOT-0001,Rozbudowa odcinka DW 968 wraz z budową mostu na potoku Kamienica w m. Lubomierz - Rzeki,"Przedmiot zamówienia stanowi wykonanie w systemie zaprojektuj i wybuduj budowy mostu na potoku Kamienica wraz z rozbudową odcinka drogi wojewódzkiej nr 968 (dojazdy do mostu – odc. 060 km 11+020,60 – km 11+275,00) w m. Lubomierz – Rzeki. 
+Zamówienie obejmuje: a) opracowanie dokumentacji projektowej (w tym projektu wykonawczego, projektu tymczasowej organizacji ruchu, przedmiaru robót, STWiORB, projektów technologicznych) w oparciu o projekt budowlany, decyzję ZRID nr 16/2022 z dnia 26.05.2022 r. oraz Program Funkcjonalno-Użytkowy (PFU), b) wykonanie robót budowlanych określonych w dokumentacji projektowej, o której mowa w lit. a.
+Szczegółowe określenie przedmiotu zamówienia zawiera Opis przedmiotu zamówienia (OPZ) stanowiący zał. nr 1 SWZ.",,5825216.95,5825216.95,NoticeResult,EUR,00422177_2025.xml,Road bridge construction work
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0001,Lot 1. Poz. 19 Platformă realitate augmentată în domeniul educațional si Poz.114 Servicii dezvoltare conținut 3D customizat,"Lot 1. 
+Poz. 19 Platformă realitate augmentată în domeniul educațional – 1 set
+si Poz.114 Servicii dezvoltare conținut 3D customizat – 1 serviciu",,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0002,Lot 2. Poz. 23. Senzori VR pentru digitalizarea miscarii corpului uman,Lot 2. Poz. 23. Senzori VR pentru digitalizarea miscarii corpului uman – 4 seturiLot 2. Poz. 23. Senzori VR pentru digitalizarea miscarii corpului uman – 4 seturi,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0003,Lot 3. Poz. 24 Device tip manusa haptica,Lot 3. Poz. 24 Device tip manusa haptica – 4 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0004,"Lot 4. Poz. 32. Stereomicroscop cu sursa de lumina tip inel, camera digitala","Lot 4. Poz. 32. Stereomicroscop cu sursa de lumina tip inel, camera digitala – 2 buc.",,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0005,Lot 5. Poz. 34. Scanner 3D,Lot 5. Poz. 34. Scanner 3D – 2 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0006,Lot 6. Poz. 35. Scanner 3D raza de actiune mare,Lot 6. Poz. 35. Scanner 3D raza de actiune mare – 2 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0007,Lot 7. Poz. 123. Sistem digital de măsură cu picoampermetru si adaptor de comunicare,Lot 7. Poz. 123. Sistem digital de măsură cu picoampermetru si adaptor de comunicare – 1 sistem.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0008,Lot 8. Poz. 124. Sistem digital de măsură a calității energiei cu transmisia datelor la calculator,Lot 8. Poz. 124. Sistem digital de măsură a calității energiei cu transmisia datelor la calculator – 3 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0009,Lot 9. Poz. 125. Simulator de retea electrica inteligenta,Lot 9. Poz. 125. Simulator de retea electrica inteligenta – 1 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0010,Lot 10. Poz. 133. Echipament haptic complex de realitate virtuală,Lot 10. Poz. 133. Echipament haptic complex de realitate virtuală – 10 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0011,Lot 11. Poz. 134. Simulator pentru echipamente cu comanda numerică,Lot 11. Poz. 134. Simulator pentru echipamente cu comanda numerică – 1 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0012,Lot 12. Poz. 135. Sistem digital laser,Lot 12. Poz. 135. Sistem digital laser – 1 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0013,Lot 13. Poz. 136. Detector cu ultrasunete,Lot 13. Poz. 136. Detector cu ultrasunete – 1 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0014,Lot 14. Poz. 137. Microscop digital,Lot 14. Poz. 137. Microscop digital – 1 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0015,Lot 15. Poz. 25. Sistem de producere a vibrațiilor de torsiune libere și forțate,Lot 15. Poz. 25. Sistem de producere a vibrațiilor de torsiune libere și forțate – 1 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0016,"Lot 16. Poz. 26. Analizator digital, platformă de învățare a procesului de diagnosticare a mașinii","Lot 16. Poz. 26. Analizator digital, platformă de învățare a procesului de diagnosticare a mașinii – 1 sistem, conform caietului de sarcini.",,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0017,Lot 17. Poz. 27. Tunel aeridinamic subsonic circuit inchis,Lot 17. Poz. 27. Tunel aeridinamic subsonic circuit inchis – 1 sistem.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0018,Lot 18. Poz. 28a Infrastructura - SISTEM INTEGRAT CU SENZORI DE pH SI CONDUCTIVITATE,Lot 18. Poz. 28a Infrastructura - SISTEM INTEGRAT CU SENZORI DE pH SI CONDUCTIVITATE – 5 sisteme.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0019,Lot 19. Poz. 28b - Infrastructura – SISTEM INTEGRAT CU SENZORI DE TENSIUNE SI CURENT,Lot 19. Poz. 28b - Infrastructura – SISTEM INTEGRAT CU SENZORI DE TENSIUNE SI CURENT – 16 sisteme.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0020,Lot 20. Poz. 29. Sistem de achizitie date pentru semnale biomedicale,Lot 20. Poz. 29. Sistem de achizitie date pentru semnale biomedicale – 1 sistem.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0021,Lot 21. Poz. 37. Scanner 3D,Lot 21. Poz. 37. Scanner 3D – 1 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+35b63dcc-5508-4670-9355-840fb36d22e6,2025-07-01+02:00,ORG-0004,38000000.0,LOT-0022,Lot 22. Poz. 38. Scanner 3D,Lot 22. Poz. 38. Scanner 3D – 1 buc.,,,,missing,EUR,00422178_2025.xml,"Laboratory, optical and precision equipments (excl. glasses)"
+d7e6d3d7-7ae5-4f1d-9db0-f494111bdbf5,2025-07-01+02:00,ORG-0001,71240000.0,LOT-0000,Servicio para redacción de proyecto de obra nueva Los Olmos,Servicio para redacción de proyecto de obra nueva Los Olmos,,391000.0,391000.0,NoticeResult,EUR,00422179_2025.xml,"Architectural, engineering and planning services"
+4b3d233b-d4e8-412e-9c5b-ca180e5108bb,2025-07-01+02:00,ORG-0001,38500000.0,LOT-0001,"SZP/242-093/2025 Dostawa wielokanałowego interrogatora optycznego czujników rozproszonych w ramach projektu „Centrum Technologii Bezpieczeństwa Publicznego” realizowanego przez Politechnikę Wrocławską, nr FEDS.01.01-IZ. 00-0003/24","1.	Przedmiotem zamówienia jest: Dostawa wielokanałowego interrogatora optycznego czujników rozproszonych w ramach projektu „Centrum Technologii Bezpieczeństwa Publicznego” realizowanego przez Politechnikę Wrocławską, nr FEDS.01.01-IZ.00-0003/24.
+Wielokanałowy interrogator optycznych czujników rozproszonych wraz z oprogramowaniem, zestawem czujników i innymi niezbędnymi akcesoriami
+Kod CPV: 38500000-0: Aparatura kontrolna i badawcza.
+Przedmiotem zamówienia obejmuje dostawę sprzętu, jego montaż/ instalację i uruchomienie oraz instruktaż z obsługi w miejscu wyznaczonym przez Zamawiającego. 
+Wszystkie koszty związane z wykonywaniem przedmiotu umowy w tym dostawa, ubezpieczenie, ryzyko, uruchomienie i instruktaż ponosi Wykonawca.
+Wykonawca zobowiązany jest zapewnić, że Sprzęt będzie opakowany w jednostkowe bezzwrotne opakowania zabezpieczające przed uszkodzeniem w czasie transportu, a po zrealizowanej dostawie zobowiązany jest do zabrania i recyklingu pustych opakowań zabezpieczających.
+Zamawiający wymaga, aby przedmiot zamówienia został zrealizowany zgodnie z Wytycznymi dotyczącymi realizacji zasad równościowych w ramach funduszy unijnych na lata 2021-2027, dotyczących zasady równości szans i niedyskryminacji, w tym dostępności dla osób z niepełnosprawnościami oraz zasady równości kobiet i mężczyzn, w tym przestrzegania Konwencji o prawach osób niepełnosprawnych sporządzonej w Nowym Jorku dnia 13 grudnia 2006 r. oraz Karty Praw Podstawowych Unii Europejskiej z dnia 26 października 2012r.
+2.	Miejsce dostawy: Politechnika Wrocławska, Wybrzeże Stanisława Wyspiańskiego 41, 50-370 Wrocław, budynek H3, pok. 2.21.
+3.	Szczegółowy opis przedmiotu zamówienia znajduje się w Załączniku nr 2 SWZ – OPZ. 
+4.	Szczegółowy zakres wykonania przedmiotu zamówienia, będący projektowanymi postanowieniami umowy w sprawie zamówienia publicznego, znajduje się we wzorze umowy, stanowiącym Załączniki nr 3 do SWZ. 
+5.	Wykonawca jest zobowiązany zawrzeć w ofercie wszystkie niezbędne urządzenia, sterowniki sprzętowe i programowe, osprzęt eksploatacyjny oraz instalacje (m.in. przewody, światłowody, przetworniki, filtry, przepusty, itp.) oraz oprogramowanie do realizacji założeń funkcjonalnych przedmiotu zamówienia.
+Opis przedmiotu zamówienia (OPZ) nie podlega interpretacji. Jeśli zapisy specyfikacji są zdaniem Wykonawcy niejasne, niepełne, nieprecyzyjne lub błędne, to Wykonawca ma obowiązek zadać pytanie przed złożeniem oferty.
+6.	Jeśli Zamawiający określa w OPZ, że dany element ma posiadać określone cechy, to ten element ma efektywnie pracować z tymi cechami, a nie mieć tylko taką teoretyczną możliwość w konfiguracji innej niż dostarczana. Cechy wymagane w  specyfikacji (OPZ) są parametrami minimalnymi.
+Zgodnie z art. 257 uPzp Zamawiający przewiduje możliwość unieważnienia przedmiotowego postępowania, jeżeli środki, które Zamawiający zamierzał przeznaczyć na sfinansowanie całości lub części zamówienia, nie zostały mu przyznane.
+Zamawiający przewiduje zastosowanie tzw. procedury odwróconej, o której mowa w art. 139 ust. 1 uPzp, tj. Zamawiający najpierw dokona badania i oceny ofert, a następnie dokona kwalifikacji podmiotowej Wykonawcy, którego oferta została najwyżej oceniona, w zakresie braku podstaw wykluczenia oraz spełniania warunków udziału w postępowaniu.
+Wykonawca jest związany ofertą od dnia upływu terminu składania ofert przez 90 dni.
+Oferta musi składać się z:
+- formularza ofertowego Wykonawcy – interaktywny formularz dostępny na Platformie e-Zamówienia, wskazującego w szczególności cenę ofertową za całość przedmiotu zamówienia, producenta i model oferowanego przedmiotu zamówienia).
+- oświadczenia, o którym mowa w rozdz. VII pkt 1 SWZ - JEDZ - interaktywny formularz dostępny na Platformie e-Zamówienia 
+- oświadczenia, o którym mowa w rozdz. VII pkt 1a SWZ - (odpowiednio) Oświadczenia zał. nr 5.1 i 5.2 do SWZ;
+- (jeżeli dotyczy) zobowiązanie podmiotu udostępniającego zasoby, o którym mowa w rozdz. VII pkt 6 SWZ;
+- (jeżeli dotyczy) wykazania zastrzeżenia informacji stanowiących tajemnicę przedsiębiorstwa zgodnie rozdz. X pkt 6;
+- dokumentu/-ów, z których wynika prawo do podpisania Oferty zgodnie z rozdz. X pkt 15 SWZ; (jeżeli dotyczy) odpowiednie pełnomocnictwa zgodnie z rozdz. X pkt 16 SWZ;
+- (jeżeli dotyczy) Oświadczenie wykonawców wspólnie ubiegających się o zamówienie - zgodnie z art. 117 ust. 4 uPzp.
+- PRZEDMIOTOWYCH ŚRODKÓW DOWODOWYCH potwierdzających, że oferowane przez Wykonawcę dostawy spełniają określone przez Zamawiającego wymagania, cechy:
+opisu oferowanego przedmiotu zamówienia - specyfikacji technicznej oferowanego przedmiotu zamówienia wraz z ewentualnymi Informacjami dla Wykonawców – pozwalającego stwierdzić zgodność oferowanego urządzenia z wymaganiami Zamawiającego przedstawionymi odpowiednio w Załączniku nr 2 do SWZ  – wypełniony Załącznik nr 2 do SWZ.
+Za przedmiotowy środek dowodowy Zamawiający uznaje wskazane przez Wykonawcę w Załączniku 2  do SWZ OPZ kol. Oferowane parametry – potwierdzenie spełnienia wymogów poprzez oferowane przez Wykonawcę parametry, 
+Wymóg wskazania „Producenta/Modelu/Wersji urządzenia” nie stanowi przedmiotowego środka dowodowego.
+Zgodnie z art. 107 uPzp, w przypadku, gdy Wykonawca nie złożył przedmiotowych środków dowodowych lub złożone przedmiotowe środki dowodowe są niekompletne, Zamawiający wezwie do ich złożenia lub uzupełnienia w wyznaczonym terminie. Zasady tej nie stosuje się, jeżeli pomimo złożenia przedmiotowego środka dowodowego, oferta podlega odrzuceniu albo zachodzą przesłanki unieważnienia postępowania.",,738000.0,738000.0,NoticeResult,EUR,00422180_2025.xml,Checking and testing apparatus
+c4a14c08-2e56-4695-bd34-9744d275ac30,2025-07-01+02:00,ORG-0001,45432130.0,LOT-0001,"Bodenbeschichtungsarbeiten, Universitätsklinikum des Saarlandes, Homburg, Neubau der Klinik für Kieferorthopädie","- Circa 90 m² PU-Bodenbeschichtung, W2-1, R10, Gipsraum Grau - Circa 11 m² PU-Bodenbeschichtung, W2-1, R10, Dusche Behinderten WC Blau - Circa 20 m² PU Bodenbeschichtung, W1-1, R09 Sanitär, Blau - Circa 265 m² Kunstharz-Bodenbeschichtung   - Circa 320 m² Oberflächenbehandlung Zementestrich",,,,missing,EUR,00422181_2025.xml,Floor-covering work
+8b4e4660-7442-440a-aa57-49520d4f2f9c,2025-07-01+02:00,ORG-0001,30213200.0,LOT-0001,Tablet - typ 1 z wyposażeniem dodatkowym,"Przedmiotem zamówienia jest dostawa 78 sztuk tabletów typu 1 z wyposażeniem dodatkowym, zgodnie ze szczegółowym opisem przedmiotu zamówienia zawartym w załączniku nr 1 do swz",,,,missing,EUR,00422182_2025.xml,Tablet computer
+8b4e4660-7442-440a-aa57-49520d4f2f9c,2025-07-01+02:00,ORG-0001,30213200.0,LOT-0002,Tablet - typ 2 z wyposażeniem dodatkowym,"Przedmiotem zamówienia jest dostawa 125 sztuk tabletów typu 2 z wyposażeniem dodatkowym, zgodnie ze szczegółowym opisem przedmiotu zamówienia zawartym w załączniku nr 1 do swz",,,,missing,EUR,00422182_2025.xml,Tablet computer
+8b4e4660-7442-440a-aa57-49520d4f2f9c,2025-07-01+02:00,ORG-0001,30213200.0,LOT-0003,Tablet - typ 3 z wyposażeniem dodatkowym,"Przedmiotem zamówienia jest dostawa 100 sztuk tabletów typu 3 z wyposażeniem dodatkowym, zgodnie ze szczegółowym opisem przedmiotu zamówienia zawartym w załączniku nr 1 do swz",,,,missing,EUR,00422182_2025.xml,Tablet computer
+8b4e4660-7442-440a-aa57-49520d4f2f9c,2025-07-01+02:00,ORG-0001,30213200.0,LOT-0004,Tablet - typ 4 z wyposażeniem dodatkowym,"Przedmiotem zamówienia jest dostawa 75 sztuk tabletów typu 4 z wyposażeniem dodatkowym, zgodnie ze szczegółowym opisem przedmiotu zamówienia zawartym w załączniku nr 1 do swz",,,,missing,EUR,00422182_2025.xml,Tablet computer
+8b4e4660-7442-440a-aa57-49520d4f2f9c,2025-07-01+02:00,ORG-0001,30213200.0,LOT-0005,Tablety - typ 5 i 6 z wyposażeniem dodatkowym,"Przedmiotem zamówienia jest dostawa 10 sztuk tabletów typu 5 i 6 z wyposażeniem dodatkowym, zgodnie ze szczegółowym opisem przedmiotu zamówienia zawartym w załączniku nr 1 do swz",,,,missing,EUR,00422182_2025.xml,Tablet computer
+8b4e4660-7442-440a-aa57-49520d4f2f9c,2025-07-01+02:00,ORG-0001,30213200.0,LOT-0006,Tablet - typ 7 z wyposażeniem dodatkowym,"Przedmiotem zamówienia jest dostawa 4 sztuk tabletów typu 7 z wyposażeniem dodatkowym, zgodnie ze szczegółowym opisem przedmiotu zamówienia zawartym w załączniku nr 1 do swz",,,,missing,EUR,00422182_2025.xml,Tablet computer
+8b4e4660-7442-440a-aa57-49520d4f2f9c,2025-07-01+02:00,ORG-0001,30213200.0,LOT-0007,Tablet - typ 8,"Przedmiotem zamówienia jest dostawa 2 sztuk tabletów typu 8 z wyposażeniem dodatkowym, zgodnie ze szczegółowym opisem przedmiotu zamówienia zawartym w załączniku nr 1 do swz",,,,missing,EUR,00422182_2025.xml,Tablet computer
+c0707bf7-0235-4d17-851a-8f9915c0ac75,2025-07-01+02:00,ORG-0004,,LOT-0001,Motorină standard și Benzină fără plumb standard CO 95 pe bază de carduri electronice de credit - LOT 1,"Alimentarea cu Carburanţi pe bază de carduri electronice de credit cu alimentare la pompă a mijloacelor auto aflate în dotarea Direcției Generale de Asistență Socială și Protecția Copilului Cluj;
+Livrarea pentru Lot 1 - Motorină standard și Benzină fără plumb standard CO 95, pe bază de carduri electronice de credit - predarea cardurilor se va face la sediul DGASPC Cluj din str. G-ral Eremia Grigorescu, nr. 37-39, mun. Cluj-Napoca, jud. Cluj.
+Informatiile detaliate se regăsesc în Caietul de sarcini.",,2264506.0,2264506.0,NoticeResult,EUR,00422183_2025.xml,EN
+c0707bf7-0235-4d17-851a-8f9915c0ac75,2025-07-01+02:00,ORG-0004,,LOT-0002,Combustibil pe bază de bonuri valorice – BVCA – în baza art. 24 alin. 9 și 10 din Legea nr. 448/2006 privind protecția și promovarea drepturilor persoanelor cu handicap - LOT 2,"Achiziția de carburanți auto pe bază de bonuri valorice în baza art. 24 alin. 9 și 10 din Legea 448/2006 privind protecția și promovarea drepturilor persoanelor cu handicap, respectiv în baza Ordinului nr. 160/2023 privind aprobarea metodologiei pentru acordarea și decontarea de carburant și/sau bonuri valorice pentru alimentarea mijloacelor de transport electrice ori pentru decontarea carburantului necesar deplasării cu autoturismul – necesară în vederea respectării art. 4 alin. 1 din Lege, pentru acordarea decontării carburantului necesar autoturismului adaptat handicapului.
+Destinația de livrare a BVCA-urilor este mun. Cluj-Napoca, str. G-ral Eremia Grigorescu, nr. 37-39, jud. Cluj.",,2264506.0,2264506.0,NoticeResult,EUR,00422183_2025.xml,EN
+c0707bf7-0235-4d17-851a-8f9915c0ac75,2025-07-01+02:00,ORG-0004,,LOT-0003,Combustibil pentru încălzire Calor Extra 1  - CPV Aghireșu - LOT 3,"Alimentarea cu combustibil Calor Extra 1 pentru încălzire, cu livrare, pe bază de comandă a combustibilului vrac necesară Căminului pentru Persoane Vârstnice Aghireșu, jud. Cluj.
+Informatii suplimentare se regăsesc în Caietul de sarcini.",,2264506.0,2264506.0,NoticeResult,EUR,00422183_2025.xml,EN
+c0707bf7-0235-4d17-851a-8f9915c0ac75,2025-07-01+02:00,ORG-0004,,LOT-0004,Motorină standard vrac pentru echipamentele de gătit - CIAPAD Luna de Jos - LOT 4,"Alimentarea cu motorină de gătit, cu livrare, pe bază de comandă a combustibilului vrac necesar Centrului de Îngrijire și Asistență pentru Persoane Adulte cu Dizabilități Luna de Jos.
+Informatii suplimentare se regăsesc în Caietul de sarcini.",,2264506.0,2264506.0,NoticeResult,EUR,00422183_2025.xml,EN
+62db7be3-df73-46ab-ba6f-0bc7cffb0057,2025-07-01+02:00,ORG-0001,45234160.0,LOT-0001,Oberleitungsarbeiten - Korridor Riedbahn,Oberleitungsarbeiten - Korridor Riedbahn,,,,missing,EUR,00422184_2025.xml,Catenary's construction works
+0197c083-2db3-4ebe-953e-9e0a2572a7e5,2025-07-01+02:00,ORG-0001,71000000.0,LOT-0001,Generalplanervertrag,"Die Vier-Tore-Stadt Neubrandenburg vergibt Planungsleistungen in Form einer Generalplanung für die Entwicklung des Lokschuppenareals Neubrandenburg als neuer Standort des digitalen Innovationszentrums (DIZ). Die zu vergebenden Leistungen beinhalten die Objekt- und Fachplanungsleistungen aller erforderlichen Leistungsbilder der HOAI 2021 in Form einer Generalplanung, also insbesondere die 
+1.	Objektplanung Gebäude und Innenräume Leistungsphasen 1-9 gem. § 34 HOAI 2021
+2.	Tragwerksplanung Leistungsphasen 1-6 gem. § 51 HOAI 2021
+3.	Technische Ausrüstung Leistungsphasen 1-9 gem. § 55 HOAI 2021 für folgende Anlagengruppen:
+•	Abwasser-, Wasser- und Gasanlagen 
+•	Wärmeversorgungsanlagen 
+•	Lufttechnische Anlagen
+•	Starkstromanlagen 
+•	Fernmelde- und Informationstechnische Anlagen
+4.	Objektplanung Freianlagen Leistungsphasen 1-9 gem. § 39 HOAI 2021
+5.	Brandschutz Leistungsphasen 1-8 gemäß AHO-Heft 17 („Leistungen für den bauordnungsrechtlichen Brandschutz“)
+6.	Bauphysik gemäß Vergabekonzept (Wärmeschutz, Bauaktustik, Raumakustik)
+(jeweils mit Besonderen Leistungen, deren Inhalt und Umfang jedoch bisher nicht feststehen)",9883224.0,9883224.89,9883224.0,EstimatedOverallContractAmount,EUR,00422185_2025.xml,"Architectural, construction, engineering and inspection services"
+7b52aef5-0ff2-4690-b20a-319233bb480d,2025-07-01+02:00,ORG-0005,71000000.0,LOT-0001,"Berlin TXL, Planung der Ausstattung und Möblierung von Mobilitätsknoten (""Mobility-Hubs)","Die Tegel Projekt GmbH entwickelt im Auftrag des Landes Berlin die Flächen des ehemaligen Flughafens Tegel
+zu einem Industrie- und Forschungspark für urbane Technologien, Berlin TXL - The Urban Tech Republic und
+einem smarten Wohnquartier das Schumacher Quartier.
+Das ambitionierte Mobilitätskonzept sieht als einen wesentlichen Baustein die Errichtung von Mobility Hubs an
+den Kernpunkten der Urban Tech Republic vor, die neben verkehrlichen Funktionen (z. B Wechsel von ÖPNV
+auf Leihrad) auch zum Teil soziale Funktionen (Bäcker, Kiosk, Paketstation) aufnehmen.
+Für die Ausstattung und Möblierung der Mobility Hubs hat der AN die Aufgabe geeignete Konzepte und
+Planungen aufzustellen, die auf einem hohen gestalterischen Niveau unter Berücksichtigung der komplexen
+und interagierenden Anforderungen aus den verkehrlichen Funktionen realisiert werden können. Dabei ist der
+Innovationsanspruch des Gesamtprojekts zu integrieren und ein aktiver und flexibler Umgang mit den damit
+verbundenen Unsicherheiten für den Realisierungsprozess zu finden.
+Es ist ein modulares System zu entwickeln, das diverse Komponenten der Stadtmöblierung in sich integrierten
+soll. Die Gestaltung der ÖPNV-Wartebereiche kann dabei einen wichtigen Beitrag als Aushängeschild und zur
+Bildung der Identifikation der Urban Tech Republic leisten.
+Die Leistungserbringung erfolgt in Leistungsphasen. Im Einzelnen handelt es sich um folgende
+Leistungsphasen:
+- Leistungsphase 1 - Grundlagenermittlung / Zieldefinition,
+- Leistungsphase 2 - Vorplanung,
+- Leistungsphase 3 - Entwurfsplanung (Optional),
+- Leistungsphase 4 - Genehmigungsphase (Optional)
+- Leistungsphase 5 - Ausführungsphase (Optional)
+- Leistungsphase 6 - Vorbereitung der Vergabe (Optional)
+- Leistungsphase 7 - Mitwirkung bei der Vergabe (Optional)
+- Leistungsphase 8 - Objektüberwachung (Optional)",,,,missing,EUR,00422186_2025.xml,"Architectural, construction, engineering and inspection services"
+e739db65-8e05-4fb5-ad06-76a5cf090ac5,2025-07-01+02:00,ORG-0001,85100000.0,LOT-0001,Konkurs ofert w rodzaju leczenie stomatologiczne,ŚWIADCZENIA OGÓLNOSTOMATOLOGICZNE,,1020638.52,1020638.52,NoticeResult,EUR,00422187_2025.xml,Health services
+60f36527-81b8-4758-accf-dce7e4369a50,2025-07-01+02:00,ORG-0001,45232130.0,LOT-0000,Entwässerungskanalarbeiten_Nichtöffentliche Erschließung Regenwasser,Installation von Regenwasser-Grundleitungen für den Gebäudeneubau,,179603.59,179603.59,NoticeResult,EUR,00422188_2025.xml,Storm-water piping construction work
+d97d9670-4a79-49fc-81b1-1db976367bc3,2025-07-01+02:00,ORG-0004,38543000.0,LOT-0000,Default lot,"Achizitia unui  ”Echipament detectie scapari” în cadrul proiectului “Hub-ul Român de Hidrogen și Noi Tehnologii Energetice – Ro-HydroHub” Cod SMIS 304724, conform documentatiei atasate.",,,,missing,EUR,00422189_2025.xml,Gas-detection equipment
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0001,MESO IN MESNI IZDELKI,MESO IN MESNI IZDELKI,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0002,PERUTNINA IN PERUTNINSKI IZDELKI,PERUTNINA IN PERUTNINSKI IZDELKI,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0003,KEFIR,KEFIR,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0004,MLEKO IN MLEČNI IZDELKI,MLEKO IN MLEČNI IZDELKI,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0005,JAJCA,JAJCA,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0006,SADJE IN ZELENJAVA,SADJE IN ZELENJAVA,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0007,DRUGI ZAMRZNJENI IZDELKI,DRUGI ZAMRZNJENI IZDELKI,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0008,"MLEVSKI IZDELKI, ŽITA IN TESTENINE","MLEVSKI IZDELKI, ŽITA IN TESTENINE",,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0009,"KRUH, PEKOVSKI IN SLAŠČIČARSKI IZDELKI","KRUH, PEKOVSKI IN SLAŠČIČARSKI IZDELKI",,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0010,SADNI SOKOVI IN SIRUPI,SADNI SOKOVI IN SIRUPI,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0011,RAZNO PREHRAMBENO BLAGO,RAZNO PREHRAMBENO BLAGO,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0012,DIETETIČNI IZDELKI,DIETETIČNI IZDELKI,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0013,EKOLOŠKA ŽITA IN IZDELKI,EKOLOŠKA ŽITA IN IZDELKI,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0014,EKOLOŠKI KRUH IN PEKOVSKO PECIVO,EKOLOŠKI KRUH IN PEKOVSKO PECIVO,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0015,EKOLOŠKO SADJE IN ZELENJAVA,EKOLOŠKO SADJE IN ZELENJAVA,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0016,DELNO PRIPRAVLJENA ZAMRZNJENA ŽIVILA,DELNO PRIPRAVLJENA ZAMRZNJENA ŽIVILA,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+3c00a8eb-c9e5-426f-ac83-da9b41beafa3,2025-07-01+02:00,ORG-0001,15000000.0,LOT-0017,ZAMRZNJENE RIBE,ZAMRZNJENE RIBE,,,,missing,EUR,00422190_2025.xml,"Food, beverages, tobacco and related products"
+eb44af4f-8b21-496d-9ef1-b1a62d194dad,2025-07-01+02:00,ORG-0001,90510000.0,LOT-0001,"Servizio di igiene urbana del Comune di Cortino per la durata di
+anni sette ed una proroga tecnica per un periodo di sei mesi","Servizio di igiene urbana del Comune di Cortino per la durata di
+anni sette ed una proroga tecnica per un periodo di sei mesi",,1031556.36,1031556.36,NoticeResult,EUR,00422191_2025.xml,Refuse disposal and treatment
+39b2f73e-d08a-4613-a5b9-125bb6544062,2025-07-01+02:00,ORG-0001,50514300.0,LOT-0000,Zamenjava odseka podzemnega toplovoda netehnološkega dela elektrarne,skladno s tehnično specifikacijo in njenimi prilogami,,,,missing,EUR,00422192_2025.xml,Sleeving repair services
+9b270105-e793-447c-80e6-cd1b92ffcea6,2025-07-01+02:00,ORG-0001,64200000.0,LOT-0001,"Poskytování služeb KIVS - 2017 – 2041, Část 1.: Datové služby KIVS CMS.","Datové služby umožňující datovou komunikaci se službami eGovernmentu prostřednictvím Centrálního místa služeb informačními systémy jednotlivých OSS nebo OVS, ať již v rámci jednoho OSS nebo OVS, nebo mezi více OSS těchto služeb KIVS CMS je uvedena v příloze č. 2 této Zadávací dokumentace DNS.",1200000000.0,66960.0,1200000000.0,EstimatedOverallContractAmount,CZK,00422193_2025.xml,Telecommunications services
+7c0ee2cf-84e0-482d-93db-d716740ec52e,2025-07-01+02:00,ORG-0001,60445000.0,LOT-0001,Frontex Surveillance Aircraft 2 with land/coastline range fixed wing aircraft Lot 1: Aerial surveillance for land,Frontex decided to establish a new FWC with manned fixed wing aircraft to deliver aerial surveillance for Land (Lot 1).,8000000.0,,8000000.0,EstimatedOverallContractAmount,EUR,00422194_2025.xml,Aircraft operating services
+7c0ee2cf-84e0-482d-93db-d716740ec52e,2025-07-01+02:00,ORG-0001,60445000.0,LOT-0002,Frontex Surveillance Aircraft 2 with land/coastline range fixed wing aircraft Lot 2: Aerial surveillance for coastline.,Frontex decided to establish a new FWC with manned fixed wing aircraft to deliver aerial surveillance for Coastline (Lot 2).,34000000.0,,34000000.0,EstimatedOverallContractAmount,EUR,00422194_2025.xml,Aircraft operating services
+17b2471e-b54d-400a-8020-07ab5728ebf4,2025-07-01+02:00,ORG-0001,33615000.0,LOT-0001,Lot 1 – Lenalidomide 5mg Capsules,CT2155/2025 - Tender for the Supply of Lenalidomide Capsules,184588.6,,184588.6,EstimatedOverallContractAmount,EUR,00422195_2025.xml,Medicinal products used in diabetes
+17b2471e-b54d-400a-8020-07ab5728ebf4,2025-07-01+02:00,ORG-0001,33615000.0,LOT-0002,Lot 2 – Lenalidomide 10mg Capsules,CT2155/2025 - Tender for the Supply of Lenalidomide Capsules,184588.6,,184588.6,EstimatedOverallContractAmount,EUR,00422195_2025.xml,Medicinal products used in diabetes
+17b2471e-b54d-400a-8020-07ab5728ebf4,2025-07-01+02:00,ORG-0001,33615000.0,LOT-0003,Lot 3 – Lenalidomide 15mg Capsules,CT2155/2025 - Tender for the Supply of Lenalidomide Capsules,184588.6,,184588.6,EstimatedOverallContractAmount,EUR,00422195_2025.xml,Medicinal products used in diabetes
+17b2471e-b54d-400a-8020-07ab5728ebf4,2025-07-01+02:00,ORG-0001,33615000.0,LOT-0004,Lot 4 - Lenalidomide 25mg Capsules,CT2155/2025 - Tender for the Supply of Lenalidomide Capsules,184588.6,,184588.6,EstimatedOverallContractAmount,EUR,00422195_2025.xml,Medicinal products used in diabetes
+4fbb4a20-a75c-4b51-8061-6f824e5e5553,2025-07-01+02:00,ORG-0001,77300000.0,LOT-0001,Świadczenie usługi utrzymania czystości i zieleni na terenie Ośrodka Reprezentacyjnego MON,"1.	Przedmiotem zamówienia jest świadczenie usługi utrzymania czystości 
+i zieleni na terenie Ośrodka Reprezentacyjnego MON, którego zakres obejmuje:
+1)	zamówienie gwarantowane:
+a)	utrzymanie zieleni (pielęgnacji), czystości i porządku terenu zespołu pałacowo-parkowego w Helenowie, wpisanego do rejestru zabytków 
+pod nr rej. 1033/904 z dn. 24.05.1971 r.,
+b)	utrzymanie w czystości nawierzchni utwardzonych i gruntowych,
+c)	utrzymanie czystości i porządku pasa zieleni i chodnika przylegającego 
+do terenu Ośrodka Reprezentacyjnego Ministerstwa Obrony Narodowej zgodnie z ustawą z dnia 13 września 1996 r. o utrzymaniu czystości i porządku w gminach (Dz. U. z 2024 poz. 399, z późn. zm.); 
+2)	zamówienie opcjonalne:
+a)	koszenie użytków rolnych, grobli i skarp stawów,
+b)	mineralizacja pasa przeciwpożarowego,
+c)	utrzymanie w czystości ogrodzenia zewnętrznego.
+2.	Szczegółowy opis przedmiotu zamówienia określa:
+1)	opis przedmiotu zamówienia: załącznik nr 1a do SWZ (zamówienie gwarantowane) oraz załącznik nr 1b do SWZ (zamówienie opcjonalne); 2)	wzór umowy - załącznik nr 9 do SWZ. 
+3.	Zamawiający zgodnie z art. 441 ust. 1 ustawy Prawo zamówień publicznych przewiduje możliwość zastosowania prawa opcji w zakresie świadczenia usługi koszenia użytków rolnych i grobli, mineralizacji pasa przeciwpożarowego oraz utrzymania w czystości ogrodzenia zewnętrznego. Wykorzystanie prawa opcji uzależnione jest od rzeczywistych potrzeb Zamawiającego oraz posiadania na ten cel środków finansowych. Zamawiający zastrzega, iż część zamówienia określona jako prawo opcji jest uprawnieniem, a nie zobowiązaniem Zamawiającego. Realizacja opcji może, ale nie musi nastąpić w zależności 
+od zapotrzebowania Zamawiającego i na skutek jego dyspozycji w tym zakresie. Brak realizacji zamówienia w tym zakresie nie będzie rodzić żadnych roszczeń ze strony Wykonawcy w stosunku do Zamawiającego.
+4.	Zamawiający na podstawie art. 95 ust. 1 ustawy wymaga zatrudnienia przez Wykonawcę lub Podwykonawców na podstawie stosunku pracy osób wykonujących bezpośrednie czynności w realizacji usługi ponieważ wykonanie tych czynności polega na wykonywaniu pracy w sposób określony w art. 22 § 1 ustawy z dnia 26 czerwca 1974 r. – Kodeks pracy (Dz. U. z 2023 r. poz.1465, z późn. zm.). Zamawiający zgodnie z art. 95 ust. 2 ustawy określa rodzaj czynności związanych z realizacją zamówienia, których dotyczą wymagania zatrudnienia:
+1)	bezpośrednie czynności nadzoru; 
+2)	bezpośrednie czynności fizyczne związane z wykonywaniem prac ogrodniczych i sprzątania (porządkowych);
+3)	bezpośrednie czynności fizyczne związane z mineralizacją pasa przeciwpożarowego i utrzymania czystości ogrodzenia.
+5. Termin wykonania zamówienia (okres świadczenia usługi): od dnia 01.07.2025 r. do dnia 30.06.2026 r. (okres 12 miesięcy).",1225390.23,1151897.5,1225390.23,EstimatedOverallContractAmount,PLN,00422196_2025.xml,Horticultural services
+65fdaf78-d4ff-41fc-8bae-846c80279957,2025-07-01+02:00,ORG-0001,55322000.0,LOT-0001,Pakiet nr 1,"Przedmiotem zamówienia jest świadczenie usług przygotowywania całodziennych posiłków dla pacjentów oraz posiłków profilaktycznych dla pracowników z uwzględnieniem zaleceń dietetycznych i ich dostarczanie do Centralnego Szpitala Klinicznego UM w Łodzi przy ul. Pomorskiej 251.
+Dotyczy postępowania o udzielenie zamówienia publicznego na usługi społeczne o wartości powyżej 750 000 EURO, do których zastosowanie mają przepisy art. 359 pkt. 1 ustawy z dnia 11.09.2019 r. Prawo zamówień publicznych (Dz. U. z 2024 r. poz. 1320 z późn. zm.) którego przedmiotem świadczenia jest usługa społeczna zg. z załącznik XIV do dyrektywy 2014/24/UE.
+Szczegółowy opis i zakres przedmiotu zamówienia określa część B SWZ – zakres rzeczowy Specyfikacji Warunków Zamówienia.
+Pakiet nr 1 – budynek B-1 przy ul. Czechosłowackiej 8/10; przy ul. Bardowskiego 1 oraz Centrum Zdrowia Psychicznego ul. Wierzbowa 38 w Łodzi;",,15832644.48,15832644.48,NoticeResult,EUR,00422197_2025.xml,Meal-cooking services
+65fdaf78-d4ff-41fc-8bae-846c80279957,2025-07-01+02:00,ORG-0001,55322000.0,LOT-0002,Pakiet nr 2,"Przedmiotem zamówienia jest świadczenie usług przygotowywania całodziennych posiłków dla pacjentów oraz posiłków profilaktycznych dla pracowników z uwzględnieniem zaleceń dietetycznych i ich dostarczanie do Centralnego Szpitala Klinicznego UM w Łodzi przy ul. Pomorskiej 251.
+Dotyczy postępowania o udzielenie zamówienia publicznego na usługi społeczne o wartości powyżej 750 000 EURO, do których zastosowanie mają przepisy art. 359 pkt. 1 ustawy z dnia 11.09.2019 r. Prawo zamówień publicznych (Dz. U. z 2024 r. poz. 1320 z późn. zm.) którego przedmiotem świadczenia jest usługa społeczna zg. z załącznik XIV do dyrektywy 2014/24/UE.
+Szczegółowy opis i zakres przedmiotu zamówienia określa część B SWZ – zakres rzeczowy Specyfikacji Warunków Zamówienia.
+Pakiet nr 2 - budynek A-1, Łódź, ul. Pomorska 251 oraz budynek przy ul. Sterlinga 13",,15832644.48,15832644.48,NoticeResult,EUR,00422197_2025.xml,Meal-cooking services
+161259bd-d243-4f06-9772-bf0808fe1972,2025-07-01+02:00,ORG-0001,44000000.0,LOT-0000,Bottom emptying waste containers,"The contracting authority needs to enter into a framework agreement for buried waste containers and bottom emptying surface containers, with the accompanying access control system.
+The competition will be carried out as a cooperation and eight (8) contractual relationships will be established, one for each municipality and one for IVAR Ryfylke.
+The following will be included in the agreement:
+- 5 m3 bottom emptyed containers for residue waste.
+- 5 m3 bottom emptyed containers for cardboard/paper waste.
+- 5 m3 bottom emptying waste containers for wet organic waste (bio-waste)
+- 5 m3 bottom emptying buried containers for glass and metal packaging.
+- 5 m3 bottom emptying buried containers for plastic packaging
+- 5 m3 bottom emptying waste containers for environment stations/holiday home sanitation (mixed waste, plastic packaging and glass and metal packaging)
+- 3-3.5 m3 bottom emptying surface containers for residue waste.
+- 3-3.5 m3 bottom emptying surface container for cardboard/paper waste.
+- 3-3.5 m3 bottom emptying surface containers for wet organic waste (bio-waste).
+- 3-3.5 m3 bottom emptying surface containers for textiles
+- 3-3.5 m3 bottom emptying surface containers for glass and metal packaging.
+- 3-3.5 m3 bottom emptying surface containers for plastic packaging.
+- Access control system for buried containers and surface containers.",150000000.0,,150000000.0,EstimatedOverallContractAmount,NOK,00422198_2025.xml,Construction structures and materials; auxiliary products to construction (except electric apparatus)
+f156c999-55a1-4fc2-adbb-63511243ef2d,2025-07-01+02:00,ORG-0001,45220000.0,LOT-0001,"ABS Berlin - Frankfurt/Oder - Grenze D/PL, PA 16, barrierefreier Ausbau der Verkehrsstation Hirschgarten, PU","ABS Berlin - Frankfurt/Oder - Grenze D/PL, PA 16, Bahnhof Köpenick, barrierefreier Ausbau der Verkehrsstation Hirschgarten, Personenunterführung",,9942136.74,9942136.74,NoticeResult,EUR,00422199_2025.xml,Engineering works and construction works
+fb6fc4d0-618f-48ca-b291-913c991a143e,2025-07-01+02:00,ORG-0001,45113000.0,LOT-0001,Schutzmaßnahmen,"Lose Einrichtungsgegenstände (inkl. Schrank- und Regalinhalte) verpacken, transportieren, zurücktransportieren & wiederaufstellen / -einräumen _ R1.03    1 Psch -Einrichtungsgegenstände (in Boxen verpackt) außerhalb des Schloßgeländes lagern _ R1.03 110 PschWo - Lose Einrichtungsgegenstände (inkl. Schrank- und Regalinhalte) verpacken, transportieren, zurücktransportieren & wiederaufstellen / -einräumen _ R1.05 1 Psch -Einrichtungsgegenstände (in Boxen verpackt) außerhalb des Schloßgeländes lagern _ R1.05 110 PschWo -Lose Einrichtungsgegenstände (inkl. Schrank- und Regalinhalte) verpacken, transportieren & einlagern _ R1.08 1 Psch -Lose Einrichtungsgegenstände (inkl. Schrank- und Regalinhalte) verpacken, transportieren, zurücktransportieren & wiederaufstellen / -einräumen _ R1.16 1 Psch -Einrichtungsgegenstände (in Boxen verpackt) außerhalb des Schloßgeländes lagern _ R1.16 110 PschWo -Lose Einrichtungsgegenstände (inkl. Schrank- und Regalinhalte) verpacken, transportieren, zurücktransportieren & wiederaufstellen / -einräumen _ R1.17 1 Psch -Einrichtungsgegenstände (in Boxen verpackt) außerhalb des Schloßgeländes lagern _ R1.17 110 PschWo -Bilder & Gemälde < 1,50 m2 abhängen, verpacken, transportieren, zurücktransportieren & aufhängen _ R 1.02, 1.03, 1.05, 1.08, 1.09, 1.12, 1.13, Z1.15, R1.16, R1.17  197 Stk -Bilder & Gemälde < 1,50 m2 außerhalb des Schloßgeländes lagern_ R 1.02, 1.03, 1.05, 1.08, 1.09, 1.12, 1.13, Z1.15, R1.16, R1.17 21.670 StkWo -Mobiliar verpacken, transportieren, zurücktransportieren & aufstellen _ R1.03 16 m² -Mobiliar außerhalb des Schloßgeländes lagern _ R1.03  1.760 m²Wo -Mobiliar verpacken, transportieren, zurücktransportieren & aufstellen _ R1.05  11 m² -Mobiliar außerhalb des Schloßgeländes lagern _ R1.05 1.210 m²Wo -Mobiliar verpacken, transportieren, zurücktransportieren & aufstellen _ R1.16  8 m² -Mobiliar außerhalb des Schloßgeländes lagern _ R1.16  880 m²Wo -Mobiliar demontieren, transportieren und auf dem Schloßgelände lagern_ R1.08 13 m² -Schutzbelag für Fußbodenbeläge liefern, ein- & zurückbauen _ Hartfaserplatten  515 m² -Schutzbelag für Fußbodenbeläge vorhalten _ Hartfaserplatten 56.650 m²Wo - Staubschutz für Wandflächen liefern, ein- und zurückbauen 1.650 m² -Staubschutz für Wandflächen vorhalten  181.500 m²Wo -Türblätter aushängen, verpacken, transportieren,zurücktransportieren & einhängen  23 Stk -Schutz für Türrahmungen liefern, ein- & zurückbauen 16 m² -Innenliegende Kamine einhausen _ R1.03, R1.11, R1.16  33 m² -Schlagläden demontieren, verpacken, transportieren, zurücktransportieren & montieren  100 Stk -Bauzeitliche Portaltür demontieren, verpacken, transportieren, zurücktransportieren & wiedereinbauen  1 Stk - Bautür inkl. Rahmen liefern, ein- und zurückbauen 1 Stk",,,,missing,EUR,00422200_2025.xml,Siteworks
+d06a0c34-1cbc-4fb9-9e98-03615c40afb1,2025-07-01+02:00,ORG-7001,45214210.0,LOT-0000,Neubau Haus 1 Grundschule (GS) Hildburghausen - Los 09 Trockenbauarbeiten,"01. Wände
+- ca. 278 m² Metallständerwände, 100 mm stark
+- ca. 30 m² Metallständerwände, 87,5 mm stark
+- ca. 95 m² Metallständerwände, 125 mm stark
+- ca. 77 m Diverse gleitende Deckenanschlüsse Metallständerwand
+- ca. 86 m Freie Wandenden und Außenecken Metallständerwand
+- ca. 27 St Diverse Türausschnitte Metallständerwand
+- ca. 15 m² Installationswand, 200 mm stark
+- ca. 142 m² Installationswand, 250 mm stark
+- ca. 9 m² Installationswand, 300 mm stark
+- ca. 12 m² Installationswand, 400 mm stark
+- ca. 9 m² Installationswand, 450 mm stark
+- ca. 57 m Diverse gleitende Deckenanschlüsse Installationswand
+- ca. 55 m Freie Wandenden + Außenecken Installationswand
+- ca. 5 St Diverse Türausschnitte Installationswand
+- ca. 84 m² Schachtwände, 72,5 mm stark
+- ca. 23 m² Schachtwände, 97,5 mm stark
+- ca. 90 m² Zulage größere Wandhöhe / Schachtwand
+- ca. 86 m Diverse gleitende Deckenanschlüsse Schachtwand
+- ca. 2 St Diverse Türausschnitte Schachtwand
+- ca. 23 m Diverse Rohrkästen
+- ca. 210 m Vorgezogene Erstellung + Beplankung
+- ca. 70 m Laibungsbeplankungen
+- ca. 750 m Acrylfugen
+- ca. 300 m² Zulage Q3, anstelle Q2
+- ca. 200 m Holztraversen
+- ca. 125 m Verstärkte U/A-Profile
+- ca. 28 St Diverse Revisionsklappen
+- ca. 40 m Bekleidung von Schlitzen mit Trockenputz
+- ca. 40 m² Akustikwandbekleidung, PET Wandabsorber
+- ca. 25 St Öffnungen rund, Einfachständerwerk
+- ca. 35 St Öffnungen rund, Doppelständerwerk
+- ca. 20 St Öffnungen rund, Vorsatzschalen/Schachtwände
+
+02. Decken
+- ca. 938 m² Unterkonstruktion aus Holz
+- ca. 800 m² Deckensegel aus HWL-Aktustikplatten
+- ca. 138 m² Unterhangdecke aus HWL-Akustikplatten, UK aus Holz
+- ca. 170 m² Unterhangdecke aus HWL-Akustikplatten, UK aus CD-Profilen
+- ca. 308 m² Unterhangdecke aus HWL-Akustikplatten, in Direktmontage
+- ca. 28 m Diverse Blende / Schürze für Unterhangdecke
+- ca. 456 m Diverse Schattenfuge bei Unterhangdecke
+- ca. 1.100 m² Zuschlag Dämmauflage aus 3 cm Flachsdämmung
+- ca. 1.335 m² Schraubenköpfe überstreichen
+- ca. 350 m Sichtbare Schnittfläche Akustikplatten streichen
+- ca. 11 St Diverse Revisionsklappen
+- ca. 50 St Ausschnitt Akustikdecke, 25-50 cm Durchmesser
+- ca. 3 St Rollgerüst, RH bis ca. 6,20 m",,,,missing,EUR,00422201_2025.xml,Primary school construction work
+eebffc18-68ac-42ad-a745-f59f49d55608,2025-07-01+02:00,ORG-0001,32320000.0,LOT-0001,„Оборудване за ТВ апаратна“,"В обхвата на обособената позиция се включва доставка и монтаж на следните артикули:
+1 .Видео миксер  - 1 бр.; 
+2. Видеоматрица  - 1 бр.;
+3. Конвертор тип 1 -  6 бр. 
+4. Конвертор тип 2  -  6 бр. 
+5. Интерком система - 1 бр. 
+6. Файлово записващо и възпроизвеждащо устройство - 4 бр. 
+7. Телевизор -  4 бр.
+8. Шкаф за техника - Комуникационен шкаф       3 бр.
+9.  Мрежов рутер  - 1 бр. и други.
+
+Подробно описание и технически характеристики се съдържат в Техническата спецификация, съставляваща неразделна част от документацията за участие.",73242.6,,73242.6,EstimatedOverallContractAmount,BGN,00422202_2025.xml,Television and audio-visual equipment
+eebffc18-68ac-42ad-a745-f59f49d55608,2025-07-01+02:00,ORG-0001,32320000.0,LOT-0002,„Оборудване за медиен център“,"В обхвата на обособената позиция се включва доставка и монтаж на следните артикули:
+1. Компютърна конфигурация            2 бр.
+2. Монитор                                          2 бр.
+3. Мрежов дисков масив                    1 бр.
+4. Външен твърд диск(SSD)                2  бр.
+5.  Мрежови суич                               2  бр. 
+6. Оптичен модул                               4 бр.
+7. Непрекъсваемо захранване - UPS 1  бр.
+8. Телесуфлер                                     3  бр.
+9. Студийна видео камера                 3  бр. 
+10. Обектив за видео заснемане      3  бр. 
+11. Обектив за видео и снимки        1  бр.
+12. Обектив за видео и снимки        1  бр. 
+13. Фотоапарат                                  1 бр. 
+14. Видеостатив                                 6 бр. 
+15. Стабилизатор тип 1                      1 бр. 
+16. Стабилизатор тип 2                      1 бр. 
+17. Миксер с вграден усилвател        1 бр.
+Подробно описание и технически характеристики се съдържат в Техническата спецификация, съставляваща неразделна част от документацията за участие.",62013.09,,62013.09,EstimatedOverallContractAmount,BGN,00422202_2025.xml,Television and audio-visual equipment
+eebffc18-68ac-42ad-a745-f59f49d55608,2025-07-01+02:00,ORG-0001,32320000.0,LOT-0003,„Камери за 3D заснемане“,"В обхвата на обособената позиция се включва доставка на  следните артикули:
+1. Екшън камера 360° тип 1                              2 бр.;
+2. Телескопична дръжка за екшън камера       2 бр.
+3. Трипод за екшън камера                              2 бр. 
+4. Ремък за гърди за екшън камера                 2 бр.
+5. Самозалепващи стойки за екшън камера   1 бр. 
+6. Обектив за 180° заснемане                         1 бр. 
+7. Фотоапарат за 180° заснемане                   1 бр.
+Подробно описание и технически характеристики се съдържат в Техническата спецификация, съставляваща неразделна част от документацията за участие.",11514.0,,11514.0,EstimatedOverallContractAmount,BGN,00422202_2025.xml,Television and audio-visual equipment
+eebffc18-68ac-42ad-a745-f59f49d55608,2025-07-01+02:00,ORG-0001,32320000.0,LOT-0004,„4-канална аналогово-цифрова инфрачервена система за симултанен превод“,"В обхвата на обособената позиция се включва доставка, монтаж и тест, както и обучение на ""4-канална аналогово-цифрова инфрачервена система за симултанен превод"" - 1 брой.
+Подробно описание и технически характеристики се съдържат в Техническата спецификация, съставляваща неразделна част от документацията за участие.",45000.0,,45000.0,EstimatedOverallContractAmount,BGN,00422202_2025.xml,Television and audio-visual equipment
+b17bb8dc-e8d4-42f8-b74d-3e3fa1b06c42,2025-07-01+02:00,ORG-0001,45000000.0,LOT-0001,Modernizacja amfiteatru im. Anny German wraz z zadaszeniem i przebudową parkingu w ramach projektu pn. Zwiększenie atrakcyjności kulturalnej regionu poprzez przebudowę amfiteatru wraz z zadaszeniem,"1.	Zamawiający informuje, iż inwestycja, o której mowa w pkt 3.1. SWZ wykonana zostanie poprzez realizację nw. zadań:
+1)	Przebudowa i modernizacja widowni amfiteatru wraz z zadaszeniem i sceną;
+2)	Przebudowa parkingu przy Amfiteatrze
+2.	Inwestycja realizowana będzie w formule zaprojektuj i wybuduj w związku z czym zakres przedmiotu zamówienia obejmuje:
+1)	wykonanie kompleksowej dokumentacji projektowej wraz z uzyskaniem z uzyskaniem wszelkich wymaganych uzgodnień, decyzji, warunków i pozwoleń, decyzji administracyjnych w tym pozwolenia na budowę/zgłoszenia robót, oraz 
+2)	wykonanie robót budowlanych w oparciu o opracowaną dokumentację projektową, o której mowa w pkt 3.3.1) SWZ wraz z uzyskaniem pozwolenia na użytkowanie i oddanie do użytkowania zadania.
+3.	Inwestycja obejmuje w szczególności:
+a)	przebudowę widowni,
+b)	budowę zadaszenia nad widownią z membrany PVC,
+c)	przebudowę zadaszenia nad sceną, wraz z remontem sceny i jej zaplecza,
+d)	budowę stanowisk reżyserskich – obrazu i dźwięku,
+e)	budowę zaplecza kateringowego i sanitarnego,
+f)	zagospodarowanie terenu,
+g)	przebudowę parkingu.
+h)	aranżację wnętrz.
+Szczegółowy opis przedmiotu zamówienia zawarty jest w załączniku nr I.2 do SWZ oraz 
+w dokumentach, o których mowa w pkt 3.5. SWZ.
+4. Zamawiający informuje, iż planuje uzyskać dofinansowanie ze środków zewnętrznych - Fundusze Europejskie dla Lubuskiego, ze środków pod nazwą ""Zwiększenie atrakcyjności kulturalnej regionu poprzez przebudowę amfiteatru wraz z zadaszeniem"" - Działanie 5.4 – Infrastruktura kulturowa i turystyczna.
+
+Z uwagi na ograniczenia techniczne pozostały opis znajduje się w dokumentach zamówienia (SWZ)",,,,missing,EUR,00422203_2025.xml,Construction work
+ac6512bc-4d12-405c-8ff9-1a88801a76d6,2025-07-01+02:00,ORG-0001,71000000.0,LOT-0001,BLB Aachen | RWTH | Ersatzneubau IEHK | Zerreißmaschine | Fachplanung Elektrotechnik (005-25-00276),Für die Zerreißmaschine des IEHK der RWTH Aachen wird ein neues Gebäude errichtet. Hierfür sind Planungsleistungen (Lph 1-9) im Bereich Elektrotechnik notwendig.,,129747.02,129747.02,NoticeResult,EUR,00422204_2025.xml,"Architectural, construction, engineering and inspection services"

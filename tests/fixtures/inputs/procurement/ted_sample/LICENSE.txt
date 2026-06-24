@@ -1,0 +1,14 @@
+This dataset includes information from the EU’s TED (Tenders Electronic Daily).
+© European Union, reused under Commission Decision 2011/833/EU.
+
+You are free to:
+- Use the dataset commercially and non-commercially
+- Modify, transform, and build upon it
+- Redistribute it in any form
+
+Conditions:
+- You must provide proper attribution: “Contains data from TED (Tenders Electronic Daily) © European Union, reused under Commission Decision 2011/833/EU.”
+- No warranties are provided. The dataset is offered “as is.”
+
+Additional enrichment (parsing, CPV mapping, and packaging) is © 2025 OpenML Datasets,
+released under the Creative Commons Zero v1.0 Universal (CC0).

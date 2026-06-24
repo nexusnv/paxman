@@ -439,69 +439,171 @@
       padding: 0 28px;
     }
 
-    /* ─── Architecture ─── */
+    /* ─── Architecture (Interactive Block Diagram) ─── */
     .arch-diagram {
       margin-top: 48px;
-      padding: 40px;
+      padding: 40px 28px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      overflow-x: auto;
+      position: relative;
     }
-    .arch-svg-wrapper {
-      min-width: 700px;
-    }
-    .arch-row {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-    .arch-box {
-      padding: 12px 20px;
-      background: var(--surface-2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font: 500 13px/1 var(--font-mono);
-      color: var(--fg);
-      text-align: center;
-      white-space: nowrap;
-      letter-spacing: -0.01em;
-    }
-    .arch-box.accent {
-      border-color: var(--accent);
-      color: var(--accent);
-      background: oklch(68% 0.18 170 / 0.06);
-    }
-    .arch-box.muted {
-      color: var(--muted);
-    }
-    .arch-arrow {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 22px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .arch-arrow svg { width: 20px; height: 12px; }
-    .arch-label {
+    .arch-layer-label {
       text-align: center;
       font-size: 11px;
       color: var(--muted);
       letter-spacing: 0.06em;
       text-transform: uppercase;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .arch-row-center {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
       margin-bottom: 8px;
     }
-    .arch-gap { height: 16px; }
-    .arch-divider {
+    .arch-row-three {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .arch-row-two {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+    .arch-block {
+      position: relative;
+      padding: 14px 24px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font: 500 13px/1 var(--font-mono);
+      color: var(--fg);
+      text-align: center;
+      white-space: nowrap;
+      cursor: default;
+      transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+      animation: arch-pulse 4s ease-in-out infinite;
+    }
+    .arch-block.accent {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: oklch(68% 0.18 170 / 0.06);
+    }
+    .arch-block:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 24px oklch(68% 0.18 170 / 0.1);
+    }
+    .arch-block[data-subsystem="api"] { animation-delay: 0s; }
+    .arch-block[data-subsystem="contract"] { animation-delay: 0.4s; }
+    .arch-block[data-subsystem="planner"] { animation-delay: 0.4s; }
+    .arch-block[data-subsystem="capabilities"] { animation-delay: 0.4s; }
+    .arch-block[data-subsystem="executor"] { animation-delay: 0.8s; }
+    .arch-block[data-subsystem="reconciler"] { animation-delay: 0.8s; }
+    .arch-block[data-subsystem="artifact"] { animation-delay: 1.2s; }
+    @keyframes arch-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 transparent; }
+      50% { box-shadow: 0 0 20px oklch(68% 0.18 170 / 0.08), 0 0 40px oklch(68% 0.18 170 / 0.03); }
+    }
+    /* CSS arrow connector */
+    .arch-connector-row {
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 28px;
-      color: var(--border);
+      height: 32px;
     }
-    .arch-divider svg { width: 24px; height: 24px; }
+    .arch-arrow-line {
+      position: relative;
+      width: 2px;
+      height: 32px;
+      background: var(--border);
+    }
+    .arch-arrow-line::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 7px solid var(--border);
+    }
+    /* Divider */
+    .arch-divider-row {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0 16px;
+    }
+    /* Cross-cutting pills */
+    .arch-row-many {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      padding: 0 8px;
+    }
+    .arch-pill {
+      display: inline-block;
+      padding: 6px 12px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font: 500 10px/1 var(--font-mono);
+      color: var(--muted);
+      letter-spacing: -0.01em;
+      transition: border-color 0.25s, color 0.25s;
+    }
+    .arch-pill:hover {
+      border-color: var(--accent);
+      color: var(--fg);
+    }
+    /* Floating tooltip for arch diagram */
+    #archTooltip {
+      position: fixed;
+      z-index: 200;
+      min-width: 200px;
+      max-width: 340px;
+      padding: 14px 16px;
+      background: oklch(10% 0.015 260);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      box-shadow: 0 8px 32px oklch(0% 0 0 / 0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      text-align: left;
+    }
+    #archTooltip.visible { opacity: 1; }
+    .arch-tooltip-title {
+      font: 600 13px/1 var(--font-mono);
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .arch-tooltip-desc {
+      font-size: 12px;
+      color: oklch(75% 0.008 260);
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .arch-tooltip-row {
+      font-size: 11px;
+      margin-bottom: 3px;
+      line-height: 1.4;
+    }
+    .arch-tooltip-label {
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .arch-tooltip-val {
+      color: oklch(75% 0.008 260);
+    }
 
     /* ─── Use Cases ─── */
     .usecases-grid {
@@ -604,6 +706,7 @@
     }
     .status-tag.done { background: oklch(68% 0.18 170 / 0.12); color: var(--accent); }
     .status-tag.next { background: oklch(60% 0.15 60 / 0.12); color: oklch(65% 0.15 60); }
+    .status-tag.in-progress { background: oklch(65% 0.15 60 / 0.15); color: oklch(65% 0.15 60); border: 1px solid oklch(65% 0.15 60 / 0.3); }
     .status-tag.future { background: oklch(60% 0.02 260 / 0.1); color: var(--muted); }
     .roadmap-item ul {
       list-style: none;
@@ -657,6 +760,114 @@
     }
     .footer-links a:hover { color: var(--fg); }
 
+    /* ─── Sprint Timeline ─── */
+    .sprint-header {
+      text-align: center;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-top: 48px;
+      margin-bottom: 12px;
+      font-weight: 500;
+    }
+    .sprint-timeline {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      padding: 12px 0 8px;
+      position: relative;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+      -webkit-overflow-scrolling: touch;
+      justify-content: center;
+    }
+    .sprint-timeline::-webkit-scrollbar { height: 4px; }
+    .sprint-timeline::-webkit-scrollbar-track { background: transparent; }
+    .sprint-timeline::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .sprint-pill-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 0 0 auto;
+      width: 96px;
+      position: relative;
+    }
+    .sprint-pill-wrapper + .sprint-pill-wrapper {
+      border-left: 1px solid var(--border);
+      padding-left: 0;
+      margin-left: 0;
+    }
+    .sprint-pill {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 6px 8px;
+      width: 100%;
+      cursor: default;
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .sprint-pill:hover {
+      background: oklch(68% 0.18 170 / 0.03);
+    }
+    .sprint-pill .sprint-num {
+      font: 600 11px/1 var(--font-mono);
+      margin-bottom: 3px;
+      transition: color 0.25s;
+    }
+    .sprint-pill .sprint-title {
+      font-size: 9px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.25;
+      letter-spacing: 0.01em;
+    }
+    .sprint-pill .sprint-status {
+      font-size: 8px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 5px;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+    /* Sprint status colors */
+    .sprint-pill.done .sprint-num { color: var(--accent); }
+    .sprint-pill.done .sprint-status {
+      background: oklch(68% 0.18 170 / 0.12);
+      color: var(--accent);
+    }
+    .sprint-pill.current .sprint-num { color: oklch(65% 0.15 60); }
+    .sprint-pill.current .sprint-status {
+      background: oklch(65% 0.15 60 / 0.12);
+      color: oklch(65% 0.15 60);
+    }
+    .sprint-pill.planned .sprint-num { color: var(--muted); }
+    .sprint-pill.planned .sprint-status {
+      background: oklch(60% 0.02 260 / 0.08);
+      color: var(--muted);
+    }
+    /* Timeline dot indicators */
+    .sprint-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-bottom: 4px;
+      transition: background 0.25s, border-color 0.25s;
+    }
+    .sprint-pill.done .sprint-dot {
+      background: var(--accent);
+      border: none;
+    }
+    .sprint-pill.current .sprint-dot {
+      background: oklch(65% 0.15 60);
+      box-shadow: 0 0 6px oklch(65% 0.15 60 / 0.4);
+    }
+    .sprint-pill.planned .sprint-dot {
+      background: transparent;
+      border: 2px solid var(--border);
+    }
+
     /* ─── Responsive ─── */
     @media (max-width: 900px) {
       .motivation-grid { grid-template-columns: 1fr; gap: 32px; }
@@ -664,6 +875,9 @@
       .status-grid { grid-template-columns: repeat(2, 1fr); }
       .roadmap { grid-template-columns: 1fr; }
       .usecases-grid { grid-template-columns: 1fr; }
+      .sprint-timeline { justify-content: flex-start; }
+      .sprint-pill-wrapper { width: 88px; }
+      .arch-diagram { padding: 24px 16px; }
     }
     @media (max-width: 640px) {
       nav .container { height: 48px; }
@@ -677,7 +891,7 @@
       .features-grid { grid-template-columns: 1fr; }
       .status-grid { grid-template-columns: 1fr 1fr; }
       section { padding: 60px 0; }
-      .arch-diagram { padding: 20px; }
+      .arch-diagram { padding: 16px; }
       footer .container { flex-direction: column; align-items: flex-start; }
     }
 
@@ -961,45 +1175,57 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
       <h2 class="section-title reveal" style="transition-delay:0.05s">Seven subsystems, strict layering</h2>
       <p class="section-sub reveal" style="transition-delay:0.1s">Each subsystem has a single responsibility. Dependencies flow in one direction — from API down through contract, planner, capabilities, executor, reconciler, to artifact.</p>
       <div class="arch-diagram reveal">
-        <div class="arch-svg-wrapper">
-          <div class="arch-label">Public API</div>
-          <div class="arch-row">
-            <div class="arch-box accent">api/</div>
-          </div>
-          <div class="arch-arrow">
-            <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 0v10M5 7l7 5 7-5"/></svg>
-          </div>
+        <!-- Layer 1: API -->
+        <div class="arch-layer-label">Public Surface</div>
+        <div class="arch-row-center">
+          <div class="arch-block accent" data-subsystem="api">api/</div>
+        </div>
+        <div class="arch-connector-row">
+          <div class="arch-arrow-line"></div>
+        </div>
 
-          <div class="arch-label">Internal Subsystems</div>
-          <div class="arch-row">
-            <div class="arch-box">contract/</div>
-            <div class="arch-box">planner/</div>
-            <div class="arch-box">capabilities/</div>
-          </div>
-          <div class="arch-arrow">
-            <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 0v10M5 7l7 5 7-5"/></svg>
-          </div>
-          <div class="arch-row">
-            <div class="arch-box">executor/</div>
-            <div class="arch-box">reconciler/</div>
-          </div>
-          <div class="arch-arrow">
-            <svg viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 0v10M5 7l7 5 7-5"/></svg>
-          </div>
-          <div class="arch-row">
-            <div class="arch-box">artifact/</div>
-          </div>
-          <div class="arch-gap"></div>
+        <!-- Layer 2: Contract, Planner, Capabilities -->
+        <div class="arch-layer-label">Planning &amp; Extraction</div>
+        <div class="arch-row-three">
+          <div class="arch-block" data-subsystem="contract">contract/</div>
+          <div class="arch-block" data-subsystem="planner">planner/</div>
+          <div class="arch-block" data-subsystem="capabilities">capabilities/</div>
+        </div>
+        <div class="arch-connector-row">
+          <div class="arch-arrow-line"></div>
+        </div>
 
-          <div class="arch-label">Cross-Cutting</div>
-          <div class="arch-row" style="gap:4px;flex-wrap:wrap">
-            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">errors.py</div>
-            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">types.py</div>
-            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">budget.py</div>
-            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">serialization.py</div>
-            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">protocols.py</div>
-            <div class="arch-box muted" style="font-size:11px;padding:8px 12px">clock.py</div>
-          </div>
+        <!-- Layer 3: Executor, Reconciler -->
+        <div class="arch-layer-label">Execution &amp; Reconciliation</div>
+        <div class="arch-row-two">
+          <div class="arch-block" data-subsystem="executor">executor/</div>
+          <div class="arch-block" data-subsystem="reconciler">reconciler/</div>
+        </div>
+        <div class="arch-connector-row">
+          <div class="arch-arrow-line"></div>
+        </div>
+
+        <!-- Layer 4: Artifact -->
+        <div class="arch-layer-label">Output</div>
+        <div class="arch-row-center">
+          <div class="arch-block" data-subsystem="artifact">artifact/</div>
+        </div>
+
+        <!-- Divider -->
+        <div class="arch-divider-row"></div>
+
+        <!-- Cross-Cutting -->
+        <div class="arch-layer-label">Cross-Cutting</div>
+        <div class="arch-row-many">
+          <span class="arch-pill">errors.py</span>
+          <span class="arch-pill">types.py</span>
+          <span class="arch-pill">budget.py</span>
+          <span class="arch-pill">serialization.py</span>
+          <span class="arch-pill">protocols.py</span>
+          <span class="arch-pill">clock.py</span>
+          <span class="arch-pill">versioning.py</span>
+          <span class="arch-pill">logging.py</span>
+          <span class="arch-pill">ids.py</span>
         </div>
       </div>
     </div>
@@ -1049,12 +1275,12 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
     <div class="container">
       <div class="section-label reveal">Project Status</div>
       <h2 class="section-title reveal" style="transition-delay:0.05s">Active development, open foundation</h2>
-      <p class="section-sub reveal" style="transition-delay:0.1s">Sprints 1–4 are complete. Contract, planner, capabilities, and executor subsystems are implemented and tested.</p>
+      <p class="section-sub reveal" style="transition-delay:0.1s">Sprints 1–5 are complete. The Reconciler subsystem, MONEY type with cross-currency arithmetic, and test data vendoring infrastructure are now implemented and tested.</p>
       <div class="status-grid reveal">
         <div class="stat-card">
-          <div class="stat-number">395+</div>
+          <div class="stat-number">1806+</div>
           <div class="stat-label">Tests</div>
-          <div class="stat-sub">93–96% coverage</div>
+          <div class="stat-sub">94% coverage</div>
         </div>
         <div class="stat-card">
           <div class="stat-number">9</div>
@@ -1073,6 +1299,99 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
         </div>
       </div>
 
+      <!-- Sprint Timeline -->
+      <div class="sprint-header reveal">Development Timeline — 11 Sprints to v1.0.0</div>
+      <div class="sprint-timeline reveal">
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill done">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 0</span>
+            <span class="sprint-title">Design Closure</span>
+            <span class="sprint-status">Done</span>
+          </div>
+        </div>
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill done">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 1</span>
+            <span class="sprint-title">Foundation</span>
+            <span class="sprint-status">Done</span>
+          </div>
+        </div>
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill done">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 2</span>
+            <span class="sprint-title">Contract Subsystem</span>
+            <span class="sprint-status">Done</span>
+          </div>
+        </div>
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill done">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 3</span>
+            <span class="sprint-title">Planner + 3 Capabilities</span>
+            <span class="sprint-status">Done</span>
+          </div>
+        </div>
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill done">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 4</span>
+            <span class="sprint-title">Executor + 2 Capabilities</span>
+            <span class="sprint-status">Done</span>
+          </div>
+        </div>
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill done">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 5</span>
+            <span class="sprint-title">Reconciler + MONEY + Vendoring</span>
+            <span class="sprint-status">Done</span>
+          </div>
+        </div>
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill current">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 6</span>
+            <span class="sprint-title">Artifact + API (First E2E)</span>
+            <span class="sprint-status">Current</span>
+          </div>
+        </div>
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill planned">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 7</span>
+            <span class="sprint-title">Integration, Property Tests</span>
+            <span class="sprint-status">Planned</span>
+          </div>
+        </div>
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill planned">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 8</span>
+            <span class="sprint-title">Docs + Community + CI</span>
+            <span class="sprint-status">Planned</span>
+          </div>
+        </div>
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill planned">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 9</span>
+            <span class="sprint-title">Production Hardening</span>
+            <span class="sprint-status">Planned</span>
+          </div>
+        </div>
+        <div class="sprint-pill-wrapper">
+          <div class="sprint-pill planned">
+            <div class="sprint-dot"></div>
+            <span class="sprint-num">Sprint 10</span>
+            <span class="sprint-title">Release (v1.0.0)</span>
+            <span class="sprint-status">Planned</span>
+          </div>
+        </div>
+      </div>
+
       <div class="roadmap">
         <div class="roadmap-item reveal">
           <div class="version">v0.0.0</div>
@@ -1082,6 +1401,8 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
             <li>Field-centric planner (7-step heuristic chain)</li>
             <li>V1 capabilities (text_extraction, regex, lookup, inference, validation)</li>
             <li>Executor subsystem (field runner, evidence, early-stop, budget tracking)</li>
+            <li>Reconciler subsystem (sole confidence authority)</li>
+            <li>MONEY type with cross-currency arithmetic</li>
             <li>Budget & Policy system</li>
             <li>9 cross-cutting modules</li>
             <li>17 error classes (hierarchical PaxmanError tree)</li>
@@ -1089,9 +1410,8 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
         </div>
         <div class="roadmap-item reveal" style="transition-delay:0.05s">
           <div class="version">v0.1.0</div>
-          <div class="status-tag next">Next</div>
+          <div class="status-tag in-progress">In Progress</div>
           <ul>
-            <li>Reconciler subsystem (sole confidence authority)</li>
             <li>Artifact subsystem (replay hash, diagnostics)</li>
             <li>End-to-end normalize() & replay() API</li>
             <li>PyPI publication</li>
@@ -1103,7 +1423,6 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
           <ul>
             <li>All V1 acceptance criteria met</li>
             <li>Full replay determinism</li>
-            <li>MONEY type with cross-currency arithmetic</li>
             <li>Production documentation</li>
           </ul>
         </div>
@@ -1126,6 +1445,8 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
       </div>
     </div>
   </footer>
+
+  <div id="archTooltip"></div>
 
   <script>
     (function () {
@@ -1161,6 +1482,93 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
         });
       }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
       revealEls.forEach(function (el) { observer.observe(el); });
+
+      // ─── Architecture diagram tooltip ───
+      var subsystemInfo = {
+        "api": {
+          title: "api/",
+          responsibility: "Public surface \u2014 normalize(), replay(), register_adapter(), register_capability(), __version__",
+          type: "Deterministic orchestration",
+          boundary: "No internal concepts leak (no FieldPlan, no CapabilitySpec by name)"
+        },
+        "contract": {
+          title: "contract/",
+          responsibility: "Adapter + validation \u2014 4 external formats (Pydantic, JSON Schema, OpenAPI, Dict DSL) \u2192 CanonicalContract",
+          type: "Deterministic",
+          boundary: "Only layer that knows about external schemas"
+        },
+        "planner": {
+          title: "planner/",
+          responsibility: "Field-centric plan synthesis \u2014 deterministic, rule-based, 7-step heuristic chain",
+          type: "Deterministic (heuristic)",
+          boundary: "Never executes. Emits FieldPlans only."
+        },
+        "capabilities": {
+          title: "capabilities/",
+          responsibility: "5 atomic ops: text_extraction, regex_extraction, lookup, inference, validation",
+          type: "Mixed (deterministic + non-deterministic)",
+          boundary: "Never assign confidence. Never read canonical contract directly."
+        },
+        "executor": {
+          title: "executor/",
+          responsibility: "Runs plan, collects evidence, stops early when budget exhausted",
+          type: "Deterministic orchestration",
+          boundary: "Never replans. Never assigns confidence. Never reads raw input directly."
+        },
+        "reconciler": {
+          title: "reconciler/",
+          responsibility: "Merges candidates, assigns final confidence, resolves truth from evidence",
+          type: "Deterministic (mathematical)",
+          boundary: "Sole confidence authority. Never executes. Never reads raw input. Never sees external schemas."
+        },
+        "artifact": {
+          title: "artifact/",
+          responsibility: "ExecutionArtifact + replay hash (SHA-256) + diagnostics collection",
+          type: "Deterministic",
+          boundary: "Replay rehydrates captured truth \u2014 never recomputes."
+        }
+      };
+
+      var archTooltip = document.getElementById('archTooltip');
+      var archBlocks = document.querySelectorAll('.arch-block');
+
+      function positionTooltip(block) {
+        var rect = block.getBoundingClientRect();
+        var tw = archTooltip.offsetWidth || 280;
+        var th = archTooltip.offsetHeight || 160;
+        var top = rect.top - th - 10;
+        var left = rect.left + (rect.width / 2) - (tw / 2);
+        if (top < 8) {
+          top = rect.bottom + 10;
+        }
+        if (left < 8) left = 8;
+        if (left + tw > window.innerWidth - 8) {
+          left = window.innerWidth - tw - 8;
+        }
+        archTooltip.style.top = top + 'px';
+        archTooltip.style.left = left + 'px';
+      }
+
+      archBlocks.forEach(function (block) {
+        block.addEventListener('mouseenter', function () {
+          var key = block.getAttribute('data-subsystem');
+          var info = subsystemInfo[key];
+          if (!info || !archTooltip) return;
+          archTooltip.innerHTML =
+            '<div class="arch-tooltip-title">' + info.title + '</div>' +
+            '<div class="arch-tooltip-desc">' + info.responsibility + '</div>' +
+            '<div class="arch-tooltip-row"><span class="arch-tooltip-label">Type: </span><span class="arch-tooltip-val">' + info.type + '</span></div>' +
+            '<div class="arch-tooltip-row"><span class="arch-tooltip-label">Boundary: </span><span class="arch-tooltip-val">' + info.boundary + '</span></div>';
+          archTooltip.classList.add('visible');
+          positionTooltip(block);
+        });
+        block.addEventListener('mousemove', function () {
+          positionTooltip(block);
+        });
+        block.addEventListener('mouseleave', function () {
+          if (archTooltip) archTooltip.classList.remove('visible');
+        });
+      });
     })();
   </script>
 </body>

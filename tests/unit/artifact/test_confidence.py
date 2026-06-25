@@ -118,15 +118,15 @@ def test_band_from_float_rejects_out_of_range(out_of_range: float) -> None:
     ("band", "expected_midpoint"),
     [
         (ConfidenceBand.CERTAIN, 0.975),
-        (ConfidenceBand.HIGH, 0.80),
-        (ConfidenceBand.MEDIUM, 0.60),
-        (ConfidenceBand.LOW, 0.30),
+        (ConfidenceBand.HIGH, 0.875),
+        (ConfidenceBand.MEDIUM, 0.70),
+        (ConfidenceBand.LOW, 0.45),
         (ConfidenceBand.UNTRUSTED, 0.15),
     ],
 )
 def test_float_from_band_midpoints(band: ConfidenceBand, expected_midpoint: float) -> None:
     """float_from_band returns the midpoint of each band's range."""
-    assert float_from_band(band) == expected_midpoint
+    assert float_from_band(band) == pytest.approx(expected_midpoint)
 
 
 @pytest.mark.deterministic

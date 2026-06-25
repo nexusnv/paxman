@@ -8,7 +8,7 @@ modules so that callers can import them from a single location::
 
 from paxman.artifact.artifact import ExecutionArtifact
 from paxman.budget import Budget, CurrencyPolicy, Policy
-from paxman.contract._types import ResolutionPolicy
+from paxman.contract import ResolutionPolicy
 from paxman.contract.canonical import CanonicalContract, CanonicalField
 from paxman.types import ConfidenceBand, FieldType, Status
 

@@ -36,9 +36,9 @@ BAND_LOWER_BOUNDS: typing.Final[dict[ConfidenceBand, float]] = {
 #: Upper bound (exclusive except CERTAIN which is inclusive).
 BAND_UPPER_BOUNDS: typing.Final[dict[ConfidenceBand, float]] = {
     ConfidenceBand.CERTAIN: 1.00,
-    ConfidenceBand.HIGH: 0.80,
-    ConfidenceBand.MEDIUM: 0.60,
-    ConfidenceBand.LOW: 0.30,
+    ConfidenceBand.HIGH: 0.95,
+    ConfidenceBand.MEDIUM: 0.80,
+    ConfidenceBand.LOW: 0.60,
     ConfidenceBand.UNTRUSTED: 0.30,
 }
 
@@ -103,8 +103,4 @@ def float_from_band(band: ConfidenceBand) -> float:
         raise TypeError(f"band must be a ConfidenceBand, got {type(band).__name__}")
     lo = BAND_LOWER_BOUNDS[band]
     hi = BAND_UPPER_BOUNDS[band]
-    if band == ConfidenceBand.CERTAIN:
-        # CERTAIN is [0.95, 1.00], both inclusive
-        return (lo + hi) / 2.0
-    # Other bands: [lo, hi) — midpoint is still meaningful
     return (lo + hi) / 2.0

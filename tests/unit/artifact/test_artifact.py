@@ -5,11 +5,12 @@ from __future__ import annotations
 import pytest
 
 from paxman.artifact.artifact import ExecutionArtifact, FieldResult, _is_hex64
+from paxman.artifact.statistics import Statistics
 from paxman.capabilities.result import Candidate, EvidenceRef
 from paxman.planner.field_plan import ExecutionPlan
 from paxman.types import ConfidenceBand, Status
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.deterministic
 
 # ============================================================================
 # _is_hex64 helper
@@ -356,9 +357,12 @@ def test_artifact_accepts_field_results() -> None:
 
 @pytest.mark.deterministic
 def test_artifact_accepts_statistics() -> None:
-    """statistics typing.Any field accepts any value."""
-    art = ExecutionArtifact(status=Status.SUCCESS, statistics={"custom": True})
-    assert art.statistics == {"custom": True}
+    """statistics accepts a Statistics instance or None."""
+    stats = Statistics(status=Status.SUCCESS)
+    art = ExecutionArtifact(status=Status.SUCCESS, statistics=stats)
+    assert art.statistics is stats
+    art_none = ExecutionArtifact(status=Status.SUCCESS, statistics=None)
+    assert art_none.statistics is None
 
 
 @pytest.mark.deterministic

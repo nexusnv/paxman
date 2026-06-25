@@ -12,7 +12,7 @@ import pytest
 
 from paxman.api.version import __version__
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.deterministic
 
 
 class TestVersionString:

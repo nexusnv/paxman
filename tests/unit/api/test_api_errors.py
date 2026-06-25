@@ -36,7 +36,7 @@ from paxman.api.errors import (
     VersionMismatchError,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.deterministic
 
 # ---------------------------------------------------------------------------
 # 12-class inventory
@@ -200,5 +200,5 @@ class TestConstruction:
 
     @pytest.mark.parametrize("cls", ALL_12)
     def test_caught_as_exception(self, cls: type) -> None:
-        with pytest.raises(cls):
+        with pytest.raises(Exception):
             raise cls("boom")

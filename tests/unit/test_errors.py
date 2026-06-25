@@ -247,8 +247,8 @@ def test_public_11_are_in_dunder_all() -> None:
     assert public_names.issubset(listed), f"Missing from __all__: {public_names - listed}"
 
 
-def test_all_17_are_in_dunder_all() -> None:
-    """All 17 error names are listed in ``paxman.errors.__all__``."""
+def test_all_18_are_in_dunder_all() -> None:
+    """All 18 error names are listed in ``paxman.errors.__all__``."""
     from paxman import errors
 
     listed = set(getattr(errors, "__all__", []))

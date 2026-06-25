@@ -14,7 +14,7 @@ import pytest
 from paxman.api.registry import get_adapter, get_capability, register_adapter, register_capability
 from paxman.errors import InvalidContractError
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.deterministic
 
 
 # ---------------------------------------------------------------------------

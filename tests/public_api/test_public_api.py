@@ -77,7 +77,6 @@ def _write_golden(surface: dict[str, Any] | None = None) -> None:
 
 
 @pytest.mark.deterministic
-@pytest.mark.integration
 def test_public_api_matches_snapshot() -> None:
     """Verify the public API surface matches the golden snapshot.
 
@@ -87,8 +86,11 @@ def test_public_api_matches_snapshot() -> None:
     current = _collect_api_surface()
 
     if not GOLDEN_PATH.exists():
-        _write_golden(current)
-        golden = current
+        raise AssertionError(
+            f"Golden snapshot not found at {GOLDEN_PATH}. "
+            "Run `python -c \"from tests.public_api.test_public_api import _write_golden; _write_golden()\"` "
+            "to create it."
+        )
     else:
         with open(GOLDEN_PATH) as f:
             golden = json.load(f)

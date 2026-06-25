@@ -27,7 +27,7 @@ from paxman.errors import InvalidContractError
 from paxman.reconciler.truth import ResolvedResult
 from paxman.types import ConfidenceBand, FieldType, Status
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.deterministic
 
 
 # ---------------------------------------------------------------------------
@@ -307,8 +307,8 @@ class TestComputeOverallStatus:
         results = (_CanonicalFactory.resolved("name"), _CanonicalFactory.unresolved("date"))
         assert _compute_overall_status(results, cc, None) is Status.PARTIAL_SUCCESS
 
-    def test_some_unresolved_mixed_with_optional_returns_partial_success(self) -> None:
-        """Some unresolved fields (some required, some optional) with resolved required => PARTIAL_SUCCESS."""
+    def test_all_required_resolved_returns_success(self) -> None:
+        """All required fields resolved (no optional fields) => SUCCESS."""
         cc = _CanonicalFactory.contract_with_required(["name"])
         # "name" is required and resolved; "date" is not in the contract.
         results = (_CanonicalFactory.resolved("name"),)
@@ -341,7 +341,7 @@ class TestComputeOverallStatus:
         assert _compute_overall_status(results, cc, policy) is Status.UNRESOLVED
 
     def test_no_fields_returns_success(self) -> None:
-        """No fields (empty contract) with no results => SUCCESS (vacuously true)."""
+        """Single required field resolved => SUCCESS."""
         cc = CanonicalContract(
             id="empty",
             fields=(

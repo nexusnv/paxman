@@ -25,7 +25,7 @@ from paxman.api.types import (
     Status,
 )
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.deterministic
 
 # ---------------------------------------------------------------------------
 # All 10 types are importable

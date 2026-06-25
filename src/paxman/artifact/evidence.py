@@ -1,8 +1,8 @@
-"""Evidence storage — collected provenance from capability invocations.
+"""Evidence storage — frozen collection of provenance from capability invocations.
 
-This module defines the :class:`EvidenceStore`, a mutable container
-that collects :class:`EvidenceRef` records during execution and
-surfaces them in the artifact.
+This module defines the :class:`EvidenceStore`, a frozen container
+of :class:`EvidenceRef` records collected during execution and
+surfaced in the artifact.
 
 The :class:`EvidenceRef` type itself lives in
 :mod:`paxman.capabilities.result`; this module provides the

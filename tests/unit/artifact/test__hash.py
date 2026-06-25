@@ -113,16 +113,7 @@ def test_compute_replay_hash_differs_with_custom_paxman_version() -> None:
     assert compute_replay_hash(art1) != compute_replay_hash(art2)
 
 
-@pytest.mark.deterministic
-def test_compute_replay_hash_consistent_with_empty_replay_hash_on_artifact() -> None:
-    """compute_replay_hash computes from the content, ignoring the stored replay_hash field."""
-    art = _make_artifact(replay_hash="")
-    h = compute_replay_hash(art)
-    # Set the hash on the artifact and recompute — should be different because
-    # field_results now includes the hash as a relevant field? Wait, replay_hash
-    # is NOT in the hash composition (it's excluded). Let's verify: the hash should
-    # be the same regardless of replay_hash value.
-    assert compute_replay_hash(art) == h
+
 
 
 @pytest.mark.deterministic

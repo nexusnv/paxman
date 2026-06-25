@@ -11,8 +11,8 @@ from its serialised form and checks the deterministic
 from __future__ import annotations
 
 import logging as _logging
-from typing import Any
 
+from paxman.protocols import Capability
 from paxman.artifact.artifact import ExecutionArtifact
 from paxman.artifact.replay import replay_artifact
 from paxman.capabilities.registry import get_latest
@@ -99,9 +99,9 @@ class _GlobalCapabilityRegistry:
 
     __slots__ = ()
 
-    def get(self, capability_id: str) -> Any:  # noqa: ANN401  # intentional — avoids Capability protocol incompatibility
+    def get(self, capability_id: str) -> Capability | None:
         try:
-            return get_latest(capability_id)
+            return get_latest(capability_id)  # type: ignore[return-value]  # paxman.protocols.Capability vs capabilities.base.Capability
         except InvalidContractError:
             _logging.getLogger(__name__).debug(
                 "Capability not found during replay", extra={"capability_id": capability_id}

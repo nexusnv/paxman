@@ -10,7 +10,7 @@ import pytest
 
 from paxman.api.protocols import Capability, ContractAdapter
 
-pytestmark = pytest.mark.unit
+pytestmark = pytest.mark.deterministic
 
 
 # ---------------------------------------------------------------------------

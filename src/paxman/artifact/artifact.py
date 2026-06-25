@@ -124,6 +124,16 @@ class FieldResult:
             raise TypeError(
                 f"evidence_refs must be a tuple, got {type(self.evidence_refs).__name__}"
             )
+        for cand in self.candidates:
+            if not isinstance(cand, Candidate):
+                raise TypeError(
+                    f"candidates must contain Candidate instances, got {type(cand).__name__}"
+                )
+        for ev_ref in self.evidence_refs:
+            if not isinstance(ev_ref, EvidenceRef):
+                raise TypeError(
+                    f"evidence_refs must contain EvidenceRef instances, got {type(ev_ref).__name__}"
+                )
 
 
 # ---------------------------------------------------------------------------
@@ -264,6 +274,40 @@ class ExecutionArtifact:
             raise TypeError(
                 f"execution_plan must be an ExecutionPlan or None, got "
                 f"{type(self.execution_plan).__name__}"
+            )
+        if not isinstance(self.unresolved_fields, list):
+            raise TypeError(
+                f"unresolved_fields must be a list, got {type(self.unresolved_fields).__name__}"
+            )
+        for uf in self.unresolved_fields:
+            if not isinstance(uf, str):
+                raise TypeError(
+                    f"unresolved_fields items must be strings, got {type(uf).__name__}"
+                )
+        if not isinstance(self.contract_id, str):
+            raise TypeError(
+                f"contract_id must be a string, got {type(self.contract_id).__name__}"
+            )
+        if not isinstance(self.planner_version, str):
+            raise TypeError(
+                f"planner_version must be a string, got {type(self.planner_version).__name__}"
+            )
+        if not isinstance(self.capability_versions, dict):
+            raise TypeError(
+                f"capability_versions must be a dict, got {type(self.capability_versions).__name__}"
+            )
+        for k, v in self.capability_versions.items():
+            if not isinstance(k, str):
+                raise TypeError(
+                    f"capability_versions keys must be strings, got {type(k).__name__}"
+                )
+            if not isinstance(v, str):
+                raise TypeError(
+                    f"capability_versions values must be strings, got {type(v).__name__}"
+                )
+        if self.statistics is not None and not isinstance(self.statistics, Statistics):
+            raise TypeError(
+                f"statistics must be a Statistics or None, got {type(self.statistics).__name__}"
             )
 
 

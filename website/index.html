@@ -564,45 +564,196 @@
       border-color: var(--accent);
       color: var(--fg);
     }
-    /* Floating tooltip for arch diagram */
-    #archTooltip {
-      position: fixed;
-      z-index: 200;
-      min-width: 200px;
-      max-width: 340px;
-      padding: 14px 16px;
-      background: oklch(10% 0.015 260);
-      border: 1px solid var(--accent);
-      border-radius: 8px;
-      box-shadow: 0 8px 32px oklch(0% 0 0 / 0.5);
-      opacity: 0;
+    /* Floating tooltip (legacy — replaced by persistent panel) */
+    #archTooltip { display: none; }
+
+    /* ─── Architecture: two-pane layout ─── */
+    .arch-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+      gap: 16px;
+      margin-top: 48px;
+      align-items: start;
+    }
+    .arch-diagram {
+      margin-top: 0;
+      padding: 32px 24px 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+    /* Subtle vertical dataflow gradient column */
+    .arch-dataflow {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 28px;
+      width: 1px;
+      background: linear-gradient(180deg,
+        transparent 0%,
+        oklch(68% 0.18 170 / 0.0) 0%,
+        oklch(68% 0.18 170 / 0.18) 30%,
+        oklch(68% 0.18 170 / 0.18) 70%,
+        oklch(68% 0.18 170 / 0.0) 100%);
+      opacity: 0.5;
       pointer-events: none;
-      transition: opacity 0.2s ease;
-      text-align: left;
     }
-    #archTooltip.visible { opacity: 1; }
-    .arch-tooltip-title {
-      font: 600 13px/1 var(--font-mono);
-      color: var(--accent);
-      margin-bottom: 6px;
+    .arch-layer {
+      position: relative;
+      transition: opacity 0.25s;
     }
-    .arch-tooltip-desc {
-      font-size: 12px;
-      color: oklch(75% 0.008 260);
-      line-height: 1.5;
-      margin-bottom: 8px;
+    /* Layer hover highlight — dim other layers */
+    .arch-diagram.has-focus .arch-layer:not(.is-focus) {
+      opacity: 0.35;
     }
-    .arch-tooltip-row {
-      font-size: 11px;
-      margin-bottom: 3px;
-      line-height: 1.4;
+    .arch-block {
+      position: relative;
+      padding: 12px 22px 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s, background 0.25s;
+      animation: arch-pulse 4s ease-in-out infinite;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
     }
-    .arch-tooltip-label {
+    .arch-block-name {
+      font: 500 13px/1 var(--font-mono);
+      color: var(--fg);
+      letter-spacing: -0.01em;
+    }
+    .arch-block-meta {
+      font: 500 9px/1 var(--font-mono);
       color: var(--muted);
-      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      opacity: 0.85;
     }
-    .arch-tooltip-val {
-      color: oklch(75% 0.008 260);
+    .arch-block.accent {
+      border-color: var(--accent);
+      background: oklch(68% 0.18 170 / 0.06);
+    }
+    .arch-block.accent .arch-block-name { color: var(--accent); }
+    .arch-block:hover,
+    .arch-block:focus-visible {
+      outline: none;
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 24px oklch(68% 0.18 170 / 0.12);
+    }
+    .arch-block.selected {
+      border-color: var(--accent);
+      background: oklch(68% 0.18 170 / 0.08);
+      box-shadow: 0 0 0 1px var(--accent), 0 4px 24px oklch(68% 0.18 170 / 0.18);
+    }
+    .arch-block.selected .arch-block-name { color: var(--accent); }
+    /* Animated gradient inside connector lines */
+    .arch-arrow-line {
+      position: relative;
+      width: 2px;
+      height: 32px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .arch-arrow-flow {
+      position: absolute;
+      top: -16px;
+      left: 0;
+      width: 100%;
+      height: 16px;
+      background: linear-gradient(180deg, transparent, var(--accent));
+      animation: arch-flow 2.4s linear infinite;
+    }
+    @keyframes arch-flow {
+      0%   { transform: translateY(0); opacity: 0; }
+      20%  { opacity: 1; }
+      100% { transform: translateY(48px); opacity: 0; }
+    }
+
+    /* Right-side detail panel */
+    .arch-panel {
+      position: sticky;
+      top: 96px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0;
+      min-height: 280px;
+    }
+    .arch-panel-inner {
+      padding: 24px 22px;
+    }
+    .arch-panel-eyebrow {
+      font: 500 10px/1 var(--font-mono);
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .arch-panel-title {
+      font: 600 22px/1.2 var(--font-display);
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+      font-family: var(--font-mono);
+    }
+    .arch-panel-desc {
+      font-size: 13px;
+      color: oklch(78% 0.008 260);
+      line-height: 1.6;
+      margin-bottom: 18px;
+    }
+    .arch-panel-meta {
+      margin: 0 0 16px;
+      padding: 14px 0 0;
+      border-top: 1px solid var(--border);
+    }
+    .apm-row {
+      display: flex;
+      gap: 12px;
+      padding: 6px 0;
+      align-items: baseline;
+    }
+    .apm-row dt {
+      flex: 0 0 86px;
+      font: 500 10px/1.2 var(--font-mono);
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .apm-row dd {
+      margin: 0;
+      flex: 1;
+      font-size: 12px;
+      line-height: 1.5;
+      color: oklch(82% 0.006 260);
+    }
+    .arch-panel-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .arch-panel-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font: 500 12px/1 var(--font-mono);
+      color: var(--accent);
+      text-decoration: none;
+      padding: 8px 12px;
+      border: 1px solid oklch(68% 0.18 170 / 0.4);
+      border-radius: 6px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .arch-panel-link:hover {
+      background: oklch(68% 0.18 170 / 0.08);
+      border-color: var(--accent);
     }
 
     /* ─── Use Cases ─── */
@@ -724,6 +875,289 @@
       position: absolute;
       left: 0;
       top: 10px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--muted);
+    }
+
+    /* ─── Status: progress bar ─── */
+    .progress-wrap {
+      margin-top: 48px;
+      padding: 20px 22px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 14px;
+    }
+    .progress-label {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .progress-eyebrow {
+      font: 500 10px/1 var(--font-mono);
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .progress-count {
+      font: 500 13px/1 var(--font-mono);
+      color: var(--fg);
+      letter-spacing: -0.01em;
+    }
+    .progress-percent {
+      font: 600 22px/1 var(--font-mono);
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+    .progress-track {
+      position: relative;
+      height: 8px;
+      background: oklch(15% 0.012 260);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      overflow: visible;
+    }
+    .progress-bar {
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg,
+        var(--accent) 0%,
+        oklch(68% 0.18 170 / 0.85) 100%);
+      border-radius: 999px;
+      box-shadow: 0 0 12px oklch(68% 0.18 170 / 0.35);
+      transition: width 1.2s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .progress-marker {
+      position: absolute;
+      top: 50%;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--muted);
+      transform: translate(-50%, -50%);
+      border: 1px solid var(--bg);
+      transition: background 0.4s, transform 0.3s;
+    }
+    .progress-marker.current {
+      background: oklch(65% 0.15 60);
+      box-shadow: 0 0 0 3px oklch(65% 0.15 60 / 0.18), 0 0 10px oklch(65% 0.15 60 / 0.5);
+      animation: marker-pulse 1.6s ease-in-out infinite;
+    }
+    .progress-marker.release {
+      background: transparent;
+      border: 2px solid var(--accent);
+      width: 10px;
+      height: 10px;
+    }
+    @keyframes marker-pulse {
+      0%, 100% { box-shadow: 0 0 0 3px oklch(65% 0.15 60 / 0.18), 0 0 10px oklch(65% 0.15 60 / 0.5); }
+      50%      { box-shadow: 0 0 0 6px oklch(65% 0.15 60 / 0.05), 0 0 14px oklch(65% 0.15 60 / 0.6); }
+    }
+    .progress-legend {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      letter-spacing: 0.01em;
+    }
+    .progress-legend i {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+    .legend-dot.done { background: var(--accent); }
+    .legend-dot.current { background: oklch(65% 0.15 60); }
+    .legend-dot.planned { background: var(--muted); }
+
+    /* ─── Stat counter (animated) ─── */
+    .stat-card {
+      cursor: default;
+      transition: background 0.25s;
+    }
+    .stat-card:hover { background: oklch(14% 0.013 260); }
+    .stat-number {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ─── Sprint filter tabs ─── */
+    .sprint-filter {
+      display: flex;
+      gap: 6px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 18px;
+      margin-bottom: 18px;
+    }
+    .sprint-filter-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 14px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: var(--muted);
+      font: 500 12px/1 var(--font-mono);
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .sprint-filter-btn:hover {
+      color: var(--fg);
+      border-color: oklch(68% 0.18 170 / 0.4);
+    }
+    .sprint-filter-btn.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: oklch(68% 0.18 170 / 0.06);
+    }
+    .filter-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    .filter-dot.done { background: var(--accent); }
+    .filter-dot.current { background: oklch(65% 0.15 60); }
+    .filter-dot.planned {
+      background: transparent;
+      border: 1.5px solid var(--muted);
+    }
+
+    /* Sprint timeline filtering */
+    .sprint-pill-wrapper {
+      transition: opacity 0.3s, transform 0.3s, max-width 0.3s, margin 0.3s, padding 0.3s;
+    }
+    .sprint-pill-wrapper.is-hidden {
+      opacity: 0;
+      transform: scale(0.85);
+      max-width: 0;
+      width: 0;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      pointer-events: none;
+      border-left-color: transparent;
+    }
+
+    /* Live indicator */
+    .sprint-header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .sprint-live {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 4px 10px;
+      border: 1px solid oklch(65% 0.15 60 / 0.4);
+      border-radius: 999px;
+      background: oklch(65% 0.15 60 / 0.06);
+    }
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: oklch(65% 0.15 60);
+      box-shadow: 0 0 0 0 oklch(65% 0.15 60 / 0.6);
+      animation: live-pulse 1.6s ease-in-out infinite;
+    }
+    @keyframes live-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 oklch(65% 0.15 60 / 0.6); }
+      50%      { box-shadow: 0 0 0 6px oklch(65% 0.15 60 / 0); }
+    }
+    .live-text {
+      font: 600 10px/1 var(--font-mono);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: oklch(65% 0.15 60);
+    }
+
+    /* ─── Roadmap: collapsible ─── */
+    .roadmap-item {
+      padding: 0;
+      overflow: hidden;
+      transition: border-color 0.25s;
+    }
+    .roadmap-item:hover { border-color: oklch(68% 0.18 170 / 0.4); }
+    .roadmap-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: transparent;
+      border: none;
+      padding: 20px 22px;
+      cursor: pointer;
+      text-align: left;
+      color: inherit;
+      font: inherit;
+      transition: background 0.2s;
+    }
+    .roadmap-head:hover { background: oklch(68% 0.18 170 / 0.03); }
+    .roadmap-head:focus-visible {
+      outline: 1px solid var(--accent);
+      outline-offset: -1px;
+    }
+    .roadmap-head-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .roadmap-item .version { margin-bottom: 0; }
+    .roadmap-item .status-tag { margin-bottom: 0; }
+    .roadmap-chevron {
+      color: var(--muted);
+      transition: transform 0.25s, color 0.2s;
+      flex-shrink: 0;
+    }
+    .roadmap-item.expanded .roadmap-chevron {
+      transform: rotate(180deg);
+      color: var(--accent);
+    }
+    .roadmap-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+    .roadmap-item.expanded .roadmap-body {
+      max-height: 600px;
+    }
+    .roadmap-body ul {
+      list-style: none;
+      margin: 0;
+      padding: 0 22px 22px;
+      border-top: 1px solid var(--border);
+      padding-top: 14px;
+    }
+    .roadmap-body li {
+      font-size: 13px;
+      color: var(--muted);
+      padding: 4px 0 4px 14px;
+      position: relative;
+    }
+    .roadmap-body li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 12px;
       width: 5px;
       height: 5px;
       border-radius: 50%;
@@ -878,6 +1312,9 @@
       .sprint-timeline { justify-content: flex-start; }
       .sprint-pill-wrapper { width: 88px; }
       .arch-diagram { padding: 24px 16px; }
+      .arch-layout { grid-template-columns: 1fr; }
+      .arch-panel { position: static; }
+      .sprint-header { flex-direction: column; gap: 10px; }
     }
     @media (max-width: 640px) {
       nav .container { height: 48px; }
@@ -892,6 +1329,9 @@
       .status-grid { grid-template-columns: 1fr 1fr; }
       section { padding: 60px 0; }
       .arch-diagram { padding: 16px; }
+      .arch-dataflow { left: 18px; }
+      .progress-wrap { padding: 16px; }
+      .progress-percent { font-size: 18px; }
       footer .container { flex-direction: column; align-items: flex-start; }
     }
 
@@ -1173,60 +1613,121 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
     <div class="container">
       <div class="section-label reveal">Under the hood</div>
       <h2 class="section-title reveal" style="transition-delay:0.05s">Seven subsystems, strict layering</h2>
-      <p class="section-sub reveal" style="transition-delay:0.1s">Each subsystem has a single responsibility. Dependencies flow in one direction — from API down through contract, planner, capabilities, executor, reconciler, to artifact.</p>
-      <div class="arch-diagram reveal">
-        <!-- Layer 1: API -->
-        <div class="arch-layer-label">Public Surface</div>
-        <div class="arch-row-center">
-          <div class="arch-block accent" data-subsystem="api">api/</div>
-        </div>
-        <div class="arch-connector-row">
-          <div class="arch-arrow-line"></div>
+      <p class="section-sub reveal" style="transition-delay:0.1s">Each subsystem has a single responsibility. Dependencies flow in one direction — from API down through contract, planner, capabilities, executor, reconciler, to artifact. Click any block for details.</p>
+
+      <div class="arch-layout reveal">
+        <!-- Diagram (left) -->
+        <div class="arch-diagram" id="archDiagram">
+          <!-- Dataflow column (subtle, runs top→bottom) -->
+          <div class="arch-dataflow" aria-hidden="true"></div>
+
+          <!-- Layer 1: API -->
+          <div class="arch-layer" data-layer="surface">
+            <div class="arch-layer-label">Public Surface</div>
+            <div class="arch-row-center">
+              <div class="arch-block accent" data-subsystem="api" tabindex="0" role="button" aria-label="api subsystem">
+                <span class="arch-block-name">api/</span>
+                <span class="arch-block-meta">1 module</span>
+              </div>
+            </div>
+          </div>
+          <div class="arch-connector-row"><div class="arch-arrow-line"><div class="arch-arrow-flow"></div></div></div>
+
+          <!-- Layer 2: Contract, Planner, Capabilities -->
+          <div class="arch-layer" data-layer="planning">
+            <div class="arch-layer-label">Planning &amp; Extraction</div>
+            <div class="arch-row-three">
+              <div class="arch-block" data-subsystem="contract" tabindex="0" role="button" aria-label="contract subsystem">
+                <span class="arch-block-name">contract/</span>
+                <span class="arch-block-meta">4 adapters</span>
+              </div>
+              <div class="arch-block" data-subsystem="planner" tabindex="0" role="button" aria-label="planner subsystem">
+                <span class="arch-block-name">planner/</span>
+                <span class="arch-block-meta">7-step chain</span>
+              </div>
+              <div class="arch-block" data-subsystem="capabilities" tabindex="0" role="button" aria-label="capabilities subsystem">
+                <span class="arch-block-name">capabilities/</span>
+                <span class="arch-block-meta">5 ops</span>
+              </div>
+            </div>
+          </div>
+          <div class="arch-connector-row"><div class="arch-arrow-line"><div class="arch-arrow-flow"></div></div></div>
+
+          <!-- Layer 3: Executor, Reconciler -->
+          <div class="arch-layer" data-layer="execution">
+            <div class="arch-layer-label">Execution &amp; Reconciliation</div>
+            <div class="arch-row-two">
+              <div class="arch-block" data-subsystem="executor" tabindex="0" role="button" aria-label="executor subsystem">
+                <span class="arch-block-name">executor/</span>
+                <span class="arch-block-meta">field runner</span>
+              </div>
+              <div class="arch-block" data-subsystem="reconciler" tabindex="0" role="button" aria-label="reconciler subsystem">
+                <span class="arch-block-name">reconciler/</span>
+                <span class="arch-block-meta">truth owner</span>
+              </div>
+            </div>
+          </div>
+          <div class="arch-connector-row"><div class="arch-arrow-line"><div class="arch-arrow-flow"></div></div></div>
+
+          <!-- Layer 4: Artifact -->
+          <div class="arch-layer" data-layer="output">
+            <div class="arch-layer-label">Output</div>
+            <div class="arch-row-center">
+              <div class="arch-block" data-subsystem="artifact" tabindex="0" role="button" aria-label="artifact subsystem">
+                <span class="arch-block-name">artifact/</span>
+                <span class="arch-block-meta">replay hash</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="arch-divider-row"></div>
+
+          <!-- Cross-Cutting -->
+          <div class="arch-layer" data-layer="cross">
+            <div class="arch-layer-label">Cross-Cutting</div>
+            <div class="arch-row-many">
+              <span class="arch-pill" title="Structured exception hierarchy">errors.py</span>
+              <span class="arch-pill" title="Status, ConfidenceBand, FieldType enums">types.py</span>
+              <span class="arch-pill" title="Budget &amp; Policy enforcement">budget.py</span>
+              <span class="arch-pill" title="Stable JSON encoder">serialization.py</span>
+              <span class="arch-pill" title="Internal Protocol definitions">protocols.py</span>
+              <span class="arch-pill" title="Injectable Clock + FakeClock">clock.py</span>
+              <span class="arch-pill" title="Version constants">versioning.py</span>
+              <span class="arch-pill" title="structlog factory">logging.py</span>
+              <span class="arch-pill" title="Prefixed ID helpers">ids.py</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Layer 2: Contract, Planner, Capabilities -->
-        <div class="arch-layer-label">Planning &amp; Extraction</div>
-        <div class="arch-row-three">
-          <div class="arch-block" data-subsystem="contract">contract/</div>
-          <div class="arch-block" data-subsystem="planner">planner/</div>
-          <div class="arch-block" data-subsystem="capabilities">capabilities/</div>
-        </div>
-        <div class="arch-connector-row">
-          <div class="arch-arrow-line"></div>
-        </div>
-
-        <!-- Layer 3: Executor, Reconciler -->
-        <div class="arch-layer-label">Execution &amp; Reconciliation</div>
-        <div class="arch-row-two">
-          <div class="arch-block" data-subsystem="executor">executor/</div>
-          <div class="arch-block" data-subsystem="reconciler">reconciler/</div>
-        </div>
-        <div class="arch-connector-row">
-          <div class="arch-arrow-line"></div>
-        </div>
-
-        <!-- Layer 4: Artifact -->
-        <div class="arch-layer-label">Output</div>
-        <div class="arch-row-center">
-          <div class="arch-block" data-subsystem="artifact">artifact/</div>
-        </div>
-
-        <!-- Divider -->
-        <div class="arch-divider-row"></div>
-
-        <!-- Cross-Cutting -->
-        <div class="arch-layer-label">Cross-Cutting</div>
-        <div class="arch-row-many">
-          <span class="arch-pill">errors.py</span>
-          <span class="arch-pill">types.py</span>
-          <span class="arch-pill">budget.py</span>
-          <span class="arch-pill">serialization.py</span>
-          <span class="arch-pill">protocols.py</span>
-          <span class="arch-pill">clock.py</span>
-          <span class="arch-pill">versioning.py</span>
-          <span class="arch-pill">logging.py</span>
-          <span class="arch-pill">ids.py</span>
-        </div>
+        <!-- Detail panel (right) -->
+        <aside class="arch-panel" id="archPanel" aria-live="polite">
+          <div class="arch-panel-inner" id="archPanelInner">
+            <div class="arch-panel-eyebrow">Subsystem detail</div>
+            <div class="arch-panel-title" id="archPanelTitle">Select a subsystem</div>
+            <div class="arch-panel-desc" id="archPanelDesc">Click any block in the diagram to inspect its responsibility, determinism type, and enforced boundary.</div>
+            <dl class="arch-panel-meta" id="archPanelMeta" hidden>
+              <div class="apm-row">
+                <dt>Determinism</dt>
+                <dd id="archPanelType">—</dd>
+              </div>
+              <div class="apm-row">
+                <dt>Boundary</dt>
+                <dd id="archPanelBoundary">—</dd>
+              </div>
+              <div class="apm-row">
+                <dt>Layer</dt>
+                <dd id="archPanelLayer">—</dd>
+              </div>
+            </dl>
+            <div class="arch-panel-actions">
+              <a class="arch-panel-link" id="archPanelLink" href="#" hidden>
+                Read in ARCHITECTURE.md
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12"><path d="M3 8h10M9 4l4 4-4 4"/></svg>
+              </a>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   </section>
@@ -1276,114 +1777,165 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
       <div class="section-label reveal">Project Status</div>
       <h2 class="section-title reveal" style="transition-delay:0.05s">Active development, open foundation</h2>
       <p class="section-sub reveal" style="transition-delay:0.1s">Sprints 1–5 are complete. The Reconciler subsystem, MONEY type with cross-currency arithmetic, and test data vendoring infrastructure are now implemented and tested.</p>
+
+      <!-- Overall progress bar -->
+      <div class="progress-wrap reveal" id="progressWrap">
+        <div class="progress-head">
+          <div class="progress-label">
+            <span class="progress-eyebrow">v1.0.0 progress</span>
+            <span class="progress-count" id="progressCount">0 / 11 sprints</span>
+          </div>
+          <div class="progress-percent" id="progressPercent">0%</div>
+        </div>
+        <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
+          <div class="progress-bar" id="progressBar"></div>
+          <div class="progress-marker" style="left: 0%" data-marker="S0"></div>
+          <div class="progress-marker" style="left: 9.09%" data-marker="S1"></div>
+          <div class="progress-marker" style="left: 18.18%" data-marker="S2"></div>
+          <div class="progress-marker" style="left: 27.27%" data-marker="S3"></div>
+          <div class="progress-marker" style="left: 36.36%" data-marker="S4"></div>
+          <div class="progress-marker" style="left: 45.45%" data-marker="S5"></div>
+          <div class="progress-marker current" style="left: 54.54%" data-marker="S6"></div>
+          <div class="progress-marker" style="left: 63.63%" data-marker="S7"></div>
+          <div class="progress-marker" style="left: 72.72%" data-marker="S8"></div>
+          <div class="progress-marker" style="left: 81.81%" data-marker="S9"></div>
+          <div class="progress-marker release" style="left: 100%" data-marker="v1"></div>
+        </div>
+        <div class="progress-legend">
+          <span><i class="legend-dot done"></i>Complete (6)</span>
+          <span><i class="legend-dot current"></i>Current (1)</span>
+          <span><i class="legend-dot planned"></i>Planned (4)</span>
+        </div>
+      </div>
+
       <div class="status-grid reveal">
         <div class="stat-card">
-          <div class="stat-number">1806+</div>
+          <div class="stat-number" data-count="1806" data-suffix="+">0</div>
           <div class="stat-label">Tests</div>
           <div class="stat-sub">94% coverage</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">9</div>
+          <div class="stat-number" data-count="9">0</div>
           <div class="stat-label">V1 Field Types</div>
           <div class="stat-sub">STRING to MONEY</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">5</div>
+          <div class="stat-number" data-count="5">0</div>
           <div class="stat-label">V1 Capabilities</div>
           <div class="stat-sub">extraction to validation</div>
         </div>
         <div class="stat-card">
-          <div class="stat-number">17</div>
+          <div class="stat-number" data-count="17">0</div>
           <div class="stat-label">Error Classes</div>
           <div class="stat-sub">hierarchical errors</div>
         </div>
       </div>
 
       <!-- Sprint Timeline -->
-      <div class="sprint-header reveal">Development Timeline — 11 Sprints to v1.0.0</div>
-      <div class="sprint-timeline reveal">
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill done">
+      <div class="sprint-header reveal">
+        <span>Development Timeline — 11 Sprints to v1.0.0</span>
+        <div class="sprint-live" aria-label="Sprint 6 in progress">
+          <span class="live-dot"></span>
+          <span class="live-text">Sprint 6 live</span>
+        </div>
+      </div>
+
+      <div class="sprint-filter reveal" role="tablist" aria-label="Filter sprints by status">
+        <button class="sprint-filter-btn active" data-filter="all" role="tab" aria-selected="true">All</button>
+        <button class="sprint-filter-btn" data-filter="done" role="tab" aria-selected="false">
+          <i class="filter-dot done"></i>Done
+        </button>
+        <button class="sprint-filter-btn" data-filter="current" role="tab" aria-selected="false">
+          <i class="filter-dot current"></i>Current
+        </button>
+        <button class="sprint-filter-btn" data-filter="planned" role="tab" aria-selected="false">
+          <i class="filter-dot planned"></i>Planned
+        </button>
+      </div>
+
+      <div class="sprint-timeline reveal" id="sprintTimeline">
+        <div class="sprint-pill-wrapper" data-status="done">
+          <div class="sprint-pill done" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 0</span>
             <span class="sprint-title">Design Closure</span>
             <span class="sprint-status">Done</span>
           </div>
         </div>
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill done">
+        <div class="sprint-pill-wrapper" data-status="done">
+          <div class="sprint-pill done" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 1</span>
             <span class="sprint-title">Foundation</span>
             <span class="sprint-status">Done</span>
           </div>
         </div>
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill done">
+        <div class="sprint-pill-wrapper" data-status="done">
+          <div class="sprint-pill done" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 2</span>
             <span class="sprint-title">Contract Subsystem</span>
             <span class="sprint-status">Done</span>
           </div>
         </div>
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill done">
+        <div class="sprint-pill-wrapper" data-status="done">
+          <div class="sprint-pill done" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 3</span>
             <span class="sprint-title">Planner + 3 Capabilities</span>
             <span class="sprint-status">Done</span>
           </div>
         </div>
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill done">
+        <div class="sprint-pill-wrapper" data-status="done">
+          <div class="sprint-pill done" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 4</span>
             <span class="sprint-title">Executor + 2 Capabilities</span>
             <span class="sprint-status">Done</span>
           </div>
         </div>
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill done">
+        <div class="sprint-pill-wrapper" data-status="done">
+          <div class="sprint-pill done" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 5</span>
             <span class="sprint-title">Reconciler + MONEY + Vendoring</span>
             <span class="sprint-status">Done</span>
           </div>
         </div>
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill current">
+        <div class="sprint-pill-wrapper" data-status="current">
+          <div class="sprint-pill current" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 6</span>
             <span class="sprint-title">Artifact + API (First E2E)</span>
             <span class="sprint-status">Current</span>
           </div>
         </div>
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill planned">
+        <div class="sprint-pill-wrapper" data-status="planned">
+          <div class="sprint-pill planned" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 7</span>
             <span class="sprint-title">Integration, Property Tests</span>
             <span class="sprint-status">Planned</span>
           </div>
         </div>
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill planned">
+        <div class="sprint-pill-wrapper" data-status="planned">
+          <div class="sprint-pill planned" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 8</span>
             <span class="sprint-title">Docs + Community + CI</span>
             <span class="sprint-status">Planned</span>
           </div>
         </div>
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill planned">
+        <div class="sprint-pill-wrapper" data-status="planned">
+          <div class="sprint-pill planned" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 9</span>
             <span class="sprint-title">Production Hardening</span>
             <span class="sprint-status">Planned</span>
           </div>
         </div>
-        <div class="sprint-pill-wrapper">
-          <div class="sprint-pill planned">
+        <div class="sprint-pill-wrapper" data-status="planned">
+          <div class="sprint-pill planned" tabindex="0">
             <div class="sprint-dot"></div>
             <span class="sprint-num">Sprint 10</span>
             <span class="sprint-title">Release (v1.0.0)</span>
@@ -1393,38 +1945,59 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
       </div>
 
       <div class="roadmap">
-        <div class="roadmap-item reveal">
-          <div class="version">v0.0.0</div>
-          <div class="status-tag done">Complete</div>
-          <ul>
-            <li>Contract subsystem (Pydantic, JSON Schema, Dict DSL, OpenAPI)</li>
-            <li>Field-centric planner (7-step heuristic chain)</li>
-            <li>V1 capabilities (text_extraction, regex, lookup, inference, validation)</li>
-            <li>Executor subsystem (field runner, evidence, early-stop, budget tracking)</li>
-            <li>Reconciler subsystem (sole confidence authority)</li>
-            <li>MONEY type with cross-currency arithmetic</li>
-            <li>Budget & Policy system</li>
-            <li>9 cross-cutting modules</li>
-            <li>17 error classes (hierarchical PaxmanError tree)</li>
-          </ul>
+        <div class="roadmap-item reveal expanded" data-version="v0.0.0">
+          <button class="roadmap-head" type="button" aria-expanded="true">
+            <div class="roadmap-head-left">
+              <div class="version">v0.0.0</div>
+              <div class="status-tag done">Complete</div>
+            </div>
+            <svg class="roadmap-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M4 6l4 4 4-4"/></svg>
+          </button>
+          <div class="roadmap-body">
+            <ul>
+              <li>Contract subsystem (Pydantic, JSON Schema, Dict DSL, OpenAPI)</li>
+              <li>Field-centric planner (7-step heuristic chain)</li>
+              <li>V1 capabilities (text_extraction, regex, lookup, inference, validation)</li>
+              <li>Executor subsystem (field runner, evidence, early-stop, budget tracking)</li>
+              <li>Reconciler subsystem (sole confidence authority)</li>
+              <li>MONEY type with cross-currency arithmetic</li>
+              <li>Budget &amp; Policy system</li>
+              <li>9 cross-cutting modules</li>
+              <li>17 error classes (hierarchical PaxmanError tree)</li>
+            </ul>
+          </div>
         </div>
-        <div class="roadmap-item reveal" style="transition-delay:0.05s">
-          <div class="version">v0.1.0</div>
-          <div class="status-tag in-progress">In Progress</div>
-          <ul>
-            <li>Artifact subsystem (replay hash, diagnostics)</li>
-            <li>End-to-end normalize() & replay() API</li>
-            <li>PyPI publication</li>
-          </ul>
+        <div class="roadmap-item reveal" data-version="v0.1.0" style="transition-delay:0.05s">
+          <button class="roadmap-head" type="button" aria-expanded="false">
+            <div class="roadmap-head-left">
+              <div class="version">v0.1.0</div>
+              <div class="status-tag in-progress">In Progress</div>
+            </div>
+            <svg class="roadmap-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M4 6l4 4 4-4"/></svg>
+          </button>
+          <div class="roadmap-body">
+            <ul>
+              <li>Artifact subsystem (replay hash, diagnostics)</li>
+              <li>End-to-end normalize() &amp; replay() API</li>
+              <li>PyPI publication</li>
+            </ul>
+          </div>
         </div>
-        <div class="roadmap-item reveal" style="transition-delay:0.1s">
-          <div class="version">v1.0.0</div>
-          <div class="status-tag future">Roadmap</div>
-          <ul>
-            <li>All V1 acceptance criteria met</li>
-            <li>Full replay determinism</li>
-            <li>Production documentation</li>
-          </ul>
+        <div class="roadmap-item reveal" data-version="v1.0.0" style="transition-delay:0.1s">
+          <button class="roadmap-head" type="button" aria-expanded="false">
+            <div class="roadmap-head-left">
+              <div class="version">v1.0.0</div>
+              <div class="status-tag future">Roadmap</div>
+            </div>
+            <svg class="roadmap-chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="14" height="14"><path d="M4 6l4 4 4-4"/></svg>
+          </button>
+          <div class="roadmap-body">
+            <ul>
+              <li>All V1 acceptance criteria met</li>
+              <li>Full replay determinism</li>
+              <li>Production documentation</li>
+            </ul>
+          </div>
         </div>
       </div>
     </div>
@@ -1445,8 +2018,6 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
       </div>
     </div>
   </footer>
-
-  <div id="archTooltip"></div>
 
   <script>
     (function () {
@@ -1487,86 +2058,244 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
       var subsystemInfo = {
         "api": {
           title: "api/",
-          responsibility: "Public surface \u2014 normalize(), replay(), register_adapter(), register_capability(), __version__",
+          responsibility: "Public surface — normalize(), replay(), register_adapter(), register_capability(), __version__",
           type: "Deterministic orchestration",
-          boundary: "No internal concepts leak (no FieldPlan, no CapabilitySpec by name)"
+          boundary: "No internal concepts leak (no FieldPlan, no CapabilitySpec by name)",
+          layer: "Public Surface"
         },
         "contract": {
           title: "contract/",
-          responsibility: "Adapter + validation \u2014 4 external formats (Pydantic, JSON Schema, OpenAPI, Dict DSL) \u2192 CanonicalContract",
+          responsibility: "Adapter + validation — 4 external formats (Pydantic, JSON Schema, OpenAPI, Dict DSL) → CanonicalContract",
           type: "Deterministic",
-          boundary: "Only layer that knows about external schemas"
+          boundary: "Only layer that knows about external schemas",
+          layer: "Planning & Extraction"
         },
         "planner": {
           title: "planner/",
-          responsibility: "Field-centric plan synthesis \u2014 deterministic, rule-based, 7-step heuristic chain",
+          responsibility: "Field-centric plan synthesis — deterministic, rule-based, 7-step heuristic chain",
           type: "Deterministic (heuristic)",
-          boundary: "Never executes. Emits FieldPlans only."
+          boundary: "Never executes. Emits FieldPlans only.",
+          layer: "Planning & Extraction"
         },
         "capabilities": {
           title: "capabilities/",
           responsibility: "5 atomic ops: text_extraction, regex_extraction, lookup, inference, validation",
           type: "Mixed (deterministic + non-deterministic)",
-          boundary: "Never assign confidence. Never read canonical contract directly."
+          boundary: "Never assign confidence. Never read canonical contract directly.",
+          layer: "Planning & Extraction"
         },
         "executor": {
           title: "executor/",
           responsibility: "Runs plan, collects evidence, stops early when budget exhausted",
           type: "Deterministic orchestration",
-          boundary: "Never replans. Never assigns confidence. Never reads raw input directly."
+          boundary: "Never replans. Never assigns confidence. Never reads raw input directly.",
+          layer: "Execution & Reconciliation"
         },
         "reconciler": {
           title: "reconciler/",
           responsibility: "Merges candidates, assigns final confidence, resolves truth from evidence",
           type: "Deterministic (mathematical)",
-          boundary: "Sole confidence authority. Never executes. Never reads raw input. Never sees external schemas."
+          boundary: "Sole confidence authority. Never executes. Never reads raw input. Never sees external schemas.",
+          layer: "Execution & Reconciliation"
         },
         "artifact": {
           title: "artifact/",
           responsibility: "ExecutionArtifact + replay hash (SHA-256) + diagnostics collection",
           type: "Deterministic",
-          boundary: "Replay rehydrates captured truth \u2014 never recomputes."
+          boundary: "Replay rehydrates captured truth — never recomputes.",
+          layer: "Output"
         }
       };
 
-      var archTooltip = document.getElementById('archTooltip');
+      // ─── Architecture: click-to-pin detail panel + layer highlight ───
+      var archDiagram = document.getElementById('archDiagram');
+      var archPanel = document.getElementById('archPanel');
+      var archPanelTitle = document.getElementById('archPanelTitle');
+      var archPanelDesc = document.getElementById('archPanelDesc');
+      var archPanelMeta = document.getElementById('archPanelMeta');
+      var archPanelType = document.getElementById('archPanelType');
+      var archPanelBoundary = document.getElementById('archPanelBoundary');
+      var archPanelLayer = document.getElementById('archPanelLayer');
+      var archPanelLink = document.getElementById('archPanelLink');
       var archBlocks = document.querySelectorAll('.arch-block');
+      var archLayers = document.querySelectorAll('.arch-layer');
+      var selectedBlock = null;
 
-      function positionTooltip(block) {
-        var rect = block.getBoundingClientRect();
-        var tw = archTooltip.offsetWidth || 280;
-        var th = archTooltip.offsetHeight || 160;
-        var top = rect.top - th - 10;
-        var left = rect.left + (rect.width / 2) - (tw / 2);
-        if (top < 8) {
-          top = rect.bottom + 10;
+      function showSubsystem(key, block) {
+        var info = subsystemInfo[key];
+        if (!info) return;
+        if (selectedBlock) selectedBlock.classList.remove('selected');
+        if (block) {
+          block.classList.add('selected');
+          selectedBlock = block;
         }
-        if (left < 8) left = 8;
-        if (left + tw > window.innerWidth - 8) {
-          left = window.innerWidth - tw - 8;
+        archPanelTitle.textContent = info.title;
+        archPanelDesc.textContent = info.responsibility;
+        archPanelType.textContent = info.type;
+        archPanelBoundary.textContent = info.boundary;
+        archPanelLayer.textContent = info.layer;
+        archPanelMeta.hidden = false;
+        archPanelLink.hidden = false;
+        archPanelLink.setAttribute('href', 'https://github.com/nexusnv/paxman/blob/main/ARCHITECTURE.md#' + key);
+      }
+
+      function clearSelection() {
+        if (selectedBlock) {
+          selectedBlock.classList.remove('selected');
+          selectedBlock = null;
         }
-        archTooltip.style.top = top + 'px';
-        archTooltip.style.left = left + 'px';
+        archPanelTitle.textContent = 'Select a subsystem';
+        archPanelDesc.textContent = 'Click any block in the diagram to inspect its responsibility, determinism type, and enforced boundary.';
+        archPanelMeta.hidden = true;
+        archPanelLink.hidden = true;
+        archDiagram.classList.remove('has-focus');
+        archLayers.forEach(function (l) { l.classList.remove('is-focus'); });
       }
 
       archBlocks.forEach(function (block) {
+        var key = block.getAttribute('data-subsystem');
+
+        // Click: pin to panel
+        block.addEventListener('click', function (e) {
+          e.stopPropagation();
+          showSubsystem(key, block);
+        });
+        // Keyboard: Enter / Space
+        block.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            showSubsystem(key, block);
+          }
+          if (e.key === 'Escape') {
+            clearSelection();
+            block.blur();
+          }
+        });
+        // Hover: highlight the layer (dim others)
         block.addEventListener('mouseenter', function () {
-          var key = block.getAttribute('data-subsystem');
-          var info = subsystemInfo[key];
-          if (!info || !archTooltip) return;
-          archTooltip.innerHTML =
-            '<div class="arch-tooltip-title">' + info.title + '</div>' +
-            '<div class="arch-tooltip-desc">' + info.responsibility + '</div>' +
-            '<div class="arch-tooltip-row"><span class="arch-tooltip-label">Type: </span><span class="arch-tooltip-val">' + info.type + '</span></div>' +
-            '<div class="arch-tooltip-row"><span class="arch-tooltip-label">Boundary: </span><span class="arch-tooltip-val">' + info.boundary + '</span></div>';
-          archTooltip.classList.add('visible');
-          positionTooltip(block);
+          var layerEl = block.closest('.arch-layer');
+          if (!layerEl) return;
+          archDiagram.classList.add('has-focus');
+          archLayers.forEach(function (l) { l.classList.remove('is-focus'); });
+          layerEl.classList.add('is-focus');
         });
-        block.addEventListener('mousemove', function () {
-          positionTooltip(block);
+        block.addEventListener('focus', function () {
+          var layerEl = block.closest('.arch-layer');
+          if (!layerEl) return;
+          archDiagram.classList.add('has-focus');
+          archLayers.forEach(function (l) { l.classList.remove('is-focus'); });
+          layerEl.classList.add('is-focus');
         });
-        block.addEventListener('mouseleave', function () {
-          if (archTooltip) archTooltip.classList.remove('visible');
+      });
+
+      // Hovering the diagram background clears the focus state
+      if (archDiagram) {
+        archDiagram.addEventListener('mouseleave', function () {
+          archDiagram.classList.remove('has-focus');
+          archLayers.forEach(function (l) { l.classList.remove('is-focus'); });
+        });
+      }
+
+      // Click outside the diagram and panel to clear
+      document.addEventListener('click', function (e) {
+        if (!archDiagram || !archPanel) return;
+        if (archDiagram.contains(e.target) || archPanel.contains(e.target)) return;
+        clearSelection();
+      });
+
+      // ─── Stat counter animation ───
+      var counters = document.querySelectorAll('.stat-number[data-count]');
+      var counterObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          counterObserver.unobserve(entry.target);
+          var el = entry.target;
+          var target = parseInt(el.getAttribute('data-count'), 10) || 0;
+          var suffix = el.getAttribute('data-suffix') || '';
+          var duration = 1400;
+          var startTs = null;
+          function step(ts) {
+            if (!startTs) startTs = ts;
+            var p = Math.min((ts - startTs) / duration, 1);
+            // ease-out cubic
+            var eased = 1 - Math.pow(1 - p, 3);
+            var value = Math.floor(eased * target);
+            el.textContent = value.toLocaleString() + suffix;
+            if (p < 1) requestAnimationFrame(step);
+            else el.textContent = target.toLocaleString() + suffix;
+          }
+          requestAnimationFrame(step);
+        });
+      }, { threshold: 0.4 });
+      counters.forEach(function (c) { counterObserver.observe(c); });
+
+      // ─── Progress bar reveal ───
+      var progressTrack = document.getElementById('progressTrack');
+      var progressBar = document.getElementById('progressBar');
+      var progressPercent = document.getElementById('progressPercent');
+      var progressCount = document.getElementById('progressCount');
+      var totalSprints = 11;
+      var doneSprints = 6; // Sprint 0..5 = 6 done
+      var progressObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          progressObserver.unobserve(entry.target);
+          var pct = Math.round((doneSprints / totalSprints) * 100);
+          // Animate counter
+          var startTs = null;
+          var duration = 1200;
+          function step(ts) {
+            if (!startTs) startTs = ts;
+            var p = Math.min((ts - startTs) / duration, 1);
+            var eased = 1 - Math.pow(1 - p, 3);
+            var cur = Math.floor(eased * pct);
+            if (progressPercent) progressPercent.textContent = cur + '%';
+            if (p < 1) requestAnimationFrame(step);
+            else {
+              if (progressPercent) progressPercent.textContent = pct + '%';
+              if (progressCount) progressCount.textContent = doneSprints + ' / ' + totalSprints + ' sprints';
+            }
+          }
+          requestAnimationFrame(step);
+          // Animate bar
+          requestAnimationFrame(function () {
+            if (progressBar) progressBar.style.width = pct + '%';
+          });
+        });
+      }, { threshold: 0.4 });
+      if (progressTrack) progressObserver.observe(progressTrack);
+
+      // ─── Sprint filter ───
+      var filterButtons = document.querySelectorAll('.sprint-filter-btn');
+      var sprintWrappers = document.querySelectorAll('.sprint-pill-wrapper');
+      filterButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var filter = btn.getAttribute('data-filter');
+          filterButtons.forEach(function (b) {
+            b.classList.remove('active');
+            b.setAttribute('aria-selected', 'false');
+          });
+          btn.classList.add('active');
+          btn.setAttribute('aria-selected', 'true');
+          sprintWrappers.forEach(function (w) {
+            var status = w.getAttribute('data-status');
+            if (filter === 'all' || status === filter) {
+              w.classList.remove('is-hidden');
+            } else {
+              w.classList.add('is-hidden');
+            }
+          });
+        });
+      });
+
+      // ─── Roadmap expand/collapse ───
+      var roadmapHeads = document.querySelectorAll('.roadmap-head');
+      roadmapHeads.forEach(function (head) {
+        head.addEventListener('click', function () {
+          var item = head.closest('.roadmap-item');
+          if (!item) return;
+          var expanded = item.classList.toggle('expanded');
+          head.setAttribute('aria-expanded', expanded ? 'true' : 'false');
         });
       });
     })();

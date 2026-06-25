@@ -16,12 +16,29 @@ from paxman.artifact.replay import replay_artifact
 from paxman.artifact.statistics import Statistics
 from paxman.types import Status
 
+pytestmark = [pytest.mark.deterministic, pytest.mark.unit]
+
 
 class _StubRegistry:
-    """A minimal capability registry for replay testing."""
+    """A minimal capability registry for replay testing.
+
+    Implements the :class:`paxman.artifact.replay.CapabilityRegistry`
+    protocol: ``get`` returns ``None`` for any unregistered capability,
+    and ``get_latest`` raises :class:`CapabilityNotFoundError` for the
+    same case.
+    """
+
+    def get(self, capability_id: str) -> object | None:
+        return None
 
     def get_latest(self, capability_id: str) -> object:
-        return object()
+        from paxman.errors import CapabilityNotFoundError
+
+        raise CapabilityNotFoundError(
+            f"capability {capability_id!r} is not registered",
+            error_code="CAPABILITY_NOT_FOUND",
+            context={"capability_id": capability_id},
+        )
 
 
 def _make_artifact(**overrides: object) -> ExecutionArtifact:
@@ -136,7 +153,7 @@ class TestArtifactReplayCoverage:
 
         artifact = attrs.evolve(artifact, replay_hash=compute_replay_hash(artifact))
 
-        with pytest.raises((CapabilityNotFoundError, Exception)):
+        with pytest.raises(CapabilityNotFoundError):
             replay_artifact(artifact, contract, _StubRegistry())
 
 

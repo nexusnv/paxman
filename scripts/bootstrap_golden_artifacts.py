@@ -25,7 +25,7 @@ Usage::
 To regenerate a single golden (e.g., after a bug fix in the artifact
 shape)::
 
-    uv run python scripts/bootstrap_golden_artifacts.py --only invoice_success
+    uv run python scripts/bootstrap_golden_artifacts.py --only invoice_unresolved_dict_dsl
 
 See ``tests/fixtures/artifacts/GENERATION.md`` for the full procedure.
 """
@@ -177,10 +177,17 @@ def _strip_non_hash_fields(artifact: ExecutionArtifact) -> dict[str, typing.Any]
     :func:`~paxman.artifact._hash.compute_replay_hash` and would
     otherwise differ across Paxman versions and across runs in the
     same version. Stripping them yields a stable JSON golden.
-    """
-    import attrs
 
-    raw = attrs.asdict(artifact)
+    Uses :func:`encode_artifact` to match the public encoding path
+    so the bootstrap output is byte-equal to what
+    :func:`paxman.artifact.serializer.encode_artifact` produces.
+    """
+    # ``encode_artifact`` returns a JSON string. Parse it back to a
+    # dict so we can pop the non-hash-relevant fields.
+    import json
+
+    json_str = encode_artifact(artifact)
+    raw = json.loads(json_str)
     raw.pop("id", None)
     raw.pop("created_at", None)
     return raw
@@ -233,7 +240,7 @@ def main() -> int:
     parser.add_argument(
         "--only",
         default=None,
-        help="Regenerate only the named golden (e.g., invoice_success).",
+        help="Regenerate only the named golden (e.g., invoice_unresolved_dict_dsl).",
     )
     args = parser.parse_args()
     written = bootstrap_all(only=args.only)

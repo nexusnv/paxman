@@ -24,7 +24,7 @@ class EvidenceRefFactory(factory.Factory):
     field_path = factory.Faker("word")
     span = None
     model_id = None
-    context: dict[str, object] = {}
+    context = factory.LazyFunction(dict)
 
 
 class CandidateFactory(factory.Factory):

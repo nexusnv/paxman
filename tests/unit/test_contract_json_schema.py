@@ -295,6 +295,25 @@ def test_adapt_invalid_json_string_raises_invalid_json() -> None:
 
 @pytest.mark.deterministic
 @pytest.mark.unit
+def test_adapt_string_decoded_to_non_dict_raises_invalid_field() -> None:
+    """A JSON string that decodes to a non-dict (e.g., a list) raises ``INVALID_FIELD``.
+
+    Regression test for the AttributeError path where the
+    ``external.get(...)`` call on a non-dict was reached after
+    ``json.loads``.
+    """
+    import json
+
+    with pytest.raises(InvalidContractError, match="top-level JSON object"):
+        JsonSchemaAdapter().adapt(json.dumps([]))  # type: ignore[arg-type]
+    with pytest.raises(InvalidContractError, match="top-level JSON object"):
+        JsonSchemaAdapter().adapt(json.dumps(42))  # type: ignore[arg-type]
+    with pytest.raises(InvalidContractError, match="top-level JSON object"):
+        JsonSchemaAdapter().adapt(json.dumps(None))  # type: ignore[arg-type]
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
 def test_adapt_unsupported_type_raises() -> None:
     """A property with an unsupported type raises UNSUPPORTED_FIELD_TYPE."""
     # "null" is supported as nullable; let's try a truly unsupported type.

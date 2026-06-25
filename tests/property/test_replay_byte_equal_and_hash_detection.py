@@ -28,7 +28,7 @@ from paxman.artifact._hash import compute_replay_hash
 from paxman.artifact.artifact import ExecutionArtifact
 from paxman.testing import artifacts
 
-pytestmark = [pytest.mark.property, pytest.mark.replay]
+pytestmark = [pytest.mark.deterministic, pytest.mark.property, pytest.mark.replay]
 
 
 # ---------------------------------------------------------------------------

@@ -18,7 +18,7 @@ from tests.fixtures.contracts.dict_dsl.quotation import DICT_DSL_QUOTATION
 from tests.fixtures.contracts.dict_dsl.receipt import DICT_DSL_RECEIPT
 from tests.fixtures.contracts.pydantic.receipt import Receipt
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.deterministic, pytest.mark.unit]
 
 
 class TestNewContracts:
@@ -44,10 +44,14 @@ class TestNewContracts:
 
     def test_dict_dsl_receipt_has_card_last4_pattern(self) -> None:
         """The Dict DSL receipt's ``card_last4`` field has a pattern constraint."""
-        # Verify the contract is well-formed.
-        assert "card_last4" in {f["name"] for f in DICT_DSL_RECEIPT["fields"]}
+        field = next(f for f in DICT_DSL_RECEIPT["fields"] if f["name"] == "card_last4")
+        assert any(c["kind"] == "pattern" for c in field.get("constraints", [])), (
+            f"card_last4 field is missing a 'pattern' constraint: {field}"
+        )
 
     def test_dict_dsl_quotation_has_quote_number_pattern(self) -> None:
         """The Dict DSL quotation's ``quote_number`` field has a pattern constraint."""
-        # Verify the contract is well-formed.
-        assert "quote_number" in {f["name"] for f in DICT_DSL_QUOTATION["fields"]}
+        field = next(f for f in DICT_DSL_QUOTATION["fields"] if f["name"] == "quote_number")
+        assert any(c["kind"] == "pattern" for c in field.get("constraints", [])), (
+            f"quote_number field is missing a 'pattern' constraint: {field}"
+        )

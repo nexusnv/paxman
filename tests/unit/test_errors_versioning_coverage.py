@@ -11,6 +11,8 @@ import pytest
 from paxman.errors import PaxmanError
 from paxman.versioning import PAXMAN_VERSION, PLANNER_VERSION, format_version
 
+pytestmark = [pytest.mark.deterministic, pytest.mark.unit]
+
 
 class TestErrorsCoverage:
     """Targeted coverage for ``src/paxman/errors.py``."""

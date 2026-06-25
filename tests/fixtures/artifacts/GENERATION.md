@@ -94,6 +94,6 @@ verified by the `paxman_version` check in `paxman.replay()`.)
 
 ## See also
 
-- [`REPLAY_AND_DETERMINISM.md`](../../../../REPLAY_AND_DETERMINISM.md) — replay model
-- [`TESTING_STRATEGY.md`](../../../../TESTING_STRATEGY.md) §5 — replay tests
-- [`docs/TEST_DATA.md`](../../../../docs/TEST_DATA.md) §8.3 — golden artifact policy
+- [`REPLAY_AND_DETERMINISM.md`](../../../REPLAY_AND_DETERMINISM.md) — replay model
+- [`TESTING_STRATEGY.md`](../../../TESTING_STRATEGY.md) §5 — replay tests
+- [`docs/TEST_DATA.md`](../../../docs/TEST_DATA.md) §8.3 — golden artifact policy

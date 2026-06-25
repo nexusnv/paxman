@@ -96,6 +96,7 @@ __all__ = [
     "candidate_sets",
     "contracts",
     "inputs",
+    "install_registry",
     "policies",
     "registries",
 ]

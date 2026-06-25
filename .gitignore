@@ -76,3 +76,4 @@ tests/fixtures/factories/__pycache__/
 # Local coverage / runtime artifacts
 coverage.json
 .worktress/
+.worktrees/

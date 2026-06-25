@@ -176,6 +176,16 @@ class JsonSchemaAdapter:
                         error_code="INVALID_JSON",
                         context={"json_error": str(e)},
                     ) from e
+                # After parsing, the value may still not be a dict
+                # (e.g., the JSON string was a list or null). Reject
+                # those explicitly so downstream ``external.get(...)``
+                # doesn't raise ``AttributeError`` on a non-dict.
+                if not isinstance(external, dict):
+                    raise InvalidContractError(
+                        "JSON Schema adapter requires a top-level JSON object",
+                        error_code="INVALID_FIELD",
+                        context={"got_type": type(external).__name__},
+                    )
             else:
                 raise InvalidContractError(
                     f"JSON Schema adapter requires a dict or str, got {type(external).__name__}",

@@ -51,11 +51,18 @@ def _subsystem_for_path(path: str) -> str | None:
 
 def _compute_subsystem_coverage(
     coverage_data: dict[str, object],
-) -> dict[str, float]:
-    """Compute line coverage percentage per subsystem."""
+) -> dict[str, tuple[float, bool]]:
+    """Compute line coverage percentage per subsystem.
+
+    Returns:
+        A mapping from subsystem key to ``(coverage_pct, has_data)``
+        where ``has_data`` is True if at least one file matched
+        the subsystem. Subsystems with no data return ``(0.0,
+        False)`` so the gate can report them as missing.
+    """
     files = coverage_data.get("files", {})
     if not isinstance(files, dict):
-        return {}
+        return {k: (0.0, False) for k in SUBSYSTEM_THRESHOLDS}
     subsystem_covered: dict[str, int] = {k: 0 for k in SUBSYSTEM_THRESHOLDS}
     subsystem_total: dict[str, int] = {k: 0 for k in SUBSYSTEM_THRESHOLDS}
     for path, info in files.items():
@@ -79,7 +86,8 @@ def _compute_subsystem_coverage(
         k: (
             100.0 * subsystem_covered[k] / subsystem_total[k]
             if subsystem_total[k] > 0
-            else 100.0
+            else 0.0,
+            subsystem_total[k] > 0,
         )
         for k in SUBSYSTEM_THRESHOLDS
     }
@@ -108,20 +116,31 @@ def main() -> int:
     subsystem_cov = _compute_subsystem_coverage(coverage_data)
 
     print("Per-subsystem coverage (D7.15):")
-    print(f"  {'Subsystem':<30}  {'Coverage':>10}  {'Threshold':>10}  {'Status':>10}")
+    print(
+        f"  {'Subsystem':<30}  {'Coverage':>10}  {'Threshold':>10}  {'Status':>10}"
+    )
     print(f"  {'-'*30}  {'-'*10}  {'-'*10}  {'-'*10}")
     failures: list[str] = []
     for subsystem, threshold in SUBSYSTEM_THRESHOLDS.items():
-        actual = subsystem_cov.get(subsystem, 0.0)
-        status = "PASS" if actual >= threshold else "FAIL"
-        if status == "FAIL":
+        actual, has_data = subsystem_cov.get(subsystem, (0.0, False))
+        if not has_data:
+            # Subsystem has no files matched: treat as a failure
+            # (per the gate's intent — a missing subsystem should
+            # not silently pass).
+            status = "FAIL (no data)"
             failures.append(subsystem)
+        else:
+            status = "PASS" if actual >= threshold else "FAIL"
+            if status == "FAIL":
+                failures.append(subsystem)
         print(
             f"  {subsystem:<30}  {actual:>9.2f}%  {threshold:>9.2f}%  {status:>10}"
         )
 
     if failures:
-        print(f"\n{len(failures)} subsystem(s) below threshold:", file=sys.stderr)
+        print(
+            f"\n{len(failures)} subsystem(s) below threshold:", file=sys.stderr
+        )
         for f in failures:
             print(f"  - {f}", file=sys.stderr)
         return 1

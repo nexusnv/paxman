@@ -15,6 +15,8 @@ import subprocess
 import sys
 import textwrap
 
+import pytest
+
 import paxman
 
 # Trigger auto-registration.
@@ -47,13 +49,15 @@ _SUBPROCESS_SCRIPT = textwrap.dedent(
 def _run_subprocess_normalize() -> str:
     """Run the normalize step in a fresh Python subprocess and return the hash."""
     # The subprocess command is built from a hard-coded string (no
-    # untrusted input), so S603 (subprocess call) is safe.
+    # untrusted input), so S603 (subprocess call) is safe. We pass
+    # an explicit timeout so a hung subprocess doesn't block CI.
     result = subprocess.run(  # noqa: S603
         [sys.executable, "-c", _SUBPROCESS_SCRIPT],
         capture_output=True,
         text=True,
         cwd=".",
         check=True,
+        timeout=30,
     )
     for line in result.stdout.splitlines():
         if line.startswith("REPLAY_HASH:"):
@@ -63,6 +67,8 @@ def _run_subprocess_normalize() -> str:
     )
 
 
+@pytest.mark.deterministic
+@pytest.mark.replay
 def test_replay_golden_reproducible_across_subprocesses() -> None:
     """Two subprocess invocations of normalize produce the same ``replay_hash``."""
     # Run the same script twice in two separate subprocesses.

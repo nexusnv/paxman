@@ -37,6 +37,10 @@ dependencies = [
     "attrs>=23.0",
     "typing-extensions>=4.0",
     "structlog>=24.1",
+    # Version comparison (Sprint 6: replay version checks per D6.7).
+    # Added per DEPENDENCIES.md §5.4 exception — packaging is a tiny,
+    # pure-Python package with zero transitive deps, maintained by PyPA.
+    "packaging>=24.0",
 ]
 
 [project.optional-dependencies]
@@ -356,6 +360,34 @@ forbidden_modules = [
 # the "Contract subsystem must not import from other subsystems"
 # contract above; no separate contract needed.
 
+# Sprint 6 deliverable D6.24 / exit criterion #13.
+# The artifact subsystem must not import from the API layer
+# (per PACKAGE_STRUCTURE.md §2, §8, and §11.6).
+[[tool.importlinter.contracts]]
+name = "Artifact subsystem must not import from API layer"
+type = "forbidden"
+source_modules = [
+    "paxman.artifact",
+    "paxman.artifact.artifact",
+    "paxman.artifact._hash",
+    "paxman.artifact.confidence",
+    "paxman.artifact.diagnostics",
+    "paxman.artifact.evidence",
+    "paxman.artifact.replay",
+    "paxman.artifact.serializer",
+    "paxman.artifact.statistics",
+]
+forbidden_modules = [
+    "paxman.api",
+    "paxman.api.errors",
+    "paxman.api.normalize",
+    "paxman.api.protocols",
+    "paxman.api.registry",
+    "paxman.api.replay",
+    "paxman.api.types",
+    "paxman.api.version",
+]
+
 # Sprint 5 deliverable D5.19 / exit criterion #14.
 # The reconciler subsystem must not import from artifact or api
 # (per PACKAGE_STRUCTURE.md §2, §7, and §11.5). It MAY import
@@ -423,6 +455,8 @@ dev = [
     "pip-audit>=2.6",
     # Git hooks
     "pre-commit>=3.5",
+    # Version comparison (Sprint 6: replay version checks per D6.7)
+    "packaging>=24.0",
     # Build
     "hatchling",
     "hatch",

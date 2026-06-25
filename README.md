@@ -152,7 +152,7 @@ See [PRD.md §7 Primary Use Cases](./PRD.md) for detailed examples.
 
 ## Status
 
-- **v0.0.0 (Sprint 1, foundation):** Build, CI, and 9 cross-cutting modules. **No public API yet** — `paxman.normalize()` and `paxman.replay()` land in Sprint 6. **In progress.**
+- **v0.0.0 (Sprint 6):** Full pipeline — contract adaptation, planning, execution, reconciliation, artifact, and public API (`paxman.normalize()`, `paxman.replay()`). **In progress.**
 - **v0.1.0 (initial preview):** planner + one adapter + one capability work end-to-end. (Pending.)
 - **v0.5.0 (feature-complete beta):** 80% of V1 features. (Pending.)
 - **1.0.0:** All V1 acceptance criteria met. (Pending.)

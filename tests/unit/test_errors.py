@@ -13,6 +13,7 @@ import pytest
 from paxman.errors import (
     BudgetExceededError,
     CapabilityError,
+    CapabilityNotFoundError,
     ConfigurationError,
     ExecutionError,
     HashMismatchError,
@@ -32,7 +33,7 @@ from paxman.errors import (
 
 # --- 17-class inventory -----------------------------------------------------
 
-ALL_17 = [
+ALL_18 = [
     PaxmanError,
     InvalidContractError,
     UnsupportedFieldTypeError,
@@ -50,8 +51,9 @@ ALL_17 = [
     ConfigurationError,
     InvalidBudgetError,
     InvalidPolicyError,
+    CapabilityNotFoundError,
 ]
-ALL_17_NAMES = [c.__name__ for c in ALL_17]
+ALL_18_NAMES = [c.__name__ for c in ALL_18]
 PUBLIC_11 = [
     PaxmanError,
     InvalidContractError,
@@ -67,8 +69,8 @@ PUBLIC_11 = [
 ]
 
 
-def test_seventeen_classes_total() -> None:
-    """The 17 classes are exactly the 17 ARCHITECTURE.md §6.2 classes."""
+def test_eighteen_classes_total() -> None:
+    """The 18 classes are exactly the ARCHITECTURE.md §6.2 + Sprint 6 classes."""
     from paxman import errors
 
     module_classes = {
@@ -78,13 +80,13 @@ def test_seventeen_classes_total() -> None:
         and issubclass(value, BaseException)
         and value is not BaseException
     }
-    assert module_classes == set(ALL_17_NAMES)
+    assert module_classes == set(ALL_18_NAMES)
 
 
 # --- Inheritance ------------------------------------------------------------
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_class_inherits_from_paxman_error_or_exception(cls: type) -> None:
     """Every error class inherits from ``PaxmanError`` (which inherits from ``Exception``)."""
     assert issubclass(cls, Exception), f"{cls.__name__} does not inherit from Exception"
@@ -143,10 +145,11 @@ EXPECTED_CODES = {
     "ConfigurationError": "CONFIGURATION_ERROR",
     "InvalidBudgetError": "INVALID_BUDGET",
     "InvalidPolicyError": "INVALID_POLICY",
+    "CapabilityNotFoundError": "CAPABILITY_NOT_FOUND",
 }
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_default_error_code_is_correct(cls: type) -> None:
     """The default error_code for each class is non-empty and matches the spec."""
     exc = cls("test message")
@@ -159,7 +162,7 @@ def test_default_error_code_is_correct(cls: type) -> None:
 # --- Construction ------------------------------------------------------------
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_minimal_construction(cls: type) -> None:
     """Every class can be constructed with just a message."""
     exc = cls("something went wrong")
@@ -168,7 +171,7 @@ def test_minimal_construction(cls: type) -> None:
     assert exc.context == {}
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_construction_with_context(cls: type) -> None:
     """Every class accepts a context dict."""
     ctx = {"field_path": "$.x", "got": "str"}
@@ -176,14 +179,14 @@ def test_construction_with_context(cls: type) -> None:
     assert exc.context == ctx
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_construction_with_context_none_normalizes_to_empty_dict(cls: type) -> None:
     """``context=None`` is normalized to ``{}`` (per the spec)."""
     exc = cls("oops", context=None)
     assert exc.context == {}
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_message_is_required(cls: type) -> None:
     """Message must be a non-empty string."""
     with pytest.raises((ValueError, TypeError)):
@@ -193,28 +196,28 @@ def test_message_is_required(cls: type) -> None:
 # --- Exception behavior -----------------------------------------------------
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_can_be_raised_and_caught(cls: type) -> None:
     """Every error class can be raised and caught by its own type."""
     with pytest.raises(cls):
         raise cls("boom")
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_caught_as_paxman_error(cls: type) -> None:
     """Every error class can be caught as ``PaxmanError`` (the base)."""
     with pytest.raises(PaxmanError):
         raise cls("boom")
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_caught_as_exception(cls: type) -> None:
     """Every error class is a real ``Exception``."""
     with pytest.raises(BaseException):  # noqa: B017  (blind exception is intentional)
         raise cls("boom")
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_str_returns_message(cls: type) -> None:
     """``str(exc)`` returns the message (per Python ``Exception`` convention)."""
     exc = cls("specific message")
@@ -224,7 +227,7 @@ def test_str_returns_message(cls: type) -> None:
 # --- Immutability ------------------------------------------------------------
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_frozen_no_attribute_assignment(cls: type) -> None:
     """Frozen attrs classes reject attribute assignment."""
     exc = cls("test")
@@ -249,14 +252,14 @@ def test_all_17_are_in_dunder_all() -> None:
     from paxman import errors
 
     listed = set(getattr(errors, "__all__", []))
-    expected = set(ALL_17_NAMES)
+    expected = set(ALL_18_NAMES)
     assert expected.issubset(listed), f"Missing from __all__: {expected - listed}"
 
 
 # --- Context validation -----------------------------------------------------
 
 
-@pytest.mark.parametrize("cls", ALL_17)
+@pytest.mark.parametrize("cls", ALL_18)
 def test_context_must_be_dict(cls: type) -> None:
     """Non-dict context raises ``TypeError`` (per the ``__attrs_post_init__`` guard)."""
     with pytest.raises(TypeError):

@@ -2044,6 +2044,7 @@ version = "0.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
+    { name = "packaging" },
     { name = "structlog" },
     { name = "typing-extensions" },
 ]
@@ -2078,6 +2079,7 @@ dev = [
     { name = "import-linter" },
     { name = "interrogate" },
     { name = "mypy" },
+    { name = "packaging" },
     { name = "pip-audit" },
     { name = "pre-commit" },
     { name = "pyright" },
@@ -2094,6 +2096,7 @@ requires-dist = [
     { name = "hypothesis", marker = "extra == 'test'", specifier = ">=6.0" },
     { name = "jsonschema", marker = "extra == 'json-schema'", specifier = ">=4.20" },
     { name = "openapi-spec-validator", marker = "extra == 'openapi'", specifier = ">=0.6" },
+    { name = "packaging", specifier = ">=24.0" },
     { name = "paxman", extras = ["pydantic", "json-schema", "openapi"], marker = "extra == 'all'" },
     { name = "pydantic", marker = "extra == 'pydantic'", specifier = ">=2.5" },
     { name = "structlog", specifier = ">=24.1" },
@@ -2112,6 +2115,7 @@ dev = [
     { name = "import-linter", specifier = ">=2.0" },
     { name = "interrogate", specifier = ">=1.7" },
     { name = "mypy", specifier = ">=1.10" },
+    { name = "packaging", specifier = ">=24.0" },
     { name = "pip-audit", specifier = ">=2.6" },
     { name = "pre-commit", specifier = ">=3.5" },
     { name = "pyright", specifier = ">=1.1" },

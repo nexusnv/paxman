@@ -1,35 +1,76 @@
 """Paxman — contract-driven deterministic normalization engine for Python.
 
-This is the public package entry point. The :mod:`paxman` module exposes a
-small, stable surface:
+This is the public package entry point exposing the stable API surface:
 
-- :data:`__version__` — the package version (PEP 440 / semver).
-- Top-level functions ``normalize()`` and ``replay()`` land in Sprint 6.
+- :func:`normalize` — normalize input against a contract.
+- :func:`replay` — verify an artifact without re-execution.
+- :func:`register_adapter`, :func:`register_capability` — extension SPIs.
+- :data:`__version__` — the package version.
+- Public types and errors from ``api.types`` and ``api.errors``.
 
-Subsystems live in their own submodules and are **not** re-exported here:
-
-- :mod:`paxman.contract` — adapter + validation boundary
-- :mod:`paxman.planner` — field-centric plan synthesis
-- :mod:`paxman.capabilities` — atomic operations (V1: ``text_extraction``,
-  ``regex_extraction``, ``lookup``, ``inference``, ``validation``)
-- :mod:`paxman.executor` — deterministic plan runner
-- :mod:`paxman.reconciler` — sole confidence authority (ADR-0005)
-- :mod:`paxman.artifact` — execution artifact + replay hash
-- :mod:`paxman.api` — public surface (Sprint 6+)
-
-Cross-cutting modules sit at the package root:
-
-- :mod:`paxman.errors` — ``PaxmanError`` hierarchy
-- :mod:`paxman.types` — shared enums (``Status``, ``ConfidenceBand``, ``FieldType``)
-- :mod:`paxman.protocols` — internal ``Protocol`` definitions
-- :mod:`paxman.versioning` — version constants and helpers
-- :mod:`paxman.logging` — structlog factory
-- :mod:`paxman.budget` — ``Budget`` / ``Policy`` / ``CurrencyPolicy``
-- :mod:`paxman.clock` — injectable ``Clock`` + ``FakeClock``
-- :mod:`paxman.ids` — prefixed ID helpers
-- :mod:`paxman.serialization` — stable JSON encoder
+Subsystems live in submodules and are **not** re-exported here.
 """
 
-from paxman.versioning import __version__
+from paxman.api.errors import (
+    BudgetExceededError,
+    CapabilityError,
+    CapabilityNotFoundError,
+    ConfigurationError,
+    ExecutionError,
+    HashMismatchError,
+    InferenceProviderError,
+    InvalidContractError,
+    PaxmanError,
+    ReconciliationError,
+    ReplayError,
+    VersionMismatchError,
+)
+from paxman.api.normalize import normalize
+from paxman.api.protocols import Capability, ContractAdapter
+from paxman.api.registry import register_adapter, register_capability
+from paxman.api.replay import replay
+from paxman.api.types import (
+    Budget,
+    CanonicalContract,
+    CanonicalField,
+    ConfidenceBand,
+    CurrencyPolicy,
+    ExecutionArtifact,
+    FieldType,
+    Policy,
+    ResolutionPolicy,
+    Status,
+)
+from paxman.api.version import __version__
 
-__all__ = ["__version__"]
+__all__ = [
+    "Budget",
+    "BudgetExceededError",
+    "CanonicalContract",
+    "CanonicalField",
+    "Capability",
+    "CapabilityError",
+    "CapabilityNotFoundError",
+    "ConfidenceBand",
+    "ConfigurationError",
+    "ContractAdapter",
+    "CurrencyPolicy",
+    "ExecutionArtifact",
+    "ExecutionError",
+    "FieldType",
+    "HashMismatchError",
+    "InferenceProviderError",
+    "InvalidContractError",
+    "PaxmanError",
+    "Policy",
+    "ReconciliationError",
+    "ReplayError",
+    "ResolutionPolicy",
+    "Status",
+    "VersionMismatchError",
+    "__version__",
+    "normalize",
+    "register_adapter",
+    "register_capability",
+    "replay",
+]

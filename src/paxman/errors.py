@@ -1,11 +1,11 @@
 """Paxman error hierarchy.
 
-This module defines the 17-class exception hierarchy for Paxman, following
+This module defines the 18-class exception hierarchy for Paxman, following
 ARCHITECTURE.md §6.2. Every exception is an ``attrs`` frozen dataclass with
 slots, carrying a machine-readable ``error_code`` and a structured ``context``
 dict for logging and tracing.
 
-The 11 public errors are re-exported in ``paxman.api.errors`` (Sprint 6):
+The 12 public errors are re-exported in ``paxman.api.errors`` (Sprint 6):
 
 - :class:`PaxmanError` (base)
 - :class:`InvalidContractError`
@@ -17,6 +17,7 @@ The 11 public errors are re-exported in ``paxman.api.errors`` (Sprint 6):
 - :class:`ReplayError`
 - :class:`VersionMismatchError`
 - :class:`HashMismatchError`
+- :class:`CapabilityNotFoundError`  (per V1_ACCEPTANCE_CRITERIA.md §1.5)
 - :class:`ConfigurationError`
 
 The remaining 6 are internal contract/configuration errors not surfaced
@@ -394,6 +395,34 @@ class HashMismatchError(ReplayError):
     context: dict[str, Any] = attrs.field(factory=dict)
 
 
+@attrs.frozen(slots=True)
+class CapabilityNotFoundError(ReplayError):
+    """Raised when a capability pinned in the artifact is no longer registered.
+
+    This is the 12th public error (per V1_ACCEPTANCE_CRITERIA.md §1.5), added
+    because replay rehydrates capability versions and must verify they still
+    exist in the registry.
+
+    Public: re-exported in api.errors.
+
+    Attributes:
+        message: Human-readable error description.
+        error_code: ``"CAPABILITY_NOT_FOUND"`` by default.
+        context: Structured details for logging and tracing (e.g.,
+            ``{"capability_id": "text_extraction_v1", "artifact_version": "0.1.0"}``).
+
+    Example:
+        >>> raise CapabilityNotFoundError(
+        ...     "Capability 'text_extraction_v1' is no longer registered",
+        ...     context={"capability_id": "text_extraction_v1"},
+        ... )
+    """
+
+    message: str = attrs.field()
+    error_code: str = attrs.field(default="CAPABILITY_NOT_FOUND")
+    context: dict[str, Any] = attrs.field(factory=dict)
+
+
 # ---------------------------------------------------------------------------
 # ConfigurationError branch
 # ---------------------------------------------------------------------------
@@ -470,6 +499,7 @@ class InvalidPolicyError(ConfigurationError):
 __all__ = [
     "BudgetExceededError",
     "CapabilityError",
+    "CapabilityNotFoundError",
     "ConfigurationError",
     "ExecutionError",
     "HashMismatchError",

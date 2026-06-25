@@ -200,5 +200,5 @@ class TestConstruction:
 
     @pytest.mark.parametrize("cls", ALL_12)
     def test_caught_as_exception(self, cls: type) -> None:
-        with pytest.raises(Exception):
+        with pytest.raises(Exception, match="boom"):
             raise cls("boom")

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from paxman.artifact.statistics import CapabilityStats, Statistics
@@ -114,12 +116,12 @@ def test_cap_stats_accepts_all_fields() -> None:
         capability_version="2.0",
         invocation_count=5,
         total_duration_ms=1234.56,
-        total_cost_usd=0.05,
+        total_cost_usd=Decimal("0.05"),
         total_tokens=1500,
     )
     assert cs.invocation_count == 5
     assert cs.total_duration_ms == 1234.56
-    assert cs.total_cost_usd == 0.05
+    assert cs.total_cost_usd == Decimal("0.05")
     assert cs.total_tokens == 1500
 
 
@@ -167,8 +169,8 @@ def test_statistics_rejects_non_status() -> None:
         ("wall_clock_ms", True, "wall_clock_ms must be a number"),
         ("monotonic_ms", -0.5, "monotonic_ms must be non-negative"),
         ("monotonic_ms", "slow", "monotonic_ms must be a number"),
-        ("total_cost_usd", -0.01, "total_cost_usd must be non-negative"),
-        ("total_cost_usd", "free", "total_cost_usd must be a number"),
+        ("total_cost_usd", -0.01, "total_cost_usd must be a Decimal"),
+        ("total_cost_usd", "free", "total_cost_usd must be a Decimal"),
     ],
 )
 def test_statistics_rejects_invalid_duration_or_cost(
@@ -219,7 +221,7 @@ def test_statistics_accepts_all_valid_fields() -> None:
         status=Status.SUCCESS,
         wall_clock_ms=100.0,
         monotonic_ms=95.0,
-        total_cost_usd=0.03,
+        total_cost_usd=Decimal("0.03"),
         total_fields=10,
         resolved_fields=8,
         unresolved_fields=2,
@@ -228,7 +230,7 @@ def test_statistics_accepts_all_valid_fields() -> None:
     assert stats.status is Status.SUCCESS
     assert stats.wall_clock_ms == 100.0
     assert stats.monotonic_ms == 95.0
-    assert stats.total_cost_usd == 0.03
+    assert stats.total_cost_usd == Decimal("0.03")
     assert stats.total_fields == 10
     assert stats.resolved_fields == 8
     assert stats.unresolved_fields == 2

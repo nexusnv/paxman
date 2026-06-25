@@ -88,7 +88,7 @@ def test_public_api_matches_snapshot() -> None:
     if not GOLDEN_PATH.exists():
         raise AssertionError(
             f"Golden snapshot not found at {GOLDEN_PATH}. "
-            "Run `python -c \"from tests.public_api.test_public_api import _write_golden; _write_golden()\"` "
+            'Run `python -c "from tests.public_api.test_public_api import _write_golden; _write_golden()"` '
             "to create it."
         )
     else:

@@ -113,9 +113,6 @@ def test_compute_replay_hash_differs_with_custom_paxman_version() -> None:
     assert compute_replay_hash(art1) != compute_replay_hash(art2)
 
 
-
-
-
 @pytest.mark.deterministic
 def test_compute_replay_hash_ignores_replay_hash_in_artifact() -> None:
     """compute_replay_hash excludes the replay_hash field from hash composition."""

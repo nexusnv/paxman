@@ -12,13 +12,13 @@ from __future__ import annotations
 
 import logging as _logging
 
-from paxman.protocols import Capability
 from paxman.artifact.artifact import ExecutionArtifact
 from paxman.artifact.replay import replay_artifact
 from paxman.capabilities.registry import get_latest
 from paxman.contract.canonical import CanonicalContract
 from paxman.contract.registry import adapt as _adapt_contract
 from paxman.errors import InvalidContractError
+from paxman.protocols import Capability
 
 from .normalize import _detect_format
 

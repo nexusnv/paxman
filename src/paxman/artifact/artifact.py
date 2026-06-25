@@ -281,13 +281,9 @@ class ExecutionArtifact:
             )
         for uf in self.unresolved_fields:
             if not isinstance(uf, str):
-                raise TypeError(
-                    f"unresolved_fields items must be strings, got {type(uf).__name__}"
-                )
+                raise TypeError(f"unresolved_fields items must be strings, got {type(uf).__name__}")
         if not isinstance(self.contract_id, str):
-            raise TypeError(
-                f"contract_id must be a string, got {type(self.contract_id).__name__}"
-            )
+            raise TypeError(f"contract_id must be a string, got {type(self.contract_id).__name__}")
         if not isinstance(self.planner_version, str):
             raise TypeError(
                 f"planner_version must be a string, got {type(self.planner_version).__name__}"
@@ -298,9 +294,7 @@ class ExecutionArtifact:
             )
         for k, v in self.capability_versions.items():
             if not isinstance(k, str):
-                raise TypeError(
-                    f"capability_versions keys must be strings, got {type(k).__name__}"
-                )
+                raise TypeError(f"capability_versions keys must be strings, got {type(k).__name__}")
             if not isinstance(v, str):
                 raise TypeError(
                     f"capability_versions values must be strings, got {type(v).__name__}"

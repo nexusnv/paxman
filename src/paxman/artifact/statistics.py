@@ -69,17 +69,11 @@ class CapabilityStats:
                 f"total_cost_usd must be a Decimal, got {type(self.total_cost_usd).__name__}"
             )
         if self.total_cost_usd < 0:
-            raise ValueError(
-                f"total_cost_usd must be non-negative, got {self.total_cost_usd}"
-            )
+            raise ValueError(f"total_cost_usd must be non-negative, got {self.total_cost_usd}")
         if not isinstance(self.total_tokens, int) or isinstance(self.total_tokens, bool):
-            raise TypeError(
-                f"total_tokens must be an int, got {type(self.total_tokens).__name__}"
-            )
+            raise TypeError(f"total_tokens must be an int, got {type(self.total_tokens).__name__}")
         if self.total_tokens < 0:
-            raise ValueError(
-                f"total_tokens must be non-negative, got {self.total_tokens}"
-            )
+            raise ValueError(f"total_tokens must be non-negative, got {self.total_tokens}")
 
 
 @attrs.frozen(slots=True)
@@ -124,9 +118,7 @@ class Statistics:
                 f"total_cost_usd must be a Decimal, got {type(self.total_cost_usd).__name__}"
             )
         if self.total_cost_usd < 0:
-            raise ValueError(
-                f"total_cost_usd must be non-negative, got {self.total_cost_usd}"
-            )
+            raise ValueError(f"total_cost_usd must be non-negative, got {self.total_cost_usd}")
         for attr_name in ("total_fields", "resolved_fields", "unresolved_fields"):
             val = getattr(self, attr_name)
             if not isinstance(val, int) or val < 0:

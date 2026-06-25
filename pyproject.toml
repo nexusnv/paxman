@@ -140,6 +140,14 @@ disallow_untyped_defs = true
 module = ["src/paxman/__init__", "src.paxman.__init__"]
 disallow_untyped_defs = false
 
+[[tool.mypy.overrides]]
+# The ``paxman.testing`` module uses ``@st.composite`` from
+# ``hypothesis`` (no type stubs available) for strategy composition.
+# The decorator is dynamically typed; ``untyped-decorator`` is a
+# false positive. Disable the check for this module.
+module = ["paxman.testing", "paxman.testing.__init__"]
+disallow_untyped_decorators = false
+
 # --- Pytest ------------------------------------------------------------------
 
 [tool.pytest.ini_options]
@@ -442,6 +450,9 @@ dev = [
     "datasets",
     "huggingface-hub",
     "pytest-benchmark",
+    # Programmatic fixture generation (Sprint 7 D7.4)
+    "factory-boy>=3.3",
+    "faker>=22.0",
     # Lint + format
     "ruff>=0.4",
     # Type check

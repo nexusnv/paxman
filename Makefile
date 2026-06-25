@@ -56,7 +56,11 @@ test-public-api: ## Run public API snapshot tests
 
 .PHONY: test-cov
 test-cov: ## Run tests with coverage
-	$(UV) run pytest --cov=paxman --cov-report=term-missing --cov-report=xml
+	$(UV) run pytest --cov=paxman --cov-report=term-missing --cov-report=xml --cov-report=json
+
+.PHONY: check-coverage
+check-coverage: ## Verify per-subsystem coverage thresholds (D7.15)
+	$(UV) run python scripts/check_subsystem_coverage.py
 
 # --- Lint + format ------------------------------------------------------------
 

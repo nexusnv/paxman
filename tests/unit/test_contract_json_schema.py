@@ -14,6 +14,8 @@ sprint's exit-criteria list, and the round-trip property.
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 import paxman.contract.adapters.json_schema  # noqa: F401  (triggers self-registration)
@@ -252,8 +254,42 @@ def test_adapt_money_with_default() -> None:
 @pytest.mark.deterministic
 @pytest.mark.unit
 def test_adapt_non_dict_raises_invalid_field() -> None:
-    """A non-dict input raises InvalidContractError."""
-    with pytest.raises(InvalidContractError, match="requires a dict"):
+    """A non-dict input raises InvalidContractError.
+
+    Strings that are not valid JSON raise ``INVALID_JSON``; a
+    non-dict/non-str input raises ``INVALID_FIELD`` with a message
+    containing ``"requires a dict or str"``.
+    """
+    with pytest.raises(InvalidContractError, match="requires a dict or str"):
+        JsonSchemaAdapter().adapt(123)  # type: ignore[arg-type]
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_string_schema_parses_json() -> None:
+    """A JSON-encoded string schema is parsed and adapted.
+
+    Per the API design, ``paxman.normalize()`` may receive a string
+    contract (e.g., the contents of a JSON Schema file). The
+    adapter parses the string as JSON before translation.
+    """
+    schema = {
+        "title": "StringSchema",
+        "type": "object",
+        "properties": {"s": {"type": "string"}},
+        "required": ["s"],
+    }
+    canonical = JsonSchemaAdapter().adapt(json.dumps(schema))
+    assert canonical.id == "StringSchema"
+    assert len(canonical.fields) == 1
+    assert canonical.fields[0].path == "s"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_adapt_invalid_json_string_raises_invalid_json() -> None:
+    """A string that is not valid JSON raises ``INVALID_JSON``."""
+    with pytest.raises(InvalidContractError, match="not valid JSON"):
         JsonSchemaAdapter().adapt("not a schema")  # type: ignore[arg-type]
 
 

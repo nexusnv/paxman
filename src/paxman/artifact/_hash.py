@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import hashlib
 import typing
+import weakref
 
 from paxman.artifact.artifact import ExecutionArtifact, FieldResult
 from paxman.serialization import stable_dumps
@@ -34,6 +35,23 @@ __all__: list[str] = [
     "compute_replay_hash",
 ]
 
+# ---------------------------------------------------------------------------
+# Process-local hash cache with weakref-based invalidation.
+#
+# Because ExecutionArtifact is @attrs.frozen (immutable), the replay hash
+# for a given object instance never changes.  We cache computed hashes
+# keyed on ``id(artifact)`` (CPython memory address) so that ``replay()``
+# can skip the expensive re-serialization when the same artifact object
+# was already hashed during ``normalize()``.  A ``weakref.ref`` guards
+# each entry: if the artifact is garbage-collected and a new object
+# reuses the same memory address, the weakref dies and the stale entry
+# is automatically skipped.  ``attrs.evolve()`` creates a new object
+# with a new ``id()``, so tampered artifacts always miss the cache.
+# ---------------------------------------------------------------------------
+_cached_artifact_ref: weakref.ref[ExecutionArtifact] | None = None
+_cached_artifact_id: int = -1
+_cached_hash: str = ""
+
 
 def compute_replay_hash(artifact: ExecutionArtifact) -> str:
     """Compute the SHA-256 replay hash for an artifact.
@@ -43,6 +61,12 @@ def compute_replay_hash(artifact: ExecutionArtifact) -> str:
     1. Serialising each hash-relevant field with :func:`stable_dumps`.
     2. Concatenating the results with ``|`` separator.
     3. Taking the SHA-256 digest of the UTF-8 encoded bytes.
+
+    Results are cached in a process-local single-entry cache keyed on
+    ``id(artifact)``.  Since :class:`ExecutionArtifact` is frozen
+    (immutable), the cached hash is always valid for the same object
+    instance.  This avoids redundant re-serialization when ``replay()``
+    is called on an artifact that was just produced by ``normalize()``.
 
     Hash-relevant fields (per ``REPLAY_AND_DETERMINISM.md`` §2.1):
 
@@ -73,6 +97,16 @@ def compute_replay_hash(artifact: ExecutionArtifact) -> str:
         >>> all(c in "0123456789abcdef" for c in h)
         True
     """
+    global _cached_artifact_ref, _cached_artifact_id, _cached_hash
+
+    # Fast path: return cached hash if the same live object is cached.
+    art_id = id(artifact)
+    if art_id == _cached_artifact_id and _cached_artifact_ref is not None:
+        if _cached_artifact_ref() is artifact:
+            return _cached_hash
+        # Artifact at this address was GC'd; fall through to recompute.
+
+    # Slow path: compute the hash from scratch.
     parts: list[str] = [
         # 1. paxman_version
         stable_dumps(artifact.paxman_version),
@@ -97,7 +131,11 @@ def compute_replay_hash(artifact: ExecutionArtifact) -> str:
     ]
 
     raw: str = "|".join(parts)
-    return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    result: str = hashlib.sha256(raw.encode("utf-8")).hexdigest()
+    _cached_artifact_ref = weakref.ref(artifact)
+    _cached_artifact_id = art_id
+    _cached_hash = result
+    return result
 
 
 _VT = typing.TypeVar("_VT")

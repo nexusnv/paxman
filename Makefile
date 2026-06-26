@@ -109,8 +109,23 @@ security: ## Run bandit
 	$(UV) run bandit -r src/paxman -c pyproject.toml
 
 .PHONY: security-audit
-security-audit: ## Run pip-audit
+security-audit: ## Run bandit + pip-audit (full dependency audit)
+	$(UV) run bandit -r src/paxman -c pyproject.toml
 	$(UV) run pip-audit
+
+# --- Benchmark + Profile (Sprint 9, D9.17) -----------------------------------
+
+.PHONY: benchmark
+benchmark: ## Run performance benchmarks (pytest-benchmark)
+	$(UV) run pytest tests/benchmark/ --benchmark-only --benchmark-sort=median --benchmark-min-rounds=10 --benchmark-warmup=3
+
+.PHONY: benchmark-quick
+benchmark-quick: ## Run performance benchmarks with fewer rounds (for dev)
+	$(UV) run pytest tests/benchmark/ --benchmark-only --benchmark-sort=median --benchmark-min-rounds=3 --benchmark-warmup=1
+
+.PHONY: profile
+profile: ## Run cold-import time benchmark
+	$(UV) run python scripts/benchmark_import_time.py --iterations 20
 
 # --- Test data (Sprint 5+) ---------------------------------------------------
 

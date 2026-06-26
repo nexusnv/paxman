@@ -214,14 +214,47 @@ def classify(normalized_bytes: bytes) -> str:
         return "unknown"
 
 
+#: ASCII whitespace byte values used by the fast path in
+#: :func:`compute_density`.  For ASCII-only input we can count these
+#: directly at the byte level (C-level ``bytes.count()`` scan).  For
+#: non-ASCII input (UTF-8 multi-byte sequences, NBSP ``U+00A0``,
+#: CJK, etc.) we fall back to a character-level scan that correctly
+#: counts *characters* rather than *bytes* (preserving the
+#: documented "non-whitespace *characters*" contract).
+_WHITESPACE_BYTE_VALUES: typing.Final[tuple[int, ...]] = (
+    0x09,  # TAB
+    0x0A,  # LF
+    0x0B,  # VT
+    0x0C,  # FF
+    0x0D,  # CR
+    0x20,  # SPACE
+)
+
+
 def compute_density(normalized_bytes: bytes, input_type: str) -> float:
     """Compute the non-whitespace density of *normalized_bytes*.
 
     Per ``docs/specs/input-profile-spec.md`` §6:
 
     - For ``"empty"`` and ``"unknown"`` types, returns ``0.0``.
-    - For all other types, decodes as UTF-8 (``errors="replace"``)
-      and computes ``non_whitespace_chars / len(normalized_bytes)``.
+    - For all other types, returns ``non_whitespace_chars /
+      len(normalized_bytes)`` — the ratio is computed against the
+      byte length but counts *characters* (per the documented
+      "non-whitespace characters" contract).
+
+    The implementation is dual-path:
+
+    1. **Fast path (ASCII-only)**: if ``normalized_bytes.isascii()``,
+       count whitespace bytes via C-level ``bytes.count()`` (one
+       scan per ASCII whitespace byte) and subtract from total
+       length.  Zero Python loops; ~1 ms for 100 KB.
+    2. **Slow path (non-ASCII)**: decode to ``str`` with
+       ``errors="replace"`` and count ``str.isspace()`` per
+       character.  This correctly handles UTF-8 multi-byte
+       sequences (e.g. ``"é"`` counts as one non-whitespace
+       character, not two non-whitespace bytes) and Unicode
+       whitespace (``U+00A0`` NBSP, ``U+3000`` ideographic space,
+       etc.).
 
     Args:
         normalized_bytes: The input as ``bytes``.
@@ -230,14 +263,21 @@ def compute_density(normalized_bytes: bytes, input_type: str) -> float:
     Returns:
         The density as a float in ``[0.0, 1.0]``. ``0.0`` for
         ``"empty"`` and ``"unknown"``; otherwise the
-        non-whitespace ratio.
+        non-whitespace character ratio.
     """
     if input_type in ("empty", "unknown"):
         return 0.0
     if len(normalized_bytes) == 0:
         return 0.0
+    if normalized_bytes.isascii():
+        # Fast path: ASCII bytes.  Multi-byte UTF-8 sequences
+        # don't appear, so byte-level counting == character counting.
+        ws_count = sum(normalized_bytes.count(b) for b in _WHITESPACE_BYTE_VALUES)
+        return (len(normalized_bytes) - ws_count) / len(normalized_bytes)
+    # Slow path: non-ASCII input.  Decode and count per-character
+    # using the documented ``str.isspace()`` semantics.
     text = normalized_bytes.decode("utf-8", errors="replace")
-    non_ws = sum(1 for c in text if not c.isspace())
+    non_ws = sum(1 for ch in text if not ch.isspace())
     return non_ws / len(normalized_bytes)
 
 

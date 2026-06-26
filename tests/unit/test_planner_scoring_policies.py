@@ -175,13 +175,18 @@ def test_estimated_chain_cost_sums_usd() -> None:
     Returns ``Decimal`` per ADR-0004 / ADR-0010 (MONEY is Decimal,
     never float). Floats in the input are coerced via
     ``Decimal(str(x))`` to preserve exact precision.
+
+    The chain below mixes a ``float`` (which exercises the
+    ``float → Decimal`` coercion path) with a pre-built ``Decimal``
+    (which exercises the ``Decimal`` passthrough path). Both
+    contribute to the summed result.
     """
     chain = [
-        (0, 1, 0.0),
-        (0, 1, 0.0),
-        (500, 1500, 0.001),
+        (0, 1, 0.0),  # float → Decimal coercion
+        (0, 1, Decimal("0.0005")),  # Decimal passthrough
+        (500, 1500, 0.001),  # float → Decimal coercion
     ]
-    assert estimated_chain_cost(chain) == Decimal("0.001")
+    assert estimated_chain_cost(chain) == Decimal("0.0015")
 
 
 def test_estimated_chain_cost_empty() -> None:

@@ -8,6 +8,7 @@ in ``api/types.py``.
 from __future__ import annotations
 
 import enum
+import math
 from decimal import Decimal
 
 import attrs
@@ -40,16 +41,34 @@ def _to_decimal_optional(
     never float — but the float-literal call site pattern is preserved
     for backward compatibility.
 
-    The conversion is exact for the V1 USD domain ([0, 1] with up to
-    4 decimal places). Floats are converted via ``Decimal(str(x))`` to
-    avoid the binary-representation noise of ``Decimal(0.1)`` producing
+    The accepted input contract is ``float | int | Decimal | None``;
+    everything else is rejected with ``TypeError``. ``bool`` is
+    rejected explicitly because ``isinstance(True, int)`` is ``True``
+    in Python (preserved from the prior float-based validation per
+    Oracle review F17 / V1 acceptance §2.1 — no bool-as-int trap).
+    NaN and Infinity are rejected with ``ValueError`` (they would
+    break budget comparisons downstream).
+
+    Floats and ints are converted via ``Decimal(str(x))`` to avoid
+    the binary-representation noise of ``Decimal(0.1)`` producing
     ``Decimal('0.1000000000000000055511151231257827021181583404541015625')``.
     """
     if value is None:
         return None
+    if isinstance(value, bool):
+        raise TypeError(f"max_total_cost_usd must be a number, got bool: {value!r}")
     if isinstance(value, Decimal):
+        if not value.is_finite():
+            raise ValueError(f"max_total_cost_usd must be a finite Decimal, got {value!r}")
         return value
-    return Decimal(str(value))
+    if isinstance(value, (int, float)):
+        if isinstance(value, float) and not math.isfinite(value):
+            raise ValueError(f"max_total_cost_usd must be a finite number, got {value!r}")
+        return Decimal(str(value))
+    raise TypeError(
+        f"max_total_cost_usd must be float | int | Decimal | None, "
+        f"got {type(value).__name__}: {value!r}"
+    )
 
 
 @attrs.frozen(slots=True)

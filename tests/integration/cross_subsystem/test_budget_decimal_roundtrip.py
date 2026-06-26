@@ -32,7 +32,7 @@ import paxman.testing
 from paxman.budget import Budget
 from tests.fixtures.contracts.dict_dsl.invoice import DICT_DSL_INVOICE
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.deterministic]
 
 
 _INPUT = "ACME Corp\nInvoice #1234\nTotal: $1,234.56\nDate: 2026-06-22\nCurrency: USD"

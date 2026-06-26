@@ -59,7 +59,7 @@ class ExecutionState:
             :class:`~paxman.executor.field_runner.FieldRunner` appends
             one entry per capability invocation.
         total_cost_usd: Cumulative USD cost across all capability
-            invocations in this run. Defaults to ``0.0``.
+            invocations in this run. Defaults to ``Decimal("0")``.
         total_latency_ms: Cumulative wall-clock latency across all
             capability invocations. Defaults to ``0``.
         invocation_count: Total number of capability invocations
@@ -82,9 +82,10 @@ class ExecutionState:
             target_confidence and fallback_policy for each field.
 
     Examples:
+        >>> from decimal import Decimal
         >>> state = ExecutionState(field_plans={})
         >>> state.total_cost_usd
-        0.0
+        Decimal('0')
         >>> state.invocation_count
         0
     """
@@ -121,13 +122,18 @@ class ExecutionState:
         """
         # Defensive against non-numeric cost and the bool-as-int trap
         # (isinstance(True, int) is True in Python). Coerce to Decimal
-        # and reject negatives to keep the budget tracking honest.
+        # and reject negatives / non-finite values to keep the budget
+        # tracking honest. NaN / Infinity in ``total_cost_usd`` would
+        # propagate to ``spent_usd`` in the diagnostic and make the
+        # gate silently pass — they must be rejected here.
         if isinstance(cost_usd, bool):
             raise TypeError(f"cost_usd must be a number, got bool: {cost_usd!r}")
         if isinstance(cost_usd, Decimal):
             cost = cost_usd
         else:
             cost = Decimal(str(cost_usd))
+        if not cost.is_finite():
+            raise ValueError(f"cost_usd must be a finite number, got {cost_usd!r}")
         if cost < 0:
             raise ValueError(f"cost_usd must be non-negative, got {cost_usd!r}")
         if latency_ms < 0:

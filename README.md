@@ -5,6 +5,8 @@
 Paxman transforms arbitrary input (PDFs, scans, emails, spreadsheets, APIs, free text) into **evidence-backed, replayable** normalized artifacts conforming to caller-supplied contracts (Pydantic, JSON Schema, OpenAPI, or a built-in Dict DSL).
 
 ```python
+from decimal import Decimal
+
 import paxman
 
 # Caller-owned contract (Pydantic example)

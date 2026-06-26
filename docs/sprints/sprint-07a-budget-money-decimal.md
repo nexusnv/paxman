@@ -7,11 +7,11 @@
 ## Scope (in)
 
 ### Source: cost pipeline types
-- `src/paxman/budget.py` — `Budget.max_total_cost_usd: float | None` → `Decimal | None` (with `float` accepted at construction and coerced to `Decimal` via `Decimal(x)` for backward compatibility with literal-`0.10` callers).
+- `src/paxman/budget.py` — `Budget.max_total_cost_usd: float | None` → `Decimal | None` (with `float | int | Decimal | None` accepted at construction and coerced to `Decimal` via `Decimal(str(x))` for backward compatibility with literal-`0.10` callers).
 - `src/paxman/budget.py` — `Budget.__attrs_post_init__` validator updated to `Decimal`-correct comparison.
 - `src/paxman/capabilities/spec.py` — `CostHint.usd: float = 0.0` → `usd: Decimal = Decimal("0")` (with `float | int` accepted and coerced).
 - `src/paxman/capabilities/spec.py` — `CostHint.__attrs_post_init__` updated.
-- `src/paxman/executor/budget_tracker.py` — `BudgetTracker.total_cost_usd: float` → `Decimal`; `record(cost_usd=...)`, `would_exceed(cost_usd=...)`, `would_exceed_reason(cost_usd=...)` accept `Decimal` (and `float` for back-compat); the `+ 1e-9` hack in `mark_exhausted` replaced with `+ Decimal("1e-9")` (or removed entirely — the `>` comparison is strict so any positive nudge works; the precise nudge no longer matters).
+- `src/paxman/executor/budget_tracker.py` — `BudgetTracker.total_cost_usd: float` → `Decimal`; `record(cost_usd=...)`, `would_exceed(cost_usd=...)`, `would_exceed_reason(cost_usd=...)` accept `Decimal` (and `float` for back-compat); the `+ 1e-9` hack in `mark_exhausted` was **removed entirely** — the bump to push the counter strictly above the cap now uses `cap.next_plus()` (the smallest representable `Decimal` increment above the cap, ~1e-28), so the reported amount stays accurate instead of inflating by a whole dollar.
 - `src/paxman/executor/budget_tracker.py` — module docstring lines 25-30 ("Future sprints may switch to `decimal.Decimal`") **deleted** and replaced with a one-line note that the switch has happened, citing this sprint.
 - `src/paxman/executor/execution_state.py` — `ExecutionState.total_cost_usd: float` → `Decimal`; `record_invocation(cost_usd=...)` accepts `Decimal`; `cost = float(cost_usd)` coercion removed; the "Calling code may pass a Decimal-like object" comment updated or removed.
 - `src/paxman/planner/policies.py` — `estimated_chain_cost` returns `Decimal`; `budget_excludes_inference`'s `budget.max_total_cost_usd < 0.001` becomes `Decimal < Decimal("0.001")`.

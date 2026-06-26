@@ -28,6 +28,7 @@ See also
 from __future__ import annotations
 
 import enum
+import math
 from decimal import Decimal
 
 import attrs
@@ -57,17 +58,26 @@ def _to_usd_decimal(value: float | int | Decimal) -> Decimal:
     Rejects ``bool`` explicitly because ``isinstance(True, int)`` is
     ``True`` in Python (preserved from the prior float-based validation
     per Oracle review F17 / V1 acceptance §2.1 — no bool-as-int trap).
+    Rejects NaN and Infinity (they would break cost comparisons
+    downstream).
 
     The conversion is exact for the V1 USD domain ([0, 1] with up to
     3 decimal places). Floats are converted via ``Decimal(str(x))`` to
     avoid the binary-representation noise of ``Decimal(0.001)`` producing
     ``Decimal('0.0010000000000000000208166817117216851329430937767028808593750')``.
     """
+
     if isinstance(value, bool):
         raise TypeError(f"usd must be a number, got bool: {value!r}")
     if isinstance(value, Decimal):
+        if not value.is_finite():
+            raise ValueError(f"usd must be a finite Decimal, got {value!r}")
         return value
-    return Decimal(str(value))
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError(f"usd must be a finite number, got {value!r}")
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
+    raise TypeError(f"usd must be float | int | Decimal, got {type(value).__name__}: {value!r}")
 
 
 @attrs.frozen(slots=True)

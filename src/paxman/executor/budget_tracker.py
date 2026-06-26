@@ -41,6 +41,7 @@ Exit criteria (per the Sprint 4 spec):
 
 from __future__ import annotations
 
+import math
 import typing
 from decimal import Decimal
 
@@ -60,17 +61,33 @@ EXCEEDED_REASON_INVOCATIONS: typing.Final[str] = "max_capability_invocations"
 
 
 def _as_decimal(value: float | int | Decimal) -> Decimal:
-    """Coerce a USD cost input to :class:`decimal.Decimal`.
+    """Coerce a USD cost input to :class:`decimal.Decimal` and reject non-finite.
 
     Rejects ``bool`` explicitly because ``isinstance(True, int)`` is
     ``True`` in Python (preserved from the prior float-based validation
-    per V1 acceptance §2.1 — no bool-as-int trap).
+    per V1 acceptance §2.1 — no bool-as-int trap). Rejects NaN and
+    Infinity (they would break budget comparisons downstream — a
+    NaN ``total_cost_usd`` would propagate to ``spent_usd`` and make
+    the gate silently pass).
+
+    This is the **central guard** for all USD inputs to
+    :class:`BudgetTracker`; :meth:`record` and
+    :meth:`would_exceed_reason` route through here so only finite
+    ``Decimal`` amounts reach the counter arithmetic.
     """
     if isinstance(value, bool):
         raise TypeError(f"cost_usd must be a number, got bool: {value!r}")
     if isinstance(value, Decimal):
+        if not value.is_finite():
+            raise ValueError(f"cost_usd must be a finite Decimal, got {value!r}")
         return value
-    return Decimal(str(value))
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError(f"cost_usd must be a finite number, got {value!r}")
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
+    raise TypeError(
+        f"cost_usd must be float | int | Decimal, got {type(value).__name__}: {value!r}"
+    )
 
 
 class BudgetTracker:
@@ -303,13 +320,12 @@ class BudgetTracker:
         if self.budget.max_total_cost_usd is not None:
             # Bump the cost counter strictly above the cap so
             # ``exceeded_reason()`` returns the cap (its check
-            # is ``total_cost_usd > max_total_cost_usd``). The
-            # precise nudge is no longer needed under strict
-            # ``>`` comparison with ``Decimal``; pushing to
-            # ``cap + 1`` is enough to trip the gate.
-            self.total_cost_usd = max(
-                self.total_cost_usd, self.budget.max_total_cost_usd + Decimal("1")
-            )
+            # is ``total_cost_usd > max_total_cost_usd``). Use the
+            # smallest representable ``Decimal`` increment above the
+            # cap (``Decimal.next_plus()``) so the reported amount
+            # stays accurate instead of inflating by a whole dollar.
+            cap = self.budget.max_total_cost_usd
+            self.total_cost_usd = max(self.total_cost_usd, cap.next_plus())
         if self.budget.max_total_latency_ms is not None:
             self.total_latency_ms = max(self.total_latency_ms, self.budget.max_total_latency_ms + 1)
         if self.budget.max_remote_inference_calls is not None:

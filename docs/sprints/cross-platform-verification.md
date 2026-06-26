@@ -29,7 +29,7 @@ The risk of a platform-specific failure is **negligible** because:
 - All filesystem operations use `pathlib.Path` (cross-platform)
 - All file encoding uses UTF-8 with `errors="replace"` (cross-platform)
 - No `os.system`, `subprocess` with platform-specific args, or platform-specific syscalls
-- The full test suite (2354 tests) passes on Linux Python 3.12
+- The full test suite (2356 tests) passes on Linux Python 3.12
 
 Manual macOS/Windows smoke tests will be added to Sprint 10.
 

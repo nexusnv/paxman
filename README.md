@@ -13,6 +13,7 @@ Paxman transforms arbitrary input (PDFs, scans, emails, spreadsheets, APIs, free
 
 ```python
 from decimal import Decimal
+from pydantic import BaseModel
 
 import paxman
 
@@ -22,12 +23,14 @@ import paxman
 import paxman.contract.adapters.pydantic  # noqa: F401  (triggers self-registration)
 import paxman.contract.adapters.dict_dsl  # noqa: F401
 
+
 # Caller-owned contract (Pydantic example)
-class Invoice(paxman.BaseModel):
+class Invoice(BaseModel):
     supplier_name: str
     total_amount: float
     currency_code: str
     line_items: list[LineItem]
+
 
 # Normalize raw input against the contract
 result = paxman.normalize(
@@ -336,6 +339,5 @@ for the full trade-off analysis).
 - [GLOSSARY.md](./GLOSSARY.md) — vocabulary
 - [REPLAY_AND_DETERMINISM.md](./REPLAY_AND_DETERMINISM.md) — replay model
 - [SECURITY.md](./SECURITY.md) — threat model
-- [DeepWiki](https://deepwiki/nexusnv/paxman) - Discover Paxman with AI Q&A
-- [Paxman Website](https://paxman.nexusnv.net) - Visit out website
-- [NexusNV Website](https://nexusnv.net) - The people behind Paxman
+- [Paxman Website](https://paxman.nexusnv.net) — the official project site
+- [NexusNV Website](https://nexusnv.net) — the people behind Paxman

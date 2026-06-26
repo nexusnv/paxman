@@ -50,27 +50,34 @@ uniquely identify an artifact's content.
 
 ### 2.1 What goes into the hash
 
-The hash is computed over a canonical JSON document containing:
+The hash is computed over a concatenation (with `|` separator) of
+the following fields, each serialised with the stable JSON encoder
+(`paxman.serialization.stable_dumps` — RFC 8785-style: sorted keys,
+no whitespace, canonical number formatting):
 
-| Field | Source |
-|---|---|
-| `paxman_version` | `paxman.__version__` |
-| `planner_version` | Internal constant (e.g. `"planner_v1"`). |
-| `capability_versions` | Per-FieldPlan capability chain. |
-| `contract_canonical_hash` | SHA-256 of the canonical contract's deterministic JSON. |
-| `input_fingerprint` | SHA-256 of the input's deterministic fingerprint (size, type, content hash). |
-| `budget` | Deterministic JSON of the `Budget`. |
-| `policy` | Deterministic JSON of the `Policy`. |
-| `field_resolved_values` | Per-field resolved value (post-Reconciler). |
-| `field_confidence` | Per-field final confidence. |
-| `evidence_refs` | Per-field evidence references. |
-| `diagnostics` | Per-field diagnostics. |
-| `statistics` | Capability invocation counts, latency, cost. |
+| # | Field | Source |
+|---|---|---|
+| 1 | `paxman_version` | `paxman.__version__` |
+| 2 | `planner_version` | `paxman.versioning.PLANNER_VERSION` (the literal string `"1"`) |
+| 3 | `replay_version` | `paxman.versioning.REPLAY_VERSION` (constant `"1"`) |
+| 4 | `execution_plan` | The plan's deterministic JSON (or `"null"` if absent) |
+| 5 | `field_results` | Per-field resolved results, sorted by `field_path` |
+| 6 | `evidence` | The artifact's evidence list |
+| 7 | `diagnostics` | The artifact's diagnostics list |
+| 8 | `statistics` | The artifact's statistics |
+| 9 | `contract_id` | The contract's stable id (string) |
+| 10 | `capability_versions` | The capability → version map (keys sorted) |
 
-The hash is **deterministic**: the same inputs always produce the
-same hash. The hash is computed using a stable JSON encoder
-(RFC 8785-style: sorted keys, no whitespace, canonical number
-formatting).
+The hash is computed as `sha256("|".join(parts)).hexdigest()` — a
+64-character lowercase hex string. It is **deterministic**: the
+same artifact produces the same hash.
+
+Fields that are intentionally **excluded** from the hash (because
+they may legitimately differ across rehydrations):
+
+- `id` — the artifact's per-run unique identifier.
+- `created_at` — wall-clock timestamp.
+- `metadata` — caller-supplied annotations.
 
 ### 2.2 What does NOT go into the hash
 
@@ -118,31 +125,30 @@ Caller
   ▼
 paxman.replay(artifact, contract)
   │
-  ├── 1. Check paxman_version compatibility
-  │     - if artifact.paxman_version not in supported set → VersionMismatchError
+  ├── 1. Type check
+  │     - artifact must be a non-None ExecutionArtifact instance
   │
-  ├── 2. Check planner_version compatibility
-  │     - if artifact.planner_version not supported by this Paxman → VersionMismatchError
+  ├── 2. Version check (paxman_version)
+  │     - artifact.paxman_version must be same major + not newer than
+  │       the running library; else → VersionMismatchError
   │
-  ├── 3. Check capability_versions
-  │     - if any pinned capability not in registry → CapabilityNotFoundError
+  ├── 3. Capability check
+  │     - every entry in artifact.capability_versions must be in the
+  │       capability registry; else → CapabilityNotFoundError
   │
-  ├── 4. Re-validate the contract
-  │     - if the contract fails validation → InvalidContractError
-  │     - this is to detect contract tampering
+  ├── 4. Hash check
+  │     - recompute the replay_hash over the artifact's hash-relevant
+  │       fields (see §2.1) and compare; mismatch → HashMismatchError
   │
-  ├── 5. Recompute the canonical contract hash
-  │     - if contract_canonical_hash in artifact doesn't match → HashMismatchError
-  │
-  ├── 6. Recompute the replay_hash
-  │     - if recomputed hash != artifact.replay_hash → HashMismatchError
-  │
-  └── 7. Return a rehydrated ExecutionArtifact (byte-equal to input)
+  └── 5. Return the rehydrated ExecutionArtifact (byte-equal to input)
 ```
 
 Replay is **read-only** in the strict sense: it does not invoke any
 capability, planner, executor, or reconciler. It is pure
-deserialization.
+deserialization. The contract is supplied by the caller and adapted
+to a `CanonicalContract`; Paxman does not re-validate the contract
+during replay (V1) — the contract's `id` is part of the hash
+inputs, so any tampering surfaces as a `HashMismatchError`.
 
 ---
 

@@ -67,20 +67,23 @@ across Paxman versions within a major version.
 ### 2.1 The replay hash
 
 `artifact.replay_hash` is a 64-character lowercase hex string
-(SHA-256 over a canonical JSON document). It is the artifact's
-tamper-detection signature. See
-[REPLAY_AND_DETERMINISM.md §2](../../REPLAY_AND_DETERMINISM.md) for
-the full spec.
+(SHA-256 over the concatenation of the artifact's hash-relevant
+fields, separated by `|`). It is the artifact's tamper-detection
+signature. See
+[REPLAY_AND_DETERMINISM.md §2](../../REPLAY_AND_DETERMINISM.md) and
+[`docs/concepts/replay.md`](../concepts/replay.md) §2.1 for the
+exact list of fields that go into the hash.
 
 ### 2.2 What goes in the serialized form
 
 The serialized artifact includes:
 
 - `paxman_version` — the Paxman version that produced the artifact.
-- `planner_version` — the planner version (`"planner_v1"`).
-- `capability_versions` — the per-FieldPlan capability chain.
-- `contract_id` and `contract_canonical_hash` — the contract identity.
-- `normalized_data` — the resolved values (post-Reconciler).
+- `planner_version` — the planner version (`"1"`).
+- `replay_version` — the replay-protocol version (`"1"`).
+- `capability_versions` — the capability → version map.
+- `contract_id` — the contract's stable id.
+- `execution_plan` — the deterministic `ExecutionPlan` (or `null`).
 - `field_results` — the per-field resolved result.
 - `unresolved_fields` — fields that could not be resolved.
 - `evidence` — the per-field evidence references.
@@ -155,12 +158,12 @@ rehydrated = paxman.replay(artifact, contract=Quotation)  # WRONG — InvalidCon
 
 Paxman detects the mismatch in two ways:
 
-1. The `contract_canonical_hash` (recorded in the artifact) is
-   recomputed from the supplied contract. Mismatch →
-   `HashMismatchError`.
-2. The contract's `required_fields()` are walked during the
-   replay-time validation. A missing required field →
-   `InvalidContractError`.
+1. The `contract_id` is part of the hash inputs (per §2.1). If the
+   contract supplied to replay is not the one used originally, the
+   `replay_hash` will not match → `HashMismatchError`.
+2. If the supplied contract fails to adapt to a
+   `CanonicalContract` (e.g. the user passes a malformed string or
+   an unknown format), replay raises `InvalidContractError`.
 
 This is intentional: the contract is part of the artifact's
 identity. Storing an artifact without its contract is not

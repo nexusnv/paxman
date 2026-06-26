@@ -58,8 +58,11 @@ class Capability(Protocol):
 `CapabilityResult` carries:
 
 - `candidates: tuple[Candidate, ...]` — zero or more candidates.
-- `evidence_refs: tuple[EvidenceRef, ...]` — pointers to where the
-  value came from (capability id, version, source span).
+- `evidence: tuple[EvidenceRef, ...]` — pointers to where the
+  value came from (capability id, version, source span). Note: the
+  field is named `evidence` (not `evidence_refs`) on
+  `CapabilityResult`; only `Candidate.evidence_refs` uses the
+  `_refs` suffix.
 - `diagnostics: tuple[Diagnostic, ...]` — informational notes (e.g.
   "regex did not match", "validation rejected value X").
 
@@ -70,9 +73,10 @@ Reconciler assigns confidence later. The static test
 A `Candidate` carries:
 
 - `value` — the resolved value (typed per the field's `FieldType`).
-- `evidence_refs` — additional evidence specific to this candidate.
-- `diagnostics` — per-candidate notes (rare; most diagnostics are
-  result-level).
+- `evidence_refs: tuple[EvidenceRef, ...]` — additional evidence
+  specific to this candidate.
+- `diagnostics: tuple[Diagnostic, ...]` — per-candidate notes
+  (rare; most diagnostics are result-level).
 
 ---
 
@@ -113,22 +117,27 @@ tier**.
 
 `invoke()` receives a `CapabilityContext` with:
 
-- `input_text` — the UTF-8-decoded text payload (from
-  `text_extraction` or the raw input).
-- `input_bytes` — the raw bytes (for capabilities that need them).
-- `field_path` — the dotted path of the field being resolved
+- `raw_input: bytes` — the raw input bytes (UTF-8 encoded, with
+  replacement applied at the API layer). The capability may
+  decode and parse this as needed (e.g. `text_extraction` for
+  `text/html`).
+- `field_path: str` — the dotted path of the field being resolved
   (e.g. `"line_items[0].price"`).
-- `field_type` — the field's `FieldType` (so the capability knows
-  what to produce).
-- `span` — optional `(start, end)` offsets in the source.
-- `step_config` — frozen view of the planner's per-step config
-  (e.g. the regex pattern for `regex_extraction`).
-- `tier` — the capability's own tier (injected for diagnostics).
-- `provider` — for `inference`, the provider name.
+- `field_type_name: str` — the field's `FieldType` value name
+  (e.g. `"STRING"`). Stored as a string to keep the context
+  JSON-serializable.
+- `config: Mapping[str, object]` — capability-specific
+  configuration (e.g. the regex pattern for `regex_extraction`).
+  Defaults to `{}`.
+- `input_profile_type: str` — the `InputProfile.input_type` for
+  the raw input (e.g. `"text"`, `"html"`). Defaults to `"text"`.
+- `span: tuple[int, int] | None` — optional `(start, end)`
+  byte-offset pair into the raw input. Defaults to `None`.
 
-Capabilities **do not** receive the raw `CanonicalContract`. The
-planner, executor, and reconciler share contracts; capabilities see
-only what they need (their per-step input).
+Capabilities **do not** receive the raw `CanonicalContract` or the
+`Budget`/`Policy`. The planner, executor, and reconciler share
+those; capabilities see only what they need (their per-step
+input).
 
 ---
 
@@ -176,7 +185,7 @@ on first use).
 ## 7. Determinism and non-determinism
 
 A capability's `spec.deterministic` flag tells the planner and
-reconciler whether to expect deterministic output. Three of the V1
+reconciler whether to expect deterministic output. Four of the V1
 capabilities are deterministic by design:
 
 - `text_extraction` — same input → same text.

@@ -119,8 +119,8 @@ class Invoice(BaseModel):
 ```
 
 For `MONEY`, define a field whose annotation inherits from
-`paxman.BaseModel` and uses the `Money` base class — see
-[§6](#6-the-money-type).
+`paxman.contract.adapters.pydantic.Money` (the MONEY base class
+shipped with the Pydantic adapter) — see [§6](#6-the-money-type).
 
 ### 3.2 JSON Schema (draft 2020-12)
 
@@ -269,9 +269,10 @@ not a `DECIMAL` with a tag. Every `MONEY` field carries:
 ```python
 from decimal import Decimal
 from pydantic import BaseModel
+from paxman.contract.adapters.pydantic import Money
 
 
-class MoneyAmount(paxman.BaseModel):
+class MoneyAmount(Money):
     amount: Decimal
     currency: str  # ISO-4217
 

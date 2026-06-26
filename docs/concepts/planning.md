@@ -65,28 +65,29 @@ Per [ADR-0001](../adr/0001-field-centric-planning.md), Paxman is
 its own `FieldPlan`:
 
 ```python
-@dataclass(frozen=True)
+@attrs.frozen(slots=True)
 class FieldPlan:
-    field_path: str
-    steps: tuple[FieldPlanStep, ...]   # capability chain
-    target_confidence: float            # read from field's confidence_threshold
-    notes: tuple[str, ...]              # planner-side notes (V1: empty)
+    field_id: str                                # CanonicalField.id
+    capability_chain: tuple[FieldPlanStep, ...]  # ordered capability chain
+    target_confidence: float = 0.8               # threshold for SUCCESS
+    fallback_policy: ResolutionPolicy = ResolutionPolicy()  # per-field
+    early_stop: bool = True                      # short-circuit on threshold met
 ```
 
 A `FieldPlanStep` carries:
 
 - `capability_id` — e.g. `"regex_extraction"`.
 - `capability_version` — the **resolved** version (e.g. `"1.0"`).
-- `tier` — `LOCAL_DETERMINISTIC` / `STRUCTURED_LOOKUP` / `LOCAL_INFERENCE` / `REMOTE_INFERENCE`.
 - `config` — frozen per-step config (e.g. the regex pattern for
   `regex_extraction`). Wrapped in `types.MappingProxyType` to
   prevent post-construction mutation.
+- `note` — optional human-readable note.
 
 The Executor walks the `FieldPlan` in step order, invokes the
-capability at each step, and collects candidates. If a step
-**already satisfies** the field (e.g. `regex_extraction` returns a
-non-empty `Candidate` with a passing `validation`), the Executor
-**stops** — there is no reason to keep spending budget.
+capability at each step, and collects candidates. If `early_stop` is
+`True` (the default) and a step's candidate meets
+`target_confidence`, the Executor **stops** — there is no reason to
+keep spending budget.
 
 The `ExecutionPlan` carries:
 
@@ -96,6 +97,7 @@ The `ExecutionPlan` carries:
 - `fields` — `tuple[FieldPlan, ...]` in **declaration order**
   (not dict-iteration order).
 - `diagnostics` — planner-emitted notes (e.g. budget exclusions).
+- `planner_version` — the planner version (e.g. `"1"`).
 
 Declaration order matters: the Executor walks fields in plan order,
 not in dict-iteration order. The plan encodes order explicitly.
@@ -157,12 +159,14 @@ The V1 weights are:
 | `MS_WEIGHT` | `1` | Latency is the tie-breaker. |
 
 ```
-score = tier_weight(tier) + (usd * 1_000_000) + (ms * 1)
+score = tier_rank * TIER_WEIGHT + (usd * USD_WEIGHT) + (ms * MS_WEIGHT)
 ```
 
-`lower is better`. The V1 calibration makes USD dominate ms dominate
-tier — a slightly slower deterministic capability beats a much
-cheaper non-deterministic one.
+where `tier_rank` is the integer value of the `CapabilityTier` enum
+(`LOCAL_DETERMINISTIC=1`, `STRUCTURED_LOOKUP=2`, `LOCAL_INFERENCE=3`,
+`REMOTE_INFERENCE=4`). `lower is better`. The V1 calibration makes
+USD dominate ms dominate tier — a slightly slower deterministic
+capability beats a much cheaper non-deterministic one.
 
 The score is computed once per `(capability, field)` pair during
 planning; the planner stores the result in the `FieldPlanStep` for

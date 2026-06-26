@@ -11,7 +11,7 @@
     ".pytest_cache",
     ".import_linter_cache"
   ],
-  "pythonVersion": "3.11",
+  "pythonVersion": "3.12",
   "pythonPlatform": "Linux",
   "typeCheckingMode": "basic",
   "reportMissingImports": "error",

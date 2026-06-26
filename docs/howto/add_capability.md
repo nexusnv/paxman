@@ -88,12 +88,19 @@ The `spec` tells the planner what the capability does, its
 
 ```python
 import attrs
-from paxman.capabilities.base import Capability
-from paxman.capabilities.context import CapabilityContext
-from paxman.capabilities.result import CapabilityResult, Candidate, EvidenceRef
+from decimal import Decimal
+
+from paxman.capabilities.base import Capability, CapabilityContext
+from paxman.capabilities.result import (
+    CapabilityResult,
+    Candidate,
+    Diagnostic,
+    DiagnosticCode,
+    DiagnosticSeverity,
+    EvidenceRef,
+)
 from paxman.capabilities.spec import CapabilitySpec, CapabilityTier, CostHint
 from paxman.types import FieldType
-from decimal import Decimal
 
 
 @attrs.frozen(slots=True)
@@ -120,22 +127,22 @@ class DateParserCapability:
 
     def invoke(self, ctx: CapabilityContext) -> CapabilityResult:
         try:
-            date_value = parse_date(ctx.input_text)
+            date_value = parse_date(ctx.raw_input)
         except ParseError as e:
             return CapabilityResult(
                 candidates=(),
-                evidence_refs=(),
+                evidence=(),
                 diagnostics=(Diagnostic(
-                    code="DATE_PARSE_FAILED",
+                    code=DiagnosticCode.PATTERN_NO_MATCH,
                     severity=DiagnosticSeverity.WARNING,
                     message=str(e),
-                    context={"input": ctx.input_text},
+                    context={"input": ctx.raw_input},
                 ),),
             )
 
         return CapabilityResult(
             candidates=(Candidate(value=date_value, evidence_refs=(), diagnostics=()),),
-            evidence_refs=(
+            evidence=(
                 EvidenceRef(
                     capability_id="date_parser",
                     capability_version="1.0",
@@ -209,13 +216,23 @@ At minimum:
 - **Stateless** — same input → same output across calls.
 - **Determinism flag** — `spec.deterministic=True` for any capability
   backed by a pure function.
-- **Evidence** — `result.evidence_refs` is non-empty when the
+- **Evidence** — `result.evidence` is non-empty when the
   capability produces a candidate.
 
 ```python
+from datetime import date
+
+from paxman.capabilities.base import CapabilityContext
+from paxman.types import FieldType
+
+
 def test_date_parser_capability_handles_iso_format():
     cap = DateParserCapability()
-    ctx = CapabilityContext(input_text="2026-01-15", field_path="issue_date", field_type=FieldType.DATE)
+    ctx = CapabilityContext(
+        raw_input=b"2026-01-15",
+        field_path="issue_date",
+        field_type_name=FieldType.DATE.value,
+    )
     result = cap.invoke(ctx)
     assert len(result.candidates) == 1
     assert result.candidates[0].value == date(2026, 1, 15)

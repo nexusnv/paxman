@@ -198,8 +198,11 @@ def test_my_format_adapter_handles_simple_contract():
     adapter = MyFormatAdapter()
     external = load_fixture("my_format/simple.myf")
     canonical = adapter.adapt(external)
-    assert canonical.fields["name"].type == FieldType.STRING
-    assert canonical.fields["name"].required is True
+    # CanonicalContract.fields is a tuple of CanonicalField; walk it
+    # by .path (the dotted field path) to find a specific field.
+    name_field = next(f for f in canonical.fields if f.path == "name")
+    assert name_field.type == FieldType.STRING
+    assert name_field.required is True
 ```
 
 Use `paxman.testing.contracts()` for property tests (it generates

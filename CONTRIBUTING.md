@@ -92,8 +92,10 @@ The full list of ADRs and the template is in
 ### 4.2 Install
 
 ```bash
-# Clone
-git clone https://github.com/nexusnv/paxman.git
+# Clone your fork (replace <your-username> with your GitHub handle;
+# the upstream URL is https://github.com/nexusnv/paxman.git).
+# If you skipped the Quick start in §2, fork the repo first.
+git clone https://github.com/<your-username>/paxman.git
 cd paxman
 
 # Install uv (if not already installed)

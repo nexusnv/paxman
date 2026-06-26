@@ -14,13 +14,13 @@ assignees: ''
 
 <!-- Run `uv run python -c "import paxman; print(paxman.__version__)"` and paste the output. -->
 
-`paxman == `
+`paxman == <version>`
 
 ## Python version
 
 <!-- Run `python --version` and paste the output. -->
 
-`Python `
+`Python <version>`
 
 ## Operating system
 

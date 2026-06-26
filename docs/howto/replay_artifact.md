@@ -105,8 +105,8 @@ Replay is **fail-closed**: a version mismatch raises
 | Scenario | Behavior |
 |---|---|
 | Same major, same minor, same patch | Replay succeeds. |
-| Same major, older minor (e.g. 1.5 artifact on 1.0) | Replay succeeds if the artifact's planner version and capability versions are still supported. |
-| Same major, newer minor | Replay succeeds if the artifact's planner version and capability versions are still supported in the new Paxman. |
+| Artifact newer than Paxman (e.g. 1.5 artifact on 1.0) | Replay succeeds if the artifact's planner version and capability versions are still supported. |
+| Artifact older than Paxman (e.g. 1.0 artifact on 1.5) | Replay succeeds if the artifact's planner version and capability versions are still supported in the new Paxman. |
 | Different major | `VersionMismatchError`. Regenerate the artifact under the new major. |
 | Missing capability | `CapabilityNotFoundError`. Register the missing capability or regenerate. |
 

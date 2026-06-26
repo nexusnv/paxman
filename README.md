@@ -234,9 +234,9 @@ See [PRD.md §7 Primary Use Cases](./PRD.md) for detailed examples.
 
 ## Status
 
-- **v0.0.0 (Sprint 6):** Full pipeline — contract adaptation, planning, execution, reconciliation, artifact, and public API (`paxman.normalize()`, `paxman.replay()`).
-- **v0.0.0 + Sprint 7:** `paxman.testing` (Hypothesis strategies), golden artifacts, end-to-end integration tests, per-subsystem coverage thresholds. **In progress.**
-- **v0.0.0 + Sprint 8:** Documentation site (`docs/concepts/`, `docs/howto/`), community files (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`), CI hardening (pyright, interrogate, bandit, pip-audit), 9-check `make ci`. **In progress.**
+- **v0.0.0 (Sprint 6) — Shipped:** Full pipeline — contract adaptation, planning, execution, reconciliation, artifact, and public API (`paxman.normalize()`, `paxman.replay()`).
+- **v0.0.0 + Sprint 7 — Shipped:** `paxman.testing` (Hypothesis strategies), golden artifacts, end-to-end integration tests, per-subsystem coverage thresholds.
+- **v0.0.0 + Sprint 8 — In progress:** Documentation site (`docs/concepts/`, `docs/howto/`), community files (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`), CI hardening (pyright, interrogate, bandit, pip-audit), 9-check `make ci`.
 - **v0.1.0 (initial preview):** planner + one adapter + one capability work end-to-end. (Pending.)
 - **v0.5.0 (feature-complete beta):** 80% of V1 features. (Pending.)
 - **1.0.0:** All V1 acceptance criteria met. (Pending.)

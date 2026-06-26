@@ -22,7 +22,7 @@ document is a 5-minute checklist.
 import typing
 
 
-class InferenceProvider(Protocol):
+class InferenceProvider(typing.Protocol):
     """SPI: a model provider behind the inference capability (internal)."""
 
     def complete(self, request: CompletionRequest) -> Completion:

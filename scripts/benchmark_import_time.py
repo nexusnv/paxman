@@ -42,13 +42,8 @@ Target = Literal["import", "normalize", "both"]
 # Each snippet must be a complete Python program that can be passed to
 # ``python -c``.
 _SNIPPETS: dict[str, str] = {
-    "import": (
-        "import paxman"
-    ),
-    "normalize": (
-        "import paxman; "
-        "getattr(paxman, 'normalize', None)"
-    ),
+    "import": ("import paxman"),
+    "normalize": ("import paxman; getattr(paxman, 'normalize', None)"),
 }
 
 
@@ -79,13 +74,11 @@ def compute_stats(times_ms: list[float]) -> dict[str, float]:
     ``mean``.
     """
     if len(times_ms) < 2:
-        raise ValueError(
-            f"Need at least 2 data points, got {len(times_ms)}"
-        )
+        raise ValueError(f"Need at least 2 data points, got {len(times_ms)}")
     sorted_times = sorted(times_ms)
     # statistics.quantiles(data, n=100) returns 99 values: the 1st through
     # 99th percentiles.  Index 49 → p50, 94 → p95, 98 → p99.
-    percentiles = statistics.quantiles(sorted_times, n=100)
+    percentiles = statistics.quantiles(sorted_times, n=100, method="inclusive")
     return {
         "p50": percentiles[49],
         "p95": percentiles[94],
@@ -136,20 +129,18 @@ def run_single_benchmark(
     print_table(stats, target)
 
     if failures:
-        print(f"\nWarning: {failures} iteration(s) failed.", file=sys.stderr)
+        print(f"\nError: {failures} iteration(s) failed.", file=sys.stderr)
 
     passed = stats["p50"] <= threshold_ms
     if passed:
-        print(
-            f"✓ p50 ({stats['p50']:.2f} ms) ≤ {threshold_ms:.0f} ms threshold — PASS"
-        )
+        print(f"✓ p50 ({stats['p50']:.2f} ms) ≤ {threshold_ms:.0f} ms threshold — PASS")
     else:
         print(
             f"✗ p50 ({stats['p50']:.2f} ms) > {threshold_ms:.0f} ms threshold — FAIL",
             file=sys.stderr,
         )
 
-    return 0 if passed else 1
+    return 0 if passed and failures == 0 else 1
 
 
 def _resolve_targets(target_arg: str) -> list[str]:
@@ -162,8 +153,7 @@ def _resolve_targets(target_arg: str) -> list[str]:
         return ["import", "normalize"]
     if target_arg not in target_map:
         print(
-            f"Error: unknown target '{target_arg}'. "
-            f"Choose from: import, normalize, both.",
+            f"Error: unknown target '{target_arg}'. Choose from: import, normalize, both.",
             file=sys.stderr,
         )
         sys.exit(1)

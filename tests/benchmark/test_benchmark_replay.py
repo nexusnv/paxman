@@ -13,8 +13,9 @@ Golden artifact sizes (all well under 100 KB):
     invoice_unresolved_dict_dsl.json   — 4,970 bytes
 
 Since all goldens are under 100 KB, we inflate an artifact by
-padding ``normalized_data`` with a large synthetic dict to reach
-the target size for the inflated benchmark.
+padding ``field_results`` (a hash-relevant field) with synthetic
+``FieldResult`` entries to reach the target size for the inflated
+benchmark.
 """
 
 from __future__ import annotations
@@ -25,8 +26,9 @@ import pytest
 import paxman
 import paxman.contract.adapters.dict_dsl  # triggers adapter self-registration
 from paxman.artifact._hash import compute_replay_hash
-from paxman.artifact.artifact import ExecutionArtifact
+from paxman.artifact.artifact import ExecutionArtifact, FieldResult
 from paxman.artifact.serializer import encode_artifact
+from paxman.types import ConfidenceBand, Status
 from tests.fixtures.contracts.dict_dsl.invoice import DICT_DSL_INVOICE
 
 pytestmark = pytest.mark.benchmark
@@ -44,30 +46,34 @@ def invoice_artifact() -> ExecutionArtifact:
     return paxman.normalize(
         input_data=_INVOICE_INPUT,
         contract=DICT_DSL_INVOICE,
+        policy=paxman.Policy(allow_remote_inference=False),
     )
 
 
 @pytest.fixture(scope="session")
 def inflated_artifact_100kb() -> ExecutionArtifact:
-    """Artifact with normalized_data padded to ~100 KB.
+    """Artifact with field_results padded to ~100 KB.
 
-    Strategy: pad normalized_data with 120 synthetic dict entries
-    (~960 bytes each in compact JSON) so the serialized artifact
-    exceeds 100 KB.  The replay_hash is recomputed to keep the
+    Strategy: pad field_results (a hash-relevant field per
+    ``compute_replay_hash``) with synthetic FieldResult entries so the
+    serialized artifact exceeds 100 KB and replay_hash is affected by
+    the inflation.  The replay_hash is recomputed to keep the
     artifact replayable.
     """
     base = paxman.normalize(
         input_data=_INVOICE_INPUT,
         contract=DICT_DSL_INVOICE,
+        policy=paxman.Policy(allow_remote_inference=False),
     )
-    padding: dict[str, object] = {}
-    for i in range(120):
-        padding[f"synthetic_field_{i:04d}"] = {
-            "description": f"Synthetic benchmark padding field {i}. " * 15,
-            "values": list(range(100)),
-            "metadata": {"index": i, "category": "benchmark_padding", "active": True},
-        }
-    inflated = attrs.evolve(base, normalized_data={**base.normalized_data, **padding})
+    synthetic_results: dict[str, FieldResult] = {}
+    for i in range(200):
+        synthetic_results[f"synthetic_field_{i:04d}"] = FieldResult(
+            field_path=f"synthetic_field_{i:04d}",
+            value=f"Synthetic benchmark padding field {i}. " * 100,
+            confidence=ConfidenceBand.UNTRUSTED,
+            status=Status.UNRESOLVED,
+        )
+    inflated = attrs.evolve(base, field_results={**base.field_results, **synthetic_results})
     inflated = attrs.evolve(inflated, replay_hash=compute_replay_hash(inflated))
     return inflated
 
@@ -95,9 +101,9 @@ def test_benchmark_replay_inflated_100kb(
 ) -> None:
     """Benchmark paxman.replay() on an inflated artifact (~100 KB).
 
-    The artifact is inflated by padding normalized_data with 120
-    synthetic fields.  The replay_hash is recomputed so the artifact
-    remains valid.
+    The artifact is inflated by padding field_results with 200
+    synthetic FieldResult entries.  The replay_hash is recomputed so
+    the artifact remains valid.
     """
     size_bytes = len(encode_artifact(inflated_artifact_100kb).encode("utf-8"))
     assert size_bytes >= 100_000, (

@@ -40,11 +40,11 @@ test: ## Run all tests
 
 .PHONY: test-unit
 test-unit: ## Run unit tests only
-	$(UV) run pytest -m unit
+	$(UV) run pytest tests/unit
 
 .PHONY: test-integration
 test-integration: ## Run integration tests only
-	$(UV) run pytest -m integration
+	$(UV) run pytest tests/integration
 
 .PHONY: test-property
 test-property: ## Run hypothesis property tests only
@@ -56,7 +56,11 @@ test-public-api: ## Run public API snapshot tests
 
 .PHONY: test-cov
 test-cov: ## Run tests with coverage
-	$(UV) run pytest --cov=paxman --cov-report=term-missing --cov-report=xml
+	$(UV) run pytest --cov=paxman --cov-report=term-missing --cov-report=xml --cov-report=json
+
+.PHONY: check-coverage
+check-coverage: ## Verify per-subsystem coverage thresholds (D7.15)
+	$(UV) run python scripts/check_subsystem_coverage.py
 
 # --- Lint + format ------------------------------------------------------------
 

@@ -69,4 +69,11 @@ Thumbs.db
 logs/
 
 # Test data (Sprint 5+: programmatic fixtures)
-tests/fixtures/generated/
+# Note: the directory is now tests/fixtures/factories/ (committed source).
+# If/when we add a gitignored cache of generated outputs, it goes here.
+tests/fixtures/factories/__pycache__/
+
+# Local coverage / runtime artifacts
+coverage.json
+.worktress/
+.worktrees/

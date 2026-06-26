@@ -80,6 +80,7 @@ one of the following ``error_code`` values:
 from __future__ import annotations
 
 import decimal
+import json
 import re
 import typing
 
@@ -163,11 +164,33 @@ class JsonSchemaAdapter:
             InvalidContractError: If the schema is malformed.
         """
         if not isinstance(external, dict):
-            raise InvalidContractError(
-                f"JSON Schema adapter requires a dict, got {type(external).__name__}",
-                error_code="INVALID_FIELD",
-                context={"got_type": type(external).__name__},
-            )
+            # Accept JSON Schema as a string (e.g., loaded from a file).
+            # Parse it as JSON before continuing.
+            if isinstance(external, str):
+                try:
+                    external = json.loads(external)
+                except json.JSONDecodeError as e:
+                    raise InvalidContractError(
+                        f"JSON Schema adapter received a string that is not valid JSON: {e}",
+                        error_code="INVALID_JSON",
+                        context={"json_error": str(e)},
+                    ) from e
+                # After parsing, the value may still not be a dict
+                # (e.g., the JSON string was a list or null). Reject
+                # those explicitly so downstream ``external.get(...)``
+                # doesn't raise ``AttributeError`` on a non-dict.
+                if not isinstance(external, dict):
+                    raise InvalidContractError(
+                        "JSON Schema adapter requires a top-level JSON object",
+                        error_code="INVALID_FIELD",
+                        context={"got_type": type(external).__name__},
+                    )
+            else:
+                raise InvalidContractError(
+                    f"JSON Schema adapter requires a dict or str, got {type(external).__name__}",
+                    error_code="INVALID_FIELD",
+                    context={"got_type": type(external).__name__},
+                )
         # Check the schema version (best-effort).
         schema_uri = external.get("$schema")
         if schema_uri is not None and schema_uri not in _SUPPORTED_DRAFTS:

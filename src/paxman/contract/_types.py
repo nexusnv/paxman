@@ -220,6 +220,18 @@ class EnumValue:
         return f"EnumValue(value={self.value!r})"
 
 
+def _to_tuple(values: typing.Iterable[typing.Any]) -> tuple[typing.Any, ...]:
+    """Coerce *values* into a tuple. Used as an ``attrs`` converter.
+
+    Defined as a module-level helper (rather than ``converter=tuple``)
+    so the parameter type is ``Iterable[Any]``. The bare ``tuple``
+    builtin's signature (``tuple[_T_co]``) makes mypy infer the
+    constructor argument as ``Iterable[_T_co]``, which then rejects
+    any concrete ``Iterable[Any]`` value at the call site.
+    """
+    return tuple(values)
+
+
 @attrs.frozen(slots=True)
 class EnumValueSet:
     """A closed set of allowed values for an ENUM field.
@@ -244,7 +256,7 @@ class EnumValueSet:
         False
     """
 
-    values: tuple[typing.Any, ...] = attrs.field(converter=tuple)
+    values: tuple[typing.Any, ...] = attrs.field(converter=_to_tuple)
 
     def __attrs_post_init__(self) -> None:
         """Validate and deduplicate the input values.

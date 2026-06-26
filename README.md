@@ -5,6 +5,8 @@
 Paxman transforms arbitrary input (PDFs, scans, emails, spreadsheets, APIs, free text) into **evidence-backed, replayable** normalized artifacts conforming to caller-supplied contracts (Pydantic, JSON Schema, OpenAPI, or a built-in Dict DSL).
 
 ```python
+from decimal import Decimal
+
 import paxman
 
 # Caller-owned contract (Pydantic example)
@@ -18,7 +20,7 @@ class Invoice(paxman.BaseModel):
 result = paxman.normalize(
     input_data=raw_invoice_bytes,
     contract=Invoice,
-    budget=paxman.Budget(max_total_cost_usd=0.10),
+    budget=paxman.Budget(max_total_cost_usd=Decimal("0.10")),  # Decimal per ADR-0004
     policy=paxman.Policy(allow_remote_inference=True),
 )
 

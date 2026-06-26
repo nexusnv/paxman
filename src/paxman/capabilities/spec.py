@@ -28,6 +28,8 @@ See also
 from __future__ import annotations
 
 import enum
+import math
+from decimal import Decimal
 
 import attrs
 
@@ -41,6 +43,41 @@ __all__ = [
 # ---------------------------------------------------------------------------
 # CostHint
 # ---------------------------------------------------------------------------
+
+
+def _to_usd_decimal(value: float | int | Decimal) -> Decimal:
+    """Convert a USD cost input to :class:`decimal.Decimal`.
+
+    Used as the ``attrs.field`` converter on :attr:`CostHint.usd` so
+    callers can pass either a literal ``float`` (``0.001``) or a
+    ``Decimal`` (``Decimal("0.001")``). The internal type is
+    :class:`decimal.Decimal` per ADR-0004 / ADR-0010 — MONEY is Decimal,
+    never float — but the float-literal call site pattern is preserved
+    for backward compatibility.
+
+    Rejects ``bool`` explicitly because ``isinstance(True, int)`` is
+    ``True`` in Python (preserved from the prior float-based validation
+    per Oracle review F17 / V1 acceptance §2.1 — no bool-as-int trap).
+    Rejects NaN and Infinity (they would break cost comparisons
+    downstream).
+
+    The conversion is exact for the V1 USD domain ([0, 1] with up to
+    3 decimal places). Floats are converted via ``Decimal(str(x))`` to
+    avoid the binary-representation noise of ``Decimal(0.001)`` producing
+    ``Decimal('0.0010000000000000000208166817117216851329430937767028808593750')``.
+    """
+
+    if isinstance(value, bool):
+        raise TypeError(f"usd must be a number, got bool: {value!r}")
+    if isinstance(value, Decimal):
+        if not value.is_finite():
+            raise ValueError(f"usd must be a finite Decimal, got {value!r}")
+        return value
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError(f"usd must be a finite number, got {value!r}")
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
+    raise TypeError(f"usd must be float | int | Decimal, got {type(value).__name__}: {value!r}")
 
 
 @attrs.frozen(slots=True)
@@ -60,23 +97,24 @@ class CostHint:
       Defaults to ``1`` (the V1 minimum; a 1 ms floor prevents the
       planner from treating capabilities as instantaneous).
     - ``usd`` — approximate USD cost per invocation. Zero for free
-      capabilities. Defaults to ``0.0``.
+      capabilities. Defaults to ``Decimal("0")`` (MONEY is Decimal,
+      per ADR-0004 / ADR-0010).
 
     Attributes:
         tokens: Approximate token count (non-negative int).
         ms: Approximate wall-clock latency in ms (non-negative int).
-        usd: Approximate USD cost (non-negative float).
+        usd: Approximate USD cost (non-negative Decimal).
 
     Examples:
         >>> CostHint(tokens=0, ms=1, usd=0.0)
-        CostHint(tokens=0, ms=1, usd=0.0)
+        CostHint(tokens=0, ms=1, usd=Decimal('0'))
         >>> CostHint(tokens=500, ms=1500, usd=0.001)
-        CostHint(tokens=500, ms=1500, usd=0.001)
+        CostHint(tokens=500, ms=1500, usd=Decimal('0.001'))
     """
 
     tokens: int = 0
     ms: int = 1
-    usd: float = 0.0
+    usd: Decimal = attrs.field(default=Decimal("0"), converter=_to_usd_decimal)
 
     def __attrs_post_init__(self) -> None:
         """Validate non-negativity of all three fields.
@@ -93,13 +131,13 @@ class CostHint:
             )
         if type(self.ms) is not int:
             raise TypeError(f"ms must be an int, got {type(self.ms).__name__}: {self.ms!r}")
-        if not isinstance(self.usd, (int, float)) or isinstance(self.usd, bool):
+        if not isinstance(self.usd, (int, float, Decimal)) or isinstance(self.usd, bool):
             raise TypeError(f"usd must be a number, got {type(self.usd).__name__}: {self.usd!r}")
         if self.tokens < 0:
             raise ValueError(f"tokens must be non-negative, got {self.tokens}")
         if self.ms < 0:
             raise ValueError(f"ms must be non-negative, got {self.ms}")
-        if self.usd < 0.0:
+        if self.usd < 0:
             raise ValueError(f"usd must be non-negative, got {self.usd}")
 
 

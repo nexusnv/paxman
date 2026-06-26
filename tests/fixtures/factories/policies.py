@@ -11,6 +11,7 @@ import decimal
 import factory
 
 from paxman.budget import Budget, Policy
+from tests.fixtures.factories.inputs import _get_faker
 
 
 class BudgetFactory(factory.Factory):
@@ -20,16 +21,16 @@ class BudgetFactory(factory.Factory):
         model = Budget
 
     max_total_cost_usd = factory.LazyAttribute(
-        lambda _o: float(factory.Faker._get_faker().pydecimal(min_value=0, max_value=10, right_digits=4))
+        lambda _o: _get_faker().pydecimal(min_value=0, max_value=10, right_digits=4)
     )
     max_total_latency_ms = factory.LazyAttribute(
-        lambda _o: factory.Faker._get_faker().random_int(min=100, max=60_000)
+        lambda _o: _get_faker().random_int(min=100, max=60_000)
     )
     max_remote_inference_calls = factory.LazyAttribute(
-        lambda _o: factory.Faker._get_faker().random_int(min=0, max=10)
+        lambda _o: _get_faker().random_int(min=0, max=10)
     )
     max_capability_invocations = factory.LazyAttribute(
-        lambda _o: factory.Faker._get_faker().random_int(min=1, max=100)
+        lambda _o: _get_faker().random_int(min=1, max=100)
     )
 
 
@@ -43,7 +44,7 @@ class PolicyFactory(factory.Factory):
     allow_local_inference = factory.Faker("boolean")
     confidence_floor = factory.LazyAttribute(
         lambda _o: float(
-            factory.Faker._get_faker().pydecimal(
+            _get_faker().pydecimal(
                 min_value=decimal.Decimal("0.5"),
                 max_value=decimal.Decimal("1.0"),
                 right_digits=2,

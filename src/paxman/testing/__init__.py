@@ -244,7 +244,18 @@ def _budget_strategy(draw: st.DrawFn) -> Budget:
         max_total_cost_usd=draw(
             st.one_of(
                 st.none(),
-                st.floats(min_value=0.0, max_value=10.0, allow_nan=False, allow_infinity=False),
+                # ``Decimal`` for USD (MONEY is Decimal per
+                # ADR-0004 / ADR-0010). The constructor coerces
+                # any stray ``float`` to ``Decimal`` for backward
+                # compat, but the strategy emits ``Decimal``
+                # directly to keep the generated budgets clean.
+                st.decimals(
+                    min_value=0,
+                    max_value=10,
+                    allow_nan=False,
+                    allow_infinity=False,
+                    places=4,
+                ),
             )
         ),
         max_total_latency_ms=draw(

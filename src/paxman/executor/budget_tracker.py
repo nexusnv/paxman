@@ -22,12 +22,11 @@ Design notes
   :mod:`paxman.capabilities.spec`.
 - All counters are **non-negative**. Negative inputs are rejected
   with :class:`ValueError`.
-- The cost type is :class:`float` for USD and :class:`int` for
-  latency / counts. The USD value is *not* converted to
-  :class:`decimal.Decimal`; V1 uses float per
-  :class:`paxman.budget.Budget` and :class:`paxman.capabilities.spec.CostHint`.
-  Future sprints may switch to :class:`decimal.Decimal` if a
-  precision issue surfaces.
+- USD costs are :class:`decimal.Decimal` (per ADR-0004 / ADR-0010 —
+  MONEY is Decimal, never float). Latency and invocation counts are
+  :class:`int`. ``bool`` is explicitly rejected (preserved from the
+  prior float-based validation per V1 acceptance §2.1 — no bool-as-int
+  trap).
 
 The :class:`BudgetTracker` is **deterministic**: the same sequence
 of :meth:`record` calls produces the same final counters.
@@ -42,7 +41,9 @@ Exit criteria (per the Sprint 4 spec):
 
 from __future__ import annotations
 
+import math
 import typing
+from decimal import Decimal
 
 from paxman.budget import Budget
 from paxman.errors import InvalidBudgetError
@@ -59,6 +60,36 @@ EXCEEDED_REASON_REMOTE: typing.Final[str] = "max_remote_inference_calls"
 EXCEEDED_REASON_INVOCATIONS: typing.Final[str] = "max_capability_invocations"
 
 
+def _as_decimal(value: float | int | Decimal) -> Decimal:
+    """Coerce a USD cost input to :class:`decimal.Decimal` and reject non-finite.
+
+    Rejects ``bool`` explicitly because ``isinstance(True, int)`` is
+    ``True`` in Python (preserved from the prior float-based validation
+    per V1 acceptance §2.1 — no bool-as-int trap). Rejects NaN and
+    Infinity (they would break budget comparisons downstream — a
+    NaN ``total_cost_usd`` would propagate to ``spent_usd`` and make
+    the gate silently pass).
+
+    This is the **central guard** for all USD inputs to
+    :class:`BudgetTracker`; :meth:`record` and
+    :meth:`would_exceed_reason` route through here so only finite
+    ``Decimal`` amounts reach the counter arithmetic.
+    """
+    if isinstance(value, bool):
+        raise TypeError(f"cost_usd must be a number, got bool: {value!r}")
+    if isinstance(value, Decimal):
+        if not value.is_finite():
+            raise ValueError(f"cost_usd must be a finite Decimal, got {value!r}")
+        return value
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError(f"cost_usd must be a finite number, got {value!r}")
+    if isinstance(value, (int, float)):
+        return Decimal(str(value))
+    raise TypeError(
+        f"cost_usd must be float | int | Decimal, got {type(value).__name__}: {value!r}"
+    )
+
+
 class BudgetTracker:
     """Tracks cumulative cost / latency / invocations against a :class:`Budget`.
 
@@ -66,7 +97,8 @@ class BudgetTracker:
         budget: The :class:`Budget` to enforce. ``None`` means no
             cap (any cost is allowed).
         total_cost_usd: Cumulative USD cost recorded via
-            :meth:`record`. Defaults to ``0.0``.
+            :meth:`record`. Defaults to ``Decimal("0")`` (MONEY is
+            Decimal, per ADR-0004 / ADR-0010).
         total_latency_ms: Cumulative wall-clock latency in ms.
             Defaults to ``0``.
         invocation_count: Total capability invocations recorded.
@@ -95,7 +127,7 @@ class BudgetTracker:
         if budget is not None and not isinstance(budget, Budget):
             raise TypeError(f"budget must be a Budget or None, got {type(budget).__name__}")
         self.budget: Budget | None = budget
-        self.total_cost_usd: float = 0.0
+        self.total_cost_usd: Decimal = Decimal("0")
         self.total_latency_ms: int = 0
         self.invocation_count: int = 0
         self.remote_inference_count: int = 0
@@ -105,7 +137,7 @@ class BudgetTracker:
     def record(
         self,
         *,
-        cost_usd: float = 0.0,
+        cost_usd: float | int | Decimal = Decimal("0"),
         latency_ms: int = 0,
         is_remote_inference: bool = False,
     ) -> None:
@@ -113,7 +145,8 @@ class BudgetTracker:
 
         Args:
             cost_usd: The USD cost of the invocation (non-negative).
-                Defaults to ``0.0``.
+                Accepts ``float | int | Decimal``; the internal type is
+                :class:`decimal.Decimal`. Defaults to ``Decimal("0")``.
             latency_ms: The wall-clock latency in ms (non-negative).
                 Defaults to ``0``.
             is_remote_inference: ``True`` if this invocation was a
@@ -123,7 +156,7 @@ class BudgetTracker:
             ValueError: If ``cost_usd`` or ``latency_ms`` is negative.
             TypeError: If a numeric field is not a number.
         """
-        cost = float(cost_usd)
+        cost = _as_decimal(cost_usd)
         if cost < 0:
             raise ValueError(f"cost_usd must be non-negative, got {cost_usd!r}")
         if not isinstance(latency_ms, int) or isinstance(latency_ms, bool):
@@ -143,7 +176,7 @@ class BudgetTracker:
     def would_exceed(
         self,
         *,
-        cost_usd: float = 0.0,
+        cost_usd: float | int | Decimal = Decimal("0"),
         latency_ms: int = 0,
         is_remote_inference: bool = False,
     ) -> bool:
@@ -175,7 +208,7 @@ class BudgetTracker:
     def would_exceed_reason(
         self,
         *,
-        cost_usd: float = 0.0,
+        cost_usd: float | int | Decimal = Decimal("0"),
         latency_ms: int = 0,
         is_remote_inference: bool = False,
     ) -> str | None:
@@ -197,10 +230,8 @@ class BudgetTracker:
         if self.budget is None:
             return None
         b = self.budget
-        if (
-            b.max_total_cost_usd is not None
-            and (self.total_cost_usd + cost_usd) > b.max_total_cost_usd
-        ):
+        cost = _as_decimal(cost_usd)
+        if b.max_total_cost_usd is not None and (self.total_cost_usd + cost) > b.max_total_cost_usd:
             return EXCEEDED_REASON_COST
         if (
             b.max_total_latency_ms is not None
@@ -289,8 +320,12 @@ class BudgetTracker:
         if self.budget.max_total_cost_usd is not None:
             # Bump the cost counter strictly above the cap so
             # ``exceeded_reason()`` returns the cap (its check
-            # is ``total_cost_usd > max_total_cost_usd``).
-            self.total_cost_usd = max(self.total_cost_usd, self.budget.max_total_cost_usd + 1e-9)
+            # is ``total_cost_usd > max_total_cost_usd``). Use the
+            # smallest representable ``Decimal`` increment above the
+            # cap (``Decimal.next_plus()``) so the reported amount
+            # stays accurate instead of inflating by a whole dollar.
+            cap = self.budget.max_total_cost_usd
+            self.total_cost_usd = max(self.total_cost_usd, cap.next_plus())
         if self.budget.max_total_latency_ms is not None:
             self.total_latency_ms = max(self.total_latency_ms, self.budget.max_total_latency_ms + 1)
         if self.budget.max_remote_inference_calls is not None:

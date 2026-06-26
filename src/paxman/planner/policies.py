@@ -24,6 +24,7 @@ downgrade-or-raise logic applies to latency.
 from __future__ import annotations
 
 import typing
+from decimal import Decimal
 
 import attrs
 
@@ -107,8 +108,8 @@ def derive_effective_policy(
 
 
 def estimated_chain_cost(
-    cost_estimates: typing.Iterable[tuple[float, ...]],
-) -> float:
+    cost_estimates: typing.Iterable[tuple[typing.Any, ...]],
+) -> Decimal:
     """Sum the USD cost over a chain of capability invocations.
 
     Args:
@@ -116,14 +117,38 @@ def estimated_chain_cost(
             :class:`CostHint` tuples. For simplicity the function
             takes 3-tuples ``(tokens, ms, usd)``.
 
+    Raises:
+        ValueError: If any tuple in ``cost_estimates`` does not have
+            the expected 3-tuple shape. Silently skipping malformed
+            tuples would undercount the cost (e.g. a 2-tuple looks
+            like zero-cost and a 4-tuple is taken literally), so the
+            function fails fast instead.
+
     Returns:
-        The total estimated USD cost.
+        The total estimated USD cost as a :class:`decimal.Decimal`
+        (MONEY is Decimal, per ADR-0004 / ADR-0010).
     """
-    total = 0.0
-    for tup in cost_estimates:
+    total = Decimal("0")
+    for index, tup in enumerate(cost_estimates):
         if len(tup) < 3:
-            continue
-        total += float(tup[2])
+            raise ValueError(
+                f"cost_estimates[{index}] must be a 3-tuple "
+                f"(tokens, ms, usd); got tuple of length {len(tup)}: {tup!r}"
+            )
+        usd = tup[2]
+        if isinstance(usd, Decimal):
+            total += usd
+        elif isinstance(usd, (int, float)) and not (isinstance(usd, bool)):
+            # Reject ``bool`` (the ``isinstance(True, int)`` trap);
+            # allow ``float`` and ``int`` to preserve the
+            # pre-Decimal call-site pattern (e.g. the cost-model
+            # spec uses ``0.001`` literals).
+            total += Decimal(str(usd))
+        else:
+            raise TypeError(
+                f"cost_estimates[{index}][2] (usd) must be Decimal | "
+                f"int | float, got {type(usd).__name__}: {usd!r}"
+            )
     return total
 
 
@@ -168,5 +193,7 @@ def budget_excludes_inference(
         return False
     if budget.max_total_cost_usd is None:
         return False
-    # Inference's usd cost is 0.001 (per the spec).
-    return budget.max_total_cost_usd < 0.001
+    # Inference's usd cost is 0.001 (per the spec). MONEY is Decimal
+    # (ADR-0004 / ADR-0010), so compare against ``Decimal("0.001")``
+    # rather than a float literal.
+    return budget.max_total_cost_usd < Decimal("0.001")

@@ -40,7 +40,7 @@ class CostHint:
 
     tokens: int   # approximate token count; 0 for non-LLM capabilities
     ms: int       # approximate wall-clock latency in milliseconds
-    usd: float    # approximate USD cost; 0.0 for free capabilities
+    usd: Decimal  # approximate USD cost (MONEY is Decimal per ADR-0004 / ADR-0010); Decimal("0") for free capabilities
 ```
 
 ### 2.2 Field semantics
@@ -49,7 +49,7 @@ class CostHint:
 |---|---|---|---|---|
 | `tokens` | token count (prompt + completion) | `>= 0` | Capability does not invoke an LLM | Capability invokes an LLM; value is the approximate total tokens |
 | `ms` | milliseconds (wall-clock) | `>= 0` | (discouraged; see EC3) | Approximate latency for one invocation |
-| `usd` | US dollars | `>= 0.0` | Capability is free (local, no billable API) | Capability has a per-invocation cost |
+| `usd` | US dollars | `>= 0` (Decimal) | Capability is free (local, no billable API) | Capability has a per-invocation cost |
 
 ### 2.3 Validation rules
 
@@ -57,7 +57,7 @@ The following invariants are enforced at capability registration time (per [EXTE
 
 - `tokens >= 0` — negative token counts are invalid.
 - `ms >= 0` — negative latency is invalid.
-- `usd >= 0.0` — negative cost is invalid.
+- `usd >= 0` (Decimal) — negative cost is invalid.
 
 Violation of any rule raises `InvalidCapabilitySpec` with `error_code="INVALID_COST_HINT"` and a `context` dict containing the offending field and value.
 

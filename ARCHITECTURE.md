@@ -408,7 +408,7 @@ result = paxman.normalize(
     input_data=...,
     contract=...,
     budget=Budget(
-        max_total_cost_usd=0.10,
+        max_total_cost_usd=Decimal("0.10"),  # Decimal per ADR-0004 / ADR-0010
         max_total_latency_ms=5_000,
         max_remote_inference_calls=2,
     ),
@@ -425,7 +425,7 @@ result = paxman.normalize(
 
 | Field | Type | Meaning |
 |---|---|---|
-| `max_total_cost_usd` | `float \| None` | Hard cap on cost in USD; aborts the run when exceeded. |
+| `max_total_cost_usd` | `Decimal \| None` | Hard cap on cost in USD; aborts the run when exceeded. Constructor accepts `float \| int \| Decimal` and coerces to `Decimal` (MONEY is Decimal per ADR-0004 / ADR-0010). |
 | `max_total_latency_ms` | `int \| None` | Hard cap on wall-clock latency. |
 | `max_remote_inference_calls` | `int \| None` | Cap on remote inference invocations. |
 | `max_capability_invocations` | `int \| None` | Cap on total capability invocations. |

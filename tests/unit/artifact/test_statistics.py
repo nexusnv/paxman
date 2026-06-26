@@ -33,7 +33,7 @@ def test_cap_stats_minimal() -> None:
     assert cs.capability_version == "1.0"
     assert cs.invocation_count == 0
     assert cs.total_duration_ms == 0.0
-    assert cs.total_cost_usd == 0.0
+    assert cs.total_cost_usd == Decimal("0")
     assert cs.total_tokens == 0
 
 
@@ -137,7 +137,7 @@ def test_statistics_minimal() -> None:
     assert stats.status is Status.UNRESOLVED
     assert stats.wall_clock_ms == 0.0
     assert stats.monotonic_ms == 0.0
-    assert stats.total_cost_usd == 0.0
+    assert stats.total_cost_usd == Decimal("0")
     assert stats.total_fields == 0
     assert stats.resolved_fields == 0
     assert stats.unresolved_fields == 0

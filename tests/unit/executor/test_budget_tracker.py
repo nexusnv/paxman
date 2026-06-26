@@ -7,6 +7,8 @@ simulate-then-book protocol and the four short-circuit reasons.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from paxman.budget import Budget
@@ -40,7 +42,10 @@ def test_construction_rejects_non_budget() -> None:
 def test_from_budget_helper() -> None:
     t = BudgetTracker.from_budget(Budget(max_total_cost_usd=0.10))
     assert t.budget is not None
-    assert t.budget.max_total_cost_usd == pytest.approx(0.10)
+    # ``max_total_cost_usd`` is stored as ``Decimal`` (MONEY is
+    # Decimal, per ADR-0004 / ADR-0010). The constructor accepts
+    # the float literal ``0.10`` and coerces via ``Decimal(str(x))``.
+    assert t.budget.max_total_cost_usd == Decimal("0.10")
 
 
 def test_from_budget_none() -> None:
@@ -59,7 +64,10 @@ def test_from_budget_rejects_non_budget() -> None:
 def test_record_increments_counters() -> None:
     t = BudgetTracker(budget=Budget(max_total_cost_usd=0.10))
     t.record(cost_usd=0.05, latency_ms=10)
-    assert t.total_cost_usd == pytest.approx(0.05)
+    # ``total_cost_usd`` is ``Decimal`` (MONEY is Decimal per
+    # ADR-0004 / ADR-0010). ``pytest.approx`` is float-only; use
+    # exact ``Decimal`` comparison.
+    assert t.total_cost_usd == Decimal("0.05")
     assert t.total_latency_ms == 10
     assert t.invocation_count == 1
     assert t.remote_inference_count == 0

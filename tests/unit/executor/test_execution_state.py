@@ -7,6 +7,8 @@ recorded in the module's docstring.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from paxman.capabilities.result import (
@@ -55,7 +57,9 @@ def test_defaults_are_zero() -> None:
 def test_record_invocation_increments_counters() -> None:
     s = _empty_state()
     s.record_invocation(cost_usd=0.001, latency_ms=100, is_remote_inference=True)
-    assert s.total_cost_usd == pytest.approx(0.001)
+    # ``total_cost_usd`` is ``Decimal`` (MONEY is Decimal per
+    # ADR-0004 / ADR-0010). Use exact ``Decimal`` comparison.
+    assert s.total_cost_usd == Decimal("0.001")
     assert s.total_latency_ms == 100
     assert s.invocation_count == 1
     assert s.remote_inference_count == 1
@@ -65,7 +69,7 @@ def test_record_invocation_accumulates() -> None:
     s = _empty_state()
     s.record_invocation(cost_usd=0.001, latency_ms=100)
     s.record_invocation(cost_usd=0.002, latency_ms=200, is_remote_inference=True)
-    assert s.total_cost_usd == pytest.approx(0.003)
+    assert s.total_cost_usd == Decimal("0.003")
     assert s.total_latency_ms == 300
     assert s.invocation_count == 2
     assert s.remote_inference_count == 1

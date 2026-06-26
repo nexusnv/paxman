@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Cost pipeline switched from `float` to `Decimal`** (per [ADR-0010](docs/adr/0010-budget-money-decimal.md) and the new [Sprint 7+ intervention plan](docs/sprints/sprint-07a-budget-money-decimal.md)) — the project's `"MONEY is Decimal, never float"` directive (ADR-0004) is now reflected end-to-end through the cost pipeline:
+  - `Budget.max_total_cost_usd: float | None` → `Decimal | None` (`src/paxman/budget.py:45`).
+  - `CostHint.usd: float` → `Decimal` (`src/paxman/capabilities/spec.py:79`).
+  - `BudgetTracker.total_cost_usd: float` → `Decimal`; `record(cost_usd=...)`, `would_exceed(cost_usd=...)`, `would_exceed_reason(cost_usd=...)` accept `Decimal` (`src/paxman/executor/budget_tracker.py:98,108,146,178`). The `+ 1e-9` nudge in `mark_exhausted` is removed (the strict `>` comparison no longer needs it).
+  - `ExecutionState.total_cost_usd: float` → `Decimal`; `cost = float(cost_usd)` coercion removed (`src/paxman/executor/execution_state.py:93,105,122`).
+  - `planner/policies.estimated_chain_cost` returns `Decimal`; `budget_excludes_inference`'s `< 0.001` comparison uses `Decimal("0.001")` (`src/paxman/planner/policies.py:110-127,172`).
+  - The `budget_tracker.py:25-30` "Future sprints may switch to `decimal.Decimal`" comment is **deleted** — the switch has happened.
+  - `Statistics.total_cost_usd: Decimal` (`src/paxman/artifact/statistics.py:97`) and `CapabilityStats.total_cost_usd: Decimal` (`src/paxman/artifact/statistics.py:40`) are no longer aspirational; the upstream pipeline now feeds them the right type.
+  - **`Policy.confidence_floor: float` is unchanged** — it's a probability in `[0.0, 1.0]`, not money. This is a defensible exception (per `src/paxman/contract/_types.py:355-360`).
+  - **`score_capability` return type is unchanged (`float`)** — the score is a sortable rank, not money; the V1 weight table (`TIER_WEIGHT=10000`, `USD_WEIGHT=1000000`, `MS_WEIGHT=1`) is calibrated for `float`.
+- **Backward compatibility:** `Budget(max_total_cost_usd=0.10)` (a `float` literal) and `CostHint(usd=0.001)` continue to work because the constructors accept `float | int | Decimal` and coerce to `Decimal` via `attrs.field(converter=...)`. All 14+ test files with literal-float budget constructions pass unchanged.
+
+### Added
+
+- [ADR-0010](docs/adr/0010-budget-money-decimal.md) — `Budget`, `CostHint`, `BudgetTracker`, `ExecutionState` switched from `float` to `Decimal`. Extends [ADR-0004](docs/adr/0004-money-first-class-type.md).
+- [Sprint 7+ intervention plan](docs/sprints/sprint-07a-budget-money-decimal.md) — the 1-week, 1-engineer intervention that operationalizes the `Decimal` switch.
+- `tests/integration/cross_subsystem/test_budget_decimal_roundtrip.py` (new) — verifies that `paxman.normalize(...)` with `Budget(max_total_cost_usd=Decimal("0.10"))` produces the same artifact as `Budget(max_total_cost_usd=0.10)`. Locks the backward-compat contract.
+- `tests/unit/test_budget.py::test_budget_accepts_float_literal_for_cost` (new) — asserts `Budget(max_total_cost_usd=0.10).max_total_cost_usd == Decimal("0.10")`. Locks the constructor coercion.
+
+### Fixed
+
+- The `src/paxman/artifact/statistics.py:97` `Statistics.total_cost_usd: Decimal` declaration was previously aspirational — no production code path produced a non-default `Decimal` value. After this change, the type is enforced end-to-end (the `Budget → BudgetTracker → ExecutionState → field_runner` chain now produces `Decimal` for the artifact's `total_cost_usd`).
+- The `src/paxman/executor/budget_tracker.py:293` `+ 1e-9` float-nudge hack in `mark_exhausted` (an artifact of the float type) is removed. The strict `>` comparison works cleanly with `Decimal`.
+
+### Notes
+
+- **No golden artifacts regenerated.** The 8 `tests/fixtures/artifacts/*.json` files do not store budget data; the replay hash is unchanged (verified by `tests/integration/test_golden_artifacts.py`).
+- **No `paxman_version` bump.** The JSON-serialization equivalence of `float(0.10)` and `Decimal("0.10")` means the artifact wire format is unchanged.
+- **No new public API surface.** `Budget` and `CostHint` are the same symbols; only their internal type changed. The public API snapshot (`tests/fixtures/public_api_snapshot.json`) is unchanged.
+- **No ADR changes required beyond ADR-0010.** The existing ADR-0004 ("MONEY as a First-Class Type") is the philosophical foundation; ADR-0010 is the operational extension. The "Future sprints may switch" caveat in `budget_tracker.py:25-30` is closed in the same commit.
+
 ### Added
 
 - Initial project skeleton (`src/paxman/`, src-layout, `py.typed` PEP 561 marker).

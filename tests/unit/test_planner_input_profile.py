@@ -175,6 +175,51 @@ def test_density_dense_text() -> None:
     assert compute_density(text, "text") == non_ws / len(text)
 
 
+def test_density_counts_characters_not_bytes() -> None:
+    """compute_density must count non-whitespace CHARACTERS, not BYTES.
+
+    Regression test for the Sprint 9 D9.5 optimization: a naive
+    byte-level scan (``bytes.count()`` over ASCII whitespace)
+    silently returns the wrong density for non-ASCII input because
+    UTF-8 multi-byte sequences inflate the byte length.  For
+    example, ``"é"`` is 2 bytes but 1 character; without the
+    character-based fallback, the density is reported as ``1.0``
+    instead of ``0.5``.
+
+    See: CodeRabbit review on PR #16 (2026-06-26).
+    """
+    # Single character, 2 bytes: density is by-character.
+    e_acute = "é".encode("utf-8")  # b"\\xc3\\xa9" — 2 bytes
+    assert len(e_acute) == 2
+    assert compute_density(e_acute, "text") == 0.5
+
+    # CJK: 2 characters, 6 bytes: density is 2/6.
+    hanzi = "汉字".encode("utf-8")
+    assert len(hanzi) == 6
+    assert abs(compute_density(hanzi, "text") - 2 / 6) < 1e-9
+
+    # Unicode whitespace (NBSP U+00A0, encoded as 2 bytes 0xC2 0xA0)
+    # is whitespace by ``str.isspace()`` semantics, so density = 0/2.
+    nbsp = b"\xc2\xa0"
+    assert compute_density(nbsp, "text") == 0.0
+
+    # Mixed ASCII + CJK + space: character count, byte-denominated.
+    mixed = "Hello 汉字 World".encode("utf-8")
+    text = mixed.decode("utf-8")
+    non_ws = sum(1 for ch in text if not ch.isspace())
+    assert compute_density(mixed, "text") == non_ws / len(mixed)
+
+
+def test_density_ascii_fast_path_matches_char_path() -> None:
+    """For ASCII input, the byte-level fast path must equal the
+    character-level reference implementation exactly."""
+    # 100 KB ASCII text — exercise the fast path on a large input.
+    text = (b"the quick brown fox jumps over the lazy dog. " * 2000)[:100_000]
+    assert text.isascii()
+    expected = sum(1 for ch in text.decode() if not ch.isspace()) / len(text)
+    assert compute_density(text, "text") == expected
+
+
 # --- make_profile --------------------------------------------------------
 
 

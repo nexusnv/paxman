@@ -454,11 +454,12 @@ The user's project AGENTS.md and ADR set declare several **zero-tolerance** anti
 
 ## 13. Outstanding Items / Follow-ups
 
-The audit did not find any **missing** deliverables for Sprints 01–08 + 7+. It did find **3 minor follow-up items** that the team may want to address before Sprint 9:
+The audit did not find any **missing** deliverables for Sprints 01–08 + 7+. It did find **4 minor follow-up items** that the team may want to address before Sprint 9:
 
-1. **Stale README in `tests/fixtures/artifacts/README.md`** — The README claims the goldens "are NOT written yet", but 8 goldens are present and exercised. Recommend updating the README in a one-line PR.
-2. **`PaxmanError` is reported as 17-classes in some places, 18 in others.** `src/paxman/errors.py` docstring (line 3) says "18-class hierarchy" (correct after Sprint 6 added `CapabilityNotFoundError`). The `tests/unit/test_errors.py` docstring (line 1) says "17-class". The `docs/sprints/sprint-01-foundation.md` (line 44) says "**17 classes**". These are minor docstring nits; the code is correct at 18.
-3. **Test Finding 1 (nitpick)** — `test_pydantic_invoice_factory` is weaker than its peers. Low priority.
+1. **Stale README in `tests/fixtures/artifacts/README.md`** — The README claims the goldens "are NOT written yet", but 8 goldens are present and exercised. Recommend updating the README in a one-line PR. ✅ **Resolved in PR #15.**
+2. **`PaxmanError` is reported as 17-classes in some places, 18 in others.** `src/paxman/errors.py` docstring (line 3) says "18-class hierarchy" (correct after Sprint 6 added `CapabilityNotFoundError`). The `tests/unit/test_errors.py` docstring (line 1) says "17-class". The `docs/sprints/sprint-01-foundation.md` (line 44) says "**17 classes**". These are minor docstring nits; the code is correct at 18. ✅ **Resolved in PR #15.**
+3. **Test Finding 1 (nitpick)** — `test_pydantic_invoice_factory` is weaker than its peers. Low priority. ✅ **Resolved in PR #15.**
+4. **Stale branch-protection required status checks (discovered during PR #15 review).** The branch protection on `main` required 8 status check names (`lint`, `interrogate`, `test-unit (3.11)`, `test-unit (3.12)`, `test-unit (3.13)`, `test-property`, `test-integration`, `test-coverage`) that **did not match the actual `name:` values** produced by the Sprint 8 CI workflow (`.github/workflows/ci.yml`). The workflow's display names were renamed during Sprint 8 (e.g., `test-unit` → `unit tests (py3.11)`, `lint` → `lint + format + typecheck + imports (py3.12)`), but the branch protection contexts were not updated. Symptom: PRs show 12 successful check-runs PLUS 8 "Expected — Waiting for status to be reported" stale entries that never resolve. ✅ **Resolved in PR #15 by repointing the branch protection contexts to the current workflow's `name:` values** (via `PATCH /repos/.../branches/main/protection/required_status_checks`). **Lesson for Sprint 9:** any future CI renaming must update the branch protection in lockstep, otherwise PRs accumulate "stale waiting" status checks that look like real failures.
 
 None of these are blockers. The team can proceed to Sprint 0 (per the user's "before continuing on sprint 0" phrasing) with high confidence that the sprint 01–08 backlog has been faithfully delivered.
 

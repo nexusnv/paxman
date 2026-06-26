@@ -42,6 +42,8 @@
 | D1.8 | `src/paxman/py.typed` (empty) | `src/paxman/py.typed` | 0.1 |
 | D1.9 | `src/paxman/__init__.py` (version only) | `src/paxman/__init__.py` | 0.2 |
 | D1.10 | `src/paxman/errors.py` (PaxmanError hierarchy, **17 classes** per `ARCHITECTURE.md` §6.2: base + 4 InvalidContractError children + 3 ExecutionError children + 2 ReplayError children + 2 ConfigurationError children; the 11 listed in `V1_ACCEPTANCE_CRITERIA.md` §1.4 are the *public* subset re-exported in `api/errors.py`) | `src/paxman/errors.py` | 3.0 |
+
+> **Editorial note (2026-06-26):** Sprint 6 added an 18th class, `CapabilityNotFoundError`, per `V1_ACCEPTANCE_CRITERIA.md` §1.5 (see `docs/sprints/CHANGES_LOG.md` C1). The 11-vs-12 public subset accordingly became 12. The current source of truth is `src/paxman/errors.py` (`__all__`) and `src/paxman/api/errors.py`. The "17 classes" wording above is preserved as the Sprint 1 baseline; do not treat it as a current contract.
 | D1.11 | `src/paxman/types.py` (shared enums: `Status`, `ConfidenceBand`, `FieldType`) | `src/paxman/types.py` | 1.0 |
 | D1.12 | `src/paxman/protocols.py` (internal Protocols) | `src/paxman/protocols.py` | 1.0 |
 | D1.13 | `src/paxman/versioning.py` (version constants, helpers; 100% test coverage) | `src/paxman/versioning.py` | 2.0 |

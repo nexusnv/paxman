@@ -1,9 +1,15 @@
-"""Unit tests for ``paxman.errors`` — the 17-class PaxmanError hierarchy.
+"""Unit tests for ``paxman.errors`` — the 18-class PaxmanError hierarchy.
 
 Per V1_ACCEPTANCE_CRITERIA.md §2.2, ``errors.py`` must have 100% line coverage.
 These tests exercise every code path: each class instantiation, each
 validator, the context-None guard, the error_code validation, and the
 exception inheritance.
+
+Note: the hierarchy was 17 classes in Sprint 1 (per
+``docs/sprints/sprint-01-foundation.md`` D1.10); Sprint 6 added the 18th
+class, :class:`~paxman.errors.CapabilityNotFoundError`, per
+``V1_ACCEPTANCE_CRITERIA.md`` §1.5 (see ``docs/sprints/CHANGES_LOG.md`` C1).
+The current source of truth is the ``__all__`` list in ``src/paxman/errors.py``.
 """
 
 from __future__ import annotations
@@ -31,7 +37,7 @@ from paxman.errors import (
     VersionMismatchError,
 )
 
-# --- 17-class inventory -----------------------------------------------------
+# --- 18-class inventory -----------------------------------------------------
 
 ALL_18 = [
     PaxmanError,

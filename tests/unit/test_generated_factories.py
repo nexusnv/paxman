@@ -59,12 +59,43 @@ def test_dict_dsl_invoice_factory() -> None:
 
 
 def test_pydantic_invoice_factory() -> None:
-    """``PydanticInvoiceFactory`` produces a Pydantic ``BaseModel`` subclass."""
+    """``PydanticInvoiceFactory`` produces a Pydantic ``BaseModel`` subclass.
+
+    The factory must produce a model with the 5 documented invoice
+    fields (``supplier_name``, ``total_amount``, ``currency_code``,
+    ``invoice_date``, ``paid``) so the adapter-parity tests can
+    normalize the same input against either Pydantic or Dict DSL and
+    expect the same downstream contract shape. A factory that
+    produced an empty model would pass the prior ``isinstance(type)``
+    + ``hasattr(model_fields)`` check, which is why this test now
+    asserts on the actual field set.
+    """
     model_class = PydanticInvoiceFactory()
     # It's a class (Pydantic models are classes).
     assert isinstance(model_class, type)
     # It has pydantic attributes.
     assert hasattr(model_class, "model_fields")
+    # It is a Pydantic BaseModel subclass (not just any class with
+    # a ``model_fields`` attribute).
+    from pydantic import BaseModel
+
+    assert issubclass(model_class, BaseModel)
+    # It carries the 5 documented invoice fields — not an empty
+    # ``class Empty(BaseModel): pass``.
+    field_names = set(model_class.model_fields.keys())
+    expected_fields = {
+        "supplier_name",
+        "total_amount",
+        "currency_code",
+        "invoice_date",
+        "paid",
+    }
+    assert expected_fields.issubset(field_names), (
+        f"PydanticInvoiceFactory missing required fields: "
+        f"{expected_fields - field_names}; got {field_names}"
+    )
+    # The class has the auto-generated name set by the factory.
+    assert model_class.__name__ == "GeneratedInvoice"
 
 
 def test_json_schema_invoice_factory() -> None:

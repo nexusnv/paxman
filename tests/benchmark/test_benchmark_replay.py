@@ -16,6 +16,7 @@ Since all goldens are under 100 KB, we inflate an artifact by
 padding ``normalized_data`` with a large synthetic dict to reach
 the target size for the inflated benchmark.
 """
+
 from __future__ import annotations
 
 import attrs
@@ -30,10 +31,7 @@ from tests.fixtures.contracts.dict_dsl.invoice import DICT_DSL_INVOICE
 
 pytestmark = pytest.mark.benchmark
 
-_INVOICE_INPUT: str = (
-    "ACME Corp\nInvoice #1234\nTotal: $1,234.56\n"
-    "Date: 2026-06-22\nCurrency: USD"
-)
+_INVOICE_INPUT: str = "ACME Corp\nInvoice #1234\nTotal: $1,234.56\nDate: 2026-06-22\nCurrency: USD"
 
 
 @pytest.fixture(scope="session")
@@ -134,4 +132,3 @@ def test_benchmark_replay_byte_equal_invariant(
         rounds=10,
         warmup_rounds=3,
     )
-

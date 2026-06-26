@@ -17,7 +17,6 @@ import pytest
 import paxman.contract.adapters.dict_dsl  # noqa: F401 — triggers adapter self-registration
 from paxman.budget import Policy
 
-
 # ---------------------------------------------------------------------------
 # 20-field Dict DSL contract
 # ---------------------------------------------------------------------------
@@ -287,11 +286,7 @@ def _build_large_input(target_bytes: int = 100_000) -> str:
     section_idx = 0
     while total_bytes < target_bytes:
         # Vary the section header slightly to avoid overly compressible text.
-        header = (
-            f"{'=' * 58}\n"
-            f" SECTION {section_idx + 1:04d} — PROCUREMENT RECORD\n"
-            f"{'=' * 58}\n\n"
-        )
+        header = f"{'=' * 58}\n SECTION {section_idx + 1:04d} — PROCUREMENT RECORD\n{'=' * 58}\n\n"
         parts.append(header)
         parts.append(base_section)
         section_idx += 1

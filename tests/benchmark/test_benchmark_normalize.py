@@ -15,7 +15,7 @@ from __future__ import annotations
 import pytest
 
 import paxman
-import paxman.contract.adapters.dict_dsl  # noqa: F401 — triggers adapter self-registration
+import paxman.contract.adapters.dict_dsl
 from paxman.artifact.artifact import ExecutionArtifact
 from paxman.budget import Policy
 from paxman.types import Status

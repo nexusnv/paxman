@@ -9,6 +9,8 @@ the capabilities subsystem; Sprint 4 docs allow this).
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import attrs
 import pytest
 
@@ -402,7 +404,7 @@ def test_evidence_is_collected_in_state() -> None:
     )
     assert len(state.evidence) == 1
     assert state.invocation_count == 1
-    assert state.total_cost_usd == pytest.approx(0.0)
+    assert state.total_cost_usd == Decimal("0")
 
 
 # --- CandidateResult invariants -------------------------------------

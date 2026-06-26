@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from paxman.budget import Budget, Policy
@@ -168,17 +170,22 @@ def test_above_inference_cost_does_not_exclude() -> None:
 
 
 def test_estimated_chain_cost_sums_usd() -> None:
-    """estimated_chain_cost sums the 3rd element (usd) of each tuple."""
+    """estimated_chain_cost sums the 3rd element (usd) of each tuple.
+
+    Returns ``Decimal`` per ADR-0004 / ADR-0010 (MONEY is Decimal,
+    never float). Floats in the input are coerced via
+    ``Decimal(str(x))`` to preserve exact precision.
+    """
     chain = [
         (0, 1, 0.0),
         (0, 1, 0.0),
         (500, 1500, 0.001),
     ]
-    assert estimated_chain_cost(chain) == 0.001
+    assert estimated_chain_cost(chain) == Decimal("0.001")
 
 
 def test_estimated_chain_cost_empty() -> None:
-    assert estimated_chain_cost([]) == 0.0
+    assert estimated_chain_cost([]) == Decimal("0")
 
 
 def test_estimated_chain_latency_ms_sums_ms() -> None:

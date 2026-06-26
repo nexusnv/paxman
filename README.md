@@ -18,7 +18,7 @@ class Invoice(paxman.BaseModel):
 result = paxman.normalize(
     input_data=raw_invoice_bytes,
     contract=Invoice,
-    budget=paxman.Budget(max_total_cost_usd=0.10),
+    budget=paxman.Budget(max_total_cost_usd=Decimal("0.10")),  # Decimal per ADR-0004
     policy=paxman.Policy(allow_remote_inference=True),
 )
 

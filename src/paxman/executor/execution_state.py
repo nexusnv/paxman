@@ -34,6 +34,7 @@ cross-cutting modules and the planner's data models.
 from __future__ import annotations
 
 import typing
+from decimal import Decimal
 
 import attrs
 
@@ -90,7 +91,7 @@ class ExecutionState:
 
     field_plans: dict[str, FieldPlan] = attrs.field(factory=dict)
     field_results: dict[str, list[object]] = attrs.field(factory=dict)
-    total_cost_usd: float = 0.0
+    total_cost_usd: Decimal = Decimal("0")
     total_latency_ms: int = 0
     invocation_count: int = 0
     remote_inference_count: int = 0
@@ -102,7 +103,7 @@ class ExecutionState:
     def record_invocation(
         self,
         *,
-        cost_usd: float = 0.0,
+        cost_usd: float | int | Decimal = Decimal("0"),
         latency_ms: int = 0,
         is_remote_inference: bool = False,
     ) -> None:
@@ -110,16 +111,23 @@ class ExecutionState:
 
         Args:
             cost_usd: The USD cost of this invocation (non-negative).
-                Defaults to ``0.0``.
+                Accepts ``float | int | Decimal``; the internal type is
+                :class:`decimal.Decimal` (MONEY is Decimal, per
+                ADR-0004 / ADR-0010). Defaults to ``Decimal("0")``.
             latency_ms: The wall-clock latency in milliseconds
                 (non-negative). Defaults to ``0``.
             is_remote_inference: ``True`` if this was a remote-inference
                 call (``REMOTE_INFERENCE``-tier). Defaults to ``False``.
         """
-        # Oracle review F2: defensive against non-numeric cost. Calling
-        # code may pass a Decimal-like object; coerce to float and
-        # reject negatives to keep the budget tracking honest.
-        cost = float(cost_usd)
+        # Defensive against non-numeric cost and the bool-as-int trap
+        # (isinstance(True, int) is True in Python). Coerce to Decimal
+        # and reject negatives to keep the budget tracking honest.
+        if isinstance(cost_usd, bool):
+            raise TypeError(f"cost_usd must be a number, got bool: {cost_usd!r}")
+        if isinstance(cost_usd, Decimal):
+            cost = cost_usd
+        else:
+            cost = Decimal(str(cost_usd))
         if cost < 0:
             raise ValueError(f"cost_usd must be non-negative, got {cost_usd!r}")
         if latency_ms < 0:

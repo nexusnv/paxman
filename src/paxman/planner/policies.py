@@ -24,6 +24,7 @@ downgrade-or-raise logic applies to latency.
 from __future__ import annotations
 
 import typing
+from decimal import Decimal
 
 import attrs
 
@@ -107,8 +108,8 @@ def derive_effective_policy(
 
 
 def estimated_chain_cost(
-    cost_estimates: typing.Iterable[tuple[float, ...]],
-) -> float:
+    cost_estimates: typing.Iterable[tuple[typing.Any, ...]],
+) -> Decimal:
     """Sum the USD cost over a chain of capability invocations.
 
     Args:
@@ -117,13 +118,18 @@ def estimated_chain_cost(
             takes 3-tuples ``(tokens, ms, usd)``.
 
     Returns:
-        The total estimated USD cost.
+        The total estimated USD cost as a :class:`decimal.Decimal`
+        (MONEY is Decimal, per ADR-0004 / ADR-0010).
     """
-    total = 0.0
+    total = Decimal("0")
     for tup in cost_estimates:
         if len(tup) < 3:
             continue
-        total += float(tup[2])
+        usd = tup[2]
+        if isinstance(usd, Decimal):
+            total += usd
+        else:
+            total += Decimal(str(usd))
     return total
 
 
@@ -168,5 +174,7 @@ def budget_excludes_inference(
         return False
     if budget.max_total_cost_usd is None:
         return False
-    # Inference's usd cost is 0.001 (per the spec).
-    return budget.max_total_cost_usd < 0.001
+    # Inference's usd cost is 0.001 (per the spec). MONEY is Decimal
+    # (ADR-0004 / ADR-0010), so compare against ``Decimal("0.001")``
+    # rather than a float literal.
+    return budget.max_total_cost_usd < Decimal("0.001")

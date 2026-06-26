@@ -1257,7 +1257,7 @@
 result = paxman.<span class="fn">normalize</span>(
     input_data=raw_invoice_bytes,
     contract=<span class="cls">Invoice</span>,
-    budget=paxman.<span class="cls">Budget</span>(max_total_cost_usd=<span class="num">0.10</span>),
+    budget=paxman.<span class="cls">Budget</span>(max_total_cost_usd=<span class="cls">Decimal</span>(<span class="num">"0.10"</span>)),
 )
 
 <span class="keyword">print</span>(result.normalized_data)
@@ -1380,7 +1380,7 @@ result = paxman.<span class="fn">normalize</span>(
 result = paxman.<span class="fn">normalize</span>(
     input_data=raw_invoice_bytes,
     contract=<span class="cls">Invoice</span>,
-    budget=paxman.<span class="cls">Budget</span>(max_total_cost_usd=<span class="num">0.10</span>),
+    budget=paxman.<span class="cls">Budget</span>(max_total_cost_usd=<span class="cls">Decimal</span>(<span class="num">"0.10"</span>)),
     policy=paxman.<span class="cls">Policy</span>(allow_remote_inference=<span class="keyword">True</span>),
 )
 
@@ -1404,7 +1404,7 @@ artifact = paxman.<span class="fn">normalize</span>(
     input_data=raw_invoice,
     contract=<span class="cls">Invoice</span>,
     budget=paxman.<span class="cls">Budget</span>(
-        max_total_cost_usd=<span class="num">0.10</span>,
+        max_total_cost_usd=<span class="cls">Decimal</span>(<span class="num">"0.10"</span>),
         max_total_latency_ms=<span class="num">5_000</span>,
         max_remote_inference_calls=<span class="num">2</span>,
     ),

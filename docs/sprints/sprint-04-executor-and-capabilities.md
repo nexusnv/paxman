@@ -110,7 +110,7 @@ None. The stub inference provider returns hard-coded completions; no real provid
 | Risk | Likelihood | Impact | Mitigation |
 |---|---|---|---|
 | Executor non-determinism from dict iteration order | Medium | High | Sort all plan/registry iterations by `id` or `field_id`. Property test catches regressions. |
-| Budget tracking has floating-point precision issues | Medium | Medium | Use `Decimal` for cost. Property test that cost tracking is exact for round numbers. |
+| ~~Budget tracking has floating-point precision issues~~ | ~~Medium~~ | ~~Medium~~ | ~~Use `Decimal` for cost. Property test that cost tracking is exact for round numbers.~~ — **Closed** by [Sprint 7+ intervention](../sprints/sprint-07a-budget-money-decimal.md) / [ADR-0010](../adr/0010-budget-money-decimal.md). |
 | The stub inference provider accidentally returns the same completion on every call (defeats the test for non-determinism) | Medium | Medium | Stub provider cycles through a fixed list of 3 strings, or accepts a `--seed` parameter for tests. Document the stub as a test-only utility. |
 | OpenAPI adapter scope creep (trying to support all of OpenAPI 3.1) | High | Medium | Hard cap: only support what `petstore_3_0.yaml` exercises. Defer `oneOf`/`anyOf`/`$ref` resolution to V2. Document limitations in `EXTENDING.md`. |
 | OpenAPI adapter delegates to JSON Schema adapter, creating an import-linter violation | High | High | The OpenAPI adapter is in `contract/`, which may import from `contract/adapters/`. The JSON Schema adapter is also in `contract/adapters/`. **No DAG violation** — they're siblings. Verify with `import-linter` in CI. |

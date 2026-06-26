@@ -20,7 +20,7 @@ class BudgetFactory(factory.Factory):
         model = Budget
 
     max_total_cost_usd = factory.LazyAttribute(
-        lambda _o: float(factory.Faker._get_faker().pydecimal(min_value=0, max_value=10, right_digits=4))
+        lambda _o: factory.Faker._get_faker().pydecimal(min_value=0, max_value=10, right_digits=4)
     )
     max_total_latency_ms = factory.LazyAttribute(
         lambda _o: factory.Faker._get_faker().random_int(min=100, max=60_000)

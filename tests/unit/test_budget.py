@@ -8,6 +8,8 @@ threshold set in pyproject.toml.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
 from paxman.budget import Budget, CurrencyPolicy, Policy
@@ -43,8 +45,20 @@ def test_budget_default_is_all_none() -> None:
 def test_budget_accepts_zero_values() -> None:
     """``Budget(max_total_cost_usd=0)`` is valid (zero is not negative)."""
     b = Budget(max_total_cost_usd=0.0, max_total_latency_ms=0)
-    assert b.max_total_cost_usd == 0.0
+    assert b.max_total_cost_usd == Decimal("0")
     assert b.max_total_latency_ms == 0
+
+
+def test_budget_accepts_float_literal_for_cost() -> None:
+    """``Budget(max_total_cost_usd=0.10)`` (a float literal) coerces to Decimal.
+
+    Backward-compat lock: existing call sites pass float literals; the
+    constructor must continue to accept them and store as Decimal per
+    ADR-0004 / ADR-0010 ("MONEY is Decimal, never float").
+    """
+    b = Budget(max_total_cost_usd=0.10)
+    assert b.max_total_cost_usd == Decimal("0.10")
+    assert isinstance(b.max_total_cost_usd, Decimal)
 
 
 def test_budget_rejects_negative_cost() -> None:
@@ -75,7 +89,7 @@ def test_budget_is_frozen() -> None:
     """``Budget`` is frozen (attrs.frozen); assignment raises FrozenInstanceError."""
     b = Budget(max_total_cost_usd=1.0)
     with pytest.raises(BaseException):  # FrozenInstanceError  # noqa: B017
-        b.max_total_cost_usd = 5.0  # type: ignore[misc]
+        b.max_total_cost_usd = Decimal("5.0")  # type: ignore[misc]
 
 
 # --- Policy defaults --------------------------------------------------------

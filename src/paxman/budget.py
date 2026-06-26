@@ -8,6 +8,7 @@ in ``api/types.py``.
 from __future__ import annotations
 
 import enum
+from decimal import Decimal
 
 import attrs
 
@@ -27,6 +28,30 @@ class CurrencyPolicy(enum.Enum):
     REJECT_WITHOUT_RATE = "REJECT_WITHOUT_RATE"
 
 
+def _to_decimal_optional(
+    value: float | int | Decimal | None,
+) -> Decimal | None:
+    """Convert a USD cost input to ``Decimal`` (or pass ``None`` through).
+
+    Used as the ``attrs.field`` converter on :attr:`Budget.max_total_cost_usd`
+    so callers can pass either a literal ``float`` (``0.10``) or a
+    ``Decimal`` (``Decimal("0.10")``). The internal type is
+    :class:`decimal.Decimal` per ADR-0004 / ADR-0010 — MONEY is Decimal,
+    never float — but the float-literal call site pattern is preserved
+    for backward compatibility.
+
+    The conversion is exact for the V1 USD domain ([0, 1] with up to
+    4 decimal places). Floats are converted via ``Decimal(str(x))`` to
+    avoid the binary-representation noise of ``Decimal(0.1)`` producing
+    ``Decimal('0.1000000000000000055511151231257827021181583404541015625')``.
+    """
+    if value is None:
+        return None
+    if isinstance(value, Decimal):
+        return value
+    return Decimal(str(value))
+
+
 @attrs.frozen(slots=True)
 class Budget:
     """Hard caps on cost, latency, and capability invocations.
@@ -36,13 +61,16 @@ class Budget:
     artifact with status ``PARTIAL_SUCCESS``.
 
     Attributes:
-        max_total_cost_usd: Hard cap on cost in USD; aborts when exceeded.
+        max_total_cost_usd: Hard cap on cost in USD (Decimal per
+            ADR-0004 / ADR-0010); aborts when exceeded. The constructor
+            accepts ``float | int | Decimal | None`` and coerces to
+            ``Decimal`` for backward compatibility.
         max_total_latency_ms: Hard cap on wall-clock latency.
         max_remote_inference_calls: Cap on remote inference invocations.
         max_capability_invocations: Cap on total capability invocations.
     """
 
-    max_total_cost_usd: float | None = attrs.field(default=None)
+    max_total_cost_usd: Decimal | None = attrs.field(default=None, converter=_to_decimal_optional)
     max_total_latency_ms: int | None = attrs.field(default=None)
     max_remote_inference_calls: int | None = attrs.field(default=None)
     max_capability_invocations: int | None = attrs.field(default=None)

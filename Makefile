@@ -170,9 +170,20 @@ publish: ## Publish to PyPI
 
 # --- Local CI simulation (the canonical "is this green?" command) -----------
 
+# 9 checks (per Sprint 8 D8.25 / V1_ACCEPTANCE_CRITERIA.md §3.2):
+#   1. install-frozen     — exact lockfile install
+#   2. lint               — ruff check
+#   3. format-check       — ruff format --check
+#   4. typecheck          — mypy --strict
+#   5. typecheck-pyright  — pyright (advisory in CI)
+#   6. imports            — import-linter
+#   7. docs-check         — interrogate (100% docstring coverage on public surface)
+#   8. security           — bandit (advisory in CI)
+#   9. test-cov           — pytest with coverage + per-subsystem threshold check
+
 .PHONY: ci
-ci: install-frozen lint format-check typecheck typecheck-pyright imports test-cov ## Run the local CI pipeline (install → lint → format → typecheck → typecheck-pyright → imports → test-cov)
+ci: install-frozen lint format-check typecheck typecheck-pyright imports docs-check security test-cov ## Run the full local-CI pipeline (9 checks: install → lint → format → typecheck → pyright → imports → docs → security → test-cov)
 	@echo ""
 	@echo "=========================================="
-	@echo "  CI GREEN ✓"
+	@echo "  CI GREEN ✓ (9 checks)"
 	@echo "=========================================="

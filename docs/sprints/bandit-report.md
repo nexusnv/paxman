@@ -29,7 +29,7 @@
 
 ## Scan Output
 
-```
+```text
 $ uv run bandit -r src/paxman -c pyproject.toml
 
 Test results:

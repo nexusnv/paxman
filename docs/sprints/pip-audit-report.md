@@ -51,7 +51,7 @@ uv lock --check
 
 # Test suite
 uv run pytest tests/unit --tb=no
-# → 2214 passed in 7.37s  EXIT: 0
+# → 2216 passed in 7.37s  EXIT: 0
 ```
 
 ## CVEs Found
@@ -103,7 +103,7 @@ None. No CVEs were found, so no `--ignore-vuln` flags were needed.
 
 ### Test Suite
 
-- **`pytest tests/unit`:** 2354 passed (exit 0)
+- **\`pytest tests/\`:** 2356 passed (exit 0)
 - **No regressions** from any dependency state
 
 ## Risk Assessment

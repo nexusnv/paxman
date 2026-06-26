@@ -61,7 +61,9 @@ environment names.
 
 After setup, you should be able to:
 
-1. Create a tag: `git tag v0.5.0 && git push --tags`
+1. Create a tag: `git tag v0.5.0 && git push origin v0.5.0`
+   (Use `git push origin <tag-name>` — never `git push --tags`, which can publish
+   multiple tags unintentionally.)
 2. GitHub Actions will trigger the `release.yml` workflow
 3. The workflow will run the full CI gates, then publish to TestPyPI
 4. Check https://test.pypi.org/project/paxman/ for the published package
@@ -71,8 +73,12 @@ After setup, you should be able to:
 - **No API tokens in repo**: `grep -r "pypi_\|API_TOKEN" .github/` returns no matches
 - **No API tokens in environment**: The GitHub OIDC token is short-lived (max 1 hour)
 - **No secret in CI logs**: The `pypa/gh-action-pypi-publish` action handles OIDC transparently
-- **Tamper-evident**: Every published artifact includes a SHA-256 hash in the wheel filename
-  (hatchling-generated) and in the `paxman.normalized_data.replay_hash` (V1 invariant)
+- **Tamper-evident**: A `SHA256SUMS` checksum file is generated as a post-build step
+  (`cd dist && sha256sum *.whl *.tar.gz > SHA256SUMS`). Users verify artifact integrity
+  with `cd dist && sha256sum -c SHA256SUMS`. This is distinct from the V1 replay hash
+  (`replay_hash`), which is a separate deterministic signature of the normalization
+  pipeline — the two mechanisms are complementary: `SHA256SUMS` covers distribution
+  integrity, while `replay_hash` covers normalization determinism.
 
 ## Fallback (if OIDC misconfigures)
 

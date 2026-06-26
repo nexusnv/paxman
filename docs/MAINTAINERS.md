@@ -49,8 +49,10 @@ will be added based on:
 4. **Time commitment** — realistic capacity to respond to issues and review PRs
 
 The current maintainer will reach out to high-quality contributors directly. If you
-believe you meet the criteria and would like to be considered, open an issue or
-email `security@nexusnv.net`.
+believe you meet the criteria and would like to be considered, open a GitHub issue
+with the "maintainer-interest" label (or any existing issue — the maintainer will
+respond). **Do not email `security@nexusnv.net` for maintainer inquiries; that
+address is reserved for security vulnerabilities only** (per [`SECURITY.md`](../SECURITY.md)).
 
 ## Maintainer Emeritus
 

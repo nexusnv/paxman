@@ -35,7 +35,7 @@ Manual macOS/Windows smoke tests will be added to Sprint 10.
 
 ## Why no per-platform matrix?
 
-Per [D9.12a](#platform-support-note-d912a) in the release notes, Paxman ships
+Per [D9.12a](#platform-support) in the release notes, Paxman ships
 **zero compiled extensions**:
 
 - All subsystems are pure Python (`@attrs.frozen` data classes, dataclass-style
@@ -91,7 +91,7 @@ python3 -m venv /tmp/paxman-test-venv
 Successfully installed attrs-26.1.0 packaging-26.2 paxman-0.0.0 structlog-26.1.0 typing-extensions-4.15.0
 ```
 
-5 core dependencies only (within DEPENDENCIES.md §1 budget of ≤4 packages).
+4 core dependencies (within DEPENDENCIES.md §1 budget of ≤4 packages) + paxman itself.
 
 ### Import + functional test
 

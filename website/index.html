@@ -920,6 +920,8 @@
     .progress-track {
       position: relative;
       height: 8px;
+      margin-top: 18px;
+      margin-bottom: 56px;
       background: oklch(15% 0.012 260);
       border: 1px solid var(--border);
       border-radius: 999px;
@@ -938,29 +940,66 @@
     }
     .progress-marker {
       position: absolute;
-      top: 50%;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--muted);
-      transform: translate(-50%, -50%);
-      border: 1px solid var(--bg);
-      transition: background 0.4s, transform 0.3s;
+      top: 4px;                /* vertical center of 8px track */
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 64px;             /* fixed slot so labels can wrap predictably */
+      cursor: default;
     }
-    .progress-marker.current {
-      background: oklch(65% 0.15 60);
-      box-shadow: 0 0 0 3px oklch(65% 0.15 60 / 0.18), 0 0 10px oklch(65% 0.15 60 / 0.5);
-      animation: marker-pulse 1.6s ease-in-out infinite;
-    }
-    .progress-marker.release {
-      background: transparent;
-      border: 2px solid var(--accent);
+    .progress-marker-dot {
       width: 10px;
       height: 10px;
+      border-radius: 50%;
+      background: var(--muted);
+      border: 1px solid var(--bg);
+      box-shadow: 0 0 0 2px var(--surface);
+      transition: background 0.4s, transform 0.3s, box-shadow 0.4s;
     }
+    .progress-marker-num {
+      font: 600 10px/1 var(--font-mono);
+      color: var(--muted);
+      margin-top: 8px;
+      letter-spacing: 0.04em;
+      transition: color 0.4s;
+    }
+    .progress-marker-title {
+      font-size: 10px;
+      line-height: 1.25;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 4px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      letter-spacing: 0.01em;
+      transition: color 0.4s;
+    }
+    .progress-marker.done .progress-marker-dot { background: var(--accent); }
+    .progress-marker.done .progress-marker-num,
+    .progress-marker.done .progress-marker-title { color: var(--accent); }
+    .progress-marker.current .progress-marker-dot {
+      background: oklch(65% 0.15 60);
+      box-shadow: 0 0 0 3px oklch(65% 0.15 60 / 0.18), 0 0 10px oklch(65% 0.15 60 / 0.5), 0 0 0 2px var(--surface);
+      animation: marker-pulse 1.6s ease-in-out infinite;
+    }
+    .progress-marker.current .progress-marker-num,
+    .progress-marker.current .progress-marker-title { color: oklch(65% 0.15 60); }
+    .progress-marker.release .progress-marker-dot {
+      background: transparent;
+      border: 2px solid var(--accent);
+      width: 12px;
+      height: 12px;
+    }
+    .progress-marker.release .progress-marker-num,
+    .progress-marker.release .progress-marker-title { color: var(--accent); }
     @keyframes marker-pulse {
-      0%, 100% { box-shadow: 0 0 0 3px oklch(65% 0.15 60 / 0.18), 0 0 10px oklch(65% 0.15 60 / 0.5); }
-      50%      { box-shadow: 0 0 0 6px oklch(65% 0.15 60 / 0.05), 0 0 14px oklch(65% 0.15 60 / 0.6); }
+      0%, 100% { box-shadow: 0 0 0 3px oklch(65% 0.15 60 / 0.18), 0 0 10px oklch(65% 0.15 60 / 0.5), 0 0 0 2px var(--surface); }
+      50%      { box-shadow: 0 0 0 6px oklch(65% 0.15 60 / 0.05), 0 0 14px oklch(65% 0.15 60 / 0.6), 0 0 0 2px var(--surface); }
     }
     .progress-legend {
       display: flex;
@@ -992,102 +1031,6 @@
     .stat-card:hover { background: oklch(14% 0.013 260); }
     .stat-number {
       font-variant-numeric: tabular-nums;
-    }
-
-    /* ─── Sprint filter tabs ─── */
-    .sprint-filter {
-      display: flex;
-      gap: 6px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin-top: 18px;
-      margin-bottom: 18px;
-    }
-    .sprint-filter-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 7px 14px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      color: var(--muted);
-      font: 500 12px/1 var(--font-mono);
-      letter-spacing: 0.02em;
-      cursor: pointer;
-      transition: color 0.2s, border-color 0.2s, background 0.2s;
-    }
-    .sprint-filter-btn:hover {
-      color: var(--fg);
-      border-color: oklch(68% 0.18 170 / 0.4);
-    }
-    .sprint-filter-btn.active {
-      color: var(--accent);
-      border-color: var(--accent);
-      background: oklch(68% 0.18 170 / 0.06);
-    }
-    .filter-dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-    }
-    .filter-dot.done { background: var(--accent); }
-    .filter-dot.current { background: oklch(65% 0.15 60); }
-    .filter-dot.planned {
-      background: transparent;
-      border: 1.5px solid var(--muted);
-    }
-
-    /* Sprint timeline filtering */
-    .sprint-pill-wrapper {
-      transition: opacity 0.3s, transform 0.3s, max-width 0.3s, margin 0.3s, padding 0.3s;
-    }
-    .sprint-pill-wrapper.is-hidden {
-      opacity: 0;
-      transform: scale(0.85);
-      max-width: 0;
-      width: 0;
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      pointer-events: none;
-      border-left-color: transparent;
-    }
-
-    /* Live indicator */
-    .sprint-header {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 16px;
-    }
-    .sprint-live {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 4px 10px;
-      border: 1px solid oklch(65% 0.15 60 / 0.4);
-      border-radius: 999px;
-      background: oklch(65% 0.15 60 / 0.06);
-    }
-    .live-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: oklch(65% 0.15 60);
-      box-shadow: 0 0 0 0 oklch(65% 0.15 60 / 0.6);
-      animation: live-pulse 1.6s ease-in-out infinite;
-    }
-    @keyframes live-pulse {
-      0%, 100% { box-shadow: 0 0 0 0 oklch(65% 0.15 60 / 0.6); }
-      50%      { box-shadow: 0 0 0 6px oklch(65% 0.15 60 / 0); }
-    }
-    .live-text {
-      font: 600 10px/1 var(--font-mono);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: oklch(65% 0.15 60);
     }
 
     /* ─── Roadmap: collapsible ─── */
@@ -1194,114 +1137,6 @@
     }
     .footer-links a:hover { color: var(--fg); }
 
-    /* ─── Sprint Timeline ─── */
-    .sprint-header {
-      text-align: center;
-      font-size: 12px;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      margin-top: 48px;
-      margin-bottom: 12px;
-      font-weight: 500;
-    }
-    .sprint-timeline {
-      display: flex;
-      gap: 0;
-      overflow-x: auto;
-      padding: 12px 0 8px;
-      position: relative;
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-      -webkit-overflow-scrolling: touch;
-      justify-content: center;
-    }
-    .sprint-timeline::-webkit-scrollbar { height: 4px; }
-    .sprint-timeline::-webkit-scrollbar-track { background: transparent; }
-    .sprint-timeline::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-    .sprint-pill-wrapper {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      flex: 0 0 auto;
-      width: 96px;
-      position: relative;
-    }
-    .sprint-pill-wrapper + .sprint-pill-wrapper {
-      border-left: 1px solid var(--border);
-      padding-left: 0;
-      margin-left: 0;
-    }
-    .sprint-pill {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 10px 6px 8px;
-      width: 100%;
-      cursor: default;
-      transition: background 0.25s, border-color 0.25s;
-    }
-    .sprint-pill:hover {
-      background: oklch(68% 0.18 170 / 0.03);
-    }
-    .sprint-pill .sprint-num {
-      font: 600 11px/1 var(--font-mono);
-      margin-bottom: 3px;
-      transition: color 0.25s;
-    }
-    .sprint-pill .sprint-title {
-      font-size: 9px;
-      color: var(--muted);
-      text-align: center;
-      line-height: 1.25;
-      letter-spacing: 0.01em;
-    }
-    .sprint-pill .sprint-status {
-      font-size: 8px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-top: 5px;
-      padding: 2px 8px;
-      border-radius: 999px;
-    }
-    /* Sprint status colors */
-    .sprint-pill.done .sprint-num { color: var(--accent); }
-    .sprint-pill.done .sprint-status {
-      background: oklch(68% 0.18 170 / 0.12);
-      color: var(--accent);
-    }
-    .sprint-pill.current .sprint-num { color: oklch(65% 0.15 60); }
-    .sprint-pill.current .sprint-status {
-      background: oklch(65% 0.15 60 / 0.12);
-      color: oklch(65% 0.15 60);
-    }
-    .sprint-pill.planned .sprint-num { color: var(--muted); }
-    .sprint-pill.planned .sprint-status {
-      background: oklch(60% 0.02 260 / 0.08);
-      color: var(--muted);
-    }
-    /* Timeline dot indicators */
-    .sprint-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      margin-bottom: 4px;
-      transition: background 0.25s, border-color 0.25s;
-    }
-    .sprint-pill.done .sprint-dot {
-      background: var(--accent);
-      border: none;
-    }
-    .sprint-pill.current .sprint-dot {
-      background: oklch(65% 0.15 60);
-      box-shadow: 0 0 6px oklch(65% 0.15 60 / 0.4);
-    }
-    .sprint-pill.planned .sprint-dot {
-      background: transparent;
-      border: 2px solid var(--border);
-    }
-
     /* ─── Responsive ─── */
     @media (max-width: 900px) {
       .motivation-grid { grid-template-columns: 1fr; gap: 32px; }
@@ -1309,12 +1144,11 @@
       .status-grid { grid-template-columns: repeat(2, 1fr); }
       .roadmap { grid-template-columns: 1fr; }
       .usecases-grid { grid-template-columns: 1fr; }
-      .sprint-timeline { justify-content: flex-start; }
-      .sprint-pill-wrapper { width: 88px; }
       .arch-diagram { padding: 24px 16px; }
       .arch-layout { grid-template-columns: 1fr; }
       .arch-panel { position: static; }
-      .sprint-header { flex-direction: column; gap: 10px; }
+      .progress-marker { width: 56px; }
+      .progress-marker-title { font-size: 9px; }
     }
     @media (max-width: 640px) {
       nav .container { height: 48px; }
@@ -1332,6 +1166,12 @@
       .arch-dataflow { left: 18px; }
       .progress-wrap { padding: 16px; }
       .progress-percent { font-size: 18px; }
+      /* Phone: dots + sprint number (no title — full text is in title attr) */
+      .progress-track { margin-bottom: 28px; }
+      .progress-marker { width: 0; }
+      .progress-marker-title { display: none; }
+      .progress-marker-num { font-size: 9px; margin-top: 6px; }
+      .progress-legend { gap: 12px; }
       footer .container { flex-direction: column; align-items: flex-start; }
     }
 
@@ -1789,17 +1629,61 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
         </div>
         <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressTrack">
           <div class="progress-bar" id="progressBar"></div>
-          <div class="progress-marker" style="left: 0%" data-marker="S0"></div>
-          <div class="progress-marker" style="left: 9.09%" data-marker="S1"></div>
-          <div class="progress-marker" style="left: 18.18%" data-marker="S2"></div>
-          <div class="progress-marker" style="left: 27.27%" data-marker="S3"></div>
-          <div class="progress-marker" style="left: 36.36%" data-marker="S4"></div>
-          <div class="progress-marker" style="left: 45.45%" data-marker="S5"></div>
-          <div class="progress-marker current" style="left: 54.54%" data-marker="S6"></div>
-          <div class="progress-marker" style="left: 63.63%" data-marker="S7"></div>
-          <div class="progress-marker" style="left: 72.72%" data-marker="S8"></div>
-          <div class="progress-marker" style="left: 81.81%" data-marker="S9"></div>
-          <div class="progress-marker release" style="left: 100%" data-marker="v1"></div>
+          <div class="progress-marker done" style="left: 0%" data-marker="S0" title="Sprint 0 — Design Closure">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">S0</span>
+            <span class="progress-marker-title">Design Closure</span>
+          </div>
+          <div class="progress-marker done" style="left: 9.09%" data-marker="S1" title="Sprint 1 — Foundation">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">S1</span>
+            <span class="progress-marker-title">Foundation</span>
+          </div>
+          <div class="progress-marker done" style="left: 18.18%" data-marker="S2" title="Sprint 2 — Contract Subsystem">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">S2</span>
+            <span class="progress-marker-title">Contract</span>
+          </div>
+          <div class="progress-marker done" style="left: 27.27%" data-marker="S3" title="Sprint 3 — Planner + 3 Capabilities">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">S3</span>
+            <span class="progress-marker-title">Planner</span>
+          </div>
+          <div class="progress-marker done" style="left: 36.36%" data-marker="S4" title="Sprint 4 — Executor + 2 Capabilities">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">S4</span>
+            <span class="progress-marker-title">Executor</span>
+          </div>
+          <div class="progress-marker done" style="left: 45.45%" data-marker="S5" title="Sprint 5 — Reconciler + MONEY + Vendoring">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">S5</span>
+            <span class="progress-marker-title">Reconciler</span>
+          </div>
+          <div class="progress-marker current" style="left: 54.54%" data-marker="S6" title="Sprint 6 — Artifact + API (First E2E)">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">S6</span>
+            <span class="progress-marker-title">Artifact + API</span>
+          </div>
+          <div class="progress-marker planned" style="left: 63.63%" data-marker="S7" title="Sprint 7 — Integration, Property Tests">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">S7</span>
+            <span class="progress-marker-title">Integration</span>
+          </div>
+          <div class="progress-marker planned" style="left: 72.72%" data-marker="S8" title="Sprint 8 — Docs + Community + CI">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">S8</span>
+            <span class="progress-marker-title">Docs + CI</span>
+          </div>
+          <div class="progress-marker planned" style="left: 81.81%" data-marker="S9" title="Sprint 9 — Production Hardening">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">S9</span>
+            <span class="progress-marker-title">Hardening</span>
+          </div>
+          <div class="progress-marker release" style="left: 100%" data-marker="v1" title="Sprint 10 — Release (v1.0.0)">
+            <span class="progress-marker-dot"></span>
+            <span class="progress-marker-num">v1</span>
+            <span class="progress-marker-title">Release</span>
+          </div>
         </div>
         <div class="progress-legend">
           <span><i class="legend-dot done"></i>Complete (6)</span>
@@ -1828,119 +1712,6 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
           <div class="stat-number" data-count="17">0</div>
           <div class="stat-label">Error Classes</div>
           <div class="stat-sub">hierarchical errors</div>
-        </div>
-      </div>
-
-      <!-- Sprint Timeline -->
-      <div class="sprint-header reveal">
-        <span>Development Timeline — 11 Sprints to v1.0.0</span>
-        <div class="sprint-live" aria-label="Sprint 6 in progress">
-          <span class="live-dot"></span>
-          <span class="live-text">Sprint 6 live</span>
-        </div>
-      </div>
-
-      <div class="sprint-filter reveal" role="tablist" aria-label="Filter sprints by status">
-        <button class="sprint-filter-btn active" data-filter="all" role="tab" aria-selected="true">All</button>
-        <button class="sprint-filter-btn" data-filter="done" role="tab" aria-selected="false">
-          <i class="filter-dot done"></i>Done
-        </button>
-        <button class="sprint-filter-btn" data-filter="current" role="tab" aria-selected="false">
-          <i class="filter-dot current"></i>Current
-        </button>
-        <button class="sprint-filter-btn" data-filter="planned" role="tab" aria-selected="false">
-          <i class="filter-dot planned"></i>Planned
-        </button>
-      </div>
-
-      <div class="sprint-timeline reveal" id="sprintTimeline">
-        <div class="sprint-pill-wrapper" data-status="done">
-          <div class="sprint-pill done" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 0</span>
-            <span class="sprint-title">Design Closure</span>
-            <span class="sprint-status">Done</span>
-          </div>
-        </div>
-        <div class="sprint-pill-wrapper" data-status="done">
-          <div class="sprint-pill done" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 1</span>
-            <span class="sprint-title">Foundation</span>
-            <span class="sprint-status">Done</span>
-          </div>
-        </div>
-        <div class="sprint-pill-wrapper" data-status="done">
-          <div class="sprint-pill done" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 2</span>
-            <span class="sprint-title">Contract Subsystem</span>
-            <span class="sprint-status">Done</span>
-          </div>
-        </div>
-        <div class="sprint-pill-wrapper" data-status="done">
-          <div class="sprint-pill done" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 3</span>
-            <span class="sprint-title">Planner + 3 Capabilities</span>
-            <span class="sprint-status">Done</span>
-          </div>
-        </div>
-        <div class="sprint-pill-wrapper" data-status="done">
-          <div class="sprint-pill done" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 4</span>
-            <span class="sprint-title">Executor + 2 Capabilities</span>
-            <span class="sprint-status">Done</span>
-          </div>
-        </div>
-        <div class="sprint-pill-wrapper" data-status="done">
-          <div class="sprint-pill done" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 5</span>
-            <span class="sprint-title">Reconciler + MONEY + Vendoring</span>
-            <span class="sprint-status">Done</span>
-          </div>
-        </div>
-        <div class="sprint-pill-wrapper" data-status="current">
-          <div class="sprint-pill current" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 6</span>
-            <span class="sprint-title">Artifact + API (First E2E)</span>
-            <span class="sprint-status">Current</span>
-          </div>
-        </div>
-        <div class="sprint-pill-wrapper" data-status="planned">
-          <div class="sprint-pill planned" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 7</span>
-            <span class="sprint-title">Integration, Property Tests</span>
-            <span class="sprint-status">Planned</span>
-          </div>
-        </div>
-        <div class="sprint-pill-wrapper" data-status="planned">
-          <div class="sprint-pill planned" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 8</span>
-            <span class="sprint-title">Docs + Community + CI</span>
-            <span class="sprint-status">Planned</span>
-          </div>
-        </div>
-        <div class="sprint-pill-wrapper" data-status="planned">
-          <div class="sprint-pill planned" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 9</span>
-            <span class="sprint-title">Production Hardening</span>
-            <span class="sprint-status">Planned</span>
-          </div>
-        </div>
-        <div class="sprint-pill-wrapper" data-status="planned">
-          <div class="sprint-pill planned" tabindex="0">
-            <div class="sprint-dot"></div>
-            <span class="sprint-num">Sprint 10</span>
-            <span class="sprint-title">Release (v1.0.0)</span>
-            <span class="sprint-status">Planned</span>
-          </div>
         </div>
       </div>
 
@@ -2250,9 +2021,11 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
             var eased = 1 - Math.pow(1 - p, 3);
             var cur = Math.floor(eased * pct);
             if (progressPercent) progressPercent.textContent = cur + '%';
+            if (progressTrack) progressTrack.setAttribute('aria-valuenow', String(cur));
             if (p < 1) requestAnimationFrame(step);
             else {
               if (progressPercent) progressPercent.textContent = pct + '%';
+              if (progressTrack) progressTrack.setAttribute('aria-valuenow', String(pct));
               if (progressCount) progressCount.textContent = doneSprints + ' / ' + totalSprints + ' sprints';
             }
           }
@@ -2264,29 +2037,6 @@ paxman.<span class="fn">register_capability</span>(<span class="cls">DateParserC
         });
       }, { threshold: 0.4 });
       if (progressTrack) progressObserver.observe(progressTrack);
-
-      // ─── Sprint filter ───
-      var filterButtons = document.querySelectorAll('.sprint-filter-btn');
-      var sprintWrappers = document.querySelectorAll('.sprint-pill-wrapper');
-      filterButtons.forEach(function (btn) {
-        btn.addEventListener('click', function () {
-          var filter = btn.getAttribute('data-filter');
-          filterButtons.forEach(function (b) {
-            b.classList.remove('active');
-            b.setAttribute('aria-selected', 'false');
-          });
-          btn.classList.add('active');
-          btn.setAttribute('aria-selected', 'true');
-          sprintWrappers.forEach(function (w) {
-            var status = w.getAttribute('data-status');
-            if (filter === 'all' || status === filter) {
-              w.classList.remove('is-hidden');
-            } else {
-              w.classList.add('is-hidden');
-            }
-          });
-        });
-      });
 
       // ─── Roadmap expand/collapse ───
       var roadmapHeads = document.querySelectorAll('.roadmap-head');

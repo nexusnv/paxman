@@ -153,7 +153,7 @@ This is sufficient for most audit needs. For regulated industries (finance, heal
 If you find a security vulnerability in Paxman:
 
 1. **Do not** open a public GitHub issue.
-2. Email `security@paxman.example` (placeholder — replace with the actual security email when the project is hosted).
+2. Email **`security@nexusnv.net`** (per the project domain `paxman.nexusnv.net`).
 3. Include a description of the vulnerability, the impact, and a reproducer.
 4. Allow up to 90 days for a fix before public disclosure.
 

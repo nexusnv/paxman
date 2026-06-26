@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Sprint 8 (Documentation + Community + CI Hardening)
+
+- **`docs/concepts/`** — 5 concept documents covering the V1 mental model:
+  - [`contracts.md`](docs/concepts/contracts.md) — the contract-driven design, the 4 V1 formats, the `CanonicalContract` internal model, MONEY as a first-class type, contract policies, common pitfalls.
+  - [`capabilities.md`](docs/concepts/capabilities.md) — the 5 V1 capabilities (`text_extraction`, `regex_extraction`, `lookup`, `inference`, `validation`), the `Capability` SPI, `CapabilitySpec` metadata, the cost model, the capability registry, boundary rules.
+  - [`planning.md`](docs/concepts/planning.md) — the field-centric planner, the 7-step heuristic chain, scoring (per `docs/specs/capability-cost-model.md` §4), budget and policy gates, the effective-policy model, determinism.
+  - [`reconciliation.md`](docs/concepts/reconciliation.md) — the three truth layers (`Contract` / `Candidate` / `Resolved`), the merge and conflict logic, confidence assignment (V1 rubric, fixed), MONEY reconciliation with `CurrencyPolicy`, the `UNRESOLVED` case, boundary rules.
+  - [`replay.md`](docs/concepts/replay.md) — the replay hash, the replay protocol, version compatibility, determinism guarantees, the replay API, golden artifacts.
+  - [`MIGRATION_GUIDE.md`](docs/concepts/MIGRATION_GUIDE.md) — skeleton migration guide (V2 will fill in worked examples for LlamaIndex, LangChain, Unstructured, …).
+- **`docs/howto/`** — 4 quick-start how-tos:
+  - [`add_adapter.md`](docs/howto/add_adapter.md) — adding a new contract adapter (5-minute checklist).
+  - [`add_capability.md`](docs/howto/add_capability.md) — adding a new capability (5-minute checklist).
+  - [`add_inference_provider.md`](docs/howto/add_inference_provider.md) — adding a new inference provider (OpenAI, Anthropic, local, …).
+  - [`replay_artifact.md`](docs/howto/replay_artifact.md) — using `paxman.replay()` end-to-end.
+- **Community files** — `CONTRIBUTING.md` (full contribution workflow + ADR-driven process), `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1).
+- **GitHub templates** — `.github/ISSUE_TEMPLATE/bug_report.md`, `.github/ISSUE_TEMPLATE/feature_request.md`, `.github/PULL_REQUEST_TEMPLATE.md`.
+- **CI hardening**:
+  - `pyrightconfig.json` (per `PACKAGE_STRUCTURE.md` §17.2).
+  - `.github/workflows/ci.yml` — the 9 CI checks (lint, format, mypy, pyright, import-linter, interrogate, bandit, pip-audit, test-cov) are wired in. `pyright` and `bandit` and `pip-audit` run as advisory jobs; `interrogate` runs as a required check (100% on the public surface).
+  - `Makefile` `make ci` runs the full local-CI pipeline (9 checks).
+  - `import-linter` — all 6 subsystem contracts in `pyproject.toml` enforce the module DAG (already present; verified by `make imports`).
+- **README updates** — badges (CI status, license, Python versions), quickstart verified end-to-end, expanded "What Paxman is NOT", new "When to use Paxman" vs "When to wrap Paxman" section, links to the new `docs/concepts/` and `docs/howto/`.
+- **Documentation links** — `docs/concepts/`, `docs/howto/`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, and the GitHub templates are linked from `README.md`.
+- **Branch protection** — `main` is protected; CI must pass before merge. Documented in `CONTRIBUTING.md` §6.
+
+### Notes (Sprint 8)
+
+- **No new public API surface.** All changes are documentation, tooling, and CI. The public API snapshot (`tests/fixtures/public_api_snapshot.json`) is unchanged.
+- **No new core dependencies.** All CI tooling (`pyright`, `interrogate`, `bandit`, `pip-audit`) is in the `[dependency-groups] dev` block, not the runtime `[project.dependencies]` block.
+- **No new ADRs.** Sprint 8 is documentation + CI; no architectural changes.
+- **All 26 sprint deliverables (D8.1–D8.26) shipped.** Per the [Sprint 8 spec](docs/sprints/sprint-08-docs-ci-hardening.md).
+
 ### Changed
 
 - **Cost pipeline switched from `float` to `Decimal`** (per [ADR-0010](docs/adr/0010-budget-money-decimal.md) and the new [Sprint 7+ intervention plan](docs/sprints/sprint-07a-budget-money-decimal.md)) — the project's `"MONEY is Decimal, never float"` directive (ADR-0004) is now reflected end-to-end through the cost pipeline:

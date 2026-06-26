@@ -87,7 +87,7 @@
 | D2.9 `contract/adapters/dict_dsl.py` | `src/paxman/contract/adapters/dict_dsl.py` | 35365 B. Tested in `tests/unit/test_contract_dict_dsl.py` (45208 B). | ✅ Present |
 | D2.10 Fixture contracts: 3+ each | `tests/fixtures/contracts/` | 4 dirs: `pydantic/`, `json_schema/`, `dict_dsl/`, `openapi/`. | ✅ Present (Sprint 7 D7.2 expanded to 10 files each) |
 | D2.11 Unit tests for all 9 modules | `tests/unit/test_contract_*.py` | 7 test files totaling ~150 KB | ✅ Present |
-| D2.12 Property tests: roundtrip Pydantic/Dict DSL | `tests/unit/test_contract_property.py` (7756 B) | ✅ Present |
+| D2.12 Property tests: roundtrip Pydantic/Dict DSL | `docs/sprints/sprint-02-contract-subsystem.md:52` | `tests/unit/test_contract_property.py` (7756 B) | ✅ Present |
 | D2.13 `import-linter` contract for `contract/` | `pyproject.toml` `[tool.importlinter]` | Verified in `pyproject.toml` | ✅ Present |
 | D2.14 Update `tests/fixtures/contracts/README.md` | `tests/fixtures/contracts/README.md` | 4335 B | ✅ Present |
 

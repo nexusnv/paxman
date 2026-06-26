@@ -60,7 +60,7 @@ ALL_18 = [
     CapabilityNotFoundError,
 ]
 ALL_18_NAMES = [c.__name__ for c in ALL_18]
-PUBLIC_11 = [
+PUBLIC_12 = [
     PaxmanError,
     InvalidContractError,
     ExecutionError,
@@ -72,6 +72,7 @@ PUBLIC_11 = [
     VersionMismatchError,
     HashMismatchError,
     ConfigurationError,
+    CapabilityNotFoundError,
 ]
 
 
@@ -244,13 +245,34 @@ def test_frozen_no_attribute_assignment(cls: type) -> None:
 # --- Public-surface contract ------------------------------------------------
 
 
-def test_public_11_are_in_dunder_all() -> None:
-    """The 11 public error names are listed in ``paxman.errors.__all__``."""
-    from paxman import errors
+def test_public_12_are_reexported() -> None:
+    """The public error re-export is exactly the 12-name set.
 
-    public_names = {c.__name__ for c in PUBLIC_11}
-    listed = set(getattr(errors, "__all__", []))
-    assert public_names.issubset(listed), f"Missing from __all__: {public_names - listed}"
+    This pins the **public re-export contract** in
+    :mod:`paxman.api.errors`, not the internal :mod:`paxman.errors`
+    module. ``paxman.errors`` is allowed to expose more symbols (the 6
+    internal contract/configuration errors); what matters for
+    downstream consumers is the 12-name set surfaced via
+    :mod:`paxman.api.errors`.
+
+    The comparison is **exact equality** (not ``issubset``), so:
+
+    - removing any of the 12 public exports fails;
+    - adding an undocumented public export fails (an ADR is required
+      to widen the public surface — see the
+      ``tests/public_api/test_public_api.py`` snapshot for the
+      matching guard at the function-level).
+    """
+    from paxman.api import errors as api_errors
+
+    public_names = {c.__name__ for c in PUBLIC_12}
+    listed = set(getattr(api_errors, "__all__", []))
+    assert listed == public_names, (
+        f"paxman.api.errors.__all__ drift. "
+        f"expected={sorted(public_names)}, got={sorted(listed)}, "
+        f"missing={sorted(public_names - listed)}, "
+        f"extra={sorted(listed - public_names)}"
+    )
 
 
 def test_all_18_are_in_dunder_all() -> None:

@@ -57,9 +57,23 @@ The replay-equality test pattern (in `tests/integration/test_golden_artifacts.py
 def test_replay_reproduces_artifact():
     """The replay of a stored artifact reproduces it byte-for-byte."""
     artifact = paxman.normalize(input_data, contract)
-    golden = load_golden("invoice_unresolved_dict_dsl.json")
-    assert encode_artifact(artifact) == golden
-    assert artifact.replay_hash == golden["replay_hash"]
+
+    # The golden has two distinct representations:
+    #   - `golden_raw_bytes`: the file's bytes as read from disk — used
+    #     for byte-for-byte equality against the freshly-encoded
+    #     artifact (the RFC 8785-style canonical JSON form).
+    #   - `golden_parsed`: the same golden after ``json.load`` — used
+    #     to read specific hash-relevant fields like ``replay_hash``
+    #     and to introspect structure.
+    golden_path = "tests/fixtures/artifacts/invoice_unresolved_dict_dsl.json"
+    golden_raw_bytes = pathlib.Path(golden_path).read_bytes()
+    golden_parsed = json.loads(golden_raw_bytes)
+
+    # 1. Byte-for-byte equality of the encoded artifact vs. the on-disk golden.
+    assert encode_artifact(artifact) == golden_raw_bytes
+
+    # 2. The fresh artifact's ``replay_hash`` matches the golden's ``replay_hash``.
+    assert artifact.replay_hash == golden_parsed["replay_hash"]
 ```
 
 The same test also runs in a fresh Python subprocess

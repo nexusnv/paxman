@@ -69,6 +69,7 @@ class TestAdversarialInputs:
         assert isinstance(artifact, ExecutionArtifact)
         assert artifact.status in {Status.UNRESOLVED, Status.PARTIAL_SUCCESS, Status.SUCCESS}
 
+    @pytest.mark.slow
     def test_extremely_large_input_returns_valid_artifact(self) -> None:
         """An extremely large input returns a valid artifact."""
         # Don't actually load the file (could be many MB) — just

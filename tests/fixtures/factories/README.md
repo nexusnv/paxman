@@ -67,6 +67,6 @@ def test_deterministic_inputs():
 
 ## See also
 
-- [docs/TEST_DATA.md §7 The Programmatic Layer](../../../../docs/TEST_DATA.md)
-- [TESTING_STRATEGY.md §3 Property Tests](../../../../TESTING_STRATEGY.md)
-- [DEPENDENCIES.md §4 Dev Dependencies](../../../../DEPENDENCIES.md)
+- [docs/TEST_DATA.md §7 The Programmatic Layer](../../../docs/TEST_DATA.md)
+- [TESTING_STRATEGY.md §3 Property Tests](../../../TESTING_STRATEGY.md)
+- [DEPENDENCIES.md §4 Dev Dependencies](../../../DEPENDENCIES.md)

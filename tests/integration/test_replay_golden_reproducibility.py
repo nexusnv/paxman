@@ -81,6 +81,8 @@ def test_replay_golden_reproducible_across_subprocesses() -> None:
     assert all(c in "0123456789abcdef" for c in hash_1)
 
 
+@pytest.mark.deterministic
+@pytest.mark.replay
 def test_replay_golden_reproducible_in_subprocess_vs_in_process() -> None:
     """A subprocess's hash matches an in-process normalize's hash.
 

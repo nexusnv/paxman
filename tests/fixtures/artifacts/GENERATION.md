@@ -79,9 +79,17 @@ Per the V1 determinism guarantee, this should only happen for:
 - A change to the planner algorithm (Sprint 3 / V2+).
 - A change to the V1 capability set (Sprint 4+).
 
-A new Paxman version that changes nothing about the artifact shape
-should produce **byte-equal** goldens across versions. (This is
-verified by the `paxman_version` check in `paxman.replay()`.)
+A Paxman version bump **can** change the golden bytes and the
+`replay_hash` even when the artifact shape is unchanged. This is
+because `paxman_version` is part of the hash-relevant input to
+:func:`~paxman.artifact._hash.compute_replay_hash` (see
+``src/paxman/artifact/_hash.py`` — `paxman_version` is the first
+field mixed into the hash). Maintainers should not expect
+byte-equality across versions; expect a fresh bootstrap after any
+version bump. The `paxman_version` check in `paxman.replay()` rejects
+artifacts produced by a different Paxman version, which is what
+makes the cross-version byte differences safe (a new version never
+silently replays a stale golden).
 
 ## Cross-cutting invariants
 

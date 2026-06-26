@@ -16,6 +16,26 @@ Factories:
 from __future__ import annotations
 
 import factory
+import faker
+import factory.random
+
+# Use the project-wide seed (imported for side-effect-free reference).
+from tests.fixtures.factories import SEED  # noqa: F401
+
+
+def _get_faker() -> faker.Faker:
+    """Return a public ``faker.Faker`` instance seeded by ``factory.random``.
+
+    Replaces the private ``factory.Faker._get_faker()`` attribute with
+    a public :class:`faker.Faker` instance whose seed is set via the
+    documented :func:`factory.random.reseed_random` entry point. This
+    keeps the test data deterministic without depending on
+    internal ``factory_boy`` behavior.
+    """
+    factory.random.reseed_random(SEED)
+    f = faker.Faker()
+    f.seed_instance(SEED)
+    return f
 
 
 class InvoiceInputFactory(factory.Factory):
@@ -26,7 +46,7 @@ class InvoiceInputFactory(factory.Factory):
 
     @classmethod
     def _create(cls, *args: object, **kwargs: object) -> str:  # type: ignore[override]
-        f = factory.Faker._get_faker()
+        f = _get_faker()
         supplier = f.company().replace(",", " ")
         invoice_num = f"INV-{f.random_number(digits=6, fix_len=True)}"
         total = f.pydecimal(min_value=10, max_value=10_000, right_digits=2)
@@ -49,7 +69,7 @@ class ReceiptInputFactory(factory.Factory):
 
     @classmethod
     def _create(cls, *args: object, **kwargs: object) -> str:  # type: ignore[override]
-        f = factory.Faker._get_faker()
+        f = _get_faker()
         merchant = f.company().replace(",", " ")
         amount = f.pydecimal(min_value=1, max_value=500, right_digits=2)
         currency = f.currency_code()
@@ -68,7 +88,7 @@ class QuotationInputFactory(factory.Factory):
 
     @classmethod
     def _create(cls, *args: object, **kwargs: object) -> str:  # type: ignore[override]
-        f = factory.Faker._get_faker()
+        f = _get_faker()
         supplier = f.company().replace(",", " ")
         quote_num = f"Q-{f.random_number(digits=6, fix_len=True)}"
         total = f.pydecimal(min_value=100, max_value=50_000, right_digits=2)
@@ -90,7 +110,7 @@ class MultiPageInputFactory(factory.Factory):
 
     @classmethod
     def _create(cls, *args: object, **kwargs: object) -> str:  # type: ignore[override]
-        f = factory.Faker._get_faker()
+        f = _get_faker()
         sections: list[str] = []
         for page in range(3):
             sections.append(

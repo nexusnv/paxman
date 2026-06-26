@@ -28,13 +28,17 @@ class EvidenceRefFactory(factory.Factory):
 
 
 class CandidateFactory(factory.Factory):
-    """A ``Candidate`` with random value and 0-3 evidence refs."""
+    """A ``Candidate`` with random value and 1-3 evidence refs."""
 
     class Meta:
         model = Candidate
 
     value = factory.Faker("word")
-    evidence_refs: tuple[EvidenceRef, ...] = ()
+    # Build a non-empty tuple of evidence refs so downstream tests
+    # exercise ``Candidate.evidence_refs`` (the tuple type is preserved).
+    evidence_refs = factory.LazyAttribute(
+        lambda _o: tuple(EvidenceRefFactory() for _ in range(2))
+    )
 
 
 class CandidateResultFactory(factory.Factory):
@@ -46,5 +50,9 @@ class CandidateResultFactory(factory.Factory):
     field_id = factory.Faker("word")
     field_path = factory.SelfAttribute("field_id")
     field_type_name = "STRING"
-    candidates: tuple[Candidate, ...] = ()
+    # Build a non-empty tuple of candidates so downstream tests
+    # exercise ``CandidateResult.candidates`` (the tuple type is preserved).
+    candidates = factory.LazyAttribute(
+        lambda _o: tuple(CandidateFactory() for _ in range(2))
+    )
     status = "RESOLVED"

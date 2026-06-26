@@ -161,17 +161,17 @@ class TestArtifactStatisticsCoverage:
     """Targeted coverage for ``src/paxman/artifact/statistics.py``."""
 
     def test_statistics_must_be_dict_or_none(self) -> None:
-        """A non-dict ``capability_stats`` raises ``TypeError`` (validation branch)."""
-        # Create a Statistics object with invalid capability_stats.
-        # The Statistics class has a __attrs_post_init__ that may not
-        # validate this. If it doesn't, this test is a no-op.
-        # The actual validation path is at line 68/72/74/76/121.
+        """A non-tuple ``capability_stats`` raises ``TypeError`` (validation branch).
+
+        Statistics.__attrs_post_init__ requires ``capability_stats`` to
+        be a tuple (see ``src/paxman/artifact/statistics.py`` line
+        126). A list is rejected with a typed ``TypeError`` — verify
+        the validation path.
+        """
         from paxman.types import Status as _Status
 
-        s = Statistics(
-            status=_Status.SUCCESS,
-            capability_stats=("not a dict",),  # type: ignore[arg-type]
-        )
-        # No assertion — just exercise the path. (If the path
-        # is unreachable, coverage stays the same.)
-        assert s is not None
+        with pytest.raises(TypeError, match="capability_stats must be a tuple"):
+            Statistics(
+                status=_Status.SUCCESS,
+                capability_stats=["not a tuple"],  # type: ignore[arg-type]
+            )

@@ -302,8 +302,6 @@ def test_adapt_string_decoded_to_non_dict_raises_invalid_field() -> None:
     ``external.get(...)`` call on a non-dict was reached after
     ``json.loads``.
     """
-    import json
-
     with pytest.raises(InvalidContractError, match="top-level JSON object"):
         JsonSchemaAdapter().adapt(json.dumps([]))  # type: ignore[arg-type]
     with pytest.raises(InvalidContractError, match="top-level JSON object"):

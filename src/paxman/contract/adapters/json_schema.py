@@ -80,6 +80,7 @@ one of the following ``error_code`` values:
 from __future__ import annotations
 
 import decimal
+import json
 import re
 import typing
 
@@ -167,8 +168,6 @@ class JsonSchemaAdapter:
             # Parse it as JSON before continuing.
             if isinstance(external, str):
                 try:
-                    import json
-
                     external = json.loads(external)
                 except json.JSONDecodeError as e:
                     raise InvalidContractError(

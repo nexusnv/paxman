@@ -40,6 +40,11 @@ SUBSYSTEM_THRESHOLDS: dict[str, float] = {
     "src/paxman/versioning.py": 100.0,
 }
 
+# Overall coverage threshold (D7.15, ``V1_ACCEPTANCE_CRITERIA.md`` §2.2).
+# The overall project line+branch coverage must be at least this value.
+OVERALL_LINE_THRESHOLD: float = 90.0
+OVERALL_BRANCH_THRESHOLD: float = 90.0
+
 
 def _subsystem_for_path(path: str) -> str | None:
     """Return the subsystem key for *path*."""
@@ -145,7 +150,42 @@ def main() -> int:
             print(f"  - {f}", file=sys.stderr)
         return 1
 
-    print("\nAll subsystems meet their coverage thresholds.")
+    # Overall coverage check (D7.15). The per-subsystem loop above
+    # only enforces the per-subsystem thresholds; the documented
+    # ``Overall ≥ 90%`` requirement must also be verified against
+    # the top-level ``totals`` block in ``coverage.json``.
+    totals = coverage_data.get("totals", {})
+    line_pct = float(totals.get("percent_covered", 0.0)) if isinstance(totals, dict) else 0.0
+    branch_pct = (
+        float(totals.get("percent_branches_covered", 0.0)) if isinstance(totals, dict) else 0.0
+    )
+    print("\nOverall coverage (D7.15):")
+    print(
+        f"  {'Metric':<30}  {'Coverage':>10}  {'Threshold':>10}  {'Status':>10}"
+    )
+    print(f"  {'-'*30}  {'-'*10}  {'-'*10}  {'-'*10}")
+    overall_failures: list[str] = []
+    for metric, actual, threshold in (
+        ("lines", line_pct, OVERALL_LINE_THRESHOLD),
+        ("branches", branch_pct, OVERALL_BRANCH_THRESHOLD),
+    ):
+        status = "PASS" if actual >= threshold else "FAIL"
+        if status == "FAIL":
+            overall_failures.append(f"overall {metric} ({actual:.2f}% < {threshold:.2f}%)")
+        print(
+            f"  {metric:<30}  {actual:>9.2f}%  {threshold:>9.2f}%  {status:>10}"
+        )
+
+    if overall_failures:
+        print(
+            f"\n{len(overall_failures)} overall coverage check(s) below threshold:",
+            file=sys.stderr,
+        )
+        for f in overall_failures:
+            print(f"  - {f}", file=sys.stderr)
+        return 1
+
+    print("\nAll subsystems and overall coverage meet their thresholds.")
     return 0
 
 

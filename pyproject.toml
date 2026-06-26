@@ -126,7 +126,13 @@ line-ending = "lf"
 
 [tool.mypy]
 strict = true
-python_version = "3.11"
+# mypy is run by the CI lint job on Python 3.12 (see
+# ``.github/workflows/ci.yml`` → ``lint`` job). Targeting 3.12 is also
+# required for compatibility with ``numpy>=2.5`` stub files (introduced
+# in late 2025), which use the PEP 695 ``type`` statement. 3.11 is
+# still covered by the ``test-unit`` matrix job, which runs the test
+# suite against the real 3.11 interpreter.
+python_version = "3.12"
 files = ["src/paxman"]
 # attrs ships with a built-in mypy plugin since mypy 0.570; no explicit
 # plugin config needed. The plugin is auto-detected when @attrs.define or

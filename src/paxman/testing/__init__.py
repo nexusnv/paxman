@@ -50,7 +50,6 @@ import string
 import typing
 
 import attrs
-import hypothesis
 from hypothesis import strategies as st
 
 from paxman.artifact._hash import compute_replay_hash
@@ -633,10 +632,28 @@ def artifacts() -> st.SearchStrategy[ExecutionArtifact]:
 
 
 # ---------------------------------------------------------------------------
-# Self-check: confirm all 7 strategies are SearchStrategy instances
+# Self-check: confirm all 7 public strategies are SearchStrategy instances
 # ---------------------------------------------------------------------------
 
 # This block is executed at module import time. It guards against
-# accidental type regressions (e.g., a developer accidentally returning
-# a list instead of a strategy from one of the factories).
-_ = hypothesis  # satisfy type checker
+# accidental type regressions (e.g., a developer accidentally
+# returning a bare value instead of a strategy from one of the
+# factories). A regression here would otherwise only surface in
+# downstream ``@given`` test runs, where the ``SearchStrategy``
+# protocol is what ``@given`` consumes.
+_STRATEGY_FACTORIES: tuple[tuple[str, typing.Callable[[], st.SearchStrategy[typing.Any]]], ...] = (
+    ("contracts", contracts),
+    ("inputs", inputs),
+    ("budgets", budgets),
+    ("policies", policies),
+    ("registries", registries),
+    ("candidate_sets", candidate_sets),
+    ("artifacts", artifacts),
+)
+for _name, _factory in _STRATEGY_FACTORIES:
+    _instance = _factory()
+    if not isinstance(_instance, st.SearchStrategy):
+        raise RuntimeError(
+            f"paxman.testing self-check failed: {_name}() did not return "
+            f"a hypothesis.SearchStrategy (got {type(_instance).__name__})"
+        )

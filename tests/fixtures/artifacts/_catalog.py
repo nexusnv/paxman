@@ -17,10 +17,10 @@ from typing import NamedTuple
 class GoldenFixture(NamedTuple):
     """A single (golden_name, input_text, contract_module, contract_attr) tuple.
 
-    The ``input_text`` may be a literal string or a special
-    sentinel (``"ADVERSARIAL: prompt injection"``) that is
+    The ``input_text`` may be a literal string or a registered
+    sentinel (e.g. :data:`ADVERSARIAL_PROMPT_INJECTION`) that is
     resolved at load time to the contents of
-    ``tests/fixtures/inputs/adversarial/prompt_injection.txt``.
+    ``tests/fixtures/inputs/adversarial/...``.
     """
 
     name: str
@@ -29,15 +29,24 @@ class GoldenFixture(NamedTuple):
     contract_attr: str
 
 
+#: Sentinel: when ``input_text`` is exactly this value, the loader
+#: substitutes the contents of the prompt-injection adversarial file.
+#:
+#: The value is a non-colliding, human-readable marker so it never
+#: coincides with a real fixture payload — including the empty-string
+#: fixture (whose ``input_text`` is the empty string).
+#: ``resolve_input_text`` dispatches on this sentinel rather than on
+#: the golden name so future adversarial fixtures can follow the same
+#: pattern by introducing a new sentinel constant.
+ADVERSARIAL_PROMPT_INJECTION: str = "<adversarial:prompt_injection>"
+
+
 #: The 8 golden fixtures, in deterministic order.
 #:
 #: Format: ``(golden_name, input_text, contract_module, contract_attr)``.
 #:
-#: The ``input_text`` is either a literal or one of:
-#:   - ``"ADVERSARIAL: prompt injection"`` — resolved to
-#:     ``tests/fixtures/inputs/adversarial/prompt_injection.txt``
-#:   - ``"ADVERSARIAL: empty"`` — empty string
-#:   - ``"ADVERSARIAL: unicode"`` — unicode-only text
+#: The ``input_text`` is either a literal or a sentinel constant
+#: (e.g. :data:`ADVERSARIAL_PROMPT_INJECTION`).
 GOLDEN_FIXTURES: list[GoldenFixture] = [
     GoldenFixture(
         name="invoice_unresolved_dict_dsl",
@@ -92,33 +101,30 @@ GOLDEN_FIXTURES: list[GoldenFixture] = [
     ),
     GoldenFixture(
         name="prompt_injection_unresolved",
-        input_text="",  # resolved at load time
+        input_text=ADVERSARIAL_PROMPT_INJECTION,
         contract_module="tests.fixtures.contracts.dict_dsl.invoice",
         contract_attr="DICT_DSL_INVOICE",
     ),
 ]
 
 
-#: Sentinel: when ``input_text`` is exactly this value, the loader
-#: substitutes the contents of the prompt-injection adversarial file.
-ADVERSARIAL_PROMPT_INJECTION: str = ""  # resolved at load time
-
-
 def resolve_input_text(name: str, default: str) -> str:
     """Resolve a special ``input_text`` to its real contents.
 
-    Currently only the ``prompt_injection_unresolved`` golden
-    needs resolution (its ``input_text`` is loaded from
-    ``tests/fixtures/inputs/adversarial/prompt_injection.txt``).
+    Dispatches on the ``input_text`` sentinel rather than the golden
+    name, so any future golden can opt into adversarial-input
+    resolution by setting ``input_text`` to a registered sentinel
+    constant (e.g. :data:`ADVERSARIAL_PROMPT_INJECTION`).
 
     Args:
-        name: The golden name (used to look up the resolution rule).
+        name: The golden name (currently unused; kept for backward
+            compatibility with callers that pass it).
         default: The default text to return if no rule matches.
 
     Returns:
         The resolved input text.
     """
-    if name == "prompt_injection_unresolved":
+    if default == ADVERSARIAL_PROMPT_INJECTION:
         from pathlib import Path
 
         path = (

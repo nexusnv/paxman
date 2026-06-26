@@ -94,10 +94,10 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies (frozen lockfile)
-        run: uv sync --frozen --all-extras --dev
+        run: uv sync --frozen --all-extras --dev --python ${{ matrix.python-version }}
 
       - name: Run unit tests
-        run: uv run pytest -m unit --no-header
+        run: uv run --python ${{ matrix.python-version }} pytest tests/unit --no-header
 
   # ---------------------------------------------------------------------------
   # Property tests (hypothesis)
@@ -149,7 +149,7 @@ jobs:
         run: uv sync --frozen --all-extras --dev
 
       - name: Run integration tests
-        run: uv run pytest -m integration --no-header
+        run: uv run pytest tests/integration --no-header
 
   # ---------------------------------------------------------------------------
   # Coverage (runs on py3.12; uploads to Codecov)

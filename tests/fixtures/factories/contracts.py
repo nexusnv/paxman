@@ -61,6 +61,12 @@ class PydanticInvoiceFactory(factory.Factory):
     Returns a Pydantic ``BaseModel`` *class* (not an instance). This
     is what callers pass to ``paxman.normalize()``.
 
+    The model mirrors :class:`DictDSLInvoiceFactory` — same field
+    names (``supplier_name``, ``total_amount``, ``currency_code``,
+    ``invoice_date``, ``paid``) and the same MONEY semantics — so
+    adapter parity tests can normalize the same input against either
+    adapter and expect the same downstream contract shape.
+
     Example::
 
         Invoice = PydanticInvoiceFactory()
@@ -74,13 +80,14 @@ class PydanticInvoiceFactory(factory.Factory):
     def _create(cls, *args: object, **kwargs: object) -> type:  # type: ignore[override]
         from pydantic import BaseModel, Field
         import datetime
+        import decimal
 
         class _Invoice(BaseModel):
             """Dynamically generated invoice model."""
 
             supplier_name: str = Field(..., min_length=1, max_length=500)
-            total: float = Field(..., ge=0)
-            currency: str = Field(..., pattern=r"^[A-Z]{3}$")
+            total_amount: decimal.Decimal = Field(..., ge=0)
+            currency_code: str = Field(..., pattern=r"^[A-Z]{3}$")
             invoice_date: datetime.date
             paid: bool = False
 
@@ -90,7 +97,14 @@ class PydanticInvoiceFactory(factory.Factory):
 
 
 class JsonSchemaInvoiceFactory(factory.Factory):
-    """A JSON Schema invoice (per :mod:`paxman.contract.json_schema`)."""
+    """A JSON Schema invoice (per :mod:`paxman.contract.json_schema`).
+
+    Mirrors :class:`DictDSLInvoiceFactory`: same invoice shape
+    (``supplier_name``, ``total_amount``, ``currency_code``,
+    ``invoice_date``, ``paid``), same required list, and MONEY
+    expressed as an object with ``total_amount`` and ``currency_code``
+    per the project's JSON-Schema MONEY convention.
+    """
 
     class Meta:
         model = dict
@@ -103,11 +117,12 @@ class JsonSchemaInvoiceFactory(factory.Factory):
             "type": "object",
             "properties": {
                 "supplier_name": {"type": "string", "minLength": 1, "maxLength": 500},
-                "total": {"type": "number", "minimum": 0},
-                "currency": {"type": "string", "pattern": r"^[A-Z]{3}$"},
+                "total_amount": {"type": "number", "minimum": 0},
+                "currency_code": {"type": "string", "pattern": r"^[A-Z]{3}$"},
+                "invoice_date": {"type": "string", "format": "date"},
                 "paid": {"type": "boolean", "default": False},
             },
-            "required": ["supplier_name", "total", "currency"],
+            "required": ["supplier_name", "total_amount", "currency_code", "invoice_date"],
         }
 
 

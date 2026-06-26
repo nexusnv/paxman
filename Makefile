@@ -40,11 +40,11 @@ test: ## Run all tests
 
 .PHONY: test-unit
 test-unit: ## Run unit tests only
-	$(UV) run pytest -m unit
+	$(UV) run pytest tests/unit
 
 .PHONY: test-integration
 test-integration: ## Run integration tests only
-	$(UV) run pytest -m integration
+	$(UV) run pytest tests/integration
 
 .PHONY: test-property
 test-property: ## Run hypothesis property tests only

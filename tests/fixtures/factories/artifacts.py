@@ -8,19 +8,27 @@ from __future__ import annotations
 
 import attrs
 import factory
+import faker
 
 from paxman.artifact._hash import compute_replay_hash
 from paxman.artifact.artifact import ExecutionArtifact, FieldResult
 from paxman.types import ConfidenceBand, Status
 
+# Use the project-wide seed (imported for side-effect-free reference).
+from tests.fixtures.factories import SEED  # noqa: F401
+
 
 def _build_artifact(num_fields: int = 2) -> ExecutionArtifact:
     """Build a deterministic ``ExecutionArtifact`` with *num_fields* fields.
 
-    Uses ``factory.Faker._get_faker()`` so the seed is set via the
-    project-wide ``factory.random.reseed_random`` call.
+    Uses a public ``faker.Faker`` instance seeded via
+    :func:`factory.random.reseed_random` (the public ``factory_boy``
+    seeding entry point). This avoids the private
+    ``factory.Faker._get_faker()`` attribute.
     """
-    f = factory.Faker._get_faker()
+    factory.random.reseed_random(SEED)
+    f = faker.Faker()
+    f.seed_instance(SEED)
     field_results: dict[str, FieldResult] = {}
     normalized_data: dict[str, object] = {}
     unresolved_fields: list[str] = []
@@ -83,5 +91,7 @@ class ExecutionArtifactFactory(factory.Factory):
         model = ExecutionArtifact
 
     @classmethod
-    def _create(cls, *args: object, **kwargs: object) -> ExecutionArtifact:  # type: ignore[override]
-        return _build_artifact(num_fields=2)
+    def _create(  # type: ignore[override]
+        cls, *args: object, num_fields: int = 2, **kwargs: object
+    ) -> ExecutionArtifact:
+        return _build_artifact(num_fields=num_fields)

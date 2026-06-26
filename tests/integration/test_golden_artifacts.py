@@ -82,7 +82,10 @@ def _load_test_module_attr(module_path: str, attr: str) -> object:
     """Load an attribute from a test fixture module by file path.
 
     Mirrors :func:`scripts.bootstrap_golden_artifacts._load_contract`
-    so we use the same robust resolution here.
+    so we use the same robust resolution here — including registering
+    each parent package in :data:`sys.modules` so intra-package
+    relative imports (e.g. ``from .other import _helper``) inside the
+    loaded fixture resolve correctly.
     """
     parts = module_path.split(".")
     if parts and parts[0] == "tests":
@@ -92,7 +95,30 @@ def _load_test_module_attr(module_path: str, attr: str) -> object:
         file_path = _TESTS_DIR.joinpath(*parts, "__init__.py")
         if not file_path.exists():
             raise FileNotFoundError(f"Could not locate module {module_path!r}")
+
+    # Register each parent package (e.g. ``tests``, ``tests.fixtures``,
+    # ``tests.fixtures.contracts``) in ``sys.modules`` so that
+    # ``from tests.fixtures.contracts.X import ...`` and
+    # ``from . import Y`` inside the loaded fixture resolve consistently.
     if module_path not in sys.modules:
+        running: list[str] = []
+        for piece in parts[:-1]:
+            running.append(piece)
+            running_path = "tests." + ".".join(running) if running else "tests"
+            if running_path not in sys.modules:
+                pkg_path = _TESTS_DIR.joinpath(*running)
+                pkg_init = pkg_path / "__init__.py"
+                if not pkg_init.exists():
+                    continue  # Implicit namespace package; fine.
+                spec = importlib.util.spec_from_file_location(
+                    running_path, pkg_init, submodule_search_locations=[str(pkg_path)]
+                )
+                if spec is None or spec.loader is None:
+                    continue
+                module = importlib.util.module_from_spec(spec)
+                sys.modules[running_path] = module
+                spec.loader.exec_module(module)
+
         spec = importlib.util.spec_from_file_location(module_path, file_path)
         if spec is None or spec.loader is None:
             raise ImportError(f"Could not load spec for {module_path}")

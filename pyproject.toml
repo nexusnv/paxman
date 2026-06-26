@@ -166,6 +166,7 @@ addopts = [
     "--strict-config",
 ]
 markers = [
+    "benchmark: pytest-benchmark performance tests",
     "deterministic: tests that verify deterministic behavior",
     "replay: tests that verify replay equivalence",
     "property: hypothesis property tests",

@@ -189,12 +189,12 @@ def test_density_counts_characters_not_bytes() -> None:
     See: CodeRabbit review on PR #16 (2026-06-26).
     """
     # Single character, 2 bytes: density is by-character.
-    e_acute = "é".encode("utf-8")  # b"\\xc3\\xa9" — 2 bytes
+    e_acute = "é".encode()  # b"\\xc3\\xa9" — 2 bytes
     assert len(e_acute) == 2
     assert compute_density(e_acute, "text") == 0.5
 
     # CJK: 2 characters, 6 bytes: density is 2/6.
-    hanzi = "汉字".encode("utf-8")
+    hanzi = "汉字".encode()
     assert len(hanzi) == 6
     assert abs(compute_density(hanzi, "text") - 2 / 6) < 1e-9
 
@@ -204,7 +204,7 @@ def test_density_counts_characters_not_bytes() -> None:
     assert compute_density(nbsp, "text") == 0.0
 
     # Mixed ASCII + CJK + space: character count, byte-denominated.
-    mixed = "Hello 汉字 World".encode("utf-8")
+    mixed = "Hello 汉字 World".encode()
     text = mixed.decode("utf-8")
     non_ws = sum(1 for ch in text if not ch.isspace())
     assert compute_density(mixed, "text") == non_ws / len(mixed)

@@ -192,7 +192,25 @@ The 394 ms import time breaks down as:
 
 3. **Cache replay hash computation**: `compute_replay_hash` is called on every `replay()` and consumes 76% of replay time. Since the artifact is immutable after creation, the replay hash could be computed once during `normalize()` and stored on the artifact. Replay would then skip re-computation entirely, reducing replay time from ~0.9 ms to ~0.2 ms. For the normalize path, the hash is already computed once, so this is a net-zero change there.
 
-## 5. Methodology
+## 5. Post-Optimization Results (D9.5)
+
+After the Sprint 9 D9.5 optimizations, the **input profiling hot spot** was eliminated by replacing the per-character `str.isspace()` decode with a bytes-level scan over a `frozenset` of ASCII whitespace bytes. This is the dominant cost identified in §3 (91% of `normalize()` time).
+
+| Operation | Before p50 | After p50 | Improvement |
+|-----------|-----------|-----------|-------------|
+| normalize() (20-field, 100 KB) | 24.30 ms | **6.32 ms** | **3.8x faster (74% reduction)** |
+| normalize() (20-field, small input) | 4.47 ms | **1.21 ms** | 3.7x faster (73% reduction) |
+| normalize() (invoice baseline) | 1.46 ms | **0.60 ms** | 2.4x faster (59% reduction) |
+
+**Decision on remaining optimizations:**
+
+- **#2 (Lazy imports for cold start)**: **Deferred to v0.6.0 performance sprint.** The cold import time of ~340 ms is 3.4x the 100 ms target. Implementing `__getattr__`-based lazy loading on `paxman/__init__.py` would require changing the public API import pattern (`paxman.normalize` → deferred lookup) and risks breaking `from paxman import normalize` patterns documented in the README. Per the sprint risk register, a missed target by >2x warrants a dedicated v0.6.0 performance sprint.
+
+- **#3 (Cache replay hash)**: **Not pursued.** Replay at 0.9-1.2 ms is already 55x under the 50 ms target. Caching the hash would add complexity for negligible benefit.
+
+The **cold import miss** is the sole remaining concern, and per the risk register, it is documented here and tracked for the v0.6.0 performance sprint.
+
+## 6. Methodology
 
 - **Benchmarks**: `pytest-benchmark` 5.2.3 with `--benchmark-min-rounds=3`, `--benchmark-warmup=on`, `--benchmark-warmup-iterations=1`, `--benchmark-sort=mean`. Timer: `time.perf_counter`. GC not disabled.
 - **Profiling**: `cProfile` (stdlib) with `sort_stats('cumulative')`. normalize() profiled over 5 iterations; replay() over 20 iterations; import over 1 iteration.

@@ -330,8 +330,9 @@ process. Reports are acknowledged within 3 business days.
 - **GitHub discussions:** for open-ended conversations, design
   questions, and announcements.
 - **Security:** see [SECURITY.md §7](SECURITY.md).
-- **Maintainers:** see [MAINTAINERS.md](MAINTAINERS.md) (when
-  populated).
+- **Maintainers:** see the [@nexusnv/paxman](https://github.com/orgs/nexusnv/people)
+  org members. (A `MAINTAINERS.md` file will be added when the project
+  transitions to a multi-maintainer model.)
 
 ---
 
@@ -353,9 +354,9 @@ process if required.
 
 Paxman uses an
 [All Contributors](https://allcontributors.org/)-style
-recognition. Substantial contributors are listed in
-[AUTHORS.md](AUTHORS.md) (when populated) and credited in release
-notes.
+recognition. Substantial contributors are credited in release
+notes ([`CHANGELOG.md`](./CHANGELOG.md)). (An `AUTHORS.md` file will
+be added when the project has its first external contributor.)
 
 ---
 

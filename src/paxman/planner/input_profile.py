@@ -243,11 +243,15 @@ def compute_density(normalized_bytes: bytes, input_type: str) -> float:
     Note:
         Whitespace is defined as the ASCII whitespace bytes
         ``0x09`` (TAB), ``0x0A`` (LF), ``0x0B`` (VT), ``0x0C`` (FF),
-        ``0x0D`` (CR), and ``0x20`` (SPACE). This matches the
-        behavior of ``str.isspace()`` for the BMP characters that
-        are present in real input (UTF-8 multi-byte sequences have
-        no bytes in this set, so non-ASCII characters are correctly
-        counted as non-whitespace).
+        ``0x0D`` (CR), and ``0x20`` (SPACE). This is a strict
+        subset of :py:meth:`str.isspace()` — Unicode whitespace
+        characters (``U+00A0`` NO-BREAK SPACE, ``U+3000``
+        IDEOGRAPHIC SPACE, ``U+0085`` NEL, ``U+1680`` OGHAM
+        SPACE, etc.) are counted as **non-whitespace** by this
+        implementation. For the input domains PAXMAN targets
+        (invoices, procurement docs, emails), ASCII whitespace
+        dominates and the difference is negligible. Density is a
+        planner heuristic, not a correctness-critical value.
     """
     if input_type in ("empty", "unknown"):
         return 0.0

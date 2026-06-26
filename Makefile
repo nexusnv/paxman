@@ -124,7 +124,7 @@ benchmark-quick: ## Run performance benchmarks with fewer rounds (for dev)
 	$(UV) run pytest tests/benchmark/ --benchmark-only --benchmark-sort=median --benchmark-min-rounds=3 --benchmark-warmup=1
 
 .PHONY: profile
-profile: ## Run cold-import and CPU profiling
+profile: ## Run cold-import time benchmark
 	$(UV) run python scripts/benchmark_import_time.py --iterations 20
 
 # --- Test data (Sprint 5+) ---------------------------------------------------

@@ -59,12 +59,46 @@ def test_dict_dsl_invoice_factory() -> None:
 
 
 def test_pydantic_invoice_factory() -> None:
-    """``PydanticInvoiceFactory`` produces a Pydantic ``BaseModel`` subclass."""
+    """``PydanticInvoiceFactory`` produces a Pydantic ``BaseModel`` subclass.
+
+    The factory must produce a model with the **exact 5 documented invoice
+    fields** (``supplier_name``, ``total_amount``, ``currency_code``,
+    ``invoice_date``, ``paid``) so the adapter-parity tests can
+    normalize the same input against either Pydantic or Dict DSL and
+    expect the same downstream contract shape. A factory that produced
+    an empty model, or a model with extra undocumented fields, would
+    drift the contract — this test pins the exact field set so
+    regressions are caught immediately.
+    """
+    from pydantic import BaseModel
+
     model_class = PydanticInvoiceFactory()
     # It's a class (Pydantic models are classes).
     assert isinstance(model_class, type)
     # It has pydantic attributes.
     assert hasattr(model_class, "model_fields")
+    # It is a Pydantic BaseModel subclass (not just any class with
+    # a ``model_fields`` attribute).
+    assert issubclass(model_class, BaseModel)
+    # The factory must produce the exact 5-field invoice shape — no
+    # missing fields, no undocumented additions. Comparing the full
+    # set (not just ``issubset``) catches drift in both directions.
+    actual_fields = set(model_class.model_fields.keys())
+    expected_fields = {
+        "supplier_name",
+        "total_amount",
+        "currency_code",
+        "invoice_date",
+        "paid",
+    }
+    assert actual_fields == expected_fields, (
+        f"PydanticInvoiceFactory field set drift. "
+        f"expected={sorted(expected_fields)}, actual={sorted(actual_fields)}, "
+        f"missing={sorted(expected_fields - actual_fields)}, "
+        f"extra={sorted(actual_fields - expected_fields)}"
+    )
+    # The class has the auto-generated name set by the factory.
+    assert model_class.__name__ == "GeneratedInvoice"
 
 
 def test_json_schema_invoice_factory() -> None:

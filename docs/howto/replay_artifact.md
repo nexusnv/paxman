@@ -3,12 +3,12 @@
 > **Status:** V1
 > **Audience:** Paxman users storing and rehydrating artifacts.
 > **Related docs:** [docs/concepts/replay.md](../concepts/replay.md),
-> [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md) (the
-> full deep dive), [GLOSSARY.md §Replay](../../GLOSSARY.md).
+> [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) (the
+> full deep dive), [GLOSSARY.md §Replay](../reference/glossary.md).
 
 This guide is a **focused quick-start** for using `paxman.replay()`.
 The full deep dive is in
-[REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md); this
+[REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md); this
 document is a 5-minute checklist.
 
 ---
@@ -70,7 +70,7 @@ across Paxman versions within a major version.
 (SHA-256 over the concatenation of the artifact's hash-relevant
 fields, separated by `|`). It is the artifact's tamper-detection
 signature. See
-[REPLAY_AND_DETERMINISM.md §2](../../REPLAY_AND_DETERMINISM.md) and
+[REPLAY_AND_DETERMINISM.md §2](../reference/replay-and-determinism.md) and
 [`docs/concepts/replay.md`](../concepts/replay.md) §2.1 for the
 exact list of fields that go into the hash.
 
@@ -110,7 +110,7 @@ Replay is **fail-closed**: a version mismatch raises
 | Different major | `VersionMismatchError`. Regenerate the artifact under the new major. |
 | Missing capability | `CapabilityNotFoundError`. Register the missing capability or regenerate. |
 
-See [REPLAY_AND_DETERMINISM.md §4](../../REPLAY_AND_DETERMINISM.md)
+See [REPLAY_AND_DETERMINISM.md §4](../reference/replay-and-determinism.md)
 for the full version-compatibility matrix.
 
 ---
@@ -186,7 +186,7 @@ not provide encryption at rest. The recommended storage pattern:
    `paxman.replay(...)`.
 
 For regulated industries, see
-[SECURITY.md §6](../../SECURITY.md) for the audit-trail and
+[SECURITY.md §6](../security/index.md) for the audit-trail and
 tamper-evident storage guidance.
 
 ---
@@ -235,11 +235,11 @@ def test_replay_is_byte_equal(artifact, contract):
 
 ## 9. See also
 
-- [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md) — the
+- [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) — the
   full deep dive on replay and determinism.
 - [docs/concepts/replay.md](../concepts/replay.md) — the conceptual
   overview of replay.
-- [GLOSSARY.md §Replay](../../GLOSSARY.md) — vocabulary.
-- [paxman.artifact.artifact](../../EXTENDING.md) — the
+- [GLOSSARY.md §Replay](../reference/glossary.md) — vocabulary.
+- [paxman.artifact.artifact](../reference/extending.md) — the
   `ExecutionArtifact` data model.
-- [paxman.artifact.replay](../../EXTENDING.md) — the replay path.
+- [paxman.artifact.replay](../reference/extending.md) — the replay path.

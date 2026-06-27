@@ -3,7 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-06-22
 > **Deciders:** Paxman core team
-> **Related docs:** [ARCHITECTURE.md §4.3](../../ARCHITECTURE.md#43-capabilities--atomic-operations), [ARCHITECTURE.md §7](../../ARCHITECTURE.md#7-configuration-model), [EXTENDING.md §2](../../EXTENDING.md#2-adding-a-new-capability), [ADR-0002](../adr/0002-rule-based-planner-v1.md), [ADR-0005](../adr/0005-confidence-ownership.md), [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md)
+> **Related docs:** [ARCHITECTURE.md §4.3](../reference/architecture.md#43-capabilities--atomic-operations), [ARCHITECTURE.md §7](../reference/architecture.md#7-configuration-model), [EXTENDING.md §2](../reference/extending.md#2-adding-a-new-capability), [ADR-0002](../adr/0002-rule-based-planner-v1.md), [ADR-0005](../adr/0005-confidence-ownership.md), [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md)
 
 This document specifies the `CostHint` type, the V1 baseline cost values for all five capabilities, the scoring rubric the planner uses to rank capabilities, and the interaction between cost estimates and budget enforcement.
 
@@ -11,14 +11,14 @@ This document specifies the `CostHint` type, the V1 baseline cost values for all
 
 ## 1. Overview
 
-Every V1 capability exposes a `CostHint` as part of its `CapabilitySpec` (see [ARCHITECTURE.md §4.3](../../ARCHITECTURE.md#43-capabilities--atomic-operations)). The `CostHint` is a three-tuple of approximate token count, wall-clock latency in milliseconds, and USD cost for a single invocation.
+Every V1 capability exposes a `CostHint` as part of its `CapabilitySpec` (see [ARCHITECTURE.md §4.3](../reference/architecture.md#43-capabilities--atomic-operations)). The `CostHint` is a three-tuple of approximate token count, wall-clock latency in milliseconds, and USD cost for a single invocation.
 
 The planner uses `CostHint` for two purposes:
 
-1. **Heuristic ordering** — when multiple capabilities can satisfy a field, the planner ranks them by ascending cost, following the heuristic chain in [ARCHITECTURE.md §4.2](../../ARCHITECTURE.md#42-planner--field-centric-plan-synthesis): explicit evidence, local deterministic, structured lookup, derived computation, local inference, remote inference, `UNRESOLVED`.
-2. **Budget enforcement** — the planner estimates total cost by summing `CostHint.usd` over the planned capability chain and compares against `Budget.max_total_cost_usd` ([ARCHITECTURE.md §7.1](../../ARCHITECTURE.md#71-budget-hard-limits)).
+1. **Heuristic ordering** — when multiple capabilities can satisfy a field, the planner ranks them by ascending cost, following the heuristic chain in [ARCHITECTURE.md §4.2](../reference/architecture.md#42-planner--field-centric-plan-synthesis): explicit evidence, local deterministic, structured lookup, derived computation, local inference, remote inference, `UNRESOLVED`.
+2. **Budget enforcement** — the planner estimates total cost by summing `CostHint.usd` over the planned capability chain and compares against `Budget.max_total_cost_usd` ([ARCHITECTURE.md §7.1](../reference/architecture.md#71-budget-hard-limits)).
 
-**Critical: the values documented here are heuristics, not measurements.** They are round numbers chosen for planner scoring fidelity. They do not reflect actual runtime cost, which depends on input size, provider pricing, and network conditions. The cost model is intentionally coarse-grained; V1 does not perform per-call cost measurement. See the risk register note in [CHANGES_LOG.md §3.1](../sprints/CHANGES_LOG.md#31-sprint-0-design-closure--recommended-decisions).
+**Critical: the values documented here are heuristics, not measurements.** They are round numbers chosen for planner scoring fidelity. They do not reflect actual runtime cost, which depends on input size, provider pricing, and network conditions. The cost model is intentionally coarse-grained; V1 does not perform per-call cost measurement. See the risk register note in [CHANGES_LOG.md §3.1](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/CHANGES-LOG#31-sprint-0-design-closure--recommended-decisions).
 
 ---
 
@@ -53,7 +53,7 @@ class CostHint:
 
 ### 2.3 Validation rules
 
-The following invariants are enforced at capability registration time (per [EXTENDING.md §2.1](../../EXTENDING.md#21-when-to-add-a-new-capability)):
+The following invariants are enforced at capability registration time (per [EXTENDING.md §2.1](../reference/extending.md#21-when-to-add-a-new-capability)):
 
 - `tokens >= 0` — negative token counts are invalid.
 - `ms >= 0` — negative latency is invalid.
@@ -65,7 +65,7 @@ Violation of any rule raises `InvalidCapabilitySpec` with `error_code="INVALID_C
 
 ## 3. V1 Capability Cost Table
 
-The following table defines the baseline `CostHint` values for the five V1 capabilities. These values were established in [CHANGES_LOG.md §3.1](../sprints/CHANGES_LOG.md#31-sprint-0-design-closure--recommended-decisions).
+The following table defines the baseline `CostHint` values for the five V1 capabilities. These values were established in [CHANGES_LOG.md §3.1](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/CHANGES-LOG#31-sprint-0-design-closure--recommended-decisions).
 
 | Capability | `tokens` | `ms` | `usd` | `deterministic` | Notes |
 |---|---|---|---|---|---|
@@ -95,7 +95,7 @@ The planner ranks capabilities by **ascending cost** within each tier of the heu
 
 ### 4.1 Heuristic tiers
 
-Per [ARCHITECTURE.md §4.2](../../ARCHITECTURE.md#42-planner--field-centric-plan-synthesis), the planner assigns each capability to a tier:
+Per [ARCHITECTURE.md §4.2](../reference/architecture.md#42-planner--field-centric-plan-synthesis), the planner assigns each capability to a tier:
 
 | Tier rank | Tier name | Example capabilities |
 |---|---|---|
@@ -166,7 +166,7 @@ The planner is a pure function ([ADR-0002](../adr/0002-rule-based-planner-v1.md)
 
 ### 5.3 Replay re-uses the same `CostHint`
 
-During replay ([REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md)), the artifact is rehydrated without re-invoking capabilities. The `CostHint` recorded in the `ExecutionPlan` is the same value that was used during planning. Replay does not re-measure cost.
+During replay ([REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md)), the artifact is rehydrated without re-invoking capabilities. The `CostHint` recorded in the `ExecutionPlan` is the same value that was used during planning. Replay does not re-measure cost.
 
 ### 5.4 Non-deterministic capabilities and cost stability
 
@@ -205,7 +205,7 @@ The planner's cost estimate is **conservative**: it may over-estimate (e.g., by 
 
 ### 6.4 Executor short-circuit
 
-Per [ARCHITECTURE.md §7.1](../../ARCHITECTURE.md#71-budget-hard-limits), the Executor short-circuits when the budget is exceeded at runtime. The artifact is returned with status `PARTIAL_SUCCESS` and a `BudgetExceededError` diagnostic. Fields resolved before the budget was exceeded retain their values; fields not yet attempted are marked `UNRESOLVED`.
+Per [ARCHITECTURE.md §7.1](../reference/architecture.md#71-budget-hard-limits), the Executor short-circuits when the budget is exceeded at runtime. The artifact is returned with status `PARTIAL_SUCCESS` and a `BudgetExceededError` diagnostic. Fields resolved before the budget was exceeded retain their values; fields not yet attempted are marked `UNRESOLVED`.
 
 ### 6.5 Interaction with `max_total_latency_ms`
 
@@ -255,7 +255,7 @@ The same estimation pattern applies to latency: the planner sums `CostHint.ms` o
 
 ## 8. Custom Capabilities (Extension)
 
-Per [EXTENDING.md §2](../../EXTENDING.md#2-adding-a-new-capability), third-party capabilities register their own `CostHint` as part of their `CapabilitySpec`.
+Per [EXTENDING.md §2](../reference/extending.md#2-adding-a-new-capability), third-party capabilities register their own `CostHint` as part of their `CapabilitySpec`.
 
 ### 8.1 Source of truth
 
@@ -299,9 +299,9 @@ The following cost-model features are explicitly deferred to V2:
 
 ## 10. See also
 
-- [ARCHITECTURE.md §4.3](../../ARCHITECTURE.md#43-capabilities--atomic-operations) — `CapabilitySpec` shape and V1 capability table.
-- [ARCHITECTURE.md §7](../../ARCHITECTURE.md#7-configuration-model) — `Budget` and `Policy` definitions.
-- [EXTENDING.md §2](../../EXTENDING.md#2-adding-a-new-capability) — how to register a custom capability with `CostHint`.
+- [ARCHITECTURE.md §4.3](../reference/architecture.md#43-capabilities--atomic-operations) — `CapabilitySpec` shape and V1 capability table.
+- [ARCHITECTURE.md §7](../reference/architecture.md#7-configuration-model) — `Budget` and `Policy` definitions.
+- [EXTENDING.md §2](../reference/extending.md#2-adding-a-new-capability) — how to register a custom capability with `CostHint`.
 - [ADR-0002](../adr/0002-rule-based-planner-v1.md) — rule-based planner; determinism requirement.
 - [ADR-0005](../adr/0005-confidence-ownership.md) — confidence is Reconciler-owned; capabilities never assign confidence.
-- [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md) — replay protocol; `CostHint` stability across replays.
+- [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) — replay protocol; `CostHint` stability across replays.

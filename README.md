@@ -125,38 +125,34 @@ pip install paxman[pydantic]                # + Pydantic adapter
 pip install paxman[all]                     # + all V1 adapters
 ```
 
-Paxman is in **pre-release** (v0.x). Public API may change between minor versions until 1.0.
+Paxman 1.0.0 is the current stable release. The public API follows [Semantic Versioning](https://semver.org/spec/v2.0.0/): breaking changes only happen in major-version bumps (1.x → 2.x).
 
 ## Documentation
 
-| Doc | Purpose |
+The full documentation site is published on **Read the Docs**:
+[paxman.readthedocs.io](https://paxman.readthedocs.io/).
+
+| Section | What's there |
 |---|---|
-| **[PRD.md](./PRD.md)** | Product vision, philosophy, V1 success metrics and acceptance criteria. |
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Subsystem design, sequence diagram, error model, versioning, observability. |
-| **[PACKAGE_STRUCTURE.md](./PACKAGE_STRUCTURE.md)** | Module layout, dependency DAG, public/private API split, packaging. |
-| **[GLOSSARY.md](./GLOSSARY.md)** | Single source of truth for Paxman vocabulary. |
-| **[V1_ACCEPTANCE_CRITERIA.md](./V1_ACCEPTANCE_CRITERIA.md)** | Definition of done for the 1.0 release. |
-| **[REPLAY_AND_DETERMINISM.md](./REPLAY_AND_DETERMINISM.md)** | Deep dive on replay and determinism. |
-| **[SECURITY.md](./SECURITY.md)** | Threat model, PII handling, provider secrets, vulnerability reporting. |
-| **[TESTING_STRATEGY.md](./TESTING_STRATEGY.md)** | Test seams, property tests, replay tests, fixtures. |
-| **[docs/TEST_DATA.md](./docs/TEST_DATA.md)** | Test data policy, dataset catalog, licensing rules. |
-| **[DEVELOPMENT.md](./DEVELOPMENT.md)** | Local dev setup, common tasks, release process. |
-| **[EXTENDING.md](./EXTENDING.md)** | How to add a new contract adapter, capability, or inference provider. |
-| **[DEPENDENCIES.md](./DEPENDENCIES.md)** | Core vs optional dependencies, packaging policy. |
-| **[docs/adr/](./docs/adr/)** | Architecture Decision Records. |
-| **[docs/concepts/](./docs/concepts/)** | Conceptual docs (contracts, capabilities, planning, reconciliation, replay, MIGRATION_GUIDE). |
-| **[docs/howto/](./docs/howto/)** | Quick-start how-tos (add adapter, add capability, add inference provider, replay artifact). |
-| **[CONTRIBUTING.md](./CONTRIBUTING.md)** | Contribution workflow + ADR-driven process. |
-| **[CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md)** | Community standards (Contributor Covenant v2.1). |
-| **[CHANGELOG.md](./CHANGELOG.md)** | Release notes. |
+| **[Concepts](https://paxman.readthedocs.io/en/latest/concepts/)** | Mental model: contracts, capabilities, planning, reconciliation, replay, migration guide, v1.0.0 release notes. |
+| **[How-to guides](https://paxman.readthedocs.io/en/latest/howto/)** | 5-minute task recipes: add a contract adapter, add a capability, add an inference provider, replay an artifact. |
+| **[Reference](https://paxman.readthedocs.io/en/latest/reference/)** | Architecture, package structure, glossary, replay & determinism, extending Paxman, dependencies. |
+| **[Decision records (ADRs)](https://paxman.readthedocs.io/en/latest/adr/)** | Accepted architectural decisions (immutable). |
+| **[Design specifications](https://paxman.readthedocs.io/en/latest/specs/)** | Implementation-level specs (developer-reference): Dict DSL, input profile, capability cost model. |
+| **[Contributing](https://paxman.readthedocs.io/en/latest/contributing/)** | Contribution workflow, development setup, testing strategy, test data policy, code of conduct. |
+| **[Security](https://paxman.readthedocs.io/en/latest/security/)** | Threat model, PII handling, secrets-by-reference, vulnerability reporting. |
+
+In-repo files (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`,
+`CHANGELOG.md`) are short stubs that link to the full content on Read
+the Docs. GitHub's issue and PR UIs auto-discover these files.
 
 ## Quickstart (5 minutes)
 
 > **Note:** Paxman V1 is in pre-release. The quickstart below is
 > verified end-to-end in CI (see `.github/workflows/ci.yml`). For a
 > full migration walkthrough (e.g. from LlamaIndex, LangChain, or a
-> hand-rolled pipeline), see
-> [`docs/concepts/MIGRATION_GUIDE.md`](./docs/concepts/MIGRATION_GUIDE.md).
+> hand-rolled pipeline), see the
+> [migration guide on Read the Docs](https://paxman.readthedocs.io/en/latest/concepts/MIGRATION-GUIDE/).
 
 ### 1. Install
 
@@ -281,16 +277,12 @@ Paxman is designed for:
 - **Document understanding services** — wrap Paxman inside a SaaS without giving up replay or evidence.
 - **Multi-source data pipelines** — normalize email, OCR, CSV, and API inputs into one canonical schema.
 
-See [PRD.md §7 Primary Use Cases](./PRD.md) for detailed examples.
+See the [PRD §7 Primary Use Cases](https://paxman.readthedocs.io/en/latest/) (linked from the docs site) for detailed examples. The PRD is a historical planning artifact kept on the project wiki.
 
 ## Status
 
-- **v0.0.0 (Sprint 6) — Shipped:** Full pipeline — contract adaptation, planning, execution, reconciliation, artifact, and public API (`paxman.normalize()`, `paxman.replay()`).
-- **v0.0.0 + Sprint 7 — Shipped:** `paxman.testing` (Hypothesis strategies), golden artifacts, end-to-end integration tests, per-subsystem coverage thresholds.
-- **v0.0.0 + Sprint 8 — In progress:** Documentation site (`docs/concepts/`, `docs/howto/`), community files (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`), CI hardening (pyright, interrogate, bandit, pip-audit), 9-check `make ci`.
-- **v0.1.0 (initial preview):** planner + one adapter + one capability work end-to-end. (Pending.)
-- **v0.5.0 (feature-complete beta):** 80% of V1 features. (Pending.)
-- **1.0.0:** All V1 acceptance criteria met. (Pending.)
+- **1.0.0 (Sprint 10) — Shipped:** Production-ready V1 — all V1 acceptance criteria met. Full pipeline (contract adaptation, planning, execution, reconciliation, artifact, replay), 4 contract adapters, 5 capabilities, 7 subsystems, deterministic replay via SHA-256, 9-check CI.
+- **Post-v1 (Sprint 11) — In progress:** Repo springclean — Diátaxis-style `docs/` reorg, Read the Docs integration, agent-artifact untracking, marketing site split out to the NexusNV website repo.
 
 ## Install (developer setup, Sprint 1)
 
@@ -311,7 +303,7 @@ uv sync --all-extras --dev
 uv run python -c "import paxman; print(f'paxman {paxman.__version__}')"
 ```
 
-Expected output: `paxman 0.0.0`.
+Expected output: `paxman 1.0.0`.
 
 ## Local CI
 
@@ -348,19 +340,33 @@ paxman/
 │   ├── api/                 # public API (normalize, replay, register_*)
 │   └── testing/             # public Hypothesis strategies (paxman.testing)
 ├── tests/                   # pytest test suite (unit / property / integration / public_api)
-├── docs/                    # design specs, ADRs, sprint plan, concepts, howtos
+├── examples/                # 3 reference mini-packages (backend_service, ai_agent_ingest, saas_procurement)
+├── docs/                    # user-facing + contributor docs (served by Read the Docs)
+│   ├── index.md             # RTD landing page
+│   ├── adr/                 # Architecture Decision Records (immutable)
+│   ├── concepts/            # Mental model: contracts, capabilities, planning, reconciliation, replay
+│   ├── howto/               # 5-minute task recipes
+│   ├── reference/           # Architecture, package structure, glossary, replay, extending, dependencies
+│   ├── specs/               # Implementation-level specs (developer-reference)
+│   ├── guides/              # Forward-growth slot for domain-specific tutorials
+│   ├── contributing/        # CONTRIBUTING, DEVELOPMENT, TESTING_STRATEGY, TEST_DATA, CODE_OF_CONDUCT
+│   ├── security/            # Security policy
+│   └── operations/          # CHANGELOG
+├── mkdocs.yml               # MkDocs config for the RTD site
+├── .readthedocs.yaml        # Read the Docs build config
 ├── pyproject.toml           # PEP 621 metadata + tooling config
 ├── Makefile                 # `make ci`, `make test`, `make build`, …
 ├── .pre-commit-config.yaml
 ├── .github/                 # workflows + issue/PR templates
 ├── LICENSE                  # MIT (per ADR-0008)
-├── CONTRIBUTING.md          # contribution workflow + ADR-driven process
-├── CODE_OF_CONDUCT.md       # Contributor Covenant v2.1
-└── CHANGELOG.md             # release notes
+├── CONTRIBUTING.md          # stub → docs/contributing/
+├── CODE_OF_CONDUCT.md       # full text (GitHub-recognized) — mirror at docs/contributing/code-of-conduct/
+├── SECURITY.md              # stub → docs/security/
+└── CHANGELOG.md             # stub → docs/operations/changelog.md
 ```
 
 
-See [V1_ACCEPTANCE_CRITERIA.md](./V1_ACCEPTANCE_CRITERIA.md) for the full definition of done.
+See the [documentation site](https://paxman.readthedocs.io/) for the full user and contributor reference.
 
 ## Contributing
 
@@ -368,27 +374,26 @@ We welcome contributions of all sizes — from typo fixes to new
 subsystems. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the
 contribution workflow and the ADR-driven process.
 
-For local development setup, see [DEVELOPMENT.md](./DEVELOPMENT.md).
+For local development setup, see the [Development setup guide](https://paxman.readthedocs.io/en/latest/contributing/development/).
 For extension guides (adding a new contract adapter, capability, or
-inference provider), see [EXTENDING.md](./EXTENDING.md).
+inference provider), see [Extending Paxman](https://paxman.readthedocs.io/en/latest/reference/extending/).
 
-Significant architectural changes require an ADR; see
-[docs/adr/README.md](./docs/adr/README.md). Community standards are
-in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
+Significant architectural changes require an ADR; see the
+[ADR index](https://paxman.readthedocs.io/en/latest/adr/). Community standards
+are in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 
 ## License
 
-MIT. See [LICENSE](./LICENSE). Per [ADR-0008](./docs/adr/0008-license-decision.md),
+MIT. See [LICENSE](./LICENSE). Per [ADR-0008](https://paxman.readthedocs.io/en/latest/adr/0008-license-decision/),
 MIT is the chosen license for V1. Apache-2.0 is the documented
-alternative if patent concerns emerge (see
-[docs/specs/license-decision.md](./docs/specs/license-decision.md)
-for the full trade-off analysis).
+alternative if patent concerns emerge (the trade-off analysis is kept
+on the project wiki).
 
 ## See also
 
-- [PRD.md](./PRD.md) — start here for the product vision
-- [GLOSSARY.md](./GLOSSARY.md) — vocabulary
-- [REPLAY_AND_DETERMINISM.md](./REPLAY_AND_DETERMINISM.md) — replay model
-- [SECURITY.md](./SECURITY.md) — threat model
+- [Glossary](https://paxman.readthedocs.io/en/latest/reference/glossary/) — vocabulary
+- [Replay & determinism](https://paxman.readthedocs.io/en/latest/reference/replay-and-determinism/) — replay model
+- [Security policy](https://paxman.readthedocs.io/en/latest/security/) — threat model
+- [Architecture](https://paxman.readthedocs.io/en/latest/reference/architecture/) — subsystem design
 - [Paxman Website](https://paxman.nexusnv.net) — the official project site
 - [NexusNV Website](https://nexusnv.net) — the people behind Paxman

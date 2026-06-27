@@ -10,7 +10,7 @@
 
 Confidence is a critical part of Paxman's output. The question is: which subsystem(s) may assign confidence to a candidate or resolved value?
 
-The earlier drafts of `PACKAGE_STRUCTURE_draft.md` (now superseded by [PACKAGE_STRUCTURE.md](../PACKAGE_STRUCTURE.md)) had contradictory statements:
+The earlier drafts of `PACKAGE_STRUCTURE_draft.md` (now superseded by [PACKAGE_STRUCTURE.md](../reference/package-structure.md)) had contradictory statements:
 - §3 guardrails: "Planner owns confidence assignment (not capabilities)."
 - §4 guardrails: "Confidence is exclusively owned by the Planner and Reconciler."
 - §6 guardrails: "Reconciler is the only layer that assigns final confidence and final truth."
@@ -79,7 +79,7 @@ The Planner emits a `target_confidence` and the Reconciler re-scores candidates 
 - `FieldPlan` has a `target_confidence` field (read from the field's `confidence_threshold`) that the Executor uses for early stop.
 - The Reconciler assigns the final `confidence` (float) and `confidence_band` on `FieldResult`.
 
-This ADR supersedes the contradictory language in the earlier `PACKAGE_STRUCTURE_draft.md` §3, §4, §6. The new [PACKAGE_STRUCTURE.md](../PACKAGE_STRUCTURE.md) §7.4, §7.5, §11.3, §11.5 are consistent with this decision.
+This ADR supersedes the contradictory language in the earlier `PACKAGE_STRUCTURE_draft.md` §3, §4, §6. The new [PACKAGE_STRUCTURE.md](../reference/package-structure.md) §7.4, §7.5, §11.3, §11.5 are consistent with this decision.
 
 ## Consequences
 

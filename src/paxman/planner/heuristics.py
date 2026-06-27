@@ -84,8 +84,7 @@ def has_explicit_evidence(
 ) -> bool:
     """Return ``True`` if the input already contains the field's value.
 
-    Per ``docs/sprints/sprint-03-planner-and-capabilities.md``
-    (Oracle M7) and ``ARCHITECTURE.md`` §4.2, "explicit evidence"
+    Per the [Sprint 3 — Planner & capabilities](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints/Sprint-03---Planner-and-capabilities) (Oracle M7) and ``ARCHITECTURE.md`` §4.2, "explicit evidence"
     in step 1 is a **planner rule** that inspects the
     :class:`InputProfile`. It does NOT require a
     ``text_extraction`` capability invocation.

@@ -4,14 +4,14 @@
 > V1 ships a stub provider).
 > **Audience:** Paxman users who want to add a new model provider
 > (OpenAI, Anthropic, Cohere, a local model, …).
-> **Related docs:** [EXTENDING.md §3](../../EXTENDING.md) (the full
+> **Related docs:** [EXTENDING.md §3](../reference/extending.md) (the full
 > SPI walkthrough), [docs/concepts/capabilities.md](../concepts/capabilities.md)
-> (what a capability is), [SECURITY.md §3](../../SECURITY.md)
+> (what a capability is), [SECURITY.md §3](../security/index.md)
 > (provider secrets).
 
 This guide is a **focused quick-start** for adding a new inference
 provider behind Paxman's `inference` capability. The full SPI
-walkthrough is in [EXTENDING.md §3](../../EXTENDING.md); this
+walkthrough is in [EXTENDING.md §3](../reference/extending.md); this
 document is a 5-minute checklist.
 
 ---
@@ -173,7 +173,7 @@ the call by `request.id`).
 The provider **must not** log the API key or any other secret. Use
 `structlog` with `redact_keys=["api_key", "authorization", ...]`
 or the equivalent in your logging library. See
-[SECURITY.md §3](../../SECURITY.md).
+[SECURITY.md §3](../security/index.md).
 
 ### 2.7 Register the provider with the `inference` capability
 
@@ -270,17 +270,17 @@ completion is what the artifact always returns.
 
 For the full SPI walkthrough (including a longer example, the
 `Completion` data model, and a worked OpenAI-style provider), see
-[EXTENDING.md §3](../../EXTENDING.md).
+[EXTENDING.md §3](../reference/extending.md).
 
 ---
 
 ## 7. See also
 
-- [EXTENDING.md §3](../../EXTENDING.md) — full SPI walkthrough.
+- [EXTENDING.md §3](../reference/extending.md) — full SPI walkthrough.
 - [docs/concepts/capabilities.md](../concepts/capabilities.md) —
   what a capability is in Paxman.
-- [SECURITY.md §3](../../SECURITY.md) — provider secrets policy.
-- [paxman.capabilities.v1.inference](../../EXTENDING.md) — the
+- [SECURITY.md §3](../security/index.md) — provider secrets policy.
+- [paxman.capabilities.v1.inference](../reference/extending.md) — the
   `InferenceProvider` SPI and the stub providers.
-- [tests/unit/test_capability_inference.py](../../EXTENDING.md) —
+- [tests/unit/test_capability_inference.py](../reference/extending.md) —
   the stub provider tests (a useful template for real providers).

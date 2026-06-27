@@ -8,6 +8,30 @@
 .codegraph/
 .understand-anything/
 
+# --- Agentic / harness / toolchain artifacts (Sprint 11) ---
+# Different developers may use different harnesses, agents, and tooling.
+# These are local dev artifacts only and must not be version-controlled.
+# The universal project knowledge base lives at ./AGENTS.md and IS tracked.
+
+# OpenCode skills (per-developer toolchain)
+.agents/
+
+# Omo harness (ralph-loop, continuation cache, etc.)
+.omo/
+
+# Skills lockfile (tool-specific)
+skills-lock.json
+
+# Harness-specific agent files (per-developer, not project-wide)
+CLAUDE.md
+CODEX.md
+kilo.md
+.gemini/
+.cursor/
+.aider*
+.windsurf/
+.continue/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -77,3 +101,6 @@ tests/fixtures/factories/__pycache__/
 coverage.json
 .worktress/
 .worktrees/
+.benchmarks/
+site/
+.playwright-cli/

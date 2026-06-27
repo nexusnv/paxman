@@ -4,14 +4,14 @@
 > **Audience:** Paxman users who want to add a new atomic
 > extraction/validation operation (OCR, barcode decoding, custom
 > regex library, …).
-> **Related docs:** [EXTENDING.md §2](../../EXTENDING.md) (the full
+> **Related docs:** [EXTENDING.md §2](../reference/extending.md) (the full
 > SPI walkthrough), [docs/concepts/capabilities.md](../concepts/capabilities.md)
 > (what a capability is), [ADR-0005](../adr/0005-confidence-ownership.md)
 > (why capabilities don't assign confidence).
 
 This guide is a **focused quick-start** for adding a new capability
 to Paxman. The full SPI walkthrough is in
-[EXTENDING.md §2](../../EXTENDING.md); this document is a 5-minute
+[EXTENDING.md §2](../reference/extending.md); this document is a 5-minute
 checklist.
 
 ---
@@ -243,7 +243,7 @@ Use `paxman.testing.capability_contexts()` for property tests.
 ### 3.7 Distribute
 
 If your capability is a **new public SPI surface** for the Paxman
-core, you need an **ADR** (see [docs/adr/README.md](../adr/README.md)).
+core, you need an **ADR** (see [docs/adr/README.md](../adr/index.md)).
 If you are publishing as a separate PyPI package
 (`paxman-<your-capability>`), you do not need an ADR for the
 Paxman core repo, but the extension should document its SPI
@@ -279,18 +279,18 @@ compliance.
 
 For the full SPI walkthrough (including a longer example, the
 `CostHint` semantics, and a worked inference-style capability), see
-[EXTENDING.md §2](../../EXTENDING.md).
+[EXTENDING.md §2](../reference/extending.md).
 
 ---
 
 ## 7. See also
 
-- [EXTENDING.md §2](../../EXTENDING.md) — full SPI walkthrough.
+- [EXTENDING.md §2](../reference/extending.md) — full SPI walkthrough.
 - [docs/concepts/capabilities.md](../concepts/capabilities.md) —
   what a capability is in Paxman.
 - [ADR-0005](../adr/0005-confidence-ownership.md) — confidence
   ownership (why capabilities don't assign confidence).
 - [docs/specs/capability-cost-model.md](../specs/capability-cost-model.md) —
   the `CostHint` and the scoring formula.
-- [paxman.capabilities.spec](../../EXTENDING.md) — the
+- [paxman.capabilities.spec](../reference/extending.md) — the
   `CapabilitySpec` data model.

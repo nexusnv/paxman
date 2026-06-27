@@ -93,7 +93,7 @@ A `Policy.parallelism` knob that lets callers opt in to parallel execution.
 
 - The Executor unit tests verify that capabilities are invoked in plan order.
 - The replay tests verify byte-equal artifacts across runs.
-- The integration tests measure p50/p99 latency on a 20-field contract as a baseline (see [PRD §9](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md) for targets).
+- The integration tests measure p50/p99 latency on a 20-field contract as a baseline (see [PRD §9](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/PRD) for targets).
 
 ## References
 

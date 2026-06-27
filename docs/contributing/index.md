@@ -7,7 +7,7 @@
 
 Paxman is an **open-source** project licensed under **MIT** (per
 [ADR-0008](../adr/0008-license-decision.md) and the
-[license decision spec](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/License-decision-full-analysis.md)). We
+[license decision spec](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/License-decision-full-analysis)). We
 welcome contributions of all sizes — from typo fixes to new
 subsystems.
 

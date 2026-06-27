@@ -14,7 +14,7 @@ Each contract is **canonical**: it exercises a specific feature of the contract 
 
 ## V1 contracts (current)
 
-The following fixtures are committed as of Sprint 2 (see the [Sprint 2 — Contract subsystem](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints/Sprint-02---Contract-subsystem.md) for the implementation plan and exit criteria):
+The following fixtures are committed as of Sprint 2 (see the [Sprint 2 — Contract subsystem](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints/Sprint-02---Contract-subsystem) for the implementation plan and exit criteria):
 
 | File | Format | What it exercises |
 |---|---|---|
@@ -72,5 +72,5 @@ the appropriate sprint when the corresponding feature lands.
 - [`tests/fixtures/contracts/AGENTS.md`](./AGENTS.md) — per-format conventions, anti-patterns.
 - [`docs/TEST_DATA.md`](../../docs/TEST_DATA.md) — the full directory structure.
 - [`docs/specs/dict-dsl-spec.md`](../../docs/specs/dict-dsl-spec.md) — the Dict DSL grammar (used by `dict_dsl/`).
-- [Sprint 2 — Contract subsystem](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints/Sprint-02---Contract-subsystem.md) — Sprint 2 (when these fixtures landed).
+- [Sprint 2 — Contract subsystem](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints/Sprint-02---Contract-subsystem) — Sprint 2 (when these fixtures landed).
 - [`TESTING_STRATEGY.md`](../../TESTING_STRATEGY.md) — how the fixtures are used in unit + property tests.

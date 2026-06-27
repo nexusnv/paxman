@@ -103,3 +103,4 @@ coverage.json
 .worktrees/
 .benchmarks/
 site/
+.playwright-cli/

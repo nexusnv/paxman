@@ -31,18 +31,15 @@ principle for PyPI releases.
    - **Owner:** `nexusnv`
    - **Repository name:** `paxman`
    - **Workflow filename:** `release.yml`
-   - **Environment name:** *leave empty / "non provided (any)"*
+   - **Environment name:** `testpypi`
 4. Click **"Add"**
 
-> **Important:** Do **not** fill in the "Environment name" field.
-> The release workflow (`.github/workflows/release.yml`) intentionally
-> does **not** specify an `environment: ...` on its publish jobs.
-> With the publisher registered with no environment, the OIDC
-> ``sub`` claim is ``repo:nexusnv/paxman`` and matches.
-> If you add an environment to the publisher, you must also add
-> the matching ``environment: ...`` line to the workflow (and
-> vice versa). See the inline comments in
-> `.github/workflows/release.yml` for details.
+> **Important:** The "Environment name" field on the publisher must
+> match the ``environment: ...`` key in the workflow's publish job.
+> For TestPyPI, the publisher uses `testpypi` and the workflow
+> has ``environment: testpypi`` on the ``publish-testpypi`` job.
+> For PyPI, the publisher uses `pypi` and the workflow has
+> ``environment: pypi`` on the ``publish-pypi`` job.
 
 ### PyPI trusted publisher (for Sprint 10)
 
@@ -55,18 +52,19 @@ Same pattern as TestPyPI:
    - **Owner:** `nexusnv`
    - **Repository name:** `paxman`
    - **Workflow filename:** `release.yml`
-   - **Environment name:** *leave empty / "non provided (any)"*
+   - **Environment name:** `pypi`
 4. Click **"Add"**
 
-### GitHub environment (not used)
+### GitHub environment (recommended)
 
-This project does **not** use GitHub Environments for trusted publishing.
-The release workflow's publish jobs have **no** ``environment: ...``
-key, so no environment is required. If you later want to add
-required-reviewer gating to the release workflow, you'll need to
-both add the environment to the publisher and add
-``environment: testpypi`` (or ``environment: pypi``) to the
-publish job.
+Create GitHub environments to gate publishing:
+
+1. Go to https://github.com/nexusnv/paxman/settings/environments
+2. Create `testpypi` environment (no required reviewers needed for Sprint 10)
+3. Create `pypi` environment (consider requiring 1+ review for production)
+
+The release workflow (`.github/workflows/release.yml`) already references these
+environment names on the publish jobs.
 
 ## Verification
 

@@ -183,9 +183,27 @@ publish-test: ## Publish to TestPyPI
 publish: ## Publish to PyPI
 	@echo "TODO(Sprint 10): publish to PyPI via trusted publishing"
 
+# --- Reference example smoke tests (Sprint 10) ------------------------------
+
+.PHONY: test-examples
+test-examples: ## Run all reference example test suites (smoke-tests persona coverage)
+	@for example in backend_service ai_agent_ingest saas_procurement; do \
+		if [ -d "examples/$$example" ]; then \
+			echo "==> Running examples/$$example tests"; \
+			cd examples/$$example && \
+				{ [ -d .venv ] || uv venv --quiet; } && \
+				.venv/bin/pip install --quiet -e "../..[pydantic]" && \
+				.venv/bin/pip install --quiet -e ".[dev]"; \
+			.venv/bin/python -m pytest tests/ -v; \
+			cd - >/dev/null; \
+		else \
+			echo "==> examples/$$example: not yet implemented, skipping"; \
+		fi; \
+	done
+
 # --- Local CI simulation (the canonical "is this green?" command) -----------
 
-# 9 checks (per Sprint 8 D8.25 / V1_ACCEPTANCE_CRITERIA.md §3.2):
+# 10 checks (per Sprint 10 / V1_ACCEPTANCE_CRITERIA.md §3.2):
 #   1. install-frozen     — exact lockfile install
 #   2. lint               — ruff check
 #   3. format-check       — ruff format --check
@@ -194,11 +212,12 @@ publish: ## Publish to PyPI
 #   6. imports            — import-linter
 #   7. docs-check         — interrogate (100% docstring coverage on public surface)
 #   8. security           — bandit (advisory in CI)
-#   9. test-cov           — pytest with coverage + per-subsystem threshold check
+#   9. test-examples      — reference example smoke tests
+#  10. test-cov           — pytest with coverage + per-subsystem threshold check
 
 .PHONY: ci
-ci: install-frozen lint format-check typecheck typecheck-pyright imports docs-check security test-cov ## Run the full local-CI pipeline (9 checks: install → lint → format → typecheck → pyright → imports → docs → security → test-cov)
+ci: install-frozen lint format-check typecheck typecheck-pyright imports docs-check security test-examples test-cov ## Run the full local-CI pipeline (10 checks: install → lint → format → typecheck → pyright → imports → docs → security → test-examples → test-cov)
 	@echo ""
 	@echo "=========================================="
-	@echo "  CI GREEN ✓ (9 checks)"
+	@echo "  CI GREEN ✓ (10 checks)"
 	@echo "=========================================="

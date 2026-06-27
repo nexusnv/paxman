@@ -24,7 +24,7 @@ import typing
 # ---------------------------------------------------------------------------
 
 #: Library version — mirrors ``pyproject.toml [project].version``.
-__version__: str = "0.0.0"
+__version__: str = "1.0.0"
 
 #: Canonical library version constant for internal use and artifact metadata.
 PAXMAN_VERSION: typing.Final[str] = __version__

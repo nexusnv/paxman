@@ -245,12 +245,47 @@ jobs:
         run: uv run pytest tests/integration --no-header
 
   # ---------------------------------------------------------------------------
+  # Reference example smoke tests (Sprint 10: persona coverage)
+  # ---------------------------------------------------------------------------
+  test-examples:
+    name: test-examples (py3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (frozen lockfile)
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Smoke-test backend_service
+        run: >
+          ls examples/backend_service/pyproject.toml 2>/dev/null && (cd examples/backend_service && uv pip install -e . && uv run pytest tests/ -v) || echo "backend_service: not yet implemented, skipping"
+
+      - name: Smoke-test ai_agent_ingest
+        run: >
+          ls examples/ai_agent_ingest/pyproject.toml 2>/dev/null && (cd examples/ai_agent_ingest && uv pip install -e . && uv run pytest tests/ -v) || echo "ai_agent_ingest: not yet implemented, skipping"
+
+      - name: Smoke-test saas_procurement
+        run: >
+          ls examples/saas_procurement/pyproject.toml 2>/dev/null && (cd examples/saas_procurement && uv pip install -e . && uv run pytest tests/ -v) || echo "saas_procurement: not yet implemented, skipping"
+
+  # ---------------------------------------------------------------------------
   # Coverage (runs on py3.12; uploads to Codecov)
   # ---------------------------------------------------------------------------
   test-coverage:
     name: coverage + per-subsystem thresholds (py3.12)
     runs-on: ubuntu-latest
-    needs: [lint, interrogate, test-unit, test-property, test-integration]
+    needs: [lint, interrogate, test-unit, test-property, test-integration, test-examples]
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4

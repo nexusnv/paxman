@@ -59,7 +59,7 @@ The Executor emits resolved results.
 
 ## Decision Outcome
 
-**Chosen option: A (Separate Reconciler).** This is consistent with [ARCHITECTURE.md §4.5](./../ARCHITECTURE.md) and [PACKAGE_STRUCTURE.md §7](./../PACKAGE_STRUCTURE.md).
+**Chosen option: A (Separate Reconciler).** This is consistent with [ARCHITECTURE.md §4.5](../reference/architecture.md) and [PACKAGE_STRUCTURE.md §7](../reference/package-structure.md).
 
 ## Consequences
 

@@ -72,7 +72,28 @@ packages = ["src/paxman"]
 "src/paxman/py.typed" = "paxman/py.typed"
 
 [tool.hatch.build.targets.sdist]
-include = ["/src", "/tests", "/docs", "/README.md", "/CHANGELOG.md", "/LICENSE"]
+include = [
+  "/src",
+  "/tests",
+  # Docs tree (served by Read the Docs)
+  "/docs/adr",
+  "/docs/concepts",
+  "/docs/howto",
+  "/docs/reference",
+  "/docs/specs",
+  "/docs/guides",
+  "/docs/contributing",
+  "/docs/security",
+  "/docs/operations",
+  "/docs/index.md",
+  # Build config for the RTD site
+  "/mkdocs.yml",
+  "/.readthedocs.yaml",
+  # Top-level README + changelog stub + license
+  "/README.md",
+  "/CHANGELOG.md",
+  "/LICENSE",
+]
 
 # --- Ruff (lint + format) ----------------------------------------------------
 
@@ -482,4 +503,8 @@ dev = [
     # Build
     "hatchling",
     "hatch",
+    # Documentation (Read the Docs + local builds)
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocs-autorefs>=1.0",
 ]

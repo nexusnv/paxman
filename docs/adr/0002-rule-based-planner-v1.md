@@ -75,9 +75,9 @@ Run the rule-based planner first; if the plan is "low confidence," ask an LLM to
 
 ## Decision Outcome
 
-**Chosen option: A (Rule-based).** The V1 planner is a pure function over (canonical contract, input profile, budget, policy, capability registry). The heuristic chain is documented in [ARCHITECTURE.md §4.2](./../ARCHITECTURE.md) and [PACKAGE_STRUCTURE.md §4](./../PACKAGE_STRUCTURE.md).
+**Chosen option: A (Rule-based).** The V1 planner is a pure function over (canonical contract, input profile, budget, policy, capability registry). The heuristic chain is documented in [ARCHITECTURE.md §4.2](../reference/architecture.md) and [PACKAGE_STRUCTURE.md §4](../reference/package-structure.md).
 
-LLM-based planning is **postponed to V2** (see [ARCHITECTURE.md §17.2](./../ARCHITECTURE.md)).
+LLM-based planning is **postponed to V2** (see [ARCHITECTURE.md §17.2](../reference/architecture.md)).
 
 ## Consequences
 

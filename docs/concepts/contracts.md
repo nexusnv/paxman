@@ -3,9 +3,9 @@
 > **Status:** V1
 > **Audience:** Paxman users authoring or consuming contracts; Paxman
 > contributors extending the contract subsystem.
-> **Related docs:** [GLOSSARY.md](../../GLOSSARY.md) §Contract,
-> [EXTENDING.md §1](../../EXTENDING.md) (adding a new adapter),
-> [ARCHITECTURE.md §3 Contract Subsystem](../../ARCHITECTURE.md),
+> **Related docs:** [GLOSSARY.md](../reference/glossary.md) §Contract,
+> [EXTENDING.md §1](../reference/extending.md) (adding a new adapter),
+> [ARCHITECTURE.md §3 Contract Subsystem](../reference/architecture.md),
 > [ADR-0007](../adr/0007-contract-adapter-set-v1.md) (V1 adapter set),
 > [ADR-0009](../adr/0009-dict-dsl-v1.md) (Dict DSL),
 > [docs/specs/dict-dsl-spec.md](../specs/dict-dsl-spec.md).
@@ -214,7 +214,7 @@ externally).
 ## 5. The adapter layer
 
 A **contract adapter** is a class that implements the
-`ContractAdapter` Protocol (the SPI; see [EXTENDING.md §1](../../EXTENDING.md)):
+`ContractAdapter` Protocol (the SPI; see [EXTENDING.md §1](../reference/extending.md)):
 
 ```python
 class ContractAdapter(Protocol):
@@ -305,7 +305,7 @@ The Reconciler enforces **currency matching** by default
 (`CurrencyPolicy.STRICT_MATCH`). `ALLOW_FX` requires an explicit
 `fx_rate` field on the contract. `REJECT_WITHOUT_RATE` rejects
 cross-currency candidates outright. See
-[GLOSSARY.md §CurrencyPolicy](../../GLOSSARY.md) for the full
+[GLOSSARY.md §CurrencyPolicy](../reference/glossary.md) for the full
 behaviour matrix.
 
 Decimal precision is preserved end-to-end. The internal pipeline
@@ -341,7 +341,7 @@ apply it to the relevant subsystems.
 
 Adapters are an **SPI** (`paxman.protocols.ContractAdapter`); you can
 register your own with `paxman.register_adapter(...)`. See
-[EXTENDING.md §1](../../EXTENDING.md) for the full step-by-step.
+[EXTENDING.md §1](../reference/extending.md) for the full step-by-step.
 
 The four V1 adapters are **always present** (Pydantic, JSON Schema,
 Dict DSL are required; OpenAPI is best-effort). The first three are
@@ -367,11 +367,11 @@ outside that subset raise `UNSUPPORTED_OPENAPI_FEATURE`.
 
 ## 10. See also
 
-- [GLOSSARY.md §Contract](../../GLOSSARY.md) — the single source of
+- [GLOSSARY.md §Contract](../reference/glossary.md) — the single source of
   truth for the term.
-- [EXTENDING.md §1](../../EXTENDING.md) — adding a new contract
+- [EXTENDING.md §1](../reference/extending.md) — adding a new contract
   adapter (full walkthrough).
-- [ARCHITECTURE.md §3 Contract Subsystem](../../ARCHITECTURE.md) —
+- [ARCHITECTURE.md §3 Contract Subsystem](../reference/architecture.md) —
   internal architecture of the contract subsystem.
 - [docs/specs/dict-dsl-spec.md](../specs/dict-dsl-spec.md) — the
   Dict DSL grammar, examples, and error model.

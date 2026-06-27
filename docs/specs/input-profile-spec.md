@@ -3,7 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-06-22
 > **Deciders:** Paxman core team
-> **Related docs:** [ARCHITECTURE.md §4.2](../../ARCHITECTURE.md), [PACKAGE_STRUCTURE.md §4.2](../../PACKAGE_STRUCTURE.md), [ADR-0002](../adr/0002-rule-based-planner-v1.md), [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md)
+> **Related docs:** [ARCHITECTURE.md §4.2](../reference/architecture.md), [PACKAGE_STRUCTURE.md §4.2](../reference/package-structure.md), [ADR-0002](../adr/0002-rule-based-planner-v1.md), [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md)
 
 ---
 
@@ -11,11 +11,11 @@
 
 `InputProfile` is a **lightweight metadata structure** derived from raw input before any capability invocation. It sits between input reception and `planner.plan(...)`, providing the Planner with the minimal signal it needs to make heuristic decisions without re-scanning the input.
 
-Per [ARCHITECTURE.md §4.2](../../ARCHITECTURE.md), the Planner is a **pure function** over `(CanonicalContract, InputProfile, Budget, Policy, CapabilityRegistry)`. The InputProfile is the Planner's view of the input — not the input itself. It is derived once, passed into the Planner, and never mutated.
+Per [ARCHITECTURE.md §4.2](../reference/architecture.md), the Planner is a **pure function** over `(CanonicalContract, InputProfile, Budget, Policy, CapabilityRegistry)`. The InputProfile is the Planner's view of the input — not the input itself. It is derived once, passed into the Planner, and never mutated.
 
 **Why it exists:** The Planner's heuristic chain needs to answer questions like "is this input empty?", "is this JSON or plain text?", "how dense is the content?" — without invoking capabilities (which is the Executor's job). InputProfile answers these questions in O(input_size) time with zero side effects.
 
-**Where it lives:** `planner/input_profile.py` per [PACKAGE_STRUCTURE.md §4.2](../../PACKAGE_STRUCTURE.md). It is an internal module; not re-exported in `api/`.
+**Where it lives:** `planner/input_profile.py` per [PACKAGE_STRUCTURE.md §4.2](../reference/package-structure.md). It is an internal module; not re-exported in `api/`.
 
 ---
 
@@ -23,7 +23,7 @@ Per [ARCHITECTURE.md §4.2](../../ARCHITECTURE.md), the Planner is a **pure func
 
 1. **Lightweight.** O(input_size) once, cached via `content_hash`. No multi-pass scanning, no external calls.
 2. **Deterministic.** Same input bytes → same InputProfile, byte-for-byte. No clock, no I/O, no random state.
-3. **Pure.** No capability invocation. The profile is derived from raw bytes alone. Per [PACKAGE_STRUCTURE.md §4.2](../../PACKAGE_STRUCTURE.md): "lightweight input classifier (no capability invocation)."
+3. **Pure.** No capability invocation. The profile is derived from raw bytes alone. Per [PACKAGE_STRUCTURE.md §4.2](../reference/package-structure.md): "lightweight input classifier (no capability invocation)."
 4. **Side-effect-free constructor.** The `make_profile()` function is a pure function. Per [ADR-0002](../adr/0002-rule-based-planner-v1.md), the Planner is a pure function; its inputs must be equally pure.
 5. **Five-field V1 surface.** Cap at 5 fields per the risk register in the sprint-00 document. Defer content classification (e.g., "is this a financial document?") to V2.
 6. **Constructed at most once per `paxman.normalize()` call.** The Planner receives the already-constructed profile. No lazy construction, no re-derivation.
@@ -63,7 +63,7 @@ class InputProfile:
 |---|---|---|---|---|
 | `input_type` | `InputType` | 8 enum values | Coarse classification of the raw input format. Drives heuristic selection in the Planner (e.g., "JSON input → try regex before inference"). | Planner (`heuristics.py`) |
 | `size` | `int` | `>= 0` | Byte count of the normalized input (UTF-8 encoded if `str` was provided). Used by Planner to estimate cost and by Budget to reject oversized inputs. | Planner, Budget |
-| `content_hash` | `str` | 64-char lowercase hex | SHA-256 hex digest of the normalized bytes. Used for replay hash composition ([REPLAY_AND_DETERMINISM.md §2.1](../../REPLAY_AND_DETERMINISM.md)) and as a cache key. | Artifact (`replay_hash`), Planner (cache key) |
+| `content_hash` | `str` | 64-char lowercase hex | SHA-256 hex digest of the normalized bytes. Used for replay hash composition ([REPLAY_AND_DETERMINISM.md §2.1](../reference/replay-and-determinism.md)) and as a cache key. | Artifact (`replay_hash`), Planner (cache key) |
 | `density` | `float` | `0.0 <= density <= 1.0` | Ratio of non-whitespace characters to total bytes. Heuristic signal for "is this a token-heavy LLM candidate?" Used by Planner to short-circuit capability selection. | Planner (`scoring.py`) |
 | `is_empty` | `bool` | `True` / `False` | `True` if `size == 0` or the input is whitespace-only. The Planner short-circuits to `UNRESOLVED` for all fields when `is_empty` is `True`. | Planner (`heuristics.py`) |
 
@@ -332,7 +332,7 @@ The following features are explicitly **deferred to V2**:
 
 ## 10. See Also
 
-- [ARCHITECTURE.md §4.2](../../ARCHITECTURE.md) — Planner subsystem design, heuristic ordering, InputProfile's role in the planning pipeline.
-- [PACKAGE_STRUCTURE.md §4.2](../../PACKAGE_STRUCTURE.md) — Module layout for `planner/`, including `input_profile.py`.
+- [ARCHITECTURE.md §4.2](../reference/architecture.md) — Planner subsystem design, heuristic ordering, InputProfile's role in the planning pipeline.
+- [PACKAGE_STRUCTURE.md §4.2](../reference/package-structure.md) — Module layout for `planner/`, including `input_profile.py`.
 - [ADR-0002: Rule-Based Planner for V1](../adr/0002-rule-based-planner-v1.md) — Why the Planner is a pure function; InputProfile's purity requirement.
-- [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md) — How `content_hash` feeds into the replay hash and cache key.
+- [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) — How `content_hash` feeds into the replay hash and cache key.

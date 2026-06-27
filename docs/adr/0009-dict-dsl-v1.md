@@ -126,9 +126,9 @@ If V2 needs references or inheritance, the DSL can be extended (or a new format 
 
 - Sibling document: `../specs/dict-dsl-spec.md`
 - `0007-contract-adapter-set-v1.md` — V1 adapter set requirement
-- `../../EXTENDING.md` §1 — adapter SPI
-- `../../ARCHITECTURE.md` §4.1 — `CanonicalContract`
-- `../../GLOSSARY.md` — V1 field types
-- `../../PACKAGE_STRUCTURE.md` §3.2 — planned `adapters/dict_dsl.py`
-- `../../DEPENDENCIES.md` §2 — core dependency policy
+- `../reference/extending.md` §1 — adapter SPI
+- `../reference/architecture.md` §4.1 — `CanonicalContract`
+- `../reference/glossary.md` — V1 field types
+- `../reference/package-structure.md` §3.2 — planned `adapters/dict_dsl.py`
+- `../reference/dependencies.md` §2 — core dependency policy
 - Sprint 0 D0.1: `../../sprints/sprint-00-design-closure.md`

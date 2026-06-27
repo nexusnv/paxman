@@ -107,8 +107,8 @@ If patent concerns emerge — for example, a corporate sponsor with a patent pol
 ## References
 
 - Sibling document: `../specs/license-decision.md`
-- `../../README.md` §License
-- `../../DEPENDENCIES.md` §2 (core dependency policy)
+- `../index.md` §License
+- `../reference/dependencies.md` §2 (core dependency policy)
 - `../../PRD.md` §6.1 (developer-focused library)
 - SPDX MIT: https://spdx.org/licenses/MIT.html
 - choosealicense.com MIT: https://choosealicense.com/licenses/mit/

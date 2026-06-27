@@ -58,7 +58,7 @@ Money is a `DECIMAL` field with `semantic_tags = ["currency", "iso4217"]`. The c
 
 ## Decision Outcome
 
-**Chosen option: A (first-class).** `MONEY` is a first-class field type in the canonical contract. The V1 set of field types is `STRING`, `INTEGER`, `DECIMAL`, `BOOLEAN`, `DATE`, `ENUM`, `OBJECT`, `ARRAY`, `MONEY` (see [ARCHITECTURE.md §4.1](./../ARCHITECTURE.md)).
+**Chosen option: A (first-class).** `MONEY` is a first-class field type in the canonical contract. The V1 set of field types is `STRING`, `INTEGER`, `DECIMAL`, `BOOLEAN`, `DATE`, `ENUM`, `OBJECT`, `ARRAY`, `MONEY` (see [ARCHITECTURE.md §4.1](../reference/architecture.md)).
 
 The `MONEY` type is modeled as:
 

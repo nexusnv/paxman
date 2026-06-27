@@ -86,7 +86,7 @@ assert rehydrated == artifact  # byte-equal
 
 - **Source code:** [github.com/nexusnv/paxman](https://github.com/nexusnv/paxman)
 - **PyPI:** [pypi.org/project/paxman](https://pypi.org/project/paxman/)
-- **Changelog:** [CHANGELOG.md on GitHub](https://github.com/nexusnv/paxman/blob/main/CHANGELOG.md)
+- **Changelog:** [CHANGELOG.md on Read the Docs](https://paxman.readthedocs.io/en/latest/operations/changelog/)
 - **Issue tracker:** [github.com/nexusnv/paxman/issues](https://github.com/nexusnv/paxman/issues)
 - **Security disclosures:** [security policy](security/index.md)
 

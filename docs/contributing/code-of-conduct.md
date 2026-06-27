@@ -60,8 +60,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-**conduct@paxman.example** (placeholder — replace with the actual contact
-when the project is hosted).
+**`conduct@nexusnv.net`**.
 
 All complaints will be reviewed and investigated promptly and fairly.
 

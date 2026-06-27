@@ -3,8 +3,8 @@
 > **Status:** Stable v1.
 > **Audience:** Paxman users, contributors, and reviewers.
 > **Related docs:** [CHANGELOG.md](../operations/changelog.md),
-> [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/V1-acceptance-criteria.md),
-> [README.md](../index.md), [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md).
+> [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/V1-acceptance-criteria.md),
+> [README.md](../index.md), [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md).
 
 ---
 
@@ -205,9 +205,9 @@ V1-specific limitations that users should be aware of:
 
 ## External user validation
 
-[V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/V1-acceptance-criteria.md) §5
+[V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/V1-acceptance-criteria.md) §5
 requires at least three external users (from the target personas in
-[PRD.md §6](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md)) to have used Paxman for a real workload
+[PRD.md §6](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md)) to have used Paxman for a real workload
 and reported no blocking issues before tagging `1.0.0`.
 
 This validation is documented as the project owner's task per the
@@ -256,10 +256,10 @@ runtime dependencies: `attrs`, `typing-extensions`, and `structlog`.
 ## See also
 
 - [CHANGELOG.md](../operations/changelog.md) — full release history.
-- [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/V1-acceptance-criteria.md) — the
+- [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/V1-acceptance-criteria.md) — the
   definition of done for V1.
 - [README.md](../index.md) — quickstart and usage guide.
-- [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md) — product vision and success metrics.
+- [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md) — product vision and success metrics.
 - [ARCHITECTURE.md](../reference/architecture.md) — subsystem design and
   sequence diagram.
 - [GLOSSARY.md](../reference/glossary.md) — vocabulary.

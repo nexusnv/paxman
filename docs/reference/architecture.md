@@ -2,7 +2,7 @@
 
 > **Status:** Draft v2 (post-documentation review)
 > **Audience:** Engineers implementing or extending Paxman.
-> **Related docs:** [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md), [PACKAGE_STRUCTURE.md](./package-structure.md), [GLOSSARY.md](./glossary.md), [docs/adr/](../adr/)
+> **Related docs:** [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md), [PACKAGE_STRUCTURE.md](./package-structure.md), [GLOSSARY.md](./glossary.md), [docs/adr/](../adr/)
 
 This document describes the **system architecture** of Paxman. It is implementation-agnostic at the level of "what subsystems exist" and "what their boundaries are," but it is concrete about **why** the boundaries are where they are. For module-level implementation rules, see [PACKAGE_STRUCTURE.md](./package-structure.md).
 
@@ -510,8 +510,8 @@ Following Pydantic's published policy as a model:
 
 Before 1.0, MINOR versions may contain breaking changes. The current target is **1.0** when:
 
-- All 9 success metrics in [PRD §9](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md) are met or explicitly waived.
-- All 8 V1 acceptance criteria in [PRD §10](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md) are met.
+- All 9 success metrics in [PRD §9](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md) are met or explicitly waived.
+- All 8 V1 acceptance criteria in [PRD §10](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md) are met.
 
 ### 9.4 Capability versioning
 
@@ -800,7 +800,7 @@ This is a public API change and requires a new ADR and a MINOR (or MAJOR, if bre
 
 ## 19. Open Architectural Questions
 
-These are tracked in [PRD §13](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md) as open questions for the V1 cycle. Architectural-level questions:
+These are tracked in [PRD §13](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md) as open questions for the V1 cycle. Architectural-level questions:
 
 1. **Q-A1** Should the Planner emit a `target_confidence` for each `FieldPlan` (yes, per §4.2) or only on the contract field? *(Resolved: per-field on the contract; the planner reads it.)*
 2. **Q-A2** Is a `ResolutionPolicy` per field or per contract? *(Resolved: per field; the contract carries a default.)*
@@ -812,10 +812,10 @@ These are tracked in [PRD §13](https://github.com/nexusnv/paxman-wiki/blob/main
 
 ## 20. References
 
-- [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md) — Product requirements, success metrics, V1 acceptance criteria.
+- [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md) — Product requirements, success metrics, V1 acceptance criteria.
 - [PACKAGE_STRUCTURE.md](./package-structure.md) — Module layout, dependency DAG, public/private split.
 - [GLOSSARY.md](./glossary.md) — Full domain vocabulary.
-- [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/V1-acceptance-criteria.md) — V1 definition of done.
+- [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/V1-acceptance-criteria.md) — V1 definition of done.
 - [REPLAY_AND_DETERMINISM.md](./replay-and-determinism.md) — Replay model deep dive.
 - [SECURITY.md](../security/index.md) — Threat model and PII handling.
 - [TESTING_STRATEGY.md](../contributing/testing-strategy.md) — Test seams and determinism tests.

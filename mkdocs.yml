@@ -108,8 +108,7 @@ nav:
       - Extending Paxman: reference/extending.md
       - Dependencies: reference/dependencies.md
   - Decision records:
-      - Overview: adr/index.md
-      - All ADRs: adr/index.md
+      - Index: adr/index.md
   - Design specifications:
       - Overview: specs/README.md
       - Dict DSL: specs/dict-dsl-spec.md

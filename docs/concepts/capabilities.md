@@ -24,7 +24,7 @@ capabilities must respect.
 
 ## 1. The five V1 capabilities
 
-Paxman V1 ships **exactly five capabilities** (per [PRD.md §5.1](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md)):
+Paxman V1 ships **exactly five capabilities** (per [PRD.md §5.1](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md)):
 
 | Capability | Tier | Input | Output | V1 use case |
 |---|---|---|---|---|

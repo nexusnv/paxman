@@ -125,7 +125,7 @@ pip install paxman[pydantic]                # + Pydantic adapter
 pip install paxman[all]                     # + all V1 adapters
 ```
 
-Paxman is in **pre-release** (v0.x). Public API may change between minor versions until 1.0.
+Paxman 1.0.0 is the current stable release. The public API follows [Semantic Versioning](https://semver.org/spec/v2.0.0/): breaking changes only happen in major-version bumps (1.x → 2.x).
 
 ## Documentation
 
@@ -151,8 +151,8 @@ the Docs. GitHub's issue and PR UIs auto-discover these files.
 > **Note:** Paxman V1 is in pre-release. The quickstart below is
 > verified end-to-end in CI (see `.github/workflows/ci.yml`). For a
 > full migration walkthrough (e.g. from LlamaIndex, LangChain, or a
-> hand-rolled pipeline), see
-> [`docs/concepts/MIGRATION_GUIDE.md`](./docs/concepts/MIGRATION_GUIDE.md).
+> hand-rolled pipeline), see the
+> [migration guide on Read the Docs](https://paxman.readthedocs.io/en/latest/concepts/MIGRATION-GUIDE/).
 
 ### 1. Install
 
@@ -360,7 +360,7 @@ paxman/
 ├── .github/                 # workflows + issue/PR templates
 ├── LICENSE                  # MIT (per ADR-0008)
 ├── CONTRIBUTING.md          # stub → docs/contributing/
-├── CODE_OF_CONDUCT.md       # full text (GitHub-recognized)
+├── CODE_OF_CONDUCT.md       # full text (GitHub-recognized) — mirror at docs/contributing/code-of-conduct/
 ├── SECURITY.md              # stub → docs/security/
 └── CHANGELOG.md             # stub → docs/operations/changelog.md
 ```

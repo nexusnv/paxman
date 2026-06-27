@@ -3,7 +3,7 @@
 #
 # This config is intentionally minimal: it points RTD at mkdocs.yml at the
 # repo root, uses Python 3.12 (matching the rest of the CI), and installs
-# the [dependency-groups] dev group (which now includes the docs stack:
+# the [dependency-groups] dev group (which includes the docs stack:
 # mkdocs, mkdocs-material, mkdocs-autorefs) plus the optional adapter
 # extras so cross-references like pydantic/attrs resolve cleanly.
 
@@ -23,7 +23,6 @@ build:
       - uv venv "${READTHEDOCS_VIRTUALENV_PATH}"
     install:
       - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv sync --all-extras --group dev
-      - UV_PROJECT_ENVIRONMENT="${READTHEDOCS_VIRTUALENV_PATH}" uv pip install mkdocs mkdocs-material mkdocs-autorefs
 
 # Build documentation with MkDocs
 mkdocs:

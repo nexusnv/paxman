@@ -18,7 +18,7 @@ The planner uses `CostHint` for two purposes:
 1. **Heuristic ordering** — when multiple capabilities can satisfy a field, the planner ranks them by ascending cost, following the heuristic chain in [ARCHITECTURE.md §4.2](../reference/architecture.md#42-planner--field-centric-plan-synthesis): explicit evidence, local deterministic, structured lookup, derived computation, local inference, remote inference, `UNRESOLVED`.
 2. **Budget enforcement** — the planner estimates total cost by summing `CostHint.usd` over the planned capability chain and compares against `Budget.max_total_cost_usd` ([ARCHITECTURE.md §7.1](../reference/architecture.md#71-budget-hard-limits)).
 
-**Critical: the values documented here are heuristics, not measurements.** They are round numbers chosen for planner scoring fidelity. They do not reflect actual runtime cost, which depends on input size, provider pricing, and network conditions. The cost model is intentionally coarse-grained; V1 does not perform per-call cost measurement. See the risk register note in [CHANGES_LOG.md §3.1](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/CHANGES-LOG.md#31-sprint-0-design-closure--recommended-decisions).
+**Critical: the values documented here are heuristics, not measurements.** They are round numbers chosen for planner scoring fidelity. They do not reflect actual runtime cost, which depends on input size, provider pricing, and network conditions. The cost model is intentionally coarse-grained; V1 does not perform per-call cost measurement. See the risk register note in [CHANGES_LOG.md §3.1](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/CHANGES-LOG.md#31-sprint-0-design-closure--recommended-decisions).
 
 ---
 
@@ -65,7 +65,7 @@ Violation of any rule raises `InvalidCapabilitySpec` with `error_code="INVALID_C
 
 ## 3. V1 Capability Cost Table
 
-The following table defines the baseline `CostHint` values for the five V1 capabilities. These values were established in [CHANGES_LOG.md §3.1](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/CHANGES-LOG.md#31-sprint-0-design-closure--recommended-decisions).
+The following table defines the baseline `CostHint` values for the five V1 capabilities. These values were established in [CHANGES_LOG.md §3.1](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/CHANGES-LOG.md#31-sprint-0-design-closure--recommended-decisions).
 
 | Capability | `tokens` | `ms` | `usd` | `deterministic` | Notes |
 |---|---|---|---|---|---|

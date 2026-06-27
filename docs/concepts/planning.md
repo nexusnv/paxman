@@ -304,7 +304,7 @@ that generates random `ExecutionPlan` instances with stable
   `CostHint` and the scoring formula.
 - [docs/specs/input-profile-spec.md](../specs/input-profile-spec.md) —
   the `InputProfile` data model.
-- [Sprint 3 spec](https://github.com/nexusnv/paxman/wiki/Internal-Development/Release-Roadmap) —
+- [Sprint 3 spec](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints/Sprint-03---Planner-and-capabilities) —
   the implementation plan.
 - [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) —
   planner determinism in the replay path.

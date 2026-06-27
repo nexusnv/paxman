@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+No changes yet.
+
+## [1.0.0] - 2026-06-27
+
 ### Added — Sprint 8 (Documentation + Community + CI Hardening)
 
 - **`docs/concepts/`** — 5 concept documents covering the V1 mental model:
@@ -260,6 +264,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **JSON Schema adapter enhancement** — accepts JSON Schema as a string and parses it as JSON at adapt time (used by ``tests/fixtures/contracts/json_schema/invoice.py``). Error code updated from ``INVALID_FIELD`` to ``INVALID_JSON`` for invalid JSON strings; non-dict/non-str inputs now raise with the message ``requires a dict or str``.
   - **Dev dependencies** — ``factory-boy >= 3.3`` and ``faker >= 22.0`` added for Layer 2 fixtures.
 
+### Added — Sprint 10 (Release v1.0.0)
+
+- **Version bumped to 1.0.0** (per ADR-0008 license decision + 9 V1 acceptance criteria all met)
+- **3 reference examples** — `examples/backend_service/` (FastAPI + Pydantic), `examples/ai_agent_ingest/` (stdlib-only agent tool-calling loop), `examples/saas_procurement/` (CSV batch procurement pipeline)
+- **`docs/concepts/RELEASE_NOTES_v1.0.0.md`** — what shipped in V1, what's deferred to V2, the 3 reference examples, known limitations
+- **`tests/integration/test_saas_procurement_replay.py`** — D10.7 cross-run `replay_hash` reproducibility test (verifies the saas_procurement example's artifacts are byte-equal across two independent Python invocations)
+- **README "Examples" section** — cross-links the 3 reference examples in the upper third of the README
+- **`paxman.api.replay`** — replaced the single remaining `# type: ignore[return-value]` (line 104) with `typing.cast` (Sprint 10 fix per V1 acceptance §2.1)
+
+### Changed
+
+- **Version** `0.0.0` → `1.0.0` (Production/Stable classifier)
+- **CI workflow** (`make ci`) now runs `test-examples` as a required gate (smoke-tests the 3 reference examples on every PR)
+- **Release workflow** (`.github/workflows/release.yml`) — uncommented the `publish-pypi` job, now publishes to both TestPyPI and PyPI via OIDC trusted publishing on tag push
+- **Golden artifacts** (8 files in `tests/fixtures/artifacts/`) — regenerated to match the new `paxman_version` (1.0.0)
+- **Test files** — `tests/unit/artifact/test_artifact.py`, `tests/unit/artifact/test_replay.py`, `tests/integration/test_replay_integrity.py`, `tests/unit/test_artifact_coverage.py` updated to use the new v1.0.0+ version semantics
+
+### Fixed
+
+- **The single remaining `# type: ignore[return-value]`** in `src/paxman/api/replay.py` is removed (replaced with `typing.cast`)
+
+### Notes
+
+- **No new public API surface.** All Sprint 10 changes are packaging, examples, documentation, CI, and one internal type-safety fix.
+- **No new core dependencies.** Examples declare only `paxman[pydantic]` as a runtime dep.
+- **No new ADRs.** Sprint 10 is the final release sprint; no architectural changes.
+- **All 20 sprint deliverables (D10.1–D10.20) shipped** per the [Sprint 10 spec](docs/sprints/sprint-10-release.md).
+- **External user validation (D10.6)**: per the [Sprint 9 Oracle M5 review](docs/sprints/sprint-09-production-hardening.md) and the [Sprint 10 risk register](docs/sprints/sprint-10-release.md), if fewer than 3 external users can be confirmed by the v1.0.0 release date, ship v1.0.0 with the user-validation gate waived and document the waiver in the release notes.
+
 ### Technical notes
 
 - The `attrs.@<field>.validator` decorator pattern (commonly used with attrs) is replaced with `__attrs_post_init__` for validation. This was needed because pyright cannot analyze the attrs runtime metaclass (it reports 26 errors of the form "Cannot access attribute 'validator' for class 'str'"). Per V1 acceptance §2.1, `# pyright: ignore` is forbidden in `src/paxman/`, so the fix is structural. mypy --strict still passes because it understands attrs natively.
@@ -271,4 +304,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sprint 3 — Validation rejects bool-as-int** (per Sprint 1's "no implicit coercion" precedent): `_to_float()` and `_to_length()` helpers check `isinstance(value, bool)` first and return `None`, preventing `True`/`False` from being silently treated as `1.0`/`0.0` in min_value/max_value comparisons.
 - **Sprint 3 — Capability tier assignment is a static spec field** (per `docs/specs/capability-cost-model.md` §4.1): the tier is part of the `CapabilitySpec`, not computed at plan time. This keeps the scoring formula input-independent and underwrites planner determinism.
 
-[Unreleased]: https://github.com/nexusnv/paxman/compare/v0.0.0...HEAD
+[Unreleased]: https://github.com/nexusnv/paxman/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/nexusnv/paxman/releases/tag/v1.0.0

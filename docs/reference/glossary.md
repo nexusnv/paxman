@@ -2,7 +2,7 @@
 
 > **Status:** Stable v1.
 > **Audience:** Anyone reading Paxman docs. This is the **single source of truth** for vocabulary.
-> **Related docs:** [PRD.md](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/PRD), [ARCHITECTURE.md](./architecture.md), [PACKAGE_STRUCTURE.md](./package-structure.md)
+> **Related docs:** [ARCHITECTURE.md](./architecture.md), [PACKAGE_STRUCTURE.md](./package-structure.md)
 
 All Paxman documentation links to this glossary. If a term is defined here, it is used **only** with that meaning across the project.
 
@@ -137,7 +137,7 @@ A disagreement between two or more candidates for the same field. The Reconciler
 
 A caller-supplied schema describing the target shape of normalized output. The contract is the entry point to Paxman: `paxman.normalize(input_data, contract=...)`. The contract may be a Pydantic model, a JSON Schema document, a Paxman Dict DSL spec, or an OpenAPI schema.
 
-**Ownership rule:** the **caller** owns the contract. Paxman never owns schemas, domain ontologies, or business standards. See [PRD.md §5.1](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/PRD).
+**Ownership rule:** the **caller** owns the contract. Paxman never owns schemas, domain ontologies, or business standards.
 
 **Related:** [Canonical Contract](#canonical-contract), [Contract Adapter](#adapter-contract-adapter), [Contract Validator](#contract-validator)
 
@@ -556,7 +556,6 @@ A W3C standard for provenance. Paxman's evidence model is inspired by W3C PROV b
 
 ## See also
 
-- [PRD.md](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/PRD) — Has a one-line glossary in §16.
 - [ARCHITECTURE.md](./architecture.md) — Subsystem responsibilities, error model, versioning.
 - [PACKAGE_STRUCTURE.md](./package-structure.md) — Module layout, public/private split.
 - [docs/adr/](../adr/) — Architecture Decision Records that justify many of these terms.

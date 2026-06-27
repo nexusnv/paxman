@@ -1,7 +1,7 @@
 """``lookup`` V1 capability — structured / retrieval-based extraction.
 
 The V1 ``lookup`` capability is a **deterministic in-memory dict
-backend** (per the Sprint 4 spec). It looks up a value in a
+backend**. It looks up a value in a
 pre-configured table by the value of the current input (or a
 literal key supplied via the capability's config).
 
@@ -12,7 +12,7 @@ The V1 ``lookup`` is intended for **structured retrieval** — looking
 up a value in a known table (e.g., a vendor master, a country code
 mapping, a unit conversion table). It is **not** a vector search,
 **not** an embedding-based lookup, and **not** an external database
-query (those are V2 per the Sprint 4 risk register).
+query (those are V2).
 
 Configuration
 -------------
@@ -45,7 +45,7 @@ V1 surface:
 
 The capability is **deterministic** by construction: the same
 input bytes + the same config table → the same output, byte-for-byte.
-Property tests (Sprint 4 D4.14) pin this.
+Property tests pin this.
 
 Examples:
     >>> cap = LookupCapability()

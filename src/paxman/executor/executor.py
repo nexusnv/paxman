@@ -27,7 +27,7 @@ The Executor is **stateless** in the V1 surface: the
 :class:`ExecutionState` is built fresh per call. This makes
 :meth:`run` safe to call concurrently from different threads
 (though ``paxman.normalize`` is documented as not thread-safe
-in V1 — the API surface is in Sprint 6).
+in V1 — the API surface is in :mod:`paxman.api`).
 
 Exit criteria
 -------------

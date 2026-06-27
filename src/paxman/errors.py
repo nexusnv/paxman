@@ -5,7 +5,7 @@ ARCHITECTURE.md §6.2. Every exception is an ``attrs`` frozen dataclass with
 slots, carrying a machine-readable ``error_code`` and a structured ``context``
 dict for logging and tracing.
 
-The 12 public errors are re-exported in ``paxman.api.errors`` (Sprint 6):
+The 12 public errors are re-exported in ``paxman.api.errors``:
 
 - :class:`PaxmanError` (base)
 - :class:`InvalidContractError`

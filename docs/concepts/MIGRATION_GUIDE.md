@@ -1,13 +1,13 @@
 # Migration Guide — Moving to Paxman
 
-> **Status:** Skeleton (per Sprint 8 D8.10). This document is a
+> **Status:** Skeleton. This document is a
 > high-level map of how to migrate from common "ad-hoc normalization"
 > patterns to Paxman. It is intentionally a **skeleton**; the full
 > guide will be filled in during V2.
 > **Audience:** Engineers and teams considering Paxman for an
 > existing normalization pipeline.
-> **Related docs:** [README.md](../index.md), [PRD.md](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/PRD)
-> (product vision), [docs/concepts/contracts.md](../concepts/contracts.md)
+> **Related docs:** [README.md](../index.md),
+> [docs/concepts/contracts.md](../concepts/contracts.md)
 > (what a contract is), [docs/concepts/replay.md](../concepts/replay.md).
 
 This document is a **migration scaffold** for users moving from

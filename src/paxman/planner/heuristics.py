@@ -84,7 +84,7 @@ def has_explicit_evidence(
 ) -> bool:
     """Return ``True`` if the input already contains the field's value.
 
-    Per the [Sprint 3 — Planner & capabilities](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints/Sprint-03---Planner-and-capabilities) (Oracle M7) and ``ARCHITECTURE.md`` §4.2, "explicit evidence"
+    Per ``ARCHITECTURE.md`` §4.2 and the planner design (Oracle M7), "explicit evidence"
     in step 1 is a **planner rule** that inspects the
     :class:`InputProfile`. It does NOT require a
     ``text_extraction`` capability invocation.
@@ -199,8 +199,8 @@ def select_structured_lookup(
 
     Returns the list of :class:`FieldPlanStep` records for
     ``STRUCTURED_LOOKUP``-tier capabilities that accept
-    ``field.type``. V1's ``lookup`` is in Sprint 4; this returns
-    an empty list in V1.
+    ``field.type``. This returns an empty list in V1 (the ``lookup``
+    capability has no registered implementation).
     """
     specs = _specs_by_tier(CapabilityTier.STRUCTURED_LOOKUP, registry)
     out: list[FieldPlanStep] = []

@@ -7,7 +7,7 @@ the right adapter.
 
 The registry is **process-local**. There is no global state shared across
 processes; this is intentional. The public ``register_adapter`` API (per
-``EXTENDING.md`` §1.3 step 4) lands in Sprint 6 with the rest of ``api/``.
+``EXTENDING.md`` §1.3 step 4) is part of the ``api/`` subsystem.
 
 Boundary
 --------
@@ -171,7 +171,7 @@ def adapt(external: object, format_id: str | None = None) -> CanonicalContract:
     Convenience function: looks up the adapter by *format_id* and calls
     its ``adapt()`` method. No type-based inference is performed in V1
     (the type-inference path is reserved for the future ``register_adapter``
-    public API in Sprint 6).
+    public API).
 
     Args:
         external: The external contract object.

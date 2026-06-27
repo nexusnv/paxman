@@ -233,7 +233,7 @@ registry's iteration order. Mitigations:
 
 - The registry sorts capabilities by `(score, id)` before iteration
   (per [docs/specs/capability-cost-model.md §7 EC5](../specs/capability-cost-model.md)).
-- `PYTHONHASHSEED=0` is set in CI (per Sprint 3 risk register).
+  - `PYTHONHASHSEED=0` is set in CI.
 
 Property tests in `tests/property/test_planner_determinism.py`
 verify byte-equal plans for 100 random
@@ -304,7 +304,5 @@ that generates random `ExecutionPlan` instances with stable
   `CostHint` and the scoring formula.
 - [docs/specs/input-profile-spec.md](../specs/input-profile-spec.md) —
   the `InputProfile` data model.
-- [Sprint 3 spec](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints/Sprint-03---Planner-and-capabilities) —
-  the implementation plan.
 - [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) —
   planner determinism in the replay path.

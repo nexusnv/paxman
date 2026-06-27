@@ -5,7 +5,7 @@ This capability checks a candidate value against one or more
 target :class:`~paxman.contract.canonical.CanonicalField`. It does
 **not** modify the value; it just reports pass / fail diagnostics.
 
-V1 constraint coverage (per the Sprint 3 scope and
+V1 constraint coverage (per
 ``EXTENDING.md`` §2.5):
 
 - :attr:`ConstraintKind.MIN_LENGTH` — string / array minimum length.
@@ -18,7 +18,7 @@ V1 constraint coverage (per the Sprint 3 scope and
   uppercase ASCII letters).
 
 **Reference constraints** (e.g., "total == sum(line_items[].price)")
-are **post-V1** (per ``EXTENDING.md`` and the Sprint 3 risk register).
+are **post-V1** (per ``EXTENDING.md``).
 
 V1 surface:
 
@@ -74,7 +74,7 @@ class ValidationCapability:
 
     In V1, ``validation`` is a **truth-reporter**, not a value-producer:
     it does not transform the value, only confirms or denies. The
-    Reconciler (Sprint 5) reads the diagnostic to decide whether to
+    Reconciler reads the diagnostic to decide whether to
     accept the value.
 
     Examples:

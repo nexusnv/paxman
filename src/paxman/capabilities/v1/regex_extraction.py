@@ -2,14 +2,13 @@
 
 This capability extracts a value from raw input using an
 ECMAScript-flavored regex (Python's :mod:`re` is ECMAScript-compatible
-enough for V1; per ``docs/sprints/sprint-03-planner-and-capabilities.md``
-§Tooling). The pattern is supplied via :attr:`CapabilityContext.config`
+enough for V1). The pattern is supplied via :attr:`CapabilityContext.config`
 as the ``"pattern"`` key (a string).
 
 The capability produces **one candidate per match** in the input. If
 the pattern contains a single **named group** ``(?P<name>...)``, the
-matched value of that group is used (V1 simplification per the Sprint
-3 risk register; duplicate named groups are rejected). Otherwise the
+matched value of that group is used (V1 simplification;
+duplicate named groups are rejected). Otherwise the
 whole match is used.
 
 V1 surface:
@@ -20,8 +19,8 @@ V1 surface:
 - ``cost_estimate`` = ``(tokens=0, ms=1, usd=0.0)`` (per
   ``docs/specs/capability-cost-model.md`` §3)
 
-Reference constraints are **post-V1** (per the Sprint 3 risk
-register); ``regex_extraction`` is purely a value-extraction step.
+Reference constraints are **post-V1**
+(per ``EXTENDING.md``); ``regex_extraction`` is purely a value-extraction step.
 Validation is a separate capability.
 """
 
@@ -132,7 +131,7 @@ class RegexExtractionCapability:
         text = ctx.raw_input.decode("utf-8", errors="replace")
         named_groups = pattern.groupindex
         if len(named_groups) > 1:
-            # Sprint 3 risk register: reject duplicate named groups in V1.
+            # V1 rejects multiple named groups (complexity guard).
             return CapabilityResult(
                 candidates=(),
                 diagnostics=(

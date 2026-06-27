@@ -1,11 +1,11 @@
 """OpenAPI 3.x adapter — OpenAPI 3.x document ↔ ``CanonicalContract``.
 
-Per `ADR-0007` and the Sprint 4 scope (``D4.10``), the V1 OpenAPI
+Per `ADR-0007`, the V1 OpenAPI
 adapter is **best-effort**: it supports the subset of OpenAPI 3.x
 that the ``petstore_3_0.yaml`` fixture exercises, and **rejects**
 everything else with a structured ``InvalidContractError``.
 
-Hard caps (per the Sprint 4 risk register):
+Hard caps:
 
 - **No ``oneOf`` / ``anyOf`` / ``allOf``** — composition is V2.
   Reject with ``UNSUPPORTED_OPENAPI_FEATURE``.
@@ -27,7 +27,7 @@ The V1 surface:
 - :class:`OpenApiAdapter` — the :class:`ContractAdapter` implementation.
 - :func:`adapt` / :func:`export` — the SPI methods.
 - Delegates schema parsing to :class:`JsonSchemaAdapter` for
-  individual schemas (per the Sprint 4 risk register; this does
+  individual schemas (this does
   **not** violate the import DAG because both adapters live in
   ``contract/adapters/`` as siblings).
 
@@ -281,7 +281,7 @@ class OpenApiAdapter:
         # The JSON Schema adapter lives in ``contract/adapters/`` as a
         # sibling of the OpenAPI adapter. This is NOT a DAG violation:
         # the ``contract`` subsystem can import from any of its
-        # submodules. Per the Sprint 4 risk register, this is the
+        # submodules. This is the
         # intended delegation pattern.
         json_adapter = JsonSchemaAdapter()
         return json_adapter.adapt(json_schema_doc)

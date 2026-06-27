@@ -14,7 +14,7 @@ Per `ADR-0002` and ``ARCHITECTURE.md`` §4.2, the planner is a
 No clock, no random, no I/O. Given the same inputs, the planner
 always produces the same :class:`ExecutionPlan` byte-for-byte.
 
-Sprint 3 does **not** execute the plan. The Executor (Sprint 4)
+This module does **not** execute the plan. The Executor
 walks the plan. This module's only output is the
 :class:`ExecutionPlan`.
 

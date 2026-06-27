@@ -268,16 +268,28 @@ jobs:
         run: uv sync --frozen --all-extras --dev
 
       - name: Smoke-test backend_service
-        run: >
-          ls examples/backend_service/pyproject.toml 2>/dev/null && (cd examples/backend_service && uv pip install -e . && uv run pytest tests/ -v) || echo "backend_service: not yet implemented, skipping"
+        run: |
+          if [ -f examples/backend_service/pyproject.toml ]; then
+            cd examples/backend_service && uv pip install -e . && uv run pytest tests/ -v
+          else
+            echo "backend_service: not yet implemented, skipping"
+          fi
 
       - name: Smoke-test ai_agent_ingest
-        run: >
-          ls examples/ai_agent_ingest/pyproject.toml 2>/dev/null && (cd examples/ai_agent_ingest && uv pip install -e . && uv run pytest tests/ -v) || echo "ai_agent_ingest: not yet implemented, skipping"
+        run: |
+          if [ -f examples/ai_agent_ingest/pyproject.toml ]; then
+            cd examples/ai_agent_ingest && uv pip install -e . && uv run pytest tests/ -v
+          else
+            echo "ai_agent_ingest: not yet implemented, skipping"
+          fi
 
       - name: Smoke-test saas_procurement
-        run: >
-          ls examples/saas_procurement/pyproject.toml 2>/dev/null && (cd examples/saas_procurement && uv pip install -e . && uv run pytest tests/ -v) || echo "saas_procurement: not yet implemented, skipping"
+        run: |
+          if [ -f examples/saas_procurement/pyproject.toml ]; then
+            cd examples/saas_procurement && uv pip install -e . && uv run pytest tests/ -v
+          else
+            echo "saas_procurement: not yet implemented, skipping"
+          fi
 
   # ---------------------------------------------------------------------------
   # Coverage (runs on py3.12; uploads to Codecov)

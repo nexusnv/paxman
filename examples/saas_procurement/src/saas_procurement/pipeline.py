@@ -89,11 +89,14 @@ def run_pipeline(manifest_path: Path, output_dir: Path) -> RunSummary:
             raise FileNotFoundError(f"Input file missing: {row.input_file}")
         if row.contract_name not in CONTRACTS:
             raise ValueError(f"Unknown contract {row.contract_name!r} in row {row.id!r}")
+        safe_row_id = Path(row.id).name
+        if safe_row_id != row.id or ".." in row.id:
+            raise ValueError(f"Invalid row id {row.id!r}")
         contract = CONTRACTS[row.contract_name]
         input_data = row.input_file.read_text(encoding="utf-8")
         try:
             artifact = paxman.normalize(input_data=input_data, contract=contract)
-            artifact_path = output_dir / f"{row.id}.json"
+            artifact_path = output_dir / f"{safe_row_id}.json"
             artifact_path.write_text(
                 json.dumps(_artifact_to_dict(artifact), indent=2, sort_keys=True),
                 encoding="utf-8",
@@ -107,7 +110,7 @@ def run_pipeline(manifest_path: Path, output_dir: Path) -> RunSummary:
                 failed += 1
         except Exception as exc:
             failed += 1
-            error_path = output_dir / f"{row.id}.error.txt"
+            error_path = output_dir / f"{safe_row_id}.error.txt"
             error_path.write_text(str(exc), encoding="utf-8")
 
     summary = RunSummary(

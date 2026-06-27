@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import pytest
 from fastapi.testclient import TestClient
+
+pytestmark = pytest.mark.deterministic
 
 
 def test_healthz(client: TestClient) -> None:

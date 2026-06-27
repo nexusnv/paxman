@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -19,21 +20,17 @@ import pytest
 _EXAMPLE_DIR = Path(__file__).resolve().parent.parent.parent / "examples" / "saas_procurement"
 _MANIFEST_PATH = _EXAMPLE_DIR / "data" / "manifest.csv"
 
-# Use the example's own .venv (has paxman + saas_procurement pre-installed).
-_EXAMPLE_PYTHON = _EXAMPLE_DIR / ".venv" / "bin" / "python"
-
 
 @pytest.fixture(scope="module")
 def example_python() -> Path:
-    """Return the saas_procurement example's Python interpreter.
+    """Return a Python interpreter that can run saas_procurement.
 
-    The example's ``.venv`` has ``paxman`` and ``saas_procurement``
-    installed.  If the ``.venv`` is missing or broken, the test skips
-    (the example is not expected to be available in all environments).
+    Uses the current test interpreter (sys.executable).  Verifies that
+    ``saas_procurement`` and ``paxman`` are importable; if not, attempts
+    an editable install.  Skips when installation fails (e.g. no venv
+    access on a restricted CI runner).
     """
-    python = _EXAMPLE_PYTHON
-    if not python.exists():
-        pytest.skip(f"Example .venv not found at {python}")
+    python = Path(sys.executable)
 
     # Verify the interpreter can import saas_procurement + paxman.
     result = subprocess.run(  # noqa: S603
@@ -42,10 +39,34 @@ def example_python() -> Path:
         text=True,
     )
     if result.returncode != 0:
-        pytest.skip(
-            f"Example .venv at {python} cannot import "
-            f"saas_procurement/paxman: {result.stderr.strip()}"
+        # Attempt editable install of the example.
+        install = subprocess.run(  # noqa: S603
+            [
+                str(python),
+                "-m",
+                "pip",
+                "install",
+                "--quiet",
+                "-e",
+                str(_EXAMPLE_DIR),
+            ],
+            capture_output=True,
+            text=True,
         )
+        if install.returncode != 0:
+            pytest.skip(
+                f"Cannot import saas_procurement and installation failed: {install.stderr.strip()}"
+            )
+        # Re-verify after install.
+        result = subprocess.run(  # noqa: S603
+            [str(python), "-c", "import saas_procurement; import paxman"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            pytest.skip(
+                f"saas_procurement still not importable after install: {result.stderr.strip()}"
+            )
     return python
 
 

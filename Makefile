@@ -190,12 +190,11 @@ test-examples: ## Run all reference example test suites (smoke-tests persona cov
 	@for example in backend_service ai_agent_ingest saas_procurement; do \
 		if [ -d "examples/$$example" ]; then \
 			echo "==> Running examples/$$example tests"; \
-			cd examples/$$example && \
+			(cd examples/$$example && \
 				{ [ -d .venv ] || uv venv --quiet; } && \
-				.venv/bin/pip install --quiet -e "../..[pydantic]" && \
-				.venv/bin/pip install --quiet -e ".[dev]"; \
-			.venv/bin/python -m pytest tests/ -v; \
-			cd - >/dev/null; \
+				uv pip install --quiet --python .venv/bin/python -e "../..[pydantic]" && \
+				uv pip install --quiet --python .venv/bin/python -e ".[dev]" && \
+				.venv/bin/python -m pytest tests/ -v) || exit 1; \
 		else \
 			echo "==> examples/$$example: not yet implemented, skipping"; \
 		fi; \

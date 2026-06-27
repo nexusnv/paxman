@@ -12,6 +12,7 @@ from backend_service.models import (
     NormalizeRequest,
     NormalizeResponse,
 )
+from paxman.errors import BudgetExceededError, ExecutionError, InvalidContractError
 
 app = FastAPI(
     title="Paxman Normalization Service",
@@ -55,10 +56,41 @@ def normalize_endpoint(request: NormalizeRequest) -> NormalizeResponse:
             f"Available: {sorted(CONTRACTS.keys())}",
         )
 
-    artifact = paxman.normalize(
-        input_data=request.input_data,
-        contract=contract_cls,
-    )
+    try:
+        artifact = paxman.normalize(
+            input_data=request.input_data,
+            contract=contract_cls,
+        )
+    except InvalidContractError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "invalid_contract",
+                "message": str(exc),
+                "error_code": exc.error_code,
+                "context": exc.context,
+            },
+        ) from exc
+    except BudgetExceededError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "budget_exceeded",
+                "message": str(exc),
+                "error_code": exc.error_code,
+                "context": exc.context,
+            },
+        ) from exc
+    except ExecutionError as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": "execution_error",
+                "message": str(exc),
+                "error_code": exc.error_code,
+                "context": exc.context,
+            },
+        ) from exc
 
     diagnostics = [
         DiagnosticsEntry(

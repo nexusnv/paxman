@@ -23,7 +23,7 @@ class TestLoadManifest:
         for row in rows:
             assert row.input_file.is_absolute()
             # The resolved path should live under the data/ directory.
-            assert str(base) in str(row.input_file)
+            assert row.input_file.is_relative_to(base)
 
     def test_load_manifest_missing_column(self, tmp_path: Path) -> None:
         """A manifest missing a required column raises ValueError."""

@@ -38,6 +38,7 @@ class TestDemo:
             capture_output=True,
             text=True,
             check=True,
+            timeout=30,
         )
         assert "Answer:" in result.stdout
         assert "Tool calls:" in result.stdout

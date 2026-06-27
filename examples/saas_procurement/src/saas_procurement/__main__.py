@@ -30,7 +30,7 @@ def main() -> int:
     print(f"  Successful: {summary.successful}")
     print(f"  Unresolved: {summary.unresolved}")
     print(f"  Failed:     {summary.failed}")
-    return 0
+    return 1 if summary.failed > 0 else 0
 
 
 if __name__ == "__main__":

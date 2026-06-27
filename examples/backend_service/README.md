@@ -48,7 +48,11 @@ curl -X POST http://localhost:8000/normalize \
   "normalized_data": {
     "supplier_name": "ACME Corp",
     "total_amount": "1234.56",
-    "currency_code": "USD"
+    "currency_code": "USD",
+    "line_items": [
+      {"description": "Widget", "quantity": 2, "unit_price": "500.00"},
+      {"description": "Gadget", "quantity": 1, "unit_price": "234.56"}
+    ]
   },
   "unresolved_fields": [],
   "replay_hash": "a3f8...<64 hex chars>",

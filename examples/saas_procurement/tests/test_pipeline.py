@@ -50,7 +50,7 @@ class TestPipeline:
         assert summary_data["total_rows"] == 3
         assert "successful" in summary_data
         assert "unresolved" in summary_data
-        assert "failed" in sample_manifest_path.name or True  # structural check
+        assert "failed" in summary_data
 
     def test_pipeline_handles_missing_input(
         self,

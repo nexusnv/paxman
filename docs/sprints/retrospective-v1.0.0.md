@@ -2,7 +2,7 @@
 
 > **Date:** 2026-06-27
 > **Cycle:** Sprints 0-10 (V1 development)
-> **Outcome:** Paxman 1.0.0 released with the full V1 capability set.
+> **Outcome:** Paxman 1.0.0 is being released with the full V1 capability set (pending merge of PR #20).
 
 ## Sprint metrics
 

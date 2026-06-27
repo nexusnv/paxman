@@ -57,12 +57,14 @@ class TestReplayHashDeterminism:
             capture_output=True,
             text=True,
             check=True,
+            timeout=60,
         )
         result2 = subprocess.run(
             [sys.executable, "-m", "saas_procurement", manifest_str, str(output2)],
             capture_output=True,
             text=True,
             check=True,
+            timeout=60,
         )
 
         assert result1.returncode == 0, f"Subprocess 1 failed: {result1.stderr}"

@@ -60,15 +60,24 @@ def load_manifest(
         missing = [c for c in REQUIRED_COLUMNS if c not in reader.fieldnames]
         if missing:
             raise ValueError(f"Manifest missing required columns: {missing}")
+        base_resolved = base.resolve()
         for i, row in enumerate(reader):
             try:
+                if not row.get("id") or not row.get("input_file") or not row.get("contract_name"):
+                    raise ValueError(f"Manifest row {i} has empty required fields")
+                resolved = (base / row["input_file"]).resolve()
+                if not resolved.is_relative_to(base_resolved):
+                    raise ValueError(
+                        f"Manifest row {i}: input_file {row['input_file']!r} "
+                        f"escapes base_dir {base_resolved}"
+                    )
                 rows.append(
                     ManifestRow(
                         id=row["id"],
-                        input_file=(base / row["input_file"]).resolve(),
+                        input_file=resolved,
                         contract_name=row["contract_name"],
                     )
                 )
-            except KeyError as e:
-                raise ValueError(f"Manifest row {i} missing column: {e}") from e
+            except (KeyError, TypeError) as e:
+                raise ValueError(f"Manifest row {i} is malformed: {e}") from e
     return rows

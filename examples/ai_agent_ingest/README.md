@@ -42,7 +42,7 @@ uv run pytest tests/ -v
 
 ## Expected output
 
-```
+```text
 Answer: Document normalized successfully.
 Tool calls: 1
 Artifact payload: {'status': 'SUCCESS', 'normalized_data': {...}, 'unresolved_fields': [...], 'replay_hash': '...'}

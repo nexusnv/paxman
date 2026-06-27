@@ -3,10 +3,10 @@
 > **Status:** V1
 > **Audience:** Paxman users inspecting capability output; Paxman
 > contributors adding or extending capabilities.
-> **Related docs:** [GLOSSARY.md §Capability](../../GLOSSARY.md),
-> [EXTENDING.md §2](../../EXTENDING.md) (adding a new capability),
-> [EXTENDING.md §3](../../EXTENDING.md) (adding a new inference
-> provider), [ARCHITECTURE.md §5 Capabilities Subsystem](../../ARCHITECTURE.md),
+> **Related docs:** [GLOSSARY.md §Capability](../reference/glossary.md),
+> [EXTENDING.md §2](../reference/extending.md) (adding a new capability),
+> [EXTENDING.md §3](../reference/extending.md) (adding a new inference
+> provider), [ARCHITECTURE.md §5 Capabilities Subsystem](../reference/architecture.md),
 > [docs/specs/capability-cost-model.md](../specs/capability-cost-model.md)
 > (cost model, scoring, weights).
 
@@ -24,7 +24,7 @@ capabilities must respect.
 
 ## 1. The five V1 capabilities
 
-Paxman V1 ships **exactly five capabilities** (per [PRD.md §5.1](../../PRD.md)):
+Paxman V1 ships **exactly five capabilities** (per [PRD.md §5.1](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD)):
 
 | Capability | Tier | Input | Output | V1 use case |
 |---|---|---|---|---|
@@ -45,8 +45,8 @@ it does not re-invoke capabilities).
 ## 2. The Capability SPI
 
 Every capability implements the `Capability` Protocol (see
-[paxman.protocols](../../EXTENDING.md) and
-[EXTENDING.md §2](../../EXTENDING.md)):
+[paxman.protocols](../reference/extending.md) and
+[EXTENDING.md §2](../reference/extending.md)):
 
 ```python
 class Capability(Protocol):
@@ -203,7 +203,7 @@ to simulate the non-determinism of a real provider; the default
 Non-determinism does **not** break replay. The artifact records
 the actual completion text in the evidence; replay rehydrates the
 artifact and does not re-invoke the capability. See
-[REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md) §5.3.
+[REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) §5.3.
 
 ---
 
@@ -251,7 +251,7 @@ The V1 inference capability is **pluggable**: it takes an
 time. The default provider is `StubInferenceProvider`; the
 `CyclingStubInferenceProvider` is a test-only stub for non-determinism
 exercises. Real providers (OpenAI, Anthropic, Cohere) are V2; see
-[EXTENDING.md §3](../../EXTENDING.md).
+[EXTENDING.md §3](../reference/extending.md).
 
 ---
 
@@ -276,7 +276,7 @@ Do **not** add a new capability when:
   (it must go through `CapabilityContext`).
 
 Capabilities require an **ADR** (see
-[docs/adr/README.md](../adr/README.md)) because they add a new
+[docs/adr/index.md](../adr/index.md)) because they add a new
 public SPI. Custom extensions published as separate PyPI packages
 (`paxman-<your-capability>`) do not require an ADR for the Paxman
 core repo, but the extension should document its SPI compliance.
@@ -285,15 +285,15 @@ core repo, but the extension should document its SPI compliance.
 
 ## 11. See also
 
-- [EXTENDING.md §2](../../EXTENDING.md) — full step-by-step for
+- [EXTENDING.md §2](../reference/extending.md) — full step-by-step for
   adding a capability.
-- [EXTENDING.md §3](../../EXTENDING.md) — full step-by-step for
+- [EXTENDING.md §3](../reference/extending.md) — full step-by-step for
   adding an inference provider.
 - [docs/specs/capability-cost-model.md](../specs/capability-cost-model.md) —
   the full cost model and scoring formula.
-- [ARCHITECTURE.md §5 Capabilities Subsystem](../../ARCHITECTURE.md) —
+- [ARCHITECTURE.md §5 Capabilities Subsystem](../reference/architecture.md) —
   internal architecture of the capabilities subsystem.
 - [ADR-0005](../adr/0005-confidence-ownership.md) — confidence
   ownership (why capabilities don't assign confidence).
-- [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md) —
+- [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) —
   determinism in the presence of non-deterministic capabilities.

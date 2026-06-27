@@ -70,7 +70,7 @@ A `Policy.parallelism` knob that lets callers opt in to parallel execution.
 
 **Chosen option: A (Sequential).** The V1 Executor runs field plans in plan order, sequentially. Each field plan is run to completion (or to its early-stop threshold) before the next one starts.
 
-**Parallelism is postponed to V2** ([ARCHITECTURE.md §17.2](./../ARCHITECTURE.md)). When V2 adds it, it will be opt-in and will only parallelize fields that the Planner has proven independent (no derived computation dependencies).
+**Parallelism is postponed to V2** ([ARCHITECTURE.md §17.2](../reference/architecture.md)). When V2 adds it, it will be opt-in and will only parallelize fields that the Planner has proven independent (no derived computation dependencies).
 
 ## Consequences
 
@@ -93,7 +93,7 @@ A `Policy.parallelism` knob that lets callers opt in to parallel execution.
 
 - The Executor unit tests verify that capabilities are invoked in plan order.
 - The replay tests verify byte-equal artifacts across runs.
-- The integration tests measure p50/p99 latency on a 20-field contract as a baseline (see [PRD §9](./../PRD.md) for targets).
+- The integration tests measure p50/p99 latency on a 20-field contract as a baseline (see [PRD §9](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD) for targets).
 
 ## References
 

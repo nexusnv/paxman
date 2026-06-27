@@ -6,7 +6,7 @@
 > guide will be filled in during V2.
 > **Audience:** Engineers and teams considering Paxman for an
 > existing normalization pipeline.
-> **Related docs:** [README.md](../../README.md), [PRD.md](../../PRD.md)
+> **Related docs:** [README.md](../index.md), [PRD.md](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD)
 > (product vision), [docs/concepts/contracts.md](../concepts/contracts.md)
 > (what a contract is), [docs/concepts/replay.md](../concepts/replay.md).
 
@@ -36,7 +36,7 @@ If you need any of the things Paxman is **not** (a workflow engine,
 an agent framework, a RAG framework, a persistence layer, a schema
 registry, a domain ontology), **wrap Paxman from the outside** —
 do not migrate to Paxman. See
-[README.md §What Paxman is NOT](../../README.md).
+[README.md §What Paxman is NOT](../index.md).
 
 ---
 
@@ -300,7 +300,7 @@ prioritize the worked example.
 
 ## 8. See also
 
-- [README.md](../../README.md) — what Paxman is and is not.
+- [README.md](../index.md) — what Paxman is and is not.
 - [docs/concepts/contracts.md](../concepts/contracts.md) — the
   contract model.
 - [docs/concepts/planning.md](../concepts/planning.md) — the
@@ -310,5 +310,5 @@ prioritize the worked example.
 - [docs/concepts/reconciliation.md](../concepts/reconciliation.md) —
   the Reconciler.
 - [docs/concepts/replay.md](../concepts/replay.md) — replay.
-- [EXTENDING.md](../../EXTENDING.md) — adding custom adapters,
+- [EXTENDING.md](../reference/extending.md) — adding custom adapters,
   capabilities, and providers.

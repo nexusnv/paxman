@@ -3,9 +3,9 @@
 > **Status:** V1
 > **Audience:** Paxman users storing and rehydrating artifacts; Paxman
 > contributors extending the artifact subsystem.
-> **Related docs:** [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md)
-> (the full deep dive), [GLOSSARY.md §Replay](../../GLOSSARY.md),
-> [ARCHITECTURE.md §8 Artifact Subsystem](../../ARCHITECTURE.md).
+> **Related docs:** [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md)
+> (the full deep dive), [GLOSSARY.md §Replay](../reference/glossary.md),
+> [ARCHITECTURE.md §8 Artifact Subsystem](../reference/architecture.md).
 
 **Replay** is the act of rehydrating a previously produced
 `ExecutionArtifact` to its original state **without recomputation**.
@@ -15,7 +15,7 @@ never recomputes from a replayed artifact.
 This document explains the replay hash, the replay protocol, version
 compatibility, and what determinism does and does not guarantee. For
 the full deep dive, see
-[REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md).
+[REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md).
 
 ---
 
@@ -335,13 +335,13 @@ trusted, and the caller must take explicit action.
 
 ## 9. See also
 
-- [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md) — the
+- [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) — the
   full deep dive on replay and determinism.
-- [ARCHITECTURE.md §8 Artifact Subsystem](../../ARCHITECTURE.md) —
+- [ARCHITECTURE.md §8 Artifact Subsystem](../reference/architecture.md) —
   internal architecture of the artifact subsystem.
-- [ARCHITECTURE.md §9 Versioning Strategy](../../ARCHITECTURE.md) —
+- [ARCHITECTURE.md §9 Versioning Strategy](../reference/architecture.md) —
   version compatibility policy.
-- [GLOSSARY.md §Replay](../../GLOSSARY.md) — vocabulary.
+- [GLOSSARY.md §Replay](../reference/glossary.md) — vocabulary.
 - [ADR-0005](../adr/0005-confidence-ownership.md) — confidence
   ownership (related: confidence is deterministic for replay).
 - [docs/howto/replay_artifact.md](../howto/replay_artifact.md) —

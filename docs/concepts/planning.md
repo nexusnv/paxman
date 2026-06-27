@@ -3,8 +3,8 @@
 > **Status:** V1
 > **Audience:** Paxman users inspecting the plan; Paxman contributors
 > extending the planner.
-> **Related docs:** [GLOSSARY.md §Plan, §Planner](../../GLOSSARY.md),
-> [ARCHITECTURE.md §4 Planner Subsystem](../../ARCHITECTURE.md),
+> **Related docs:** [GLOSSARY.md §Plan, §Planner](../reference/glossary.md),
+> [ARCHITECTURE.md §4 Planner Subsystem](../reference/architecture.md),
 > [ADR-0001](../adr/0001-field-centric-planning.md) (field-centric
 > planning), [ADR-0002](../adr/0002-rule-based-planner-v1.md)
 > (rule-based V1 planner), [docs/specs/capability-cost-model.md](../specs/capability-cost-model.md)
@@ -107,7 +107,7 @@ not in dict-iteration order. The plan encodes order explicitly.
 ## 3. The 7-step heuristic chain
 
 For each required field, the planner walks this chain in order (per
-[ARCHITECTURE.md §4.2](../../ARCHITECTURE.md) and the Oracle M7
+[ARCHITECTURE.md §4.2](../reference/architecture.md) and the Oracle M7
 clarification):
 
 1. **Explicit evidence.** A planner rule on the `InputProfile` that
@@ -214,7 +214,7 @@ Reconciler.
 This means a contract can declare a higher `confidence_floor` than
 the call-site default, and the planner will respect the contract's
 value for those fields. See
-[paxman.planner.policies](../../EXTENDING.md) for the full logic.
+[paxman.planner.policies](../reference/extending.md) for the full logic.
 
 ---
 
@@ -292,7 +292,7 @@ that generates random `ExecutionPlan` instances with stable
 
 ## 11. See also
 
-- [ARCHITECTURE.md §4 Planner Subsystem](../../ARCHITECTURE.md) —
+- [ARCHITECTURE.md §4 Planner Subsystem](../reference/architecture.md) —
   internal architecture of the planner subsystem.
 - [ADR-0001](../adr/0001-field-centric-planning.md) — field-centric
   planning rationale.
@@ -304,7 +304,7 @@ that generates random `ExecutionPlan` instances with stable
   `CostHint` and the scoring formula.
 - [docs/specs/input-profile-spec.md](../specs/input-profile-spec.md) —
   the `InputProfile` data model.
-- [Sprint 3 spec](../sprints/sprint-03-planner-and-capabilities.md) —
+- [Sprint 3 spec](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints) —
   the implementation plan.
-- [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md) —
+- [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) —
   planner determinism in the replay path.

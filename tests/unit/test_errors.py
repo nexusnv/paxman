@@ -5,10 +5,11 @@ These tests exercise every code path: each class instantiation, each
 validator, the context-None guard, the error_code validation, and the
 exception inheritance.
 
-Note: the hierarchy was 17 classes in Sprint 1 (per
-``docs/sprints/sprint-01-foundation.md`` D1.10); Sprint 6 added the 18th
-class, :class:`~paxman.errors.CapabilityNotFoundError`, per
-``V1_ACCEPTANCE_CRITERIA.md`` §1.5 (see ``docs/sprints/CHANGES_LOG.md`` C1).
+Note: the hierarchy was 17 classes in Sprint 1 (per the
+[Sprint 1 — Foundation](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprint-1-—-Foundation) D1.10); Sprint 6 added the 18th
+class, :class:`~paxman.errors.CapabilityNotFoundError`, per the
+[V1 acceptance criteria](https://github.com/nexusnv/paxman/wiki/Internal-Development/V1-acceptance-criteria) §1.5 (see the
+[CHANGES_LOG](https://github.com/nexusnv/paxman/wiki/Internal-Development/CHANGES-LOG) C1).
 The current source of truth is the ``__all__`` list in ``src/paxman/errors.py``.
 """
 

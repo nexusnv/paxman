@@ -2,7 +2,7 @@
 
 > **Status:** Draft v1.
 > **Audience:** Paxman users (especially those in regulated industries) and Paxman contributors.
-> **Related docs:** [PRD §15 Compliance and Data Privacy Notes](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD), [ARCHITECTURE.md §13 Security and PII Model](../reference/architecture.md), [GLOSSARY.md](../reference/glossary.md)
+> **Related docs:** [PRD §15 Compliance and Data Privacy Notes](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md), [ARCHITECTURE.md §13 Security and PII Model](../reference/architecture.md), [GLOSSARY.md](../reference/glossary.md)
 
 This document is Paxman's **threat model** and PII handling policy. It is non-normative: the **caller** is responsible for their own compliance posture, but Paxman's defaults are designed to make compliance easier.
 
@@ -195,7 +195,7 @@ Paxman is a library. The caller is responsible for their own compliance posture.
 
 ## 9. See also
 
-- [PRD §15 Compliance and Data Privacy Notes](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD)
+- [PRD §15 Compliance and Data Privacy Notes](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md)
 - [ARCHITECTURE.md §13 Security and PII Model](../reference/architecture.md)
 - [GLOSSARY.md](../reference/glossary.md)
 - [DEPENDENCIES.md](../reference/dependencies.md)

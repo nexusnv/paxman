@@ -2,7 +2,7 @@
 
 > **Status:** Draft v1.
 > **Audience:** Paxman users and engineers implementing or extending Paxman.
-> **Related docs:** [ARCHITECTURE.md §9 Versioning Strategy](./architecture.md), [GLOSSARY.md](./glossary.md), [PRD.md §8.2 NFR-3 Determinism](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD)
+> **Related docs:** [ARCHITECTURE.md §9 Versioning Strategy](./architecture.md), [GLOSSARY.md](./glossary.md), [PRD.md §8.2 NFR-3 Determinism](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md)
 
 This document is the **deep dive** on replay and determinism in Paxman. It explains the replay hash, the replay protocol, version compatibility, and what determinism does and does not guarantee.
 

@@ -2,9 +2,9 @@
 
 > **Status:** Stable v1 (promoted from draft; this is the **source of truth** for module-level design).
 > **Audience:** Engineers implementing or extending Paxman.
-> **Related docs:** [PRD.md](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD), [ARCHITECTURE.md](./architecture.md), [GLOSSARY.md](./glossary.md)
+> **Related docs:** [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md), [ARCHITECTURE.md](./architecture.md), [GLOSSARY.md](./glossary.md)
 
-This is the **stable mental model for the codebase**, derived from [ARCHITECTURE.md](./architecture.md) and [PRD.md](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD). It reflects the V1 product definition: a **contract-driven, field-centric, deterministic normalization engine**.
+This is the **stable mental model for the codebase**, derived from [ARCHITECTURE.md](./architecture.md) and [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md). It reflects the V1 product definition: a **contract-driven, field-centric, deterministic normalization engine**.
 
 It supersedes the earlier `PACKAGE_STRUCTURE_draft.md`. The numbering is preserved where possible to keep references stable.
 
@@ -591,7 +591,7 @@ Paxman returns an `ExecutionArtifact` and stops. Storage, queues, and databases 
 
 ## 12. V1 Capability Set (Explicit)
 
-Per [PRD.md §8.1 FR-6](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD), V1 ships with exactly:
+Per [PRD.md §8.1 FR-6](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md), V1 ships with exactly:
 
 - `text_extraction`
 - `regex_extraction`
@@ -876,10 +876,10 @@ See [TESTING_STRATEGY.md](../contributing/testing-strategy.md) for the test stra
 
 ## 21. References
 
-- [PRD.md](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD) — Product requirements, success metrics, V1 acceptance criteria.
+- [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md) — Product requirements, success metrics, V1 acceptance criteria.
 - [ARCHITECTURE.md](./architecture.md) — System architecture, ADRs, sequence diagram.
 - [GLOSSARY.md](./glossary.md) — Full domain vocabulary.
-- [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman/wiki/Internal-Development/V1-acceptance-criteria) — V1 definition of done.
+- [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/V1-acceptance-criteria.md) — V1 definition of done.
 - [REPLAY_AND_DETERMINISM.md](./replay-and-determinism.md) — Replay model deep dive.
 - [SECURITY.md](../security/index.md) — Threat model and PII handling.
 - [TESTING_STRATEGY.md](../contributing/testing-strategy.md) — Test seams and determinism tests.

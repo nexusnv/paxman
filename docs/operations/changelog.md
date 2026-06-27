@@ -84,11 +84,11 @@ change. No code, no public API, no tests.
 - **No new public API surface.** All changes are documentation, tooling, and CI. The public API snapshot (`tests/fixtures/public_api_snapshot.json`) is unchanged.
 - **No new core dependencies.** All CI tooling (`pyright`, `interrogate`, `bandit`, `pip-audit`) is in the `[dependency-groups] dev` block, not the runtime `[project.dependencies]` block.
 - **No new ADRs.** Sprint 8 is documentation + CI; no architectural changes.
-- **All 26 sprint deliverables (D8.1–D8.26) shipped.** Per the [Sprint 8 spec](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints).
+- **All 26 sprint deliverables (D8.1–D8.26) shipped.** Per the [Sprint 8 spec](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints.md).
 
 ### Changed
 
-- **Cost pipeline switched from `float` to `Decimal`** (per [ADR-0010](../adr/0010-budget-money-decimal.md) and the new [Sprint 7+ intervention plan](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints)) — the project's `"MONEY is Decimal, never float"` directive (ADR-0004) is now reflected end-to-end through the cost pipeline:
+- **Cost pipeline switched from `float` to `Decimal`** (per [ADR-0010](../adr/0010-budget-money-decimal.md) and the new [Sprint 7+ intervention plan](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints.md)) — the project's `"MONEY is Decimal, never float"` directive (ADR-0004) is now reflected end-to-end through the cost pipeline:
   - `Budget.max_total_cost_usd: float | None` → `Decimal | None` (`src/paxman/budget.py:45`).
   - `CostHint.usd: float` → `Decimal` (`src/paxman/capabilities/spec.py:79`).
   - `BudgetTracker.total_cost_usd: float` → `Decimal`; `record(cost_usd=...)`, `would_exceed(cost_usd=...)`, `would_exceed_reason(cost_usd=...)` accept `Decimal` (`src/paxman/executor/budget_tracker.py:98,108,146,178`). The `+ 1e-9` nudge in `mark_exhausted` is removed (the strict `>` comparison no longer needs it).
@@ -103,7 +103,7 @@ change. No code, no public API, no tests.
 ### Added
 
 - [ADR-0010](../adr/0010-budget-money-decimal.md) — `Budget`, `CostHint`, `BudgetTracker`, `ExecutionState` switched from `float` to `Decimal`. Extends [ADR-0004](../adr/0004-money-first-class-type.md).
-- [Sprint 7+ intervention plan](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints) — the 1-week, 1-engineer intervention that operationalizes the `Decimal` switch.
+- [Sprint 7+ intervention plan](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints.md) — the 1-week, 1-engineer intervention that operationalizes the `Decimal` switch.
 - `tests/integration/cross_subsystem/test_budget_decimal_roundtrip.py` (new) — verifies that `paxman.normalize(...)` with `Budget(max_total_cost_usd=Decimal("0.10"))` produces the same artifact as `Budget(max_total_cost_usd=0.10)`. Locks the backward-compat contract.
 - `tests/unit/test_budget.py::test_budget_accepts_float_literal_for_cost` (new) — asserts `Budget(max_total_cost_usd=0.10).max_total_cost_usd == Decimal("0.10")`. Locks the constructor coercion.
 
@@ -137,7 +137,7 @@ change. No code, no public API, no tests.
 - GitHub Actions CI workflow on `main` and PRs (Python 3.11 / 3.12 / 3.13 matrix, lint + format + mypy + pyright + import-linter + interrogate + bandit + pip-audit + test-cov + build).
 - `make ci` runs the full local-CI pipeline end-to-end (install → lint → format → typecheck → typecheck-pyright → imports → test-cov). All 7 gates are green.
 - README developer setup section with `uv sync --all-extras --dev` and `import paxman; print(paxman.__version__)` smoke.
-- **Sprint 2 — Contract Subsystem** (per [`https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints`](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints)):
+- **Sprint 2 — Contract Subsystem** (per [`https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints`](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints.md)):
   - `paxman.contract._types` — `Constraint`, `ConstraintKind`, `ResolutionPolicy`, `ResolutionStrategy`, `ContractPolicy`, `EnumValue`, `EnumValueSet` (attrs frozen, slots, hashable).
   - `paxman.contract.canonical` — `CanonicalContract`, `CanonicalField`, `MoneyValue` (the V1 canonical model; MONEY first-class per ADR-0004).
   - `paxman.contract.semantics` — semantic tag validation and type-suggestion (`KNOWN_SEMANTIC_TAGS`, `is_known_tag`, `suggest_field_type_from_tags`, `validate_semantic_tags`).
@@ -150,7 +150,7 @@ change. No code, no public API, no tests.
   - Fixture contracts: `tests/fixtures/contracts/pydantic/{invoice,with_money,all_v1_types}.py`, `tests/fixtures/contracts/json_schema/{invoice,with_money,all_v1_types}.json`, `tests/fixtures/contracts/dict_dsl/{invoice,with_money,all_v1_types}.py` (3 + 3 + 3 paired fixtures, per D2.10).
   - Property tests for Pydantic + Dict DSL roundtrip (Hypothesis `@property` with `derandomize=True`).
   - `import-linter` contract: `paxman.contract` and `paxman.contract.adapters` may NOT import from any of `paxman.{planner,executor,reconciler,artifact,capabilities,api}`.
-- **Sprint 3 — Planner + 3 Capabilities** (per [`https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints`](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints)):
+- **Sprint 3 — Planner + 3 Capabilities** (per [`https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints`](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints.md)):
   - **Capabilities subsystem** (`src/paxman/capabilities/`):
     - `paxman.capabilities.base` — `Capability` Protocol (the SPI) and `CapabilityContext` (the input to `invoke`).
     - `paxman.capabilities.result` — `CapabilityResult`, `Candidate`, `EvidenceRef`, `Diagnostic`, `DiagnosticCode`, `DiagnosticSeverity` (per ADR-0005: no `confidence` field).
@@ -251,7 +251,7 @@ change. No code, no public API, no tests.
   - `paxman.serialization` — taught ``_default()`` to serialize ``types.MappingProxyType`` (used by the new frozen ``FieldPlanStep.config``).
   - `paxman.capabilities.__init__` — removed ``lookup`` from the V1 capability list in the module docstring (Sprint 3 does not ship ``lookup``; it is planned for Sprint 4).
 
-- **Sprint 4 — Executor + 2 Capabilities + OpenAPI Adapter** (per [`https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints`](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints)):
+- **Sprint 4 — Executor + 2 Capabilities + OpenAPI Adapter** (per [`https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints`](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints.md)):
   - **Executor subsystem** (`src/paxman/executor/`):
     - `paxman.executor.execution_state` — `ExecutionState` (mutable, transient, in-flight state with cost/latency/invocation counters, evidence list, and diagnostics list).
     - `paxman.executor.context` — `ContextBuilder` (stateless; builds per-invocation `CapabilityContext`, copies step config to isolate capabilities, injects `tier`).
@@ -294,7 +294,7 @@ change. No code, no public API, no tests.
     - `paxman.executor.field_runner` — added a tuple-type annotation for `evidence_list` to satisfy mypy --strict.
     - `paxman.executor.execution_state` — added docstrings to both `typing.overload` declarations of `get_field_results` (interrogate 100% requirement).
 
-- **Sprint 7 — Integration, Property Tests, Golden Artifacts, ``paxman.testing``** (per [`https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints`](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints)):
+- **Sprint 7 — Integration, Property Tests, Golden Artifacts, ``paxman.testing``** (per [`https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints`](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints.md)):
   - **``paxman.testing`` public module** (D7.1) — 7 public Hypothesis strategies for downstream tests: ``contracts()``, ``inputs()``, ``budgets()``, ``policies()``, ``registries()`` (with ``install_registry`` context manager), ``candidate_sets()``, ``artifacts()``. ENUM fields are populated with valid ``EnumValueSet`` so the strategy always produces valid ``CanonicalField`` instances. Exit criterion #10 (``from paxman.testing import contracts, inputs, budgets, policies, registries``) verified.
   - **Golden ``ExecutionArtifact`` JSON fixtures** (D7.3) — 8 goldens bootstrapped from real ``paxman.normalize()`` runs (exit criterion #2, ≥5 goldens): invoice via Dict DSL / Pydantic / JSON Schema, all-9-types, with-MONEY, and three adversarial inputs (empty, unicode, prompt-injection). All are byte-equal across bootstrap runs (verified by ``md5sum``). Non-hash-relevant fields (``id``, ``created_at``) are stripped at bootstrap to ensure cross-run stability (exit criterion #8). New ``tests/fixtures/artifacts/GENERATION.md`` documents the procedure. Replay-equality is enforced by ``tests/integration/test_golden_artifacts.py`` (34 tests).
   - **Programmatic fixture factories** (D7.4) — ``tests/fixtures/factories/`` (committed source; the directory was renamed from ``generated/`` because the prior path was gitignored per ``tests/fixtures/AGENTS.md``, but the factories are hand-written code that should be tracked): ``contracts.py`` (Dict DSL / Pydantic / JSON Schema / OpenAPI factories), ``inputs.py`` (InvoiceInput / ReceiptInput / QuotationInput / MultiPageInput), ``candidates.py`` (Candidate / EvidenceRef / CandidateResult), ``artifacts.py`` (ExecutionArtifact with stable replay_hash), ``policies.py`` (Budget / Policy). All factories use ``factory.Faker._get_faker()`` with the project-wide ``SEED = 0x70617821`` for reproducibility. ``factory-boy >= 3.3`` and ``faker >= 22.0`` added to dev dependencies.
@@ -333,8 +333,8 @@ change. No code, no public API, no tests.
 - **No new public API surface.** All Sprint 10 changes are packaging, examples, documentation, CI, and one internal type-safety fix.
 - **No new core dependencies.** Examples declare only `paxman[pydantic]` as a runtime dep.
 - **No new ADRs.** Sprint 10 is the final release sprint; no architectural changes.
-- **All 20 sprint deliverables (D10.1–D10.20) shipped** per the [Sprint 10 spec](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints).
-- **External user validation (D10.6)**: per the [Sprint 9 Oracle M5 review](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints) and the [Sprint 10 risk register](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints), if fewer than 3 external users can be confirmed by the v1.0.0 release date, ship v1.0.0 with the user-validation gate waived and document the waiver in the release notes.
+- **All 20 sprint deliverables (D10.1–D10.20) shipped** per the [Sprint 10 spec](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints.md).
+- **External user validation (D10.6)**: per the [Sprint 9 Oracle M5 review](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints.md) and the [Sprint 10 risk register](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints.md), if fewer than 3 external users can be confirmed by the v1.0.0 release date, ship v1.0.0 with the user-validation gate waived and document the waiver in the release notes.
 
 ### Technical notes
 

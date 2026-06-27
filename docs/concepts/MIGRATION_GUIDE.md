@@ -6,7 +6,7 @@
 > guide will be filled in during V2.
 > **Audience:** Engineers and teams considering Paxman for an
 > existing normalization pipeline.
-> **Related docs:** [README.md](../index.md), [PRD.md](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD)
+> **Related docs:** [README.md](../index.md), [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md)
 > (product vision), [docs/concepts/contracts.md](../concepts/contracts.md)
 > (what a contract is), [docs/concepts/replay.md](../concepts/replay.md).
 

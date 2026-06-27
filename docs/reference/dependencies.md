@@ -2,7 +2,7 @@
 
 > **Status:** Draft v1.
 > **Audience:** Paxman users (especially those concerned about install footprint) and Paxman maintainers.
-> **Related docs:** [PACKAGE_STRUCTURE.md §17 Build and Packaging Strategy](./package-structure.md), [SECURITY.md](../security/index.md), [PRD.md §11 Dependencies and Assumptions](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD)
+> **Related docs:** [PACKAGE_STRUCTURE.md §17 Build and Packaging Strategy](./package-structure.md), [SECURITY.md](../security/index.md), [PRD.md §11 Dependencies and Assumptions](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md)
 
 This document describes Paxman's **dependency policy**: what is core, what is optional, and how the packaging is organized.
 
@@ -216,6 +216,6 @@ The core is intentionally **disconnected** from any schema library. Adapters are
 ## 10. See also
 
 - [PACKAGE_STRUCTURE.md §17 Build and Packaging Strategy](./package-structure.md)
-- [PRD.md §11 Dependencies and Assumptions](https://github.com/nexusnv/paxman/wiki/Internal-Development/PRD)
+- [PRD.md §11 Dependencies and Assumptions](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/PRD.md)
 - [SECURITY.md §7 Vulnerability Reporting](../security/index.md)
 - [DEVELOPMENT.md §9 Building the Package](../contributing/development.md)

@@ -270,7 +270,8 @@ jobs:
       - name: Smoke-test backend_service
         run: |
           if [ -f examples/backend_service/pyproject.toml ]; then
-            cd examples/backend_service && uv pip install -e . && uv run pytest tests/ -v
+            uv pip install --python .venv/bin/python -e "examples/backend_service[dev]"
+            PYTHONPATH=examples/backend_service/src .venv/bin/python -m pytest examples/backend_service/tests/ -v
           else
             echo "backend_service: not yet implemented, skipping"
           fi
@@ -278,7 +279,8 @@ jobs:
       - name: Smoke-test ai_agent_ingest
         run: |
           if [ -f examples/ai_agent_ingest/pyproject.toml ]; then
-            cd examples/ai_agent_ingest && uv pip install -e . && uv run pytest tests/ -v
+            uv pip install --python .venv/bin/python -e "examples/ai_agent_ingest[dev]"
+            PYTHONPATH=examples/ai_agent_ingest/src .venv/bin/python -m pytest examples/ai_agent_ingest/tests/ -v
           else
             echo "ai_agent_ingest: not yet implemented, skipping"
           fi
@@ -286,7 +288,8 @@ jobs:
       - name: Smoke-test saas_procurement
         run: |
           if [ -f examples/saas_procurement/pyproject.toml ]; then
-            cd examples/saas_procurement && uv pip install -e . && uv run pytest tests/ -v
+            uv pip install --python .venv/bin/python -e "examples/saas_procurement[dev]"
+            PYTHONPATH=examples/saas_procurement/src .venv/bin/python -m pytest examples/saas_procurement/tests/ -v
           else
             echo "saas_procurement: not yet implemented, skipping"
           fi

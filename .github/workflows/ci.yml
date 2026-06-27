@@ -245,12 +245,62 @@ jobs:
         run: uv run pytest tests/integration --no-header
 
   # ---------------------------------------------------------------------------
+  # Reference example smoke tests (Sprint 10: persona coverage)
+  # ---------------------------------------------------------------------------
+  test-examples:
+    name: test-examples (py3.12)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (frozen lockfile)
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Smoke-test backend_service
+        run: |
+          if [ -f examples/backend_service/pyproject.toml ]; then
+            uv pip install --python .venv/bin/python -e "examples/backend_service[dev]"
+            PYTHONPATH=examples/backend_service/src .venv/bin/python -m pytest examples/backend_service/tests/ -v
+          else
+            echo "backend_service: not yet implemented, skipping"
+          fi
+
+      - name: Smoke-test ai_agent_ingest
+        run: |
+          if [ -f examples/ai_agent_ingest/pyproject.toml ]; then
+            uv pip install --python .venv/bin/python -e "examples/ai_agent_ingest[dev]"
+            PYTHONPATH=examples/ai_agent_ingest/src .venv/bin/python -m pytest examples/ai_agent_ingest/tests/ -v
+          else
+            echo "ai_agent_ingest: not yet implemented, skipping"
+          fi
+
+      - name: Smoke-test saas_procurement
+        run: |
+          if [ -f examples/saas_procurement/pyproject.toml ]; then
+            uv pip install --python .venv/bin/python -e "examples/saas_procurement[dev]"
+            PYTHONPATH=examples/saas_procurement/src .venv/bin/python -m pytest examples/saas_procurement/tests/ -v
+          else
+            echo "saas_procurement: not yet implemented, skipping"
+          fi
+
+  # ---------------------------------------------------------------------------
   # Coverage (runs on py3.12; uploads to Codecov)
   # ---------------------------------------------------------------------------
   test-coverage:
     name: coverage + per-subsystem thresholds (py3.12)
     runs-on: ubuntu-latest
-    needs: [lint, interrogate, test-unit, test-property, test-integration]
+    needs: [lint, interrogate, test-unit, test-property, test-integration, test-examples]
     steps:
       - name: Checkout
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4

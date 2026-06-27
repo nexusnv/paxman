@@ -221,6 +221,57 @@ rehydrated = paxman.replay(artifact, contract=Invoice)
 assert rehydrated == artifact  # byte-equal
 ```
 
+## Examples
+
+Paxman ships with 3 reference examples covering the 3 target personas.
+Each is a standalone mini-package. Clone the repo, `cd` into the
+example, and run it.
+
+### Backend service (Persona A: backend developer)
+
+A minimal FastAPI service exposing `POST /normalize` for contract-driven
+normalization. Accepts raw text input, returns structured
+evidence-backed JSON with a deterministic replay hash.
+
+- **Path:** [`examples/backend_service/`](./examples/backend_service/)
+- **What it demonstrates:** Pydantic contract, REST endpoint, replay hash, unresolved fields
+
+```bash
+cd examples/backend_service
+uv pip install -e "../../[pydantic]" -e ".[dev]"
+uvicorn backend_service.app:app --reload --port 8000
+```
+
+### AI agent ingest (Persona B: AI engineer)
+
+A stdlib-only agent tool-calling loop that invokes `paxman.normalize()`
+as a tool. Zero framework dependencies. Port the `NormalizeTool` to
+LangChain, LlamaIndex, or any custom agent.
+
+- **Path:** [`examples/ai_agent_ingest/`](./examples/ai_agent_ingest/)
+- **What it demonstrates:** Agent tool loop, framework-agnostic design, evidence-backed extraction
+
+```bash
+cd examples/ai_agent_ingest
+uv pip install -e ".[dev]"
+uv run python -m ai_agent_ingest
+```
+
+### SaaS procurement pipeline (Persona C: SaaS team)
+
+A CSV-batch invoice/quotation pipeline. Reads a manifest of raw input
+files, normalizes each against a Pydantic contract, writes artifacts to
+disk, and verifies cross-run replay-hash reproducibility.
+
+- **Path:** [`examples/saas_procurement/`](./examples/saas_procurement/)
+- **What it demonstrates:** Batch normalization, on-disk artifact storage, replay-hash determinism (D10.7 fixture)
+
+```bash
+cd examples/saas_procurement
+uv pip install -e ".[dev]"
+uv run python -m saas_procurement data/manifest.csv output/
+```
+
 ## Use cases
 
 Paxman is designed for:

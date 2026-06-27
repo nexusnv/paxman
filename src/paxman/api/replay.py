@@ -11,6 +11,7 @@ from its serialised form and checks the deterministic
 from __future__ import annotations
 
 import logging as _logging
+import typing
 
 from paxman.artifact.artifact import ExecutionArtifact
 from paxman.artifact.replay import replay_artifact
@@ -101,9 +102,14 @@ class _GlobalCapabilityRegistry:
 
     def get(self, capability_id: str) -> Capability | None:
         try:
-            return get_latest(capability_id)  # type: ignore[return-value]  # paxman.protocols.Capability vs capabilities.base.Capability
+            result = get_latest(capability_id)
         except InvalidContractError:
             _logging.getLogger(__name__).debug(
                 "Capability not found during replay", extra={"capability_id": capability_id}
             )
             return None
+        # ``get_latest`` returns ``paxman.capabilities.base.Capability``;
+        # the public ``Capability`` is ``paxman.protocols.Capability``. The
+        # two are structurally compatible (Protocol class), so a runtime
+        # cast is the cleanest way to bridge them without ``# type: ignore``.
+        return typing.cast("Capability", result)

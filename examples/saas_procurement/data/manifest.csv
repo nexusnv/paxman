@@ -1,0 +1,4 @@
+id,input_file,contract_name
+invoice_acme,inputs/invoice_acme.txt,Invoice
+invoice_globex,inputs/invoice_globex.txt,Invoice
+quotation_initech,inputs/quotation_initech.txt,Quotation

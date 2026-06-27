@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ai-agent-ingest"
+version = "0.1.0"
+description = "Paxman reference example: stdlib-only agent tool-calling loop with paxman.normalize."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Paxman example" }]
+
+# ONLY runtime dep: paxman[pydantic]. Stdlib only otherwise.
+dependencies = [
+    "paxman[pydantic]>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ai_agent_ingest"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

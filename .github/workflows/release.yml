@@ -112,20 +112,21 @@ jobs:
   # ---------------------------------------------------------------------------
   # Publish to PyPI via OIDC trusted publishing (Sprint 10; commented out for now)
   # ---------------------------------------------------------------------------
-  # publish-pypi:
-  #   # When enabled, this job needs a permissions block with id-token: write
-  #   # for PyPI OIDC trusted publishing (same pattern as publish-testpypi above).
-  #   name: Publish to PyPI
-  #   runs-on: ubuntu-latest
-  #   needs: [build, publish-testpypi]
-  #   environment: pypi
-  #   steps:
-  #     - name: Download artifacts
-  #       uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
-  #       with:
-  #         name: dist
-  #         path: dist/
-  #     - name: Publish to PyPI (OIDC)
-  #       uses: pypa/gh-action-pypi-publish@67339c736fd9354cd4f8cb0b744f2b82a74b5c70 # v1
-  #       with:
-  #         packages-dir: dist/
+  publish-pypi:
+    permissions:
+      contents: read
+      id-token: write  # Required for PyPI OIDC trusted publishing
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: [build, publish-testpypi]
+    environment: pypi
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to PyPI (OIDC)
+        uses: pypa/gh-action-pypi-publish@67339c736fd9354cd4f8cb0b744f2b82a74b5c70 # v1
+        with:
+          packages-dir: dist/

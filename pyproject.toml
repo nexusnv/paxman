@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "paxman"
-version = "0.0.0"
+version = "1.0.0"
 description = "Contract-driven deterministic normalization engine for Python."
 readme = "README.md"
 license = { text = "MIT" }
@@ -18,7 +18,7 @@ keywords = [
     "replay",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -112,6 +112,11 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "ANN"]  # asserts + untyped fixtures are OK in tests
+"examples/**/tests/**/*.py" = ["S101", "ANN", "S603"]  # asserts + untyped fixtures + subprocess calls are OK in example tests
+# Example code legitimately uses `Any` for the tool/agent contract paramters
+# (the caller may pass any agent framework, any LLM, any contract type);
+# suppress ANN401 so the example signatures are not noisier than they need to be.
+"examples/**/*.py" = ["ANN401"]
 "src/paxman/__init__.py" = ["F401"]  # re-exports may appear unused until populated in Sprint 6
 # Adapters legitimately deal with `Any` (external contract types are arbitrary);
 # suppress ANN401 so the adapter signatures are not noisier than they need to be.

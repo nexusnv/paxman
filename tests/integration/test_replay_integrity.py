@@ -120,11 +120,11 @@ class TestVersionMismatch:
     ) -> None:
         """Artifact with a different major version raises ``VersionMismatchError``.
 
-        Changing ``paxman_version`` to ``"1.0.0"`` (current is ``"0.0.0"``)
+        Changing ``paxman_version`` to ``"2.0.0"`` (current is ``"1.0.0"``)
         triggers a major version mismatch.  The hash is recomputed so the
         hash check itself would pass — the version check happens first.
         """
-        tampered = attrs.evolve(artifact, paxman_version="1.0.0")
+        tampered = attrs.evolve(artifact, paxman_version="2.0.0")
         # Recompute the replay hash so that the hash remains internally
         # consistent.  The version check runs before the hash check, so
         # a consistent hash does not mask the version mismatch.
@@ -136,7 +136,7 @@ class TestVersionMismatch:
         self, artifact: ExecutionArtifact
     ) -> None:
         """Artifact from a newer minor/patch version raises ``VersionMismatchError``."""
-        tampered = attrs.evolve(artifact, paxman_version="0.0.1")
+        tampered = attrs.evolve(artifact, paxman_version="1.1.0")
         tampered = attrs.evolve(tampered, replay_hash=compute_replay_hash(tampered))
         with pytest.raises(paxman.VersionMismatchError, match="artifact is from a newer version"):
             paxman.replay(tampered, contract=DICT_DSL_INVOICE)

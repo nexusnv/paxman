@@ -115,7 +115,7 @@ def test_replay_artifact_type_check_passes() -> None:
 @pytest.mark.deterministic
 def test_replay_artifact_raises_on_major_mismatch() -> None:
     """Different major version raises VersionMismatchError."""
-    art = _make_artifact(paxman_version="1.0.0")
+    art = _make_artifact(paxman_version="2.0.0")  # newer major than current 1.0.0
     contract = _make_contract()
     registry = _MockRegistry()
     with pytest.raises(VersionMismatchError, match="major version mismatch"):
@@ -125,7 +125,7 @@ def test_replay_artifact_raises_on_major_mismatch() -> None:
 @pytest.mark.deterministic
 def test_replay_artifact_raises_on_artifact_from_future() -> None:
     """Artifact from a newer minor/patch raises VersionMismatchError."""
-    art = _make_artifact(paxman_version="0.0.1")  # newer than current 0.0.0
+    art = _make_artifact(paxman_version="1.1.0")  # newer minor than current 1.0.0
     contract = _make_contract()
     registry = _MockRegistry()
     with pytest.raises(VersionMismatchError, match="artifact is from a newer version"):
@@ -135,7 +135,7 @@ def test_replay_artifact_raises_on_artifact_from_future() -> None:
 @pytest.mark.deterministic
 def test_replay_artifact_accepts_same_version() -> None:
     """Artifact with same version passes check."""
-    art = _make_artifact(paxman_version="0.0.0")
+    art = _make_artifact(paxman_version="1.0.0")
     contract = _make_contract()
     registry = _MockRegistry()
     result = replay_artifact(art, contract, registry)

@@ -2,7 +2,7 @@
 
 The Dict DSL is the V1 contract format that maps directly to
 :class:`~paxman.contract.canonical.CanonicalContract`. It is defined
-authoritatively in ``docs/specs/dict-dsl-spec.md`` (Sprint 0, ADR-0009).
+authoritatively in ``docs/specs/dict-dsl-spec.md`` (ADR-0009).
 
 The adapter is a **pure recursive dict-walk** (~250 lines). The grammar,
 the five concepts (``FieldSpec``, ``Constraint``, ``Tag``, ``Policy``,

@@ -7,15 +7,14 @@ each step, and accumulates the results into a per-field
 
 The :class:`FieldRunner` is **not** an authority on confidence (per
 ADR-0005): it only collects candidates + evidence + diagnostics.
-The Reconciler (Sprint 5) merges candidates and assigns confidence.
+The Reconciler merges candidates and assigns confidence.
 
-V1 invariants (per ``PACKAGE_STRUCTURE.md`` §6.4 and the Sprint 4
-spec):
+V1 invariants (per ``PACKAGE_STRUCTURE.md`` §6.4):
 
 - The runner walks the chain **in plan order** (the planner's
   ordering is authoritative; the runner does not reorder).
 - The runner stops on **chain exhaustion** (V1 has no
-  confidence-based early stop; the Sprint 4 deliverable is
+  confidence-based early stop; the V1 deliverable is
   "chain-exhausted only").
 - The runner **never** assigns confidence. The
   :class:`CandidateResult` carries only candidates + evidence
@@ -72,7 +71,7 @@ class CandidateResult:
     """The per-field output of the Executor.
 
     Per ADR-0005, the :class:`CandidateResult` carries **no
-    confidence field**. The Reconciler (Sprint 5) is the sole
+    confidence field**.     The Reconciler is the sole
     confidence authority. The Executor only collects the
     candidates + evidence + diagnostics.
 
@@ -468,7 +467,7 @@ def _field_path_from_plan(field_plan: FieldPlan) -> str:
 
     The :class:`FieldPlan` does not embed the :class:`CanonicalField`
     (it carries the id only); the :class:`FieldRunner` cannot
-    recover the path. The Reconciler (Sprint 5) and the artifact
+    recover the path.     The Reconciler and the artifact
     map ``field_id`` → ``field_path`` at composition time. For
     diagnostic context, the runner defaults to the id.
     """

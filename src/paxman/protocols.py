@@ -2,8 +2,8 @@
 
 Defines the four structural protocols that govern extensibility points
 throughout the paxman engine.  A public subset (``ContractAdapter``,
-``Capability``, ``Heuristic``) is re-exported via ``paxman.api.protocols``
-in Sprint 6.  ``InferenceProvider`` is internal-only.
+``Capability``, ``Heuristic``) is re-exported via ``paxman.api.protocols``.
+``InferenceProvider`` is internal-only.
 
 All protocols use ``typing.Protocol`` (PEP 544) so that concrete
 implementations need not inherit from them -- they are satisfied
@@ -163,8 +163,7 @@ class InferenceProvider(Protocol):
     this protocol.
 
     Internal
-        Not re-exported.  Lives in ``paxman.capabilities.inference``
-        (Sprint 4).
+        Not re-exported.  Lives in ``paxman.capabilities.inference``.
     """
 
     def complete(self, request: object) -> object:

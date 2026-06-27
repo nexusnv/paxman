@@ -205,7 +205,7 @@ class PlanDiagnostic:
     Plan-level diagnostics are produced by the planner during
     planning (e.g., "budget excludes inference; fields requiring
     inference will be UNRESOLVED"). They are surfaced in the
-    artifact's ``diagnostics`` by the Executor (Sprint 4).
+    artifact's ``diagnostics`` by the Executor.
 
     Attributes:
         code: The diagnostic code (e.g.,
@@ -237,8 +237,8 @@ class ExecutionPlan:
     """The planner's output — a list of :class:`FieldPlan` records.
 
     The :class:`ExecutionPlan` is what the planner emits. The
-    Executor walks it (Sprint 4); replay rehydrates it from the
-    artifact (Sprint 6). The plan is **frozen** and **immutable**;
+Executor walks it; replay rehydrates it from the
+artifact. The plan is **frozen** and **immutable**;
     the Executor must not mutate it.
 
     The plan is keyed on:

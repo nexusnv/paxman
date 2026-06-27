@@ -8,16 +8,16 @@ and ``ARCHITECTURE.md`` §4.3):
 - :mod:`paxman.capabilities.v1.regex_extraction` — pattern-based
   local extraction (deterministic).
 - :mod:`paxman.capabilities.v1.lookup` — deterministic in-memory
-  table lookup (Sprint 4).
+  table lookup.
 - :mod:`paxman.capabilities.v1.inference` — model-backed extraction
-  (LLM is a provider; Sprint 3 SPI + stub; Sprint 4 adds the
+  (LLM is a provider; includes the SPI, a stub provider, and the
   ``CyclingStubInferenceProvider`` for non-determinism testing).
 - :mod:`paxman.capabilities.v1.validation` — verify a candidate
   value against a constraint (deterministic).
 
-In Sprint 3 we ship the first three (text_extraction, regex_extraction,
-validation) plus the inference SPI + stub provider. ``lookup`` is
-Sprint 4 work.
+The first three capabilities (text_extraction, regex_extraction,
+validation) plus the inference SPI and stub provider ship initially;
+``lookup`` follows.
 
 Boundary rules
 --------------

@@ -46,8 +46,8 @@ class ContractAdapter(typing.Protocol):
     immutability and type stability.
 
     See :mod:`paxman.protocols` for the abstract re-declaration; the
-    public ``paxman.api.protocols.ContractAdapter`` (Sprint 6+) re-exports
-    this Protocol.
+public ``paxman.api.protocols.ContractAdapter`` re-exports
+this Protocol.
     """
 
     @property

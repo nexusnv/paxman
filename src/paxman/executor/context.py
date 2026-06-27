@@ -15,7 +15,7 @@ Design notes
 - Capabilities never read the canonical contract directly; the
   :class:`CapabilityContext` carries only the per-field metadata
   (path, type, and the per-step config from the :class:`FieldPlan`).
-- The :class:`CapabilityContext` is **frozen** (per Sprint 3
+- The :class:`CapabilityContext` is **frozen** (per
   :class:`CapabilityContext` invariants). The Executor must not
   attempt to mutate it after construction.
 

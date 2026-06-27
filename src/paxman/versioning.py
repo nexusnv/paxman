@@ -11,7 +11,7 @@ Design constraints
 ------------------
 - Leaf module: no imports from any ``paxman.*`` submodule.
 - Every public symbol is listed in ``__all__``.
-- 100 % line-coverage target (exit criterion #11).
+- 100 % line-coverage target.
 - Deterministic: no I/O, no clock, no random, no global mutable state.
 """
 

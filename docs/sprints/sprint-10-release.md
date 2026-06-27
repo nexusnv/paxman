@@ -26,6 +26,30 @@
 - Final `CHANGELOG.md` entry: `## [1.0.0] - YYYY-MM-DD`
 - `docs/concepts/RELEASE_NOTES_v1.0.0.md` (or similar) — what shipped, what's deferred to V2
 
+### Reference examples (3 personas, in-tree)
+- `examples/backend_service/` — Minimal FastAPI service exposing `POST /normalize`.
+  Mirrors D10.2 Persona A (Backend developer building a normalization service).
+  The smoke-test script from D10.2 is the seed for this example.
+- `examples/ai_agent_ingest/` — Stdlib-only, framework-agnostic tool-calling loop
+  that calls `paxman.normalize()` from a fake agent step. **Intentionally
+  framework-free** (no LangChain / LlamaIndex dep) so it survives framework churn
+  and acts as a copy-able reference for any agent framework. Mirrors D10.2
+  Persona B (AI engineer building an agentic ingestion flow).
+- `examples/saas_procurement/` — Invoice/quotation batch pipeline: reads a CSV
+  manifest of raw input files, calls `paxman.normalize()` per row, writes
+  artifacts to disk. Mirrors D10.2 Persona C (SaaS team building
+  procurement / invoice / quotation pipelines). **This example's output
+  artifact is the D10.7 `replay_hash` reproducibility fixture.**
+- Per-example contract (required for all 3):
+  - `README.md` — problem statement, install, run, expected output
+  - `pyproject.toml` declaring `paxman[pydantic]` as the only runtime dep
+    (dev deps may include test frameworks; the core-dep-cap rule applies only
+    to the main `pyproject.toml` per `DEPENDENCIES.md`)
+  - `tests/` directory wired into `make ci` so examples are smoke-tested on
+    every PR (no manual gate)
+- Cross-link the 3 examples from the top-level `README.md` under a new
+  "Examples" section so PyPI visitors land on runnable code, not just prose.
+
 ### Post-release retrospective
 - Internal retrospective with the team
 - Document the 5 things that went well, 5 things that didn't, 5 things to do differently in V1.x
@@ -66,8 +90,12 @@
 | D10.14 | `SECURITY.md` §7 disclosure email is real and monitored | 0.1 |
 | D10.15 | Verify PyPI page renders correctly (project description, links) | 0.2 |
 | D10.16 | Verify `pip install paxman` works on a clean machine (3 platforms) | 0.5 |
+| D10.17 | `examples/backend_service/` (FastAPI + tests + README) | 0.8 |
+| D10.18 | `examples/ai_agent_ingest/` (stdlib-only + tests + README) | 0.8 |
+| D10.19 | `examples/saas_procurement/` (CSV batch + tests + README; produces the D10.7 `replay_hash` fixture) | 0.8 |
+| D10.20 | Top-level `README.md` cross-link to the 3 examples | 0.1 |
 
-**Total: ~10.6 id-ed over 3 weeks.** Sized for **1-2 engineers** with parallel coordination from the project owner for external user validation.
+**Total: ~13.1 id-ed over 3 weeks.** Sized for **1-2 engineers** with parallel coordination from the project owner for external user validation. The 2.5 id-ed added by D10.17–D10.20 is absorbed by Sprint 10's existing slack (the 3-week duration was sized for RC-fix time, which is not fully consumed in the happy path).
 
 ## Prerequisites
 
@@ -134,6 +162,15 @@ V1.1.0 candidates (from the retrospective):
 - Migration tools for ad-hoc normalization → Paxman
 - Pyright in strict mode
 
+V1.0.x patch candidates (file as issues at end of Sprint 10, schedule in the
+first V1.0.x sprint):
+- **Adopt static site for user-docs** (mkdocs-material candidate) — promote
+  `docs/concepts/`, `docs/howto/`, and the 3 reference examples to a published
+  site (likely GitHub Pages). The 3 examples added in D10.17–D10.19 are
+  designed to be reusable as the site's homepage hero cards. Tool selection
+  (mkdocs-material vs sphinx vs docusaurus vs quarto) is a separate
+  decision; do not bundle it with the v1.0.0 release.
+
 ## See also
 
 - `../V1_ACCEPTANCE_CRITERIA.md` §5 (Pre-1.0 Gates).
@@ -143,3 +180,4 @@ V1.1.0 candidates (from the retrospective):
 - `../EXTENDING.md` §6 (Distributing Your Extension) — for users who want to add adapters.
 - `../CHANGELOG.md` — updated this sprint.
 - `../docs/sprints/retrospective-v1.0.0.md` — written this sprint.
+- `../../examples/` — 3 reference examples (D10.17–D10.19), shipped with v1.0.0.

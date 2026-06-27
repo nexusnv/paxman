@@ -76,3 +76,13 @@ curl -X POST http://localhost:8000/normalize \
 | `POST` | `/normalize` | Normalize input against a contract |
 | `GET` | `/contracts` | List available contracts |
 | `GET` | `/healthz` | Health check |
+
+## Notes
+
+- **No CORS middleware configured.** This example is designed for
+  server-to-server use (e.g., another service in your backend). If you
+  need to expose it to a browser, add FastAPI's `CORSMiddleware` and
+  configure allowed origins.
+- **No authentication.** This is a reference example. Production
+  deployments should add auth (API keys, OAuth, mTLS, etc.) before
+  exposing the endpoint.

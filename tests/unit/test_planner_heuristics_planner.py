@@ -248,9 +248,9 @@ def test_plan_includes_optional_fields_only_when_required() -> None:
 def test_plan_emits_unresolved_diagnostic_for_field_with_no_chain() -> None:
     """A field with no eligible capability gets a FIELD_UNRESOLVED diagnostic.
 
-    We achieve this by registering an *empty* registry and planning
-    a STRING field. With no capabilities registered, the chain is
-    empty, and a FIELD_UNRESOLVED diagnostic is emitted.
+    We achieve this by passing an *empty* registry to ``plan()`` and
+    planning a STRING field. With no capabilities registered, the
+    chain is empty, and a FIELD_UNRESOLVED diagnostic is emitted.
     """
     reset()  # no capabilities registered
     contract = CanonicalContract(
@@ -258,7 +258,10 @@ def test_plan_emits_unresolved_diagnostic_for_field_with_no_chain() -> None:
         fields=(_field("supplier_name", FieldType.STRING, required=True),),
     )
     profile = make_profile(b"x")
-    p = plan(contract, profile)
+    # Note: as of Sprint 10, the registry self-heals when ``plan()``
+    # is called via the global registry. To test the truly-empty-registry
+    # behaviour, pass an explicit empty registry to bypass the bootstrap.
+    p = plan(contract, profile, registry={})
     assert any(d.code == "FIELD_UNRESOLVED" for d in p.diagnostics)
     # Re-register for other tests in this module (autouse fixture also resets).
     register(RegexExtractionCapability())

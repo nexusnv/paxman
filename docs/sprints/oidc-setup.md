@@ -31,10 +31,22 @@ principle for PyPI releases.
    - **Owner:** `nexusnv`
    - **Repository name:** `paxman`
    - **Workflow filename:** `release.yml`
-   - **Environment name:** `testpypi` (optional, but recommended)
+   - **Environment name:** *leave empty / "non provided (any)"*
 4. Click **"Add"**
 
+> **Important:** Do **not** fill in the "Environment name" field.
+> The release workflow (`.github/workflows/release.yml`) intentionally
+> does **not** specify an `environment: ...` on its publish jobs.
+> With the publisher registered with no environment, the OIDC
+> ``sub`` claim is ``repo:nexusnv/paxman`` and matches.
+> If you add an environment to the publisher, you must also add
+> the matching ``environment: ...`` line to the workflow (and
+> vice versa). See the inline comments in
+> `.github/workflows/release.yml` for details.
+
 ### PyPI trusted publisher (for Sprint 10)
+
+Same pattern as TestPyPI:
 
 1. Go to https://pypi.org/manage/project/paxman/settings/publishing/
 2. Click **"Add a new pending publisher"**
@@ -43,19 +55,18 @@ principle for PyPI releases.
    - **Owner:** `nexusnv`
    - **Repository name:** `paxman`
    - **Workflow filename:** `release.yml`
-   - **Environment name:** `pypi` (optional, but recommended)
+   - **Environment name:** *leave empty / "non provided (any)"*
 4. Click **"Add"**
 
-### GitHub environment
+### GitHub environment (not used)
 
-Optionally, create GitHub environments to gate publishing:
-
-1. Go to https://github.com/nexusnv/paxman/settings/environments
-2. Create `testpypi` environment (no required reviewers needed for Sprint 9)
-3. Create `pypi` environment (Sprint 10; consider requiring 1+ review for production)
-
-The release workflow (`.github/workflows/release.yml`) already references these
-environment names.
+This project does **not** use GitHub Environments for trusted publishing.
+The release workflow's publish jobs have **no** ``environment: ...``
+key, so no environment is required. If you later want to add
+required-reviewer gating to the release workflow, you'll need to
+both add the environment to the publisher and add
+``environment: testpypi`` (or ``environment: pypi``) to the
+publish job.
 
 ## Verification
 

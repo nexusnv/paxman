@@ -90,7 +90,13 @@ jobs:
     name: Publish to TestPyPI
     runs-on: ubuntu-latest
     needs: build
-    environment: testpypi
+    # NOTE: ``environment`` is intentionally NOT specified here.
+    # The TestPyPI trusted publisher is registered with
+    # ``Environment name: non provided (any)``, which means the
+    # OIDC ``sub`` claim must be ``repo:OWNER/REPO`` (no
+    # ``:environment:ENV_NAME`` suffix). If you later add an
+    # environment here, also update the TestPyPI publisher to
+    # match (per docs/sprints/oidc-setup.md).
     permissions:
       contents: read
       id-token: write  # Required for PyPI OIDC trusted publishing
@@ -119,7 +125,11 @@ jobs:
     name: Publish to PyPI
     runs-on: ubuntu-latest
     needs: [build, publish-testpypi]
-    environment: pypi
+    # NOTE: ``environment`` is intentionally NOT specified here.
+    # When the PyPI trusted publisher is registered, follow the
+    # same convention as TestPyPI (see comment in
+    # ``publish-testpypi`` above). If you later add an environment
+    # here, also update the PyPI publisher to match.
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4

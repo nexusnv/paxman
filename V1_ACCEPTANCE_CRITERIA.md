@@ -72,7 +72,7 @@ V1 is the first **production-ready** release: a stable public API, replayable ar
 - [x] `mypy --strict` passes on internal modules with `from __future__ import annotations` allowed.
 - [x] `pyright` passes on the same surface.
 - [x] `py.typed` marker is shipped.
-- [ ] **No `as any`, no `# type: ignore`, no `# pyright: ignore` in `src/paxman/`** — *Partially met: no `as any` or `# pyright: ignore` found; one `# type: ignore[return-value]` at `src/paxman/api/replay.py:104` (type incompatibility between `paxman.protocols.Capability` and `capabilities.base.Capability`). Sprint 10 work item to resolve before 1.0.*
+- [x] **No `as any`, no `# type: ignore`, no `# pyright: ignore` in `src/paxman/`.** *(Sprint 10 fix: replaced `# type: ignore[return-value]` at `src/paxman/api/replay.py:104` with `typing.cast` since the two `Capability` Protocol classes are structurally compatible.)*
 
 ### 2.2 Tests
 

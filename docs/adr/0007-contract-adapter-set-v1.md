@@ -8,7 +8,7 @@
 
 ## Context and Problem Statement
 
-Paxman supports multiple contract formats via adapters. [PRD §5.1](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md) lists 8 contract origin types (Python models, API schemas, ERP object models, agent tool schemas, JSON Schema, OpenAPI, custom DSLs, wrapper applications). Not all of these need a first-party adapter in V1. This ADR decides which adapters ship as required, optional, or not at all in V1.
+Paxman supports multiple contract formats via adapters. [PRD §5.1](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/PRD) lists 8 contract origin types (Python models, API schemas, ERP object models, agent tool schemas, JSON Schema, OpenAPI, custom DSLs, wrapper applications). Not all of these need a first-party adapter in V1. This ADR decides which adapters ship as required, optional, or not at all in V1.
 
 ## Decision Drivers
 

@@ -130,7 +130,7 @@ The `Budget(max_total_cost_usd=0.10)` ergonomic for callers is preserved via `at
 
 - [ADR-0004: MONEY as a First-Class Type](./0004-money-first-class-type.md) — the philosophical foundation; this ADR extends it operationally.
 - [AGENTS.md:73](https://github.com/nexusnv/paxman/blob/main/AGENTS.md#L73) — "MONEY first-class: amount + ISO-4217 currency + precision (Decimal, never float)".
-- [Sprint 7a — Budget money decimal](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints/Sprint-07a---Budget-money-decimal.md) — the intervention sprint that implements this ADR.
+- [Sprint 7a — Budget money decimal](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints/Sprint-07a---Budget-money-decimal) — the intervention sprint that implements this ADR.
 - [docs/specs/capability-cost-model.md](https://github.com/nexusnv/paxman/blob/main/docs/specs/capability-cost-model.md) — the cost model refined by this refactor.
 - [CHANGELOG.md](../operations/changelog.md) — entry added under `[Unreleased]`.
 - [src/paxman/budget.py](https://github.com/nexusnv/paxman/blob/main/src/paxman/budget.py) — the primary type being changed.

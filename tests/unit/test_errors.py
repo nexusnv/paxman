@@ -6,10 +6,10 @@ validator, the context-None guard, the error_code validation, and the
 exception inheritance.
 
 Note: the hierarchy was 17 classes in Sprint 1 (per the
-[Sprint 1 — Foundation](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Sprints/Sprint-01---Foundation.md) D1.10); Sprint 6 added the 18th
+[Sprint 1 — Foundation](https://github.com/nexusnv/paxman/wiki/Internal-Development/Sprints/Sprint-01---Foundation) D1.10); Sprint 6 added the 18th
 class, :class:`~paxman.errors.CapabilityNotFoundError`, per the
-[V1 acceptance criteria](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/V1-acceptance-criteria.md) §1.5 (see the
-[CHANGES_LOG](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/CHANGES-LOG.md) C1).
+[V1 acceptance criteria](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/V1-acceptance-criteria) §1.5 (see the
+[CHANGES_LOG](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/CHANGES-LOG) C1).
 The current source of truth is the ``__all__`` list in ``src/paxman/errors.py``.
 """
 

@@ -313,7 +313,7 @@ Adding a new vendored dataset follows this procedure. It is intentionally heavy 
 7. **Add to .gitignore.** Add patterns to ensure non-vendored data (e.g., SROIE) is never committed.
 8. **CI gate.** Add a CI check that asserts no file under `tests/fixtures/` violates the license catalog.
 9. **Update tests.** Reference the new dataset in the appropriate test file.
-10. **Update docs.** Update [TESTING_STRATEGY.md](./testing-strategy.md) and [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/V1-acceptance-criteria.md) if relevant.
+10. **Update docs.** Update [TESTING_STRATEGY.md](./testing-strategy.md) and [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/V1-acceptance-criteria) if relevant.
 
 ### 5.2 What "vendor" means
 
@@ -545,7 +545,7 @@ When Paxman is used in production, the caller is expected to:
 
 1. Run the full test suite against their own sample of production data.
 2. Verify that the `replay_hash` is stable across runs.
-3. Verify that the field-resolution rate meets the success-metric target (≥ 90% in [PRD §9](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md)).
+3. Verify that the field-resolution rate meets the success-metric target (≥ 90% in [PRD §9](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/PRD)).
 4. File an issue if a real-world input is not handled well — this is how the V1 corpus grows.
 
 ### 11.2 The contribution path

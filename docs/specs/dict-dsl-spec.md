@@ -3,7 +3,7 @@
 > **Status:** Draft v1.
 > **Date:** 2026-06-22
 > **Deciders:** Paxman core team
-> **Related docs:** [EXTENDING.md](../../EXTENDING.md) (ContractAdapter SPI), [ARCHITECTURE.md](../../ARCHITECTURE.md) (subsystem spec), [GLOSSARY.md](../../GLOSSARY.md) (vocabulary), [ADR-0007](../adr/0007-contract-adapter-set-v1.md) (V1 adapter set)
+> **Related docs:** [EXTENDING.md](../reference/extending.md) (ContractAdapter SPI), [ARCHITECTURE.md](../reference/architecture.md) (subsystem spec), [GLOSSARY.md](../reference/glossary.md) (vocabulary), [ADR-0007](../adr/0007-contract-adapter-set-v1.md) (V1 adapter set)
 
 ---
 
@@ -13,7 +13,7 @@ The Dict DSL is Paxman's **native contract format** — a pure-Python `dict` tha
 
 1. **Internal escape hatch.** When a caller does not use Pydantic and does not want to author JSON Schema, the Dict DSL provides a zero-dependency way to define contracts.
 2. **Test source of truth.** All internal contract fixtures are written as Dict DSL dicts. This makes tests readable, copy-pasteable, and free of third-party schema libraries. Per [ADR-0007](../adr/0007-contract-adapter-set-v1.md), "the Dict DSL is used by all internal tests as the lingua franca."
-3. **Adapter reference implementation.** The Dict DSL adapter is the simplest possible `ContractAdapter` implementation. It serves as the template for third-party adapter authors (see [EXTENDING.md §1](../../EXTENDING.md)).
+3. **Adapter reference implementation.** The Dict DSL adapter is the simplest possible `ContractAdapter` implementation. It serves as the template for third-party adapter authors (see [EXTENDING.md §1](../reference/extending.md)).
 
 ### When to use which adapter
 
@@ -32,15 +32,15 @@ The Dict DSL is **not** a replacement for Pydantic or JSON Schema in production 
 
 1. **Round-trippable.** The same Dict DSL input always produces the same `CanonicalContract` byte-for-byte. No ambiguity, no heuristic interpretation.
 
-2. **Pure.** The adapter performs no I/O, reads no clock, generates no random values. It is a function `dict -> CanonicalContract`. See [EXTENDING.md §1.4](../../EXTENDING.md).
+2. **Pure.** The adapter performs no I/O, reads no clock, generates no random values. It is a function `dict -> CanonicalContract`. See [EXTENDING.md §1.4](../reference/extending.md).
 
 3. **Five-concept V1 surface.** The DSL defines exactly five concepts: `FieldSpec`, `Constraint`, `Tag`, `Policy`, `Contract`. References, inheritance, macros, and conditional defaults are explicitly rejected (YAGNI). See §8.
 
-4. **Expresses all 9 V1 field types.** `STRING`, `INTEGER`, `DECIMAL`, `BOOLEAN`, `DATE`, `ENUM`, `OBJECT`, `ARRAY`, `MONEY` — every type in [GLOSSARY.md](../../GLOSSARY.md) is representable.
+4. **Expresses all 9 V1 field types.** `STRING`, `INTEGER`, `DECIMAL`, `BOOLEAN`, `DATE`, `ENUM`, `OBJECT`, `ARRAY`, `MONEY` — every type in [GLOSSARY.md](../reference/glossary.md) is representable.
 
 5. **Test-source-of-truth.** A valid contract is a Python literal. No file I/O, no loader, no YAML parser. Copy a dict into a test and it runs.
 
-6. **Fail-fast validation.** Invalid input raises `InvalidContractError` with a structured `error_code` and `context` dict. The Executor never sees an invalid contract. See [EXTENDING.md §1.2](../../EXTENDING.md).
+6. **Fail-fast validation.** Invalid input raises `InvalidContractError` with a structured `error_code` and `context` dict. The Executor never sees an invalid contract. See [EXTENDING.md §1.2](../reference/extending.md).
 
 7. **Small parser.** The entire adapter is a dict-walk plus validation — approximately 200 lines. No grammar, no tokenizer, no AST.
 
@@ -454,8 +454,8 @@ The following features are explicitly **not** part of the V1 Dict DSL. They are 
 
 ## 9. See also
 
-- [EXTENDING.md §1](../../EXTENDING.md) — The `ContractAdapter` SPI and how to implement a new adapter.
-- [ARCHITECTURE.md §4.1](../../ARCHITECTURE.md) — The `contract/` subsystem: translation + validation boundary.
-- [GLOSSARY.md](../../GLOSSARY.md) — Canonical definitions for all Paxman vocabulary.
+- [EXTENDING.md §1](../reference/extending.md) — The `ContractAdapter` SPI and how to implement a new adapter.
+- [ARCHITECTURE.md §4.1](../reference/architecture.md) — The `contract/` subsystem: translation + validation boundary.
+- [GLOSSARY.md](../reference/glossary.md) — Canonical definitions for all Paxman vocabulary.
 - [ADR-0007](../adr/0007-contract-adapter-set-v1.md) — Decision to ship Dict DSL as a required V1 adapter.
-- [PACKAGE_STRUCTURE.md §3](../../PACKAGE_STRUCTURE.md) — Planned module layout for `adapters/dict_dsl.py`.
+- [PACKAGE_STRUCTURE.md §3](../reference/package-structure.md) — Planned module layout for `adapters/dict_dsl.py`.

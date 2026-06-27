@@ -3,8 +3,8 @@
 > **Status:** V1
 > **Audience:** Paxman users inspecting the resolved output; Paxman
 > contributors extending the Reconciler.
-> **Related docs:** [GLOSSARY.md §Reconciler, §ConfidenceBand](../../GLOSSARY.md),
-> [ARCHITECTURE.md §7 Reconciler Subsystem](../../ARCHITECTURE.md),
+> **Related docs:** [GLOSSARY.md §Reconciler, §ConfidenceBand](../reference/glossary.md),
+> [ARCHITECTURE.md §7 Reconciler Subsystem](../reference/architecture.md),
 > [ADR-0003](../adr/0003-separate-reconciler.md) (separate
 > Reconciler), [ADR-0005](../adr/0005-confidence-ownership.md)
 > (confidence ownership), [docs/specs/dict-dsl-spec.md](../specs/dict-dsl-spec.md)
@@ -339,7 +339,7 @@ surface for reconciliation is the artifact's `field_results` and
 
 ## 11. See also
 
-- [ARCHITECTURE.md §7 Reconciler Subsystem](../../ARCHITECTURE.md) —
+- [ARCHITECTURE.md §7 Reconciler Subsystem](../reference/architecture.md) —
   internal architecture of the Reconciler subsystem.
 - [ADR-0003](../adr/0003-separate-reconciler.md) — separate
   Reconciler rationale.
@@ -349,5 +349,5 @@ surface for reconciliation is the artifact's `field_results` and
   ownership.
 - [ADR-0010](../adr/0010-budget-money-decimal.md) — the
   cost-pipeline Decimal switch.
-- [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md) —
+- [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) —
   Reconciler determinism in the replay path.

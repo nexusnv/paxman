@@ -1,0 +1,162 @@
+# MkDocs configuration for the Paxman documentation site.
+# Built and hosted by Read the Docs (see .readthedocs.yaml).
+# Source tree: docs/ (Diátaxis-style: concepts/ + howto/ + reference/ +
+# contributing/ + security/ + operations/ + guides/ + adr/ + specs/).
+#
+# Conventions:
+#   - User-facing docs live in docs/concepts/ and docs/howto/.
+#   - Reference material lives in docs/reference/.
+#   - Contributor-facing docs live in docs/contributing/.
+#   - ADRs (immutable architectural history) live in docs/adr/.
+#   - Implementation specs (developer-reference) live in docs/specs/.
+#   - Forward-growth slot for domain guides lives in docs/guides/.
+#   - Security policy lives in docs/security/.
+#   - Release-sensitive ops docs live in docs/operations/.
+
+site_name: Paxman
+site_description: >-
+  Contract-driven deterministic normalization engine for Python.
+  Evidence-backed, replayable, field-centric.
+site_url: https://paxman.readthedocs.io/
+repo_url: https://github.com/nexusnv/paxman
+repo_name: nexusnv/paxman
+edit_uri: edit/main/docs/
+copyright: >-
+  Copyright © 2026 Nexus Envision Sdn Bhd. Paxman is released under the MIT License.
+
+docs_dir: docs
+
+theme:
+  name: material
+  language: en
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: teal
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.footer
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.action.edit
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+  font:
+    text: Inter
+    code: JetBrains Mono
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/nexusnv/paxman
+      name: Paxman on GitHub
+  generator: false  # Hide "Made with Material for MkDocs"
+
+extra_css:
+  - assets/css/extra.css
+
+# Top-level navigation. Each entry maps to a section in docs/.
+# Files referenced here MUST exist at the listed path relative to docs_dir,
+# or `mkdocs build --strict` will fail.
+nav:
+  - Home: index.md
+  - Getting started:
+      - Installation: index.md
+      - Quickstart: index.md
+  - Concepts:
+      - Contracts: concepts/contracts.md
+      - Capabilities: concepts/capabilities.md
+      - Planning: concepts/planning.md
+      - Reconciliation: concepts/reconciliation.md
+      - Replay: concepts/replay.md
+      - Migration guide: concepts/MIGRATION_GUIDE.md
+      - Release notes v1.0.0: concepts/RELEASE_NOTES_v1.0.0.md
+  - How-to guides:
+      - Add a contract adapter: howto/add_adapter.md
+      - Add a capability: howto/add_capability.md
+      - Add an inference provider: howto/add_inference_provider.md
+      - Replay an artifact: howto/replay_artifact.md
+  - Reference:
+      - Architecture: reference/architecture.md
+      - Package structure: reference/package-structure.md
+      - Glossary: reference/glossary.md
+      - Replay & determinism: reference/replay-and-determinism.md
+      - Extending Paxman: reference/extending.md
+      - Dependencies: reference/dependencies.md
+  - Decision records:
+      - Index: adr/index.md
+  - Design specifications:
+      - Overview: specs/README.md
+      - Dict DSL: specs/dict-dsl-spec.md
+      - Input profile: specs/input-profile-spec.md
+      - Capability cost model: specs/capability-cost-model.md
+  - Guides:
+      - Overview: guides/README.md
+  - Security: security/index.md
+  - Contributing:
+      - Contributing: contributing/index.md
+      - Development setup: contributing/development.md
+      - Testing strategy: contributing/testing-strategy.md
+      - Test data policy: contributing/test-data.md
+      - Code of conduct: contributing/code-of-conduct.md
+  - Operations:
+      - Changelog: operations/changelog.md
+
+# MkDocs extensions: enable GFM-style features, admonitions, tabs, etc.
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      permalink_title: Anchor link to this section
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.caret
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search
+  - autorefs

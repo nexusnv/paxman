@@ -4,14 +4,14 @@
 > **Audience:** Paxman users who want to add support for a new
 > contract format (Avro, Protobuf, GraphQL, a vendor-specific
 > schema, …).
-> **Related docs:** [EXTENDING.md §1](../../EXTENDING.md) (the full
+> **Related docs:** [EXTENDING.md §1](../reference/extending.md) (the full
 > SPI walkthrough), [docs/concepts/contracts.md](../concepts/contracts.md)
 > (what a contract is), [ADR-0007](../adr/0007-contract-adapter-set-v1.md)
 > (V1 adapter set).
 
 This guide is a **focused quick-start** for adding a new contract
 adapter to Paxman. The full SPI walkthrough is in
-[EXTENDING.md §1](../../EXTENDING.md); this document is a 5-minute
+[EXTENDING.md §1](../reference/extending.md); this document is a 5-minute
 checklist.
 
 ---
@@ -36,7 +36,7 @@ Do **not** add a new adapter when:
 If the format is brand new, you will need to **ship the adapter as
 a separate PyPI package** (`paxman-<your-format>`) — the Paxman
 core team only accepts adapters into the main package by ADR. See
-[EXTENDING.md §6](../../EXTENDING.md).
+[EXTENDING.md §6](../reference/extending.md).
 
 ---
 
@@ -219,7 +219,7 @@ Publish the adapter as a separate PyPI package
 - An end-to-end example.
 
 Use the `paxman-` prefix to make your package discoverable. Link
-to Paxman's [EXTENDING.md](../../EXTENDING.md) for the SPI reference.
+to Paxman's [EXTENDING.md](../reference/extending.md) for the SPI reference.
 
 ---
 
@@ -250,20 +250,20 @@ to Paxman's [EXTENDING.md](../../EXTENDING.md) for the SPI reference.
 
 For the full SPI walkthrough (including a longer example, the
 `export()` semantics, and a worked Pydantic-style adapter), see
-[EXTENDING.md §1](../../EXTENDING.md).
+[EXTENDING.md §1](../reference/extending.md).
 
 ---
 
 ## 7. See also
 
-- [EXTENDING.md §1](../../EXTENDING.md) — full SPI walkthrough.
+- [EXTENDING.md §1](../reference/extending.md) — full SPI walkthrough.
 - [docs/concepts/contracts.md](../concepts/contracts.md) — what
   a contract is in Paxman.
 - [ADR-0007](../adr/0007-contract-adapter-set-v1.md) — V1 adapter
   set rationale.
-- [paxman.protocols](../../EXTENDING.md) — the `ContractAdapter`
+- [paxman.protocols](../reference/extending.md) — the `ContractAdapter`
   Protocol (the SPI).
-- [paxman.contract.canonical](../../EXTENDING.md) — the
+- [paxman.contract.canonical](../reference/extending.md) — the
   `CanonicalContract` data model.
-- [paxman.contract.validator](../../EXTENDING.md) — the standard
+- [paxman.contract.validator](../reference/extending.md) — the standard
   validator.

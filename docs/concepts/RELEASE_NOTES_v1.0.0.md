@@ -2,9 +2,9 @@
 
 > **Status:** Stable v1.
 > **Audience:** Paxman users, contributors, and reviewers.
-> **Related docs:** [CHANGELOG.md](../../CHANGELOG.md),
-> [V1_ACCEPTANCE_CRITERIA.md](../../V1_ACCEPTANCE_CRITERIA.md),
-> [README.md](../../README.md), [PRD.md](../../PRD.md).
+> **Related docs:** [CHANGELOG.md](../operations/changelog.md),
+> [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/V1-acceptance-criteria.md),
+> [README.md](../index.md), [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md).
 
 ---
 
@@ -205,9 +205,9 @@ V1-specific limitations that users should be aware of:
 
 ## External user validation
 
-[V1_ACCEPTANCE_CRITERIA.md](../../V1_ACCEPTANCE_CRITERIA.md) §5
+[V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/V1-acceptance-criteria.md) §5
 requires at least three external users (from the target personas in
-[PRD.md §6](../../PRD.md)) to have used Paxman for a real workload
+[PRD.md §6](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md)) to have used Paxman for a real workload
 and reported no blocking issues before tagging `1.0.0`.
 
 This validation is documented as the project owner's task per the
@@ -227,7 +227,7 @@ For users migrating from pre-1.0 (v0.x) releases: the public API
 (`paxman.normalize()`, `paxman.replay()`, `paxman.register_adapter()`,
 `paxman.register_capability()`) is stable from 1.0.0 onward and
 follows semver. Breaking changes between 0.x and 1.0 are documented
-in the [CHANGELOG.md](../../CHANGELOG.md).
+in the [CHANGELOG.md](../operations/changelog.md).
 
 For users migrating from ad-hoc normalization pipelines (regex + LLM,
 document parsers, agent frameworks) to Paxman, see
@@ -255,18 +255,18 @@ runtime dependencies: `attrs`, `typing-extensions`, and `structlog`.
 
 ## See also
 
-- [CHANGELOG.md](../../CHANGELOG.md) — full release history.
-- [V1_ACCEPTANCE_CRITERIA.md](../../V1_ACCEPTANCE_CRITERIA.md) — the
+- [CHANGELOG.md](../operations/changelog.md) — full release history.
+- [V1_ACCEPTANCE_CRITERIA.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/V1-acceptance-criteria.md) — the
   definition of done for V1.
-- [README.md](../../README.md) — quickstart and usage guide.
-- [PRD.md](../../PRD.md) — product vision and success metrics.
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) — subsystem design and
+- [README.md](../index.md) — quickstart and usage guide.
+- [PRD.md](https://github.com/nexusnv/paxman-wiki/blob/main/Internal-Development/Decision-History/PRD.md) — product vision and success metrics.
+- [ARCHITECTURE.md](../reference/architecture.md) — subsystem design and
   sequence diagram.
-- [GLOSSARY.md](../../GLOSSARY.md) — vocabulary.
-- [REPLAY_AND_DETERMINISM.md](../../REPLAY_AND_DETERMINISM.md) —
+- [GLOSSARY.md](../reference/glossary.md) — vocabulary.
+- [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md) —
   replay model deep dive.
-- [SECURITY.md](../../SECURITY.md) — threat model and PII handling.
-- [EXTENDING.md](../../EXTENDING.md) — how to add adapters,
+- [SECURITY.md](../security/index.md) — threat model and PII handling.
+- [EXTENDING.md](../reference/extending.md) — how to add adapters,
   capabilities, and inference providers.
 - [docs/concepts/](./) — conceptual docs (contracts, capabilities,
   planning, reconciliation, replay, migration guide).

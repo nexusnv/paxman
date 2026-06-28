@@ -831,7 +831,7 @@ class DictDSLAdapter:
 
 
 # Self-register the adapter on import so the registry is populated
-# automatically (per EXTENDING.md §1.3 step 4).
+# automatically (per docs/reference/extending.md §1.3 step 4).
 def _register_on_import() -> None:
     from paxman.contract import registry
 

@@ -1,7 +1,7 @@
 """``inference`` V1 capability — model-backed extraction.
 
 V1 ships only the **SPI** and a **stub provider**. Real providers
-(OpenAI, Anthropic, Cohere) are V2 per ``EXTENDING.md`` §3. The
+(OpenAI, Anthropic, Cohere) are V2 per ``docs/reference/extending.md`` §3. The
 capability exists so the planner's heuristic
 chain (steps 4 + 5: local + remote inference) has something to
 select; the stub returns hard-coded completions.

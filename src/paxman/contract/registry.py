@@ -7,7 +7,7 @@ the right adapter.
 
 The registry is **process-local**. There is no global state shared across
 processes; this is intentional. The public ``register_adapter`` API (per
-``EXTENDING.md`` §1.3 step 4) is part of the ``api/`` subsystem.
+``docs/reference/extending.md`` §1.3 step 4) is part of the ``api/`` subsystem.
 
 Boundary
 --------

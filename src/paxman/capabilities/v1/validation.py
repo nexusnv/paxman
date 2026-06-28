@@ -6,7 +6,7 @@ target :class:`~paxman.contract.canonical.CanonicalField`. It does
 **not** modify the value; it just reports pass / fail diagnostics.
 
 V1 constraint coverage (per
-``EXTENDING.md`` §2.5):
+``docs/reference/extending.md`` §2.5):
 
 - :attr:`ConstraintKind.MIN_LENGTH` — string / array minimum length.
 - :attr:`ConstraintKind.MAX_LENGTH` — string / array maximum length.
@@ -18,7 +18,7 @@ V1 constraint coverage (per
   uppercase ASCII letters).
 
 **Reference constraints** (e.g., "total == sum(line_items[].price)")
-are **post-V1** (per ``EXTENDING.md``).
+are **post-V1** (per ``docs/reference/extending.md``).
 
 V1 surface:
 

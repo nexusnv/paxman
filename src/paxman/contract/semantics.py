@@ -52,7 +52,7 @@ __all__ = [
 #: adding a tag requires an ADR per ``PACKAGE_STRUCTURE.md`` §3.4.
 #:
 #: Tags are grouped by their primary planner effect (per
-#: ``docs/specs/dict-dsl-spec.md`` §3.3 + ``EXTENDING.md`` §1.4):
+#: ``docs/specs/dict-dsl-spec.md`` §3.3 + ``docs/reference/extending.md`` §1.4):
 #:
 #: Type hints (suggest a V1 field type when none is given):
 #: - ``"iso4217"`` — ISO-4217 currency code. Hints ``STRING`` or ``MONEY``.

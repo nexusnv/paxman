@@ -1,7 +1,7 @@
 """``ContractAdapter`` Protocol — the SPI for translating external contracts.
 
 This is the **public SPI** for adding new contract adapters (per
-``EXTENDING.md`` §1.2 and ``PACKAGE_STRUCTURE.md`` §3.3). The Protocol is
+``docs/reference/extending.md`` §1.2 and ``PACKAGE_STRUCTURE.md`` §3.3). The Protocol is
 re-exported from :mod:`paxman.protocols` (where the canonical declaration
 lives, with ``object`` placeholders). The version here is the **concrete
 typed** version, used by adapter implementations and the registry.

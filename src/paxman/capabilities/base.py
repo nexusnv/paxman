@@ -6,8 +6,7 @@ field types. It carries a :class:`~paxman.capabilities.spec.CapabilitySpec`
 declaring its metadata, and an ``invoke()`` method that runs against
 a :class:`CapabilityContext`.
 
-This module is the **only** capability-side interface; the Executor
-(Sprint 4) and the API (Sprint 6) talk to capabilities exclusively
+This module is the **only** capability-side interface; the Executor and the API talk to capabilities exclusively
 through this Protocol. Third-party capabilities implement it
 structurally (PEP 544) — no inheritance is required.
 
@@ -15,7 +14,7 @@ Public surface
 --------------
 
 - :class:`Capability` — the SPI Protocol. Re-exported in
-  ``paxman.api.protocols`` in Sprint 6.
+  ``paxman.api.protocols``.
 - :class:`CapabilityContext` — the input to ``invoke()``. The
   :class:`Capability` does not read raw input directly; the Executor
   builds the context.
@@ -43,7 +42,7 @@ __all__ = [
 class CapabilityContext:
     """The input to :meth:`Capability.invoke`.
 
-    The Executor (Sprint 4) builds a :class:`CapabilityContext` per
+    The Executor builds a :class:`CapabilityContext` per
     capability invocation. The capability never reads the raw input
     or the canonical contract directly — the context is its sole
     interface to the world (per ``PACKAGE_STRUCTURE.md`` §5.4
@@ -128,11 +127,11 @@ class Capability(typing.Protocol):
 
     Per ADR-0005, ``invoke()`` MUST return a
     :class:`~paxman.capabilities.result.CapabilityResult` that does
-    **not** carry a ``confidence`` field. The Reconciler (Sprint 5)
+    **not** carry a ``confidence`` field. The Reconciler
     is the sole confidence assigner.
 
     Public
-        Re-exported in ``paxman.api.protocols`` (Sprint 6).
+        Re-exported in ``paxman.api.protocols``.
     """
 
     @property

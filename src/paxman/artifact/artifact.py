@@ -16,7 +16,7 @@ is the deterministic signature of the captured truth.
 
 Ownership
 ---------
-This module is part of the ``artifact/`` subsystem (Sprint 6). It is
+This module is part of the ``artifact/`` subsystem. It is
 allowed to import from:
 
 - ``paxman.types`` — ``Status``, ``ConfidenceBand`` enum.
@@ -174,7 +174,7 @@ class ExecutionArtifact:
     matches. If any field is modified after construction, replay raises
     :class:`HashMismatchError`.
 
-    Required fields per Sprint 6 exit criterion #8:
+    Required fields on the artifact:
     ``normalized_data``, ``field_results``, ``unresolved_fields``,
     ``evidence``, ``diagnostics``, ``execution_plan``, ``replay_hash``,
     ``statistics``.

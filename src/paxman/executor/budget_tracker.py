@@ -8,7 +8,7 @@ The :class:`BudgetTracker` is the **gatekeeper** for the Executor
 loop. The Executor calls :meth:`would_exceed` *before* invoking
 a capability; if it would, the Executor short-circuits with a
 ``BUDGET_EXCEEDED`` diagnostic and stops walking the plan (per
-``ARCHITECTURE.md`` §7.1 and the Sprint 4 exit criteria).
+``ARCHITECTURE.md`` §7.1).
 
 Design notes
 ------------
@@ -31,7 +31,7 @@ Design notes
 The :class:`BudgetTracker` is **deterministic**: the same sequence
 of :meth:`record` calls produces the same final counters.
 
-Exit criteria (per the Sprint 4 spec):
+Exit criteria:
 
 - The Executor short-circuits when ``Budget.max_total_cost_usd``
   is exceeded. The tracker enforces this gate.

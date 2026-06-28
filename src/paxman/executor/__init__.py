@@ -1,13 +1,13 @@
-"""``executor`` subsystem — the deterministic plan runner (Sprint 4).
+"""``executor`` subsystem — the deterministic plan runner.
 
-Per ``PACKAGE_STRUCTURE.md`` §6 and ``docs/sprints/sprint-04-executor-and-capabilities.md``,
-the Executor:
+Per ``PACKAGE_STRUCTURE.md`` §6 and the Executor design in
+``ARCHITECTURE.md``, the Executor:
 
 - Walks the per-field plans in declaration order (sequential, per ADR-0006).
 - Invokes the capability chain for each field, in plan order.
 - Collects candidates + evidence + diagnostics (no confidence — per ADR-0005).
 - Stops on chain exhaustion (V1 has no confidence-based early stop; the
-  Reconciler assigns confidence in Sprint 5).
+  Reconciler assigns confidence).
 - Short-circuits on :class:`~paxman.budget.Budget` exhaustion with a
   ``BUDGET_EXCEEDED`` diagnostic.
 

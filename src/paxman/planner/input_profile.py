@@ -10,7 +10,7 @@ The function :func:`make_profile` is a **pure function**: same input
 bytes → same :class:`InputProfile` byte-for-byte. No I/O, no clock,
 no random state, no capability invocation.
 
-5-field V1 surface (per the Sprint 0 spec):
+5-field V1 surface:
 
 - ``input_type`` (8-value :class:`InputType`) — coarse format
   classification.

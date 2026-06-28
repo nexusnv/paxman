@@ -1,8 +1,8 @@
 """Shared internal enums for the paxman normalization engine.
 
 This module is a leaf in the import DAG — it imports nothing from
-``paxman.*`` submodules.  Public-facing types will be re-exported from
-``paxman.api.types`` in Sprint 6.
+``paxman.*`` submodules.  Public-facing types are re-exported from
+``paxman.api.types``.
 """
 
 from __future__ import annotations

@@ -39,14 +39,14 @@ __all__ = ["ContractAdapter"]
 class ContractAdapter(typing.Protocol):
     """SPI: translate an external contract format to/from ``CanonicalContract``.
 
-    Adapters are pure: the same input always produces the same
-    :class:`CanonicalContract`. No I/O, no clock reads, no randomness.
+        Adapters are pure: the same input always produces the same
+        :class:`CanonicalContract`. No I/O, no clock reads, no randomness.
 
-    Implementations should be ``@attrs.frozen(slots=True)`` for
-    immutability and type stability.
+        Implementations should be ``@attrs.frozen(slots=True)`` for
+        immutability and type stability.
 
-    See :mod:`paxman.protocols` for the abstract re-declaration; the
-    public ``paxman.api.protocols.ContractAdapter`` (Sprint 6+) re-exports
+        See :mod:`paxman.protocols` for the abstract re-declaration; the
+    public ``paxman.api.protocols.ContractAdapter`` re-exports
     this Protocol.
     """
 

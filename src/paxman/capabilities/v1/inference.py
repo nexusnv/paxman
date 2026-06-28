@@ -1,8 +1,8 @@
 """``inference`` V1 capability — model-backed extraction.
 
 V1 ships only the **SPI** and a **stub provider**. Real providers
-(OpenAI, Anthropic, Cohere) are V2 per ``EXTENDING.md`` §3 and the
-Sprint 3 scope. The capability exists so the planner's heuristic
+(OpenAI, Anthropic, Cohere) are V2 per ``EXTENDING.md`` §3. The
+capability exists so the planner's heuristic
 chain (steps 4 + 5: local + remote inference) has something to
 select; the stub returns hard-coded completions.
 
@@ -20,7 +20,7 @@ The capability takes a provider from :attr:`CapabilityContext.config`
 ``Completion(text="<stub>", model="stub", usage=Usage(tokens=0))``
 for every request.
 
-Note: per the Sprint 3 risk register, the stub is **one class with
+Note: the stub is **one class with
 one method** that returns a hard-coded completion; it must never
 make network calls. A test asserts this.
 
@@ -208,9 +208,9 @@ class StubInferenceProvider:
     text is ``"<stub: {prompt[:64]}>"`` and the model is
     ``"stub-v1"``. **Never makes network calls.**
 
-    Per the Sprint 3 risk register, this stub is one class with
-    one method; it must not drift toward real-provider behavior.
-    A test (``test_stub_never_makes_network_calls``) pins this.
+    This stub is intentionally one class with one method
+    and must not drift toward real-provider behavior. A test
+    (``test_stub_never_makes_network_calls``) pins this.
     """
 
     def complete(self, request: CompletionRequest) -> Completion:
@@ -230,8 +230,8 @@ class StubInferenceProvider:
 
 #: The 3 fixed completions the cycling stub rotates through. The
 #: strings are deliberately distinctive so tests can assert which
-#: "cycle position" produced a given response. Per the Sprint 4
-#: risk register, the cycling stub simulates the non-determinism
+#: "cycle position" produced a given response. The cycling stub
+#: simulates the non-determinism
 #: of a real provider: the same prompt on a fresh provider may
 #: return any of these three strings.
 _DEFAULT_CYCLE_TEXTS: typing.Final[tuple[str, ...]] = (
@@ -244,8 +244,8 @@ _DEFAULT_CYCLE_TEXTS: typing.Final[tuple[str, ...]] = (
 class CyclingStubInferenceProvider:
     """Test-only :class:`InferenceProvider` that cycles through 3 fixed strings.
 
-    The Sprint 4 risk register flags that a "stub provider
-    accidentally returns the same completion on every call" would
+    The cycling stub guards against a "stub provider
+    accidentally returns the same completion on every call" scenario that would
     defeat non-determinism tests. This cycling stub is the
     countermeasure: it returns one of three pre-defined strings,
     selected by the call index (modulo 3).
@@ -263,7 +263,7 @@ class CyclingStubInferenceProvider:
     :meth:`reset`.
 
     Like :class:`StubInferenceProvider`, this stub **never makes
-    network calls**. The same Sprint 3
+    network calls**. The
     ``test_stub_never_makes_network_calls`` test (parametrized
     over the stub classes) pins this.
 

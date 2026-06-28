@@ -8,7 +8,7 @@ best-effort (per ``PACKAGE_STRUCTURE.md`` §3.4).
 MONEY representation
 -------------------
 
-JSON Schema has no native MONEY type. Per the Sprint 2 risk register, the
+JSON Schema has no native MONEY type. The
 adapter supports two equivalent MONEY representations:
 
 1. **Explicit Paxman extension** (recommended): a schema that adds

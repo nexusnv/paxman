@@ -11,7 +11,7 @@ Design notes
 ------------
 
 - **Evidence is monotonic.** Once a piece of evidence is recorded,
-  it is never removed. The Reconciler (Sprint 5) decides what to
+  it is never removed. The Reconciler decides what to
   believe; the Executor only collects.
 - **Diagnostics may be downgraded or dropped.** A capability-level
   diagnostic (e.g., ``PATTERN_NO_MATCH``) is **per-invocation** and
@@ -105,7 +105,7 @@ class EvidenceCollector:
 def _should_promote_to_run_level(diagnostic: Diagnostic) -> bool:
     """Return ``True`` if *diagnostic* should be elevated to run-level.
 
-    The rule (per the Sprint 4 design):
+    The rule:
 
     - ``ERROR`` severity → always promote.
     - ``WARNING`` severity for the untrusted-inference warning

@@ -16,7 +16,7 @@ view. The authoritative per-field output is the :class:`CandidateResult`
 returned by :func:`paxman.executor.executor.run`. The state object is
 discarded at the end of a run.
 
-V1 invariants (per ``PACKAGE_STRUCTURE.md`` §6.4 and the Sprint 4 spec):
+V1 invariants (per ``PACKAGE_STRUCTURE.md`` §6.4):
 
 - The state is **mutable in-flight** — the Executor mutates it
   incrementally. This is the one place in Paxman where mutation is

@@ -1,7 +1,7 @@
 """``text_extraction`` V1 capability — pull text from raw input.
 
-V1 supports ``text/plain`` and ``text/html`` only (per the Sprint 3
-risk register; PDF and image OCR are V2). The capability uses a
+V1 supports ``text/plain`` and ``text/html`` only (PDF
+and image OCR are V2). The capability uses a
 **provider SPI** so a real OCR / HTML parser can be plugged in
 without modifying the capability; in V1 the provider is a stub.
 

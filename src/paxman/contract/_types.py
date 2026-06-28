@@ -89,7 +89,7 @@ class Constraint:
 
     Constraints are produced by adapters (e.g., a Pydantic ``Field(min_length=2)``
     becomes a :class:`Constraint` of kind ``MIN_LENGTH`` with ``params={"min": 2}``).
-    The Reconciler enforces them on candidate values during Sprint 5+.
+    The Reconciler enforces them on candidate values.
 
     Attributes:
         kind: The :class:`ConstraintKind` identifying the rule.

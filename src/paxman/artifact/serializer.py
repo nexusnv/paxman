@@ -4,7 +4,7 @@ This module provides deterministic serialisation and deserialisation
 of :class:`ExecutionArtifact` instances using the cross-cutting
 :mod:`paxman.serialization` module (RFC 8785-style JSON).
 
-Per the sprint risk register, all JSON encoding **must** delegate to
+All JSON encoding **must** delegate to
 :func:`paxman.serialization.stable_dumps` and
 :func:`paxman.serialization.stable_loads` — no alternative JSON
 implementation is permitted.

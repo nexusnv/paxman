@@ -6,8 +6,7 @@
 > ADR-driven workflow that Paxman uses for significant changes.
 
 Paxman is an **open-source** project licensed under **MIT** (per
-[ADR-0008](../adr/0008-license-decision.md) and the
-[license decision spec](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/License-decision-full-analysis)). We
+[ADR-0008](../adr/0008-license-decision.md)). We
 welcome contributions of all sizes — from typo fixes to new
 subsystems.
 

@@ -1,6 +1,6 @@
 """Hypothesis strategies for property-based testing of paxman.
 
-Per Sprint 7 D7.1, this module exposes 7 public Hypothesis strategies
+This module exposes 7 public Hypothesis strategies
 that downstream tests (and external test suites for libraries built on
 paxman) can use:
 
@@ -25,7 +25,7 @@ Usage::
     def test_something(contract, raw):
         ...
 
-Exit criterion #10: ``from paxman.testing import contracts, inputs,
+The public import ``from paxman.testing import contracts, inputs,
 budgets, policies, registries`` works.
 
 Boundary

@@ -1,25 +1,24 @@
 """Early-stop policy for the Executor.
 
 The :class:`EarlyStop` is the Executor's gate that decides whether to
-walk the next :class:`FieldPlanStep` or to short-circuit. Per the
-Sprint 4 spec, the V1 early-stop is **chain-exhaustion only** — the
+walk the next :class:`FieldPlanStep` or to short-circuit. The V1 early-stop is **chain-exhaustion only** — the
 Executor stops when a field's capability chain is exhausted, not
 when a candidate meets ``target_confidence`` (the Reconciler
-assigns confidence in Sprint 5; capabilities do not return
+assigns confidence; capabilities do not return
 confidence per ADR-0005).
 
 This module exists for two reasons:
 
 1. **It is the future-proofing seam for confidence-based early stop.**
-   The Sprint 4 deliverable is "just chain-exhausted logic," but the
-   API of :class:`EarlyStop` is shaped so that the Reconciler (Sprint 5)
+   The V1 deliverable is "just chain-exhausted logic," but the
+   API of :class:`EarlyStop` is shaped so that the Reconciler
    can plug in a confidence-based gate without changing the
    :class:`FieldRunner` call site.
 2. **It centralizes the "should I keep going?" decision** so the
    :class:`FieldRunner` stays focused on invoking capabilities and
    collecting results.
 
-V1 policy (per ``docs/sprints/sprint-04-executor-and-capabilities.md``):
+V1 policy (per the Executor design in ``ARCHITECTURE.md`` §6):
 
 - **Stop when the chain is empty** (no more steps for the field).
 - **Stop when the field's ``early_stop=False`` and the plan is empty.**

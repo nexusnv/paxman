@@ -9,14 +9,14 @@ It carries:
 
 Per `ADR-0005` (Confidence Ownership), :class:`CapabilityResult` has **no
 ``confidence`` field**. Candidates carry ``value`` and ``evidence_refs``;
-the Reconciler (Sprint 5) assigns confidence.
+the Reconciler assigns confidence.
 
 Design notes
 ------------
 
 All data classes are :func:`attrs.frozen` with ``slots=True`` (per
 ``DEPENDENCIES.md`` §3.2). Validation lives in ``__attrs_post_init__``
-(see Sprint 1 hotfix on the attrs-validator / pyright conflict).
+(see the prior attrs-validator / pyright hotfix).
 """
 
 from __future__ import annotations
@@ -220,7 +220,7 @@ class EvidenceRef:
 class Candidate:
     """A single proposed value for a field, with provenance.
 
-    Candidates are produced by capabilities. The Reconciler (Sprint 5)
+    Candidates are produced by capabilities. The Reconciler
     merges candidates and assigns confidence. Per ADR-0005, candidates
     do **not** carry confidence — that is the Reconciler's exclusive
     responsibility.
@@ -272,7 +272,7 @@ class CapabilityResult:
 
     A :class:`CapabilityResult` carries the candidates, evidence, and
     diagnostics produced by one :meth:`Capability.invoke` call. It does
-    **not** carry confidence (per ADR-0005). The Reconciler (Sprint 5)
+    **not** carry confidence (per ADR-0005). The Reconciler
     reads the candidates, weighs the evidence, and assigns confidence.
 
     Attributes:

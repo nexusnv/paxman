@@ -9,7 +9,7 @@ Rounding and precision
 ----------------------
 
 - **Rounding:** :data:`decimal.ROUND_HALF_EVEN` (banker's rounding).
-  This is the V1 default per the Sprint 5 prerequisite.
+  This is the V1 default.
 - **Precision:** Python's default Decimal context (28 significant
   digits). Adjusting this is a per-call concern via
   :func:`decimal.localcontext`.
@@ -58,8 +58,7 @@ __all__ = [
 
 
 #: Rounding mode for all monetary arithmetic in this module.
-#: Banker's rounding (``ROUND_HALF_EVEN``) is the V1 default per
-#: the Sprint 5 prerequisite.
+#: Banker's rounding (``ROUND_HALF_EVEN``) is the V1 default.
 _ROUNDING: typing.Final[str] = decimal.ROUND_HALF_EVEN
 
 

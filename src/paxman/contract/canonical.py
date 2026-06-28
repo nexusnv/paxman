@@ -26,8 +26,7 @@ Design notes
 
 All data classes use :func:`attrs.frozen` with ``slots=True`` per
 ``DEPENDENCIES.md`` §3.2. Validation lives in ``__attrs_post_init__`` to
-play nicely with mypy --strict (which the previous Sprint 1 hotfix identified
-as incompatible with ``@validators``-decorated methods).
+play nicely with mypy --strict (which is incompatible with ``@validators``-decorated methods).
 """
 
 from __future__ import annotations

@@ -205,7 +205,7 @@ class PlanDiagnostic:
     Plan-level diagnostics are produced by the planner during
     planning (e.g., "budget excludes inference; fields requiring
     inference will be UNRESOLVED"). They are surfaced in the
-    artifact's ``diagnostics`` by the Executor (Sprint 4).
+    artifact's ``diagnostics`` by the Executor.
 
     Attributes:
         code: The diagnostic code (e.g.,
@@ -236,51 +236,51 @@ class PlanDiagnostic:
 class ExecutionPlan:
     """The planner's output — a list of :class:`FieldPlan` records.
 
-    The :class:`ExecutionPlan` is what the planner emits. The
-    Executor walks it (Sprint 4); replay rehydrates it from the
-    artifact (Sprint 6). The plan is **frozen** and **immutable**;
-    the Executor must not mutate it.
+        The :class:`ExecutionPlan` is what the planner emits. The
+    Executor walks it; replay rehydrates it from the
+    artifact. The plan is **frozen** and **immutable**;
+        the Executor must not mutate it.
 
-    The plan is keyed on:
+        The plan is keyed on:
 
-    - ``planner_version`` — embedded in the artifact for replay
-      (defaults to :data:`paxman.versioning.PLANNER_VERSION`).
-    - ``field_plans`` — the ordered tuple of :class:`FieldPlan`,
-      one per required field. Required fields are deduplicated by
-      ``field_id`` at construction time.
-    - ``diagnostics`` — :class:`PlanDiagnostic` records emitted
-      during planning (e.g., budget exclusions).
-    - ``input_content_hash`` — the SHA-256 of the input bytes
-      (mirrored from :attr:`InputProfile.content_hash`). Used by
-      the artifact's replay hash composition.
-    - ``contract_id`` — the :class:`CanonicalContract.id` (for
-      artifact hash composition).
+        - ``planner_version`` — embedded in the artifact for replay
+          (defaults to :data:`paxman.versioning.PLANNER_VERSION`).
+        - ``field_plans`` — the ordered tuple of :class:`FieldPlan`,
+          one per required field. Required fields are deduplicated by
+          ``field_id`` at construction time.
+        - ``diagnostics`` — :class:`PlanDiagnostic` records emitted
+          during planning (e.g., budget exclusions).
+        - ``input_content_hash`` — the SHA-256 of the input bytes
+          (mirrored from :attr:`InputProfile.content_hash`). Used by
+          the artifact's replay hash composition.
+        - ``contract_id`` — the :class:`CanonicalContract.id` (for
+          artifact hash composition).
 
-    Attributes:
-        field_plans: Ordered tuple of :class:`FieldPlan`.
-        planner_version: The planner's algorithm version.
-        diagnostics: Tuple of :class:`PlanDiagnostic`.
-        input_content_hash: SHA-256 of the raw input (hex).
-        contract_id: The :class:`CanonicalContract.id`.
+        Attributes:
+            field_plans: Ordered tuple of :class:`FieldPlan`.
+            planner_version: The planner's algorithm version.
+            diagnostics: Tuple of :class:`PlanDiagnostic`.
+            input_content_hash: SHA-256 of the raw input (hex).
+            contract_id: The :class:`CanonicalContract.id`.
 
-    Examples:
-        >>> plan = ExecutionPlan(
-        ...     field_plans=(
-        ...         FieldPlan(
-        ...             field_id="f1",
-        ...             capability_chain=(
-        ...                 FieldPlanStep(
-        ...                     capability_id="regex_extraction",
-        ...                     capability_version="1.0",
-        ...                 ),
-        ...             ),
-        ...         ),
-        ...     ),
-        ...     input_content_hash="a" * 64,
-        ...     contract_id="invoice-v1",
-        ... )
-        >>> plan.planner_version
-        '1'
+        Examples:
+            >>> plan = ExecutionPlan(
+            ...     field_plans=(
+            ...         FieldPlan(
+            ...             field_id="f1",
+            ...             capability_chain=(
+            ...                 FieldPlanStep(
+            ...                     capability_id="regex_extraction",
+            ...                     capability_version="1.0",
+            ...                 ),
+            ...             ),
+            ...         ),
+            ...     ),
+            ...     input_content_hash="a" * 64,
+            ...     contract_id="invoice-v1",
+            ... )
+            >>> plan.planner_version
+            '1'
     """
 
     field_plans: tuple[FieldPlan, ...] = attrs.field()

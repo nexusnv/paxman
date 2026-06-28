@@ -208,9 +208,9 @@ class StubInferenceProvider:
     text is ``"<stub: {prompt[:64]}>"`` and the model is
     ``"stub-v1"``. **Never makes network calls.**
 
-    Per the risk register, this stub is one class with
-    one method; it must not drift toward real-provider behavior.
-    A test (``test_stub_never_makes_network_calls``) pins this.
+    This stub is intentionally one class with one method
+    and must not drift toward real-provider behavior. A test
+    (``test_stub_never_makes_network_calls``) pins this.
     """
 
     def complete(self, request: CompletionRequest) -> Completion:

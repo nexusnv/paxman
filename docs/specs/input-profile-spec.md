@@ -25,7 +25,7 @@ Per [ARCHITECTURE.md §4.2](../reference/architecture.md), the Planner is a **pu
 2. **Deterministic.** Same input bytes → same InputProfile, byte-for-byte. No clock, no I/O, no random state.
 3. **Pure.** No capability invocation. The profile is derived from raw bytes alone. Per [PACKAGE_STRUCTURE.md §4.2](../reference/package-structure.md): "lightweight input classifier (no capability invocation)."
 4. **Side-effect-free constructor.** The `make_profile()` function is a pure function. Per [ADR-0002](../adr/0002-rule-based-planner-v1.md), the Planner is a pure function; its inputs must be equally pure.
-5. **Five-field V1 surface.** Cap at 5 fields per the risk register in the sprint-00 document. Defer content classification (e.g., "is this a financial document?") to V2.
+5. **Five-field V1 surface.** Cap at 5 fields. Defer content classification (e.g., "is this a financial document?") to V2.
 6. **Constructed at most once per `paxman.normalize()` call.** The Planner receives the already-constructed profile. No lazy construction, no re-derivation.
 
 ---

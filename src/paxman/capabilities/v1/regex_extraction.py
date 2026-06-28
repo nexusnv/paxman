@@ -20,7 +20,7 @@ V1 surface:
   ``docs/specs/capability-cost-model.md`` §3)
 
 Reference constraints are **post-V1**
-(per ``EXTENDING.md``); ``regex_extraction`` is purely a value-extraction step.
+(per ``docs/reference/extending.md``); ``regex_extraction`` is purely a value-extraction step.
 Validation is a separate capability.
 """
 

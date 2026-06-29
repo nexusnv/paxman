@@ -16,7 +16,7 @@ from paxman.contract.adapters.openapi import OpenApiAdapter, _read_defs, _read_j
 from paxman.errors import InvalidContractError
 from paxman.types import FieldType
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.deterministic]
 
 
 # --- fixture loading -------------------------------------------------

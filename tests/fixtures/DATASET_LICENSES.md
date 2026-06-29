@@ -82,13 +82,13 @@ If a file is found in `tests/fixtures/` that is **not** in this catalog, the CI 
 
 ### OpenAPI Petstore (v3.1)
 
-- **Source:** https://github.com/swagger-api/swagger-petstore
-- **Version:** 3.0.27 (OAS 3.1)
+- **Source:** https://github.com/OAI/OpenAPI-Specification/blob/main/examples/v3.1/petstore.yaml (hand-rolled subset, 2026-06-29)
+- **Version:** OAS 3.1.0
 - **License:** MIT
 - **Files vendored:** 1 (single YAML)
 - **Path:** `tests/fixtures/contracts/openapi/petstore_3_1.yaml`
-- **Vendored on:** _TBD_
-- **V1 use:** OpenAPI 3.1 adapter smoke test, `$ref` and `oneOf` exercise.
+- **Vendored on:** 2026-06-29
+- **V1 use:** OpenAPI 3.1 adapter smoke test, exercises `jsonSchemaDialect`, `$defs`, `type: [string, null]`, `webhooks`, and path-item `parameters` (the last two are accepted and ignored per V1.1.0 non-goal N3).
 
 ### JSON-Schema-Test-Suite
 

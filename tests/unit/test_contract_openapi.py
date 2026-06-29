@@ -470,3 +470,44 @@ def test_merge_path_parameters_3_1_appends_new_keys() -> None:
     assert len(merged) == 2
     names = {p["name"] for p in merged}
     assert names == {"id", "limit"}
+
+
+# --- 3.1 fixture -----------------------------------------------------
+
+
+def test_adapt_petstore_3_1_fixture() -> None:
+    """The hand-rolled 3.1 fixture must adapt without error and exercise
+    every V1 type except MONEY."""
+    path = (
+        Path(__file__).parent.parent
+        / "fixtures"
+        / "contracts"
+        / "openapi"
+        / "petstore_3_1.yaml"
+    )
+    import yaml
+
+    with path.open() as f:
+        doc = yaml.safe_load(f)
+    contract = OpenApiAdapter().adapt(doc)
+    assert contract.id == "Paxman Petstore 3.1"
+
+    by_path = {f.path: f for f in contract.fields}
+    # 3.0-style integer field.
+    assert by_path["id"].type is FieldType.INTEGER
+    # 3.0-style string with minLength constraint.
+    assert by_path["name"].type is FieldType.STRING
+    # 3.1 nullable type array: [string, null].
+    assert by_path["nickname"].type is FieldType.STRING
+    assert by_path["nickname"].nullable is True
+    # $defs ref resolution: tag becomes an OBJECT (inlined Tag schema).
+    assert by_path["tag"].type is FieldType.OBJECT
+    # Boolean, enum, date, number, array — all present.
+    assert by_path["available"].type is FieldType.BOOLEAN
+    assert by_path["status"].type is FieldType.ENUM
+    assert by_path["birthday"].type is FieldType.DATE
+    assert by_path["weight_kg"].type is FieldType.DECIMAL
+    assert by_path["photo_urls"].type is FieldType.ARRAY
+    # webhooks / path-item parameters / MONEY must not leak into fields.
+    assert "limit" not in by_path
+    assert "newPet" not in by_path

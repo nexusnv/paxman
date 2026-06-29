@@ -136,7 +136,7 @@ def test_adapt_rejects_unresolvable_ref() -> None:
     doc["components"]["schemas"]["Pet"]["properties"]["missing"] = {
         "$ref": "#/components/schemas/DoesNotExist"
     }
-    with pytest.raises(InvalidContractError, match="mismatched|does not resolve"):
+    with pytest.raises(InvalidContractError, match=r"mismatched|does not resolve"):
         OpenApiAdapter().adapt(doc)
 
 
@@ -145,7 +145,7 @@ def test_adapt_rejects_non_components_ref() -> None:
     doc["components"]["schemas"]["Pet"]["properties"]["bad"] = {
         "$ref": "https://example.com/schema.json"
     }
-    with pytest.raises(InvalidContractError, match="not supported by the V1.1.0 adapter"):
+    with pytest.raises(InvalidContractError, match=r"not supported by the V1.1.0 adapter"):
         OpenApiAdapter().adapt(doc)
 
 
@@ -237,10 +237,7 @@ def test_read_json_schema_dialect_returns_none_when_absent() -> None:
 def test_read_json_schema_dialect_returns_value_when_present() -> None:
     doc = _load_petstore()
     doc["jsonSchemaDialect"] = "https://json-schema.org/draft/2020-12/schema"
-    assert (
-        _read_json_schema_dialect(doc)
-        == "https://json-schema.org/draft/2020-12/schema"
-    )
+    assert _read_json_schema_dialect(doc) == "https://json-schema.org/draft/2020-12/schema"
 
 
 def test_read_json_schema_dialect_rejects_non_string() -> None:
@@ -283,9 +280,7 @@ def test_inline_refs_resolves_defs_ref_in_3_1() -> None:
             "required": ["name"],
         }
     }
-    doc["components"]["schemas"]["Pet"]["properties"]["owner"] = {
-        "$ref": "#/$defs/Owner"
-    }
+    doc["components"]["schemas"]["Pet"]["properties"]["owner"] = {"$ref": "#/$defs/Owner"}
     contract = OpenApiAdapter().adapt(doc)
     by_path = {f.path: f for f in contract.fields}
     # ``owner`` is now an OBJECT with a single required ``name`` STRING child.
@@ -305,9 +300,7 @@ def test_inline_refs_rejects_defs_ref_in_3_0() -> None:
     doc = _load_petstore()
     doc["openapi"] = "3.0.3"
     doc["$defs"] = {"X": {"type": "string"}}
-    doc["components"]["schemas"]["Pet"]["properties"]["bad"] = {
-        "$ref": "#/$defs/X"
-    }
+    doc["components"]["schemas"]["Pet"]["properties"]["bad"] = {"$ref": "#/$defs/X"}
     with pytest.raises(InvalidContractError, match="mismatched"):
         OpenApiAdapter().adapt(doc)
 
@@ -318,7 +311,11 @@ def test_inline_refs_rejects_components_schemas_ref_in_defs_only_doc() -> None:
         "openapi": "3.1.0",
         "info": {"title": "defs only"},
         "$defs": {"X": {"type": "string"}},
-        "components": {"schemas": {"Pet": {"type": "object", "properties": {"bad": {"$ref": "#/components/schemas/X"}}}}},
+        "components": {
+            "schemas": {
+                "Pet": {"type": "object", "properties": {"bad": {"$ref": "#/components/schemas/X"}}}
+            }
+        },
     }
     with pytest.raises(InvalidContractError, match="does not resolve"):
         OpenApiAdapter().adapt(doc)
@@ -368,7 +365,9 @@ def test_adapt_3_1_rejects_unknown_dialect() -> None:
         "openapi": "3.1.0",
         "info": {"title": "Bad"},
         "jsonSchemaDialect": "https://example.com/no-such-dialect",
-        "components": {"schemas": {"Pet": {"type": "object", "properties": {"id": {"type": "integer"}}}}},
+        "components": {
+            "schemas": {"Pet": {"type": "object", "properties": {"id": {"type": "integer"}}}}
+        },
     }
     with pytest.raises(InvalidContractError, match="dialect"):
         OpenApiAdapter().adapt(doc)
@@ -381,7 +380,9 @@ def test_adapt_ignores_webhooks() -> None:
         "newPet": {
             "post": {
                 "requestBody": {
-                    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Pet"}}}
+                    "content": {
+                        "application/json": {"schema": {"$ref": "#/components/schemas/Pet"}}
+                    }
                 }
             }
         }
@@ -399,16 +400,12 @@ def test_adapt_ignores_path_item_parameters() -> None:
     doc["openapi"] = "3.1.0"
     doc["paths"] = {
         "/pets": {
-            "parameters": [
-                {"name": "limit", "in": "query", "schema": {"type": "integer"}}
-            ],
+            "parameters": [{"name": "limit", "in": "query", "schema": {"type": "integer"}}],
             "get": {
                 "responses": {
                     "200": {
                         "content": {
-                            "application/json": {
-                                "schema": {"$ref": "#/components/schemas/Pets"}
-                            }
+                            "application/json": {"schema": {"$ref": "#/components/schemas/Pets"}}
                         }
                     }
                 }
@@ -429,9 +426,7 @@ def test_adapt_3_1_nullable_type_array() -> None:
                 "Pet": {
                     "type": "object",
                     "required": ["nickname"],
-                    "properties": {
-                        "nickname": {"type": ["string", "null"]}
-                    },
+                    "properties": {"nickname": {"type": ["string", "null"]}},
                 }
             }
         },
@@ -478,13 +473,7 @@ def test_merge_path_parameters_3_1_appends_new_keys() -> None:
 def test_adapt_petstore_3_1_fixture() -> None:
     """The hand-rolled 3.1 fixture must adapt without error and exercise
     every V1 type except MONEY."""
-    path = (
-        Path(__file__).parent.parent
-        / "fixtures"
-        / "contracts"
-        / "openapi"
-        / "petstore_3_1.yaml"
-    )
+    path = Path(__file__).parent.parent / "fixtures" / "contracts" / "openapi" / "petstore_3_1.yaml"
     import yaml
 
     with path.open() as f:

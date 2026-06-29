@@ -82,13 +82,29 @@ If a file is found in `tests/fixtures/` that is **not** in this catalog, the CI 
 
 ### OpenAPI Petstore (v3.1)
 
-- **Source:** https://github.com/swagger-api/swagger-petstore
-- **Version:** 3.0.27 (OAS 3.1)
-- **License:** MIT
+- **Source:** Hand-rolled contract fixture modeled on the OAI/OpenAPI-Specification 3.1 petstore examples
+  ([https://github.com/OAI/OpenAPI-Specification/blob/main/examples/v3.1/petstore.yaml](https://github.com/OAI/OpenAPI-Specification/blob/main/examples/v3.1/petstore.yaml)).
+  Each field is constructed to exercise a specific V1.1.0 feature
+  (`jsonSchemaDialect`, `$defs`, `type: [string, null]`, `webhooks`,
+  path-item `parameters`). Verified by `test_adapt_petstore_3_1_fixture`
+  in `tests/unit/test_contract_openapi.py`, which asserts every V1
+  type except MONEY is round-tripped through `OpenApiAdapter.adapt()`.
+- **Version:** OAS 3.1.0
+- **License:** MIT (matches the upstream OAI examples license)
 - **Files vendored:** 1 (single YAML)
 - **Path:** `tests/fixtures/contracts/openapi/petstore_3_1.yaml`
-- **Vendored on:** _TBD_
-- **V1 use:** OpenAPI 3.1 adapter smoke test, `$ref` and `oneOf` exercise.
+- **Vendored on:** 2026-06-29
+- **V1 use:** OpenAPI 3.1 adapter acceptance test, exercises the
+  full V1.1.0 feature matrix (dialect, `$defs`, nullable type array,
+  `webhooks`, path-item `parameters` — the last two are accepted and
+  ignored per non-goal N3).
+- **Provenance policy:** Per `tests/fixtures/AGENTS.md`, contract
+  fixtures are hand-picked, hand-written, or hand-modified. Unlike
+  **artifact** goldens (which must be bootstrapped from a real run),
+  contract fixtures are written to exercise specific canonical-model
+  features. This fixture is paired with `test_adapt_petstore_3_1_fixture`
+  which acts as the verification step — the test fails if the fixture
+  drifts from the adapter's expected behavior.
 
 ### JSON-Schema-Test-Suite
 

@@ -146,7 +146,12 @@ class JsonSchemaAdapter:
 
     # ----- adapt ---------------------------------------------------------
 
-    def adapt(self, external: typing.Any) -> CanonicalContract:
+    def adapt(
+        self,
+        external: typing.Any,
+        *,
+        schema_dialect: str | None = None,
+    ) -> CanonicalContract:
         """Translate a JSON Schema dict into a :class:`CanonicalContract`.
 
         The schema's top level should be an ``object`` with ``properties``
@@ -156,6 +161,19 @@ class JsonSchemaAdapter:
 
         Args:
             external: A JSON Schema dict (Python literal).
+            schema_dialect: Optional JSON Schema dialect (e.g. from
+                OpenAPI 3.1 ``jsonSchemaDialect``). **Validation only
+                in V1.1.0:** when provided, the value is validated
+                against ``_SUPPORTED_DRAFTS`` and an
+                ``InvalidContractError(INVALID_VERSION)`` is raised
+                if the dialect is not supported. The value is
+                **not** persisted on the resulting
+                :class:`CanonicalContract` and is **not** round-tripped
+                by ``export()`` — it is a fail-fast guard, not a
+                semantic signal. A future V1.2 release may thread the
+                dialect through the canonical model; until then, the
+                adapter parses the schema the same way regardless of
+                the declared dialect.
 
         Returns:
             The :class:`CanonicalContract` representation.
@@ -163,6 +181,20 @@ class JsonSchemaAdapter:
         Raises:
             InvalidContractError: If the schema is malformed.
         """
+        # 3.1 OpenAPI documents can declare a custom ``jsonSchemaDialect``.
+        # The V1.1.0 JSON Schema adapter does not dispatch on the value
+        # (it already targets draft 2020-12) and does not persist it.
+        # Validation here is a fail-fast guard: a 3.1 document with a
+        # bogus dialect is rejected with INVALID_VERSION rather than
+        # silently parsed under a different dialect. Persistence and
+        # round-trip are out of scope for V1.1.0; see the docstring.
+        if schema_dialect is not None:
+            if schema_dialect not in _SUPPORTED_DRAFTS:
+                raise InvalidContractError(
+                    f"unsupported JSON Schema dialect: {schema_dialect!r}",
+                    error_code="INVALID_VERSION",
+                    context={"$schema": schema_dialect},
+                )
         if not isinstance(external, dict):
             # Accept JSON Schema as a string (e.g., loaded from a file).
             # Parse it as JSON before continuing.

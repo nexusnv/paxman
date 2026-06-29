@@ -82,6 +82,55 @@ assert rehydrated == artifact  # byte-equal
 | Contribute to Paxman | [Contributing](contributing/index.md) |
 | Read the v1.0.0 release notes | [Release notes v1.0.0](concepts/RELEASE_NOTES_v1.0.0.md) |
 
+## Reference examples
+
+Paxman ships with three reference mini-packages that cover the three
+target personas. Each is a standalone, runnable project. Clone the
+repo, `cd` into the example, and follow its README.
+
+<div class="grid cards" markdown>
+
+-   :material-server: **Backend service**
+
+    ---
+
+    A minimal FastAPI service exposing `POST /normalize` for
+    contract-driven normalization. Accepts raw text, returns
+    structured, evidence-backed JSON with a deterministic replay
+    hash.
+
+    **Persona A — backend developer**
+
+    [:octicons-arrow-right-24: Read the example](https://github.com/nexusnv/paxman/tree/main/examples/backend_service)
+
+-   :material-robot: **AI agent ingest**
+
+    ---
+
+    A stdlib-only agent tool-calling loop that invokes
+    `paxman.normalize()` as a tool. Zero framework dependencies —
+    port the `NormalizeTool` to LangChain, LlamaIndex, or any custom
+    agent.
+
+    **Persona B — AI engineer**
+
+    [:octicons-arrow-right-24: Read the example](https://github.com/nexusnv/paxman/tree/main/examples/ai_agent_ingest)
+
+-   :material-file-document-multiple: **SaaS procurement pipeline**
+
+    ---
+
+    A CSV-batch invoice / quotation pipeline. Reads a manifest of
+    raw input files, normalizes each against a Pydantic contract,
+    writes artifacts to disk, and verifies cross-run replay-hash
+    reproducibility.
+
+    **Persona C — SaaS team**
+
+    [:octicons-arrow-right-24: Read the example](https://github.com/nexusnv/paxman/tree/main/examples/saas_procurement)
+
+</div>
+
 ## Project links
 
 - **Source code:** [github.com/nexusnv/paxman](https://github.com/nexusnv/paxman)

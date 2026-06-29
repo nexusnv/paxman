@@ -389,6 +389,43 @@ MIT is the chosen license for V1. Apache-2.0 is the documented
 alternative if patent concerns emerge (the trade-off analysis is kept
 on the project wiki).
 
+## Performance
+
+V1 aspirational targets and measured numbers from the Sprint 9 baseline
+(`Linux x86_64`, `Python 3.12`, `pytest-benchmark`, 10 rounds). Targets are
+**aspirational, not SLOs** — see [`ARCHITECTURE.md` §14](https://paxman.readthedocs.io/en/latest/reference/architecture/).
+
+| Operation | p50 | p99 | Target (p50 / p99) | Status |
+|---|---|---|---|---|
+| `normalize()` (20-field contract, 100 KB input) | **24.30 ms** | 24.73 ms | ≤ 200 ms / ≤ 2 s | met |
+| `replay()` (standard 5 KB artifact) | **1.17 ms** | 1.81 ms | ≤ 50 ms / ≤ 500 ms | met |
+| `replay()` (inflated 100 KB artifact) | **0.90 ms** | 1.24 ms | ≤ 50 ms / ≤ 500 ms | met |
+| Cold import (`import paxman`) | **37 ms** | 60 ms | ≤ 100 ms | met (D9.5) |
+
+**Headline speedups from the D9.5 optimization pass:**
+
+- **4.1× faster** `normalize()` on 100 KB input — C-level `bytes.count()` replaces a Python-level generator loop in `planner/input_profile.compute_density`.
+- **3.4× faster** cold import — PEP 562 `__getattr__` lazy loading cuts `import paxman` from 127 ms → 37 ms (78% fewer modules loaded eagerly).
+- **6.4–7.1× faster** `replay()` — single-entry weakref-guarded hash cache skips re-serialization on the common `normalize()` → `replay()` path.
+
+Reproduce locally with `make benchmark` (pytest-benchmark) and `python scripts/benchmark_import_time.py`. Full profiling details (cumulative-time breakdowns for `normalize`, `replay`, and cold import) were captured in the Sprint 9 baseline report on the `sprint-9-production-hardening` branch.
+
+## Community & discussions
+
+Have an idea, want to show what you built, or just want to ask something?
+Join the conversation on GitHub Discussions:
+
+- [💡 Ideas](https://github.com/nexusnv/paxman/discussions/categories/ideas) — propose features and shape the **next version of Paxman**. Roadmaps, RFCs, design proposals.
+- [🎉 Show and tell](https://github.com/nexusnv/paxman/discussions/categories/show-and-tell) — built something with Paxman? Show it off, share patterns, post a demo.
+- [🙏 Q&A](https://github.com/nexusnv/paxman/discussions/categories/q-a) — got stuck? Ask the community. Usage questions, integration help, "how do I…".
+- [📣 Announcements](https://github.com/nexusnv/paxman/discussions/categories/announcements) — release notes, security advisories, breaking-change previews. Read-only for the community.
+- [🗳️ Polls](https://github.com/nexusnv/paxman/discussions/categories/polls) — quick community votes on naming, defaults, and design tradeoffs.
+- [💬 General](https://github.com/nexusnv/paxman/discussions/categories/general) — anything else Paxman-related that doesn't fit a category above.
+
+Bug reports and well-defined feature requests go to
+[GitHub Issues](https://github.com/nexusnv/paxman/issues) — Discussions is
+for the open-ended conversation.
+
 ## See also
 
 - [Glossary](https://paxman.readthedocs.io/en/latest/reference/glossary/) — vocabulary

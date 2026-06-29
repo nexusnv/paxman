@@ -26,6 +26,24 @@ Do **not** add a new adapter when:
 - The format is already supported (Pydantic, JSON Schema, Dict DSL, OpenAPI).
 - You can convert your input to a supported format with a small wrapper (e.g., convert ERP → JSON Schema once, then use the JSON Schema adapter).
 
+> **V1.1.0 OpenAPI coverage** — The OpenAPI adapter now accepts both 3.0.x and 3.1.x documents. V1.1.0 support matrix:
+>
+> | OpenAPI 3.x feature | V1.1.0 support |
+> |---|---|
+> | `openapi: 3.0.x` | yes |
+> | `openapi: 3.1.x` | yes |
+> | `info.title` (contract id) | yes |
+> | `components.schemas` (object) | yes |
+> | `jsonSchemaDialect` (3.1) | yes — validated, forwarded to JSON Schema adapter |
+> | `$defs` (3.1) | yes — sibling namespace for `$ref` resolution |
+> | `components.schemas`-based `$ref` | yes |
+> | `type: [string, null]` (3.1 nullable) | yes |
+> | `webhooks` (3.1) | accepted, **ignored** (full path parsing is V2) |
+> | path-item `parameters` (3.1 merge) | accepted, **ignored** (3.1 merge semantics locked in helper, see `OpenApiAdapter._merge_path_parameters`) |
+> | `paths.*` (operations) | ignored |
+> | `oneOf` / `anyOf` / `allOf` | rejected (V2 territory) |
+> | external `$ref` (URL) | rejected (V2 territory) |
+
 ### 1.2 The `ContractAdapter` SPI
 
 ```python

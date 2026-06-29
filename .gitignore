@@ -15,6 +15,7 @@
 
 # OpenCode skills (per-developer toolchain)
 .agents/
+docs/superpowers/
 
 # Omo harness (ralph-loop, continuation cache, etc.)
 .omo/

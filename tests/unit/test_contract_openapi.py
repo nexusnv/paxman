@@ -322,3 +322,121 @@ def test_inline_refs_rejects_components_schemas_ref_in_defs_only_doc() -> None:
     }
     with pytest.raises(InvalidContractError, match="does not resolve"):
         OpenApiAdapter().adapt(doc)
+
+
+# --- 3.1 end-to-end adapt() ----------------------------------------
+
+
+def test_adapt_3_1_document_with_defs_and_dialect() -> None:
+    doc: dict = {
+        "openapi": "3.1.0",
+        "info": {"title": "Paxman Petstore 3.1"},
+        "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
+        "$defs": {
+            "Tag": {
+                "type": "object",
+                "properties": {"name": {"type": "string"}},
+                "required": ["name"],
+            }
+        },
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "required": ["id", "name"],
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "name": {"type": "string"},
+                        "tag": {"$ref": "#/$defs/Tag"},
+                    },
+                }
+            }
+        },
+    }
+    contract = OpenApiAdapter().adapt(doc)
+    assert contract.id == "Paxman Petstore 3.1"
+    by_path = {f.path: f for f in contract.fields}
+    # ``tag`` was a $defs ref; should have inlined as OBJECT.
+    assert by_path["tag"].type is FieldType.OBJECT
+    # The ``name`` child of the inlined OBJECT should also be present
+    # (because the inline ref targets a full Tag schema).
+    assert "name" in {f.path for f in contract.fields}
+
+
+def test_adapt_3_1_rejects_unknown_dialect() -> None:
+    doc: dict = {
+        "openapi": "3.1.0",
+        "info": {"title": "Bad"},
+        "jsonSchemaDialect": "https://example.com/no-such-dialect",
+        "components": {"schemas": {"Pet": {"type": "object", "properties": {"id": {"type": "integer"}}}}},
+    }
+    with pytest.raises(InvalidContractError, match="dialect"):
+        OpenApiAdapter().adapt(doc)
+
+
+def test_adapt_ignores_webhooks() -> None:
+    doc = _load_petstore()
+    doc["openapi"] = "3.1.0"
+    doc["webhooks"] = {
+        "newPet": {
+            "post": {
+                "requestBody": {
+                    "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Pet"}}}
+                }
+            }
+        }
+    }
+    contract = OpenApiAdapter().adapt(doc)
+    # Adding webhooks must not change the canonical contract.
+    by_path = {f.path: f for f in contract.fields}
+    assert "id" in by_path
+    assert "name" in by_path
+    assert "tag" in by_path
+
+
+def test_adapt_ignores_path_item_parameters() -> None:
+    doc = _load_petstore()
+    doc["openapi"] = "3.1.0"
+    doc["paths"] = {
+        "/pets": {
+            "parameters": [
+                {"name": "limit", "in": "query", "schema": {"type": "integer"}}
+            ],
+            "get": {
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {"$ref": "#/components/schemas/Pets"}
+                            }
+                        }
+                    }
+                }
+            },
+        }
+    }
+    contract = OpenApiAdapter().adapt(doc)
+    # Path-item parameters must not appear as contract fields.
+    assert "limit" not in {f.path for f in contract.fields}
+
+
+def test_adapt_3_1_nullable_type_array() -> None:
+    doc: dict = {
+        "openapi": "3.1.0",
+        "info": {"title": "Nullable"},
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "required": ["nickname"],
+                    "properties": {
+                        "nickname": {"type": ["string", "null"]}
+                    },
+                }
+            }
+        },
+    }
+    contract = OpenApiAdapter().adapt(doc)
+    by_path = {f.path: f for f in contract.fields}
+    assert by_path["nickname"].type is FieldType.STRING
+    assert by_path["nickname"].nullable is True

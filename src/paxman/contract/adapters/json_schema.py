@@ -146,7 +146,12 @@ class JsonSchemaAdapter:
 
     # ----- adapt ---------------------------------------------------------
 
-    def adapt(self, external: typing.Any) -> CanonicalContract:
+    def adapt(
+        self,
+        external: typing.Any,
+        *,
+        schema_dialect: str | None = None,
+    ) -> CanonicalContract:
         """Translate a JSON Schema dict into a :class:`CanonicalContract`.
 
         The schema's top level should be an ``object`` with ``properties``
@@ -156,6 +161,12 @@ class JsonSchemaAdapter:
 
         Args:
             external: A JSON Schema dict (Python literal).
+            schema_dialect: Optional JSON Schema dialect (e.g. from
+                OpenAPI 3.1 ``jsonSchemaDialect``). When provided,
+                the value is validated against ``_SUPPORTED_DRAFTS``
+                and substituted for the default ``$schema`` field
+                on the resulting document. The V1.1.0 JSON Schema
+                adapter does not parse differently per dialect.
 
         Returns:
             The :class:`CanonicalContract` representation.
@@ -163,6 +174,17 @@ class JsonSchemaAdapter:
         Raises:
             InvalidContractError: If the schema is malformed.
         """
+        # 3.1 OpenAPI documents can declare a custom ``jsonSchemaDialect``.
+        # The V1 JSON Schema adapter does not dispatch on the value (it
+        # already targets draft 2020-12), but it records the value so
+        # that ``export()`` round-trips it on the ``$schema`` field.
+        if schema_dialect is not None:
+            if schema_dialect not in _SUPPORTED_DRAFTS:
+                raise InvalidContractError(
+                    f"unsupported JSON Schema dialect: {schema_dialect!r}",
+                    error_code="INVALID_VERSION",
+                    context={"$schema": schema_dialect},
+                )
         if not isinstance(external, dict):
             # Accept JSON Schema as a string (e.g., loaded from a file).
             # Parse it as JSON before continuing.

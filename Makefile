@@ -117,11 +117,11 @@ security-audit: ## Run bandit + pip-audit (full dependency audit)
 
 .PHONY: benchmark
 benchmark: ## Run performance benchmarks (pytest-benchmark)
-	$(UV) run pytest tests/benchmark/ --benchmark-only --benchmark-sort=median --benchmark-min-rounds=10 --benchmark-warmup=3
+	$(UV) run pytest tests/benchmark/ --benchmark-only --benchmark-sort=mean --benchmark-min-rounds=10 --benchmark-warmup-iterations=3
 
 .PHONY: benchmark-quick
 benchmark-quick: ## Run performance benchmarks with fewer rounds (for dev)
-	$(UV) run pytest tests/benchmark/ --benchmark-only --benchmark-sort=median --benchmark-min-rounds=3 --benchmark-warmup=1
+	$(UV) run pytest tests/benchmark/ --benchmark-only --benchmark-sort=mean --benchmark-min-rounds=3 --benchmark-warmup-iterations=1
 
 .PHONY: profile
 profile: ## Run cold-import time benchmark

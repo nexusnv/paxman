@@ -391,9 +391,9 @@ on the project wiki).
 
 ## Performance
 
-V1 aspirational targets and measured numbers from the Sprint 9 baseline
-(`Linux x86_64`, `Python 3.12`, `pytest-benchmark`, 10 rounds). Targets are
-**aspirational, not SLOs** — see [`ARCHITECTURE.md` §14](https://paxman.readthedocs.io/en/latest/reference/architecture/).
+V1 aspirational targets and measured numbers from the **Sprint 9 production-hardening baseline** (commit [`71941f5`](https://github.com/nexusnv/paxman/commit/71941f5), branch `sprint-9-production-hardening`). Hardware: `Linux x86_64`, `Python 3.12`, `pytest-benchmark`, 10 rounds. Targets are **aspirational, not SLOs** — see [`ARCHITECTURE.md` §14](https://paxman.readthedocs.io/en/latest/reference/architecture/).
+
+> **Note:** The numbers below are the *historical* Sprint 9 snapshot, not a current-machine expectation. Modern dev boxes typically measure 1.5×–17× faster across the same benchmarks. Run `make benchmark` and `make profile` on your hardware for up-to-date numbers.
 
 | Operation | p50 | p99 | Target (p50 / p99) | Status |
 |---|---|---|---|---|
@@ -402,13 +402,19 @@ V1 aspirational targets and measured numbers from the Sprint 9 baseline
 | `replay()` (inflated 100 KB artifact) | **0.90 ms** | 1.24 ms | ≤ 50 ms / ≤ 500 ms | met |
 | Cold import (`import paxman`) | **37 ms** | 60 ms | ≤ 100 ms | met (D9.5) |
 
-**Headline speedups from the D9.5 optimization pass:**
+**Headline speedups from the D9.5 optimization pass** (before → after, same Sprint 9 hardware):
 
-- **4.1× faster** `normalize()` on 100 KB input — C-level `bytes.count()` replaces a Python-level generator loop in `planner/input_profile.compute_density`.
-- **3.4× faster** cold import — PEP 562 `__getattr__` lazy loading cuts `import paxman` from 127 ms → 37 ms (78% fewer modules loaded eagerly).
-- **6.4–7.1× faster** `replay()` — single-entry weakref-guarded hash cache skips re-serialization on the common `normalize()` → `replay()` path.
+- **4.1× faster** `normalize()` on 100 KB input (9.14 ms → 2.23 ms) — C-level `bytes.count()` replaces a Python-level generator loop in `planner/input_profile.compute_density`.
+- **3.4× faster** cold import (127 ms → 37 ms) — PEP 562 `__getattr__` lazy loading cuts modules loaded eagerly from 65 → 14.
+- **6.4–7.1× faster** `replay()` (379–418 µs → 59 µs) — single-entry weakref-guarded hash cache skips re-serialization on the common `normalize()` → `replay()` path.
 
-Reproduce locally with `make benchmark` (pytest-benchmark) and `python scripts/benchmark_import_time.py`. Full profiling details (cumulative-time breakdowns for `normalize`, `replay`, and cold import) were captured in the Sprint 9 baseline report on the `sprint-9-production-hardening` branch.
+**Run on your own hardware:**
+
+- `make benchmark` — `pytest-benchmark` over `tests/benchmark/` (sort by mean, ≥ 10 rounds, 3 warmup iterations).
+- `make benchmark-quick` — same, fewer rounds (faster feedback during dev).
+- `make profile` — wraps `scripts/benchmark_import_time.py` with 20 iterations for cold-import time.
+
+Full profiling details (cumulative-time breakdowns for `normalize`, `replay`, and cold import, plus per-optimization before/after tables) are in the Sprint 9 baseline report committed as `docs/sprints/performance-baseline.md` on the `sprint-9-production-hardening` branch.
 
 ## Community & discussions
 

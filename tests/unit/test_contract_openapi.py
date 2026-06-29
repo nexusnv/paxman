@@ -440,3 +440,33 @@ def test_adapt_3_1_nullable_type_array() -> None:
     by_path = {f.path: f for f in contract.fields}
     assert by_path["nickname"].type is FieldType.STRING
     assert by_path["nickname"].nullable is True
+
+
+# --- path-item parameters merge vs append --------------------------
+
+
+def test_merge_path_parameters_3_0_appends() -> None:
+    op = [{"name": "id", "in": "path"}]
+    path = [{"name": "limit", "in": "query"}]
+    merged = OpenApiAdapter._merge_path_parameters(op, path, version="3.0.3")
+    assert len(merged) == 2
+    assert merged[0]["name"] == "id"
+    assert merged[1]["name"] == "limit"
+
+
+def test_merge_path_parameters_3_1_merges_by_name_in() -> None:
+    op = [{"name": "id", "in": "path", "schema": {"type": "string"}}]
+    path = [{"name": "id", "in": "path", "schema": {"type": "integer"}}]
+    merged = OpenApiAdapter._merge_path_parameters(op, path, version="3.1.0")
+    assert len(merged) == 1
+    # Operation-level wins on collision.
+    assert merged[0]["schema"]["type"] == "string"
+
+
+def test_merge_path_parameters_3_1_appends_new_keys() -> None:
+    op = [{"name": "id", "in": "path"}]
+    path = [{"name": "limit", "in": "query"}]
+    merged = OpenApiAdapter._merge_path_parameters(op, path, version="3.1.0")
+    assert len(merged) == 2
+    names = {p["name"] for p in merged}
+    assert names == {"id", "limit"}

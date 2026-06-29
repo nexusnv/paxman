@@ -402,6 +402,49 @@ class OpenApiAdapter:
         return schema_name
 
     @staticmethod
+    def _merge_path_parameters(
+        operation_params: typing.Iterable[dict[str, typing.Any]],
+        path_item_params: typing.Iterable[dict[str, typing.Any]],
+        *,
+        version: str,
+    ) -> list[dict[str, typing.Any]]:
+        """Merge or append path-item-level ``parameters`` to operation-level ones.
+
+        - OpenAPI 3.0.x semantics: ``parameters`` from the path item
+          are **appended** to the operation-level list (no dedup).
+          This is the V1.0.0 behavior and matches the OAS 3.0 spec.
+        - OpenAPI 3.1.x semantics: ``parameters`` are **merged** by
+          the ``(name, in)`` tuple, with the operation-level entry
+          winning on collision. Path-item entries with new
+          ``(name, in)`` pairs are appended.
+
+        This helper is a pure function; V1.1.0 does not call it
+        end-to-end (paths are still ignored per non-goal N3). It is
+        shipped and unit-tested to lock the semantics for V2.0.
+        """
+        op_list = list(operation_params)
+        path_list = list(path_item_params)
+        if _is_openapi_3_1(version):
+            # 3.1 merge: operation-level wins on (name, in) collision.
+            op_keys: set[tuple[str, str]] = {
+                (p["name"], p["in"])
+                for p in op_list
+                if isinstance(p, dict) and "name" in p and "in" in p
+            }
+            out = list(op_list)
+            for p in path_list:
+                if not isinstance(p, dict):
+                    out.append(p)
+                    continue
+                key = (p.get("name"), p.get("in"))
+                if key in op_keys:
+                    continue  # operation-level wins; skip
+                out.append(p)
+            return out
+        # 3.0 append.
+        return op_list + path_list
+
+    @staticmethod
     def _inline_refs(
         schema: dict[str, typing.Any],
         *,

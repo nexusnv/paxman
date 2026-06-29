@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added — Issue #21 (V1.0.x: Hero cards for reference examples)
+
+- **Reference-examples hero cards on the docs homepage.** `docs/index.md`
+  now includes a "Reference examples" section that surfaces the three
+  shipped reference examples (`backend_service`, `ai_agent_ingest`,
+  `saas_procurement`) as Material-themed grid cards. Each card links
+  to the example directory on GitHub and tags the persona it is
+  designed for (backend developer / AI engineer / SaaS team). Closes
+  the "3 reference examples linked as hero cards on homepage" item
+  in the V1.0.x static-site adoption DoD.
+
 ### Changed — Sprint 11 (Post-v1 Repo Springclean)
 
 Repo restructured to separate the library from the marketing site, internal

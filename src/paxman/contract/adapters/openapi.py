@@ -513,4 +513,52 @@ def _is_openapi_3_1(version: str) -> bool:
     return version in _OPENAPI_3_1_VERSIONS
 
 
+def _read_json_schema_dialect(external: dict[str, typing.Any]) -> str | None:
+    """Return the document's declared ``jsonSchemaDialect``, or ``None``.
+
+    OpenAPI 3.1 lets a document declare a JSON Schema dialect. V1
+    does not dispatch on the value — the V1 JSON Schema adapter
+    already targets draft 2020-12 — but the value is **validated**
+    and forwarded to the JSON Schema adapter so that ``$schema`` is
+    populated correctly on export.
+
+    Raises:
+        InvalidContractError: ``INVALID_JSON_SCHEMA_DIALECT`` if the
+            value is not a string.
+    """
+    dialect = external.get("jsonSchemaDialect")
+    if dialect is None:
+        return None
+    if not isinstance(dialect, str):
+        raise InvalidContractError(
+            f"OpenAPI 'jsonSchemaDialect' must be a str, got {type(dialect).__name__}",
+            error_code="INVALID_JSON_SCHEMA_DIALECT",
+            context={"got_type": type(dialect).__name__},
+        )
+    return dialect
+
+
+def _read_defs(external: dict[str, typing.Any]) -> dict[str, typing.Any]:
+    """Return the document's ``$defs`` map, or ``{}`` if absent.
+
+    OpenAPI 3.1 documents may declare a root-level ``$defs`` block;
+    V1 reads it as a sibling namespace for ``$ref`` resolution. The
+    value is always a dict; a non-dict raises.
+
+    Raises:
+        InvalidContractError: ``INVALID_DEF`` if ``$defs`` is not a
+            dict.
+    """
+    defs = external.get("$defs")
+    if defs is None:
+        return {}
+    if not isinstance(defs, dict):
+        raise InvalidContractError(
+            f"OpenAPI '$defs' must be a dict, got {type(defs).__name__}",
+            error_code="INVALID_DEF",
+            context={"got_type": type(defs).__name__},
+        )
+    return defs
+
+
 _register_on_import()

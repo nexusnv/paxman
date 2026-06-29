@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from paxman.contract.adapters.openapi import OpenApiAdapter
+from paxman.contract.adapters.openapi import OpenApiAdapter, _read_defs, _read_json_schema_dialect
 from paxman.errors import InvalidContractError
 from paxman.types import FieldType
 
@@ -224,3 +224,47 @@ def test_export_round_trip() -> None:
 def test_export_rejects_non_canonical_contract() -> None:
     with pytest.raises(InvalidContractError, match="export expects CanonicalContract"):
         OpenApiAdapter().export("not a contract")  # type: ignore[arg-type]
+
+
+# --- 3.1 dialect & defs reading ------------------------------------
+
+
+def test_read_json_schema_dialect_returns_none_when_absent() -> None:
+    doc = _load_petstore()
+    assert _read_json_schema_dialect(doc) is None
+
+
+def test_read_json_schema_dialect_returns_value_when_present() -> None:
+    doc = _load_petstore()
+    doc["jsonSchemaDialect"] = "https://json-schema.org/draft/2020-12/schema"
+    assert (
+        _read_json_schema_dialect(doc)
+        == "https://json-schema.org/draft/2020-12/schema"
+    )
+
+
+def test_read_json_schema_dialect_rejects_non_string() -> None:
+    doc = _load_petstore()
+    doc["jsonSchemaDialect"] = 42
+    with pytest.raises(InvalidContractError, match="jsonSchemaDialect"):
+        _read_json_schema_dialect(doc)
+
+
+def test_read_defs_returns_empty_when_absent() -> None:
+    doc = _load_petstore()
+    assert _read_defs(doc) == {}
+
+
+def test_read_defs_returns_dict_when_present() -> None:
+    doc = _load_petstore()
+    doc["$defs"] = {"Owner": {"type": "object", "properties": {"name": {"type": "string"}}}}
+    defs = _read_defs(doc)
+    assert "Owner" in defs
+    assert defs["Owner"]["properties"]["name"]["type"] == "string"
+
+
+def test_read_defs_rejects_non_dict() -> None:
+    doc = _load_petstore()
+    doc["$defs"] = "not a dict"
+    with pytest.raises(InvalidContractError, match=r"\$defs"):
+        _read_defs(doc)

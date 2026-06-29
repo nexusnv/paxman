@@ -95,6 +95,28 @@ _SUPPORTED_OPENAPI_VERSIONS: typing.Final[frozenset[str]] = frozenset(
     }
 )
 
+#: Subset of supported OpenAPI versions that follow the 3.1 spec.
+#: 3.1 documents have native JSON Schema 2020-12 alignment, a
+#: ``$defs`` block, a top-level ``webhooks`` map, and 3.1
+#: path-item ``parameters`` merge semantics.
+_OPENAPI_3_1_VERSIONS: typing.Final[frozenset[str]] = frozenset({"3.1.0", "3.1.1"})
+
+#: Subset of supported OpenAPI versions that follow the 3.0 spec.
+#: 3.0 documents use the custom "Schema Object", not native JSON
+#: Schema; ``$ref`` lives only in ``#/components/schemas/<name>``.
+_OPENAPI_3_0_VERSIONS: typing.Final[frozenset[str]] = frozenset(
+    {"3.0.0", "3.0.1", "3.0.2", "3.0.3"}
+)
+
+#: The set of OpenAPI 3.1 ``jsonSchemaDialect`` values we accept.
+#: Mirrors the JSON Schema adapter's supported drafts but is restricted
+#: to the JSON Schema 2020-12 family (the only family 3.1 aligns with).
+_SUPPORTED_OPENAPI_DIALECTS: typing.Final[frozenset[str]] = frozenset(
+    {
+        "https://json-schema.org/draft/2020-12/schema",
+    }
+)
+
 #: The JSON Schema sub-keyword we use to mark an inline schema as
 #: "MONEY" inside an OpenAPI document. Mirrors the JSON Schema
 #: adapter's convention.
@@ -484,6 +506,11 @@ def _register_on_import() -> None:
     from paxman.contract import registry
 
     registry.register(OpenApiAdapter(), replace=True)
+
+
+def _is_openapi_3_1(version: str) -> bool:
+    """Return ``True`` iff *version* is a 3.1.x OpenAPI document."""
+    return version in _OPENAPI_3_1_VERSIONS
 
 
 _register_on_import()

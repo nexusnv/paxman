@@ -64,10 +64,23 @@ def test_adapt_is_deterministic(doc: dict[str, typing.Any]) -> None:
     adapter = OpenApiAdapter()
     a = adapter.adapt(doc)
     b = adapter.adapt(deepcopy(doc))
-    # Two independent adapts of identical input must produce equal
-    # canonical contracts (field set, types, required flags).
+    # Two independent adapts of identical input must produce byte-equal
+    # canonical contracts. Compare every canonical attribute that the V1
+    # OpenAPI adapter controls (id is per-call unique and excluded; the
+    # rest must match exactly).
     assert {f.path for f in a.fields} == {f.path for f in b.fields}
-    assert {f.path: f.type for f in a.fields} == {f.path: f.type for f in b.fields}
+    by_a = {f.path: f for f in a.fields}
+    by_b = {f.path: f for f in b.fields}
+    for path in by_a:
+        fa, fb = by_a[path], by_b[path]
+        assert fa.type is fb.type
+        assert fa.required is fb.required
+        assert fa.nullable is fb.nullable
+        assert fa.name == fb.name
+        assert fa.description == fb.description
+        assert fa.default == fb.default
+        assert fa.constraints == fb.constraints
+        assert fa.enum_values == fb.enum_values
 
 
 @hypothesis.given(_openapi_doc())
@@ -79,9 +92,20 @@ def test_adapt_export_adapt_round_trip(doc: dict[str, typing.Any]) -> None:
     exported = adapter.export(a)
     b = adapter.adapt(exported)
     # The envelope changes (3.0.3, paths={}, ...) but the canonical
-    # content (field set, types) must be byte-equal.
+    # content must be byte-equal (excluding the per-call id).
     assert {f.path for f in a.fields} == {f.path for f in b.fields}
-    assert {f.path: f.type for f in a.fields} == {f.path: f.type for f in b.fields}
+    by_a = {f.path: f for f in a.fields}
+    by_b = {f.path: f for f in b.fields}
+    for path in by_a:
+        fa, fb = by_a[path], by_b[path]
+        assert fa.type is fb.type
+        assert fa.required is fb.required
+        assert fa.nullable is fb.nullable
+        assert fa.name == fb.name
+        assert fa.description == fb.description
+        assert fa.default == fb.default
+        assert fa.constraints == fb.constraints
+        assert fa.enum_values == fb.enum_values
 
 
 def test_cycle_detection_raises_invalid_ref() -> None:

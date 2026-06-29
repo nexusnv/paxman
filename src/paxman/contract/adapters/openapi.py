@@ -271,18 +271,20 @@ class OpenApiAdapter:
 
         # --- Read 3.1 inputs (best-effort) ---------------------------------
         is_3_1 = _is_openapi_3_1(version)
-        dialect = _read_json_schema_dialect(external)
-        # 3.0 documents ignore ``jsonSchemaDialect`` per spec; only validate
-        # the value on 3.1.
-        if dialect is not None and not is_3_1:
-            dialect = None
+        # 3.0 documents do not define ``jsonSchemaDialect`` per spec, so
+        # we skip the reader entirely (which would otherwise raise on a
+        # non-string value). For 3.1 we read the field and validate it
+        # against the supported dialect set.
+        dialect = _read_json_schema_dialect(external) if is_3_1 else None
         if dialect is not None and dialect not in _SUPPORTED_OPENAPI_DIALECTS:
             raise InvalidContractError(
                 f"OpenAPI 3.1 'jsonSchemaDialect'={dialect!r} is not in the supported set",
                 error_code="INVALID_JSON_SCHEMA_DIALECT",
                 context={"dialect": dialect},
             )
-        defs = _read_defs(external)
+        # Same for ``$defs``: 3.0 documents cannot use it, so we skip
+        # the reader (which would also raise on a non-dict value).
+        defs = _read_defs(external) if is_3_1 else {}
 
         # --- Inline $ref resolution (best-effort) -------------------------
         # V1.1.0 supports both ``#/components/schemas/<name>`` (3.0) and
@@ -617,7 +619,16 @@ class OpenApiAdapter:
                         "namespace": namespace,
                     },
                 )
-            return OpenApiAdapter._inline_refs_impl(
+            # JSON Schema 2020-12 (and OpenAPI 3.1) allow sibling
+            # keywords next to ``$ref``. Per the spec, the siblings
+            # *override* the target on a per-key basis. We merge
+            # the inlined target with the siblings, recursing on
+            # the target first (so a $ref inside the target is
+            # also inlined) and then overlaying the siblings.
+            # V1.0.0 silently dropped siblings; V1.1.0 preserves
+            # them. ``$ref`` itself is removed from the output.
+            siblings = {k: v for k, v in schema.items() if k != "$ref"}
+            inlined_target = OpenApiAdapter._inline_refs_impl(
                 target,
                 components_schemas=components_schemas,
                 defs=defs,
@@ -625,6 +636,12 @@ class OpenApiAdapter:
                 document_version=document_version,
                 _seen=_seen | {seen_key},
             )
+            # Merge: start from the inlined target, overlay siblings.
+            if not isinstance(inlined_target, dict):
+                return inlined_target
+            merged: dict[str, typing.Any] = dict(inlined_target)
+            merged.update(siblings)
+            return merged
         # No $ref at this level. Walk into ``properties`` and ``items``.
         out = dict(schema)
         if "properties" in out and isinstance(out["properties"], dict):

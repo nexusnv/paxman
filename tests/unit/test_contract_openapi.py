@@ -136,7 +136,12 @@ def test_adapt_rejects_unresolvable_ref() -> None:
     doc["components"]["schemas"]["Pet"]["properties"]["missing"] = {
         "$ref": "#/components/schemas/DoesNotExist"
     }
-    with pytest.raises(InvalidContractError, match=r"mismatched|does not resolve"):
+    # This is a same-version ref; the only legitimate failure mode is
+    # "does not resolve" (the ref is well-formed, just points to a
+    # missing target). Match precisely so a regression that
+    # misclassifies the error (e.g. as "mismatched") would fail this
+    # test.
+    with pytest.raises(InvalidContractError, match=r"does not resolve"):
         OpenApiAdapter().adapt(doc)
 
 
@@ -290,8 +295,24 @@ def test_inline_refs_resolves_defs_ref_in_3_1() -> None:
 def test_inline_refs_resolves_components_schemas_ref_in_3_1() -> None:
     doc = _load_petstore()
     doc["openapi"] = "3.1.0"
+    # Inject an actual $ref under components.schemas.Pet.properties
+    # so the assertion exercises the 3.1 components/schemas $ref
+    # resolution path (the 3.0 petstore has all properties inline,
+    # so without this the test would pass even if 3.1 component-ref
+    # inlining was broken). The Tag schema must exist in
+    # components.schemas for the ref to resolve.
+    doc["components"]["schemas"]["Tag"] = {
+        "type": "object",
+        "properties": {"name": {"type": "string"}},
+        "required": ["name"],
+    }
+    doc["components"]["schemas"]["Pet"]["properties"]["owner"] = {
+        "$ref": "#/components/schemas/Tag",
+    }
     contract = OpenApiAdapter().adapt(doc)
     by_path = {f.path: f for f in contract.fields}
+    # ``owner`` was the $ref; the inlined Tag schema is an OBJECT.
+    assert by_path["owner"].type is FieldType.OBJECT
     # Backward-compat: 3.1 documents still resolve #/components/schemas/*.
     assert by_path["tag"].type is FieldType.STRING
 
@@ -353,11 +374,17 @@ def test_adapt_3_1_document_with_defs_and_dialect() -> None:
     contract = OpenApiAdapter().adapt(doc)
     assert contract.id == "Paxman Petstore 3.1"
     by_path = {f.path: f for f in contract.fields}
-    # ``tag`` was a $defs ref; should have inlined as OBJECT.
+    # ``tag`` was a $defs ref; should have inlined as OBJECT. The
+    # V1 contract model is flat (per ADR-0001 — no nested OBJECT
+    # children are emitted as separate CanonicalFields), so we
+    # cannot assert on the inlined Tag's children directly. The
+    # fact that ``tag`` is OBJECT type is sufficient evidence that
+    # the $defs ref was resolved and inlined (an inline STRING
+    # would have produced STRING).
     assert by_path["tag"].type is FieldType.OBJECT
-    # The ``name`` child of the inlined OBJECT should also be present
-    # (because the inline ref targets a full Tag schema).
-    assert "name" in {f.path for f in contract.fields}
+    # The other top-level fields remain intact.
+    assert by_path["id"].type is FieldType.INTEGER
+    assert by_path["name"].type is FieldType.STRING
 
 
 def test_adapt_3_1_rejects_unknown_dialect() -> None:
@@ -500,3 +527,86 @@ def test_adapt_petstore_3_1_fixture() -> None:
     # webhooks / path-item parameters / MONEY must not leak into fields.
     assert "limit" not in by_path
     assert "newPet" not in by_path
+
+
+# --- $ref sibling keyword preservation -----------------------------
+
+
+def test_adapt_merges_ref_siblings_with_inlined_target() -> None:
+    """JSON Schema 2020-12 (and OpenAPI 3.1) allow sibling keywords
+    next to ``$ref``. The V1.1.0 adapter preserves the siblings and
+    overlays them on the inlined target (siblings win on conflict).
+    """
+    doc: dict = {
+        "openapi": "3.1.0",
+        "info": {"title": "Siblings"},
+        "components": {
+            "schemas": {
+                # ``Item`` is the first schema, so the OpenAPI adapter
+                # adapts it (the adapter's V1 contract model is one
+                # canonical contract per document).
+                "Item": {
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {
+                        # ``$ref`` to a STRING target, with a sibling
+                        # ``description`` and ``default`` that must
+                        # survive the inlining.
+                        "name": {
+                            "$ref": "#/components/schemas/Target",
+                            "description": "Item display name",
+                            "default": "untitled",
+                        }
+                    },
+                },
+                "Target": {"type": "string", "minLength": 1, "maxLength": 50},
+            }
+        },
+    }
+    contract = OpenApiAdapter().adapt(doc)
+    by_path = {f.path: f for f in contract.fields}
+    name = by_path["name"]
+    assert name.type is FieldType.STRING
+    assert name.description == "Item display name"
+    assert name.default == "untitled"
+    # Sibling must win: the inlined Target says minLength=1, maxLength=50;
+    # the sibling set contains no conflicting key, so the constraints
+    # survive.
+    assert any(c.kind.value == "min_length" for c in name.constraints)
+    assert any(c.kind.value == "max_length" for c in name.constraints)
+
+
+def test_adapt_merges_ref_siblings_override_inlined_target() -> None:
+    """When a sibling key conflicts with an inlined-target key, the
+    sibling wins (per JSON Schema 2020-12 sibling semantics)."""
+    doc: dict = {
+        "openapi": "3.1.0",
+        "info": {"title": "Override"},
+        "components": {
+            "schemas": {
+                "Item": {
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {
+                        "name": {
+                            "$ref": "#/components/schemas/Target",
+                            "description": "from sibling",
+                        }
+                    },
+                },
+                "Target": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "from target",
+                },
+            }
+        },
+    }
+    contract = OpenApiAdapter().adapt(doc)
+    by_path = {f.path: f for f in contract.fields}
+    name = by_path["name"]
+    assert name.type is FieldType.STRING
+    # Sibling wins.
+    assert name.description == "from sibling"
+    # The target's minLength is preserved (no conflict on that key).
+    assert any(c.kind.value == "min_length" for c in name.constraints)

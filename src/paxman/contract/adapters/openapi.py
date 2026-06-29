@@ -269,13 +269,33 @@ class OpenApiAdapter:
                     context={"schema_name": schema_name, "keyword": keyword},
                 )
 
+        # --- Read 3.1 inputs (best-effort) ---------------------------------
+        is_3_1 = _is_openapi_3_1(version)
+        dialect = _read_json_schema_dialect(external)
+        # 3.0 documents ignore ``jsonSchemaDialect`` per spec; only validate
+        # the value on 3.1.
+        if dialect is not None and not is_3_1:
+            dialect = None
+        if dialect is not None and dialect not in _SUPPORTED_OPENAPI_DIALECTS:
+            raise InvalidContractError(
+                f"OpenAPI 3.1 'jsonSchemaDialect'={dialect!r} is not in the supported set",
+                error_code="INVALID_JSON_SCHEMA_DIALECT",
+                context={"dialect": dialect},
+            )
+        defs = _read_defs(external)
+
         # --- Inline $ref resolution (best-effort) -------------------------
-        # V1 supports ``$ref: #/components/schemas/<name>`` only.
-        # Other refs are rejected. The resolver walks the schema
-        # tree recursively (within a single level of nesting —
-        # a ref inside a ref is inlined as-is, but the
-        # referenced schema is not re-walked; that is V2).
-        inlined_schema = self._inline_refs(schema_def, schemas, schema_name)
+        # V1.1.0 supports both ``#/components/schemas/<name>`` (3.0) and
+        # ``#/$defs/<name>`` (3.1). A ref using one prefix in a
+        # document declared as the other version is rejected with
+        # ``INVALID_REF`` (mismatched) by the walker.
+        inlined_schema = self._inline_refs(
+            schema_def,
+            components_schemas=schemas,
+            defs=defs,
+            schema_name=schema_name,
+            document_version=version,
+        )
 
         # --- Build a JSON Schema-shaped dict for the JSON Schema adapter.
         # The JSON Schema adapter expects a top-level ``object`` with
@@ -306,7 +326,7 @@ class OpenApiAdapter:
         # submodules. This is the
         # intended delegation pattern.
         json_adapter = JsonSchemaAdapter()
-        return json_adapter.adapt(json_schema_doc)
+        return json_adapter.adapt(json_schema_doc, schema_dialect=dialect)
 
     # ----- export --------------------------------------------------------
 
@@ -384,59 +404,88 @@ class OpenApiAdapter:
     @staticmethod
     def _inline_refs(
         schema: dict[str, typing.Any],
-        schemas: dict[str, typing.Any],
+        *,
+        components_schemas: dict[str, typing.Any],
+        defs: dict[str, typing.Any],
         schema_name: str,
+        document_version: str,
     ) -> dict[str, typing.Any]:
         """Replace ``$ref`` pointers in *schema* with the referenced subschema.
 
-        Only ``$ref: #/components/schemas/<name>`` is supported
-        (and only when ``<name>`` is a key in *schemas*). Other
-        refs are rejected. The resolver walks the schema tree
-        recursively into nested ``properties`` and ``items`` so
-        refs at any depth are inlined. (Refs inside ``allOf`` /
-        ``oneOf`` / ``anyOf`` are **not** walked because V1
-        rejects those keywords outright.)
+        Supports the two V1.1.0 prefixes:
 
-        The resolution is bounded: a ``$ref`` chain (ref → ref →
-        ref) is inlined one level at a time; if the inlined
-        schema itself contains a ``$ref`` to a resolvable target,
-        it is inlined too. Cycles are detected and rejected.
+        - ``#/components/schemas/<name>`` — the OpenAPI 3.0 location.
+        - ``#/$defs/<name>`` — the OpenAPI 3.1 location.
+
+        A ref whose prefix does not match the document's version is
+        rejected with ``INVALID_REF`` (and a ``mismatched`` message) so
+        that 3.0↔3.1 schema mixing is caught early. External refs
+        (``https://…``, ``./other.yaml``), path refs (``#/paths/…``),
+        and pointer refs to non-existent targets are rejected with
+        ``UNSUPPORTED_OPENAPI_FEATURE`` / ``INVALID_REF``.
+
+        Cycle detection is preserved: a ``$ref`` chain (``A`` → ``B`` →
+        ``A``) raises ``INVALID_REF``. The seen-set is keyed on the
+        *fully-qualified pointer* (``components/X`` vs ``defs/X``) so
+        the two namespaces cannot collide.
 
         Args:
             schema: The schema to walk.
-            schemas: The full ``components.schemas`` dict.
-            schema_name: The current schema's name (for
-                diagnostic context).
+            components_schemas: The full ``components.schemas`` dict.
+            defs: The full ``$defs`` dict (may be empty).
+            schema_name: The current schema's name (diagnostic context).
+            document_version: The OpenAPI version string (e.g. ``"3.0.3"``
+                or ``"3.1.0"``); used to enforce that the ref
+                namespace matches the document's declared version.
 
         Returns:
-            A new dict with all resolvable ``$ref`` keys
-            replaced by the inlined subschema.
+            A new dict with all resolvable ``$ref`` keys replaced by
+            the inlined subschema.
 
         Raises:
-            InvalidContractError: If a ``$ref`` cannot be
-                resolved, is not supported, or forms a cycle.
+            InvalidContractError: ``UNSUPPORTED_OPENAPI_FEATURE`` or
+                ``INVALID_REF`` for unresolvable / mismatched refs.
         """
-        result = OpenApiAdapter._inline_refs_impl(schema, schemas, schema_name, _seen=set())
-        # The recursive impl returns a dict at the top level
-        # (the schema is always a dict at the entry point);
-        # narrow the type for the public API.
+        result = OpenApiAdapter._inline_refs_impl(
+            schema,
+            components_schemas=components_schemas,
+            defs=defs,
+            schema_name=schema_name,
+            document_version=document_version,
+            _seen=frozenset(),
+        )
         if not isinstance(result, dict):
-            # Defensive: the entry-point schema is always a dict.
             return dict(schema)
         return result
 
     @staticmethod
     def _inline_refs_impl(
         schema: typing.Any,
-        schemas: dict[str, typing.Any],
-        schema_name: str,
         *,
-        _seen: set[str],
+        components_schemas: dict[str, typing.Any],
+        defs: dict[str, typing.Any],
+        schema_name: str,
+        document_version: str,
+        _seen: frozenset[str],
     ) -> typing.Any:
-        """Recursive helper for :meth:`_inline_refs`."""
+        """Recursive helper for :meth:`_inline_refs`.
+
+        Args:
+            document_version: The OpenAPI version string of the
+                enclosing document (e.g. ``"3.0.3"`` or ``"3.1.0"``).
+                Used to enforce that a ref's namespace matches the
+                document's declared version.
+        """
         if isinstance(schema, list):
             return [
-                OpenApiAdapter._inline_refs_impl(item, schemas, schema_name, _seen=_seen)
+                OpenApiAdapter._inline_refs_impl(
+                    item,
+                    components_schemas=components_schemas,
+                    defs=defs,
+                    schema_name=schema_name,
+                    document_version=document_version,
+                    _seen=_seen,
+                )
                 for item in schema
             ]
         if not isinstance(schema, dict):
@@ -449,16 +498,47 @@ class OpenApiAdapter:
                     error_code="INVALID_REF",
                     context={"ref": repr(ref), "schema_name": schema_name},
                 )
-            prefix = "#/components/schemas/"
-            if not ref.startswith(prefix):
+            comp_prefix = "#/components/schemas/"
+            defs_prefix = "#/$defs/"
+            if ref.startswith(comp_prefix):
+                target_name = ref[len(comp_prefix) :]
+                namespace = "components"
+                target_table = components_schemas
+            elif ref.startswith(defs_prefix):
+                target_name = ref[len(defs_prefix) :]
+                namespace = "defs"
+                target_table = defs
+            else:
                 raise InvalidContractError(
-                    f"schema {schema_name!r} $ref={ref!r} is not supported by the V1 "
-                    f"adapter (only {prefix}* is allowed)",
+                    f"schema {schema_name!r} $ref={ref!r} is not supported by the V1.1.0 "
+                    f"adapter (only {comp_prefix}* and {defs_prefix}* are allowed)",
                     error_code="UNSUPPORTED_OPENAPI_FEATURE",
                     context={"ref": ref, "schema_name": schema_name},
                 )
-            target_name = ref[len(prefix) :]
-            if target_name in _seen:
+            # V1.1.0 namespace / version guard: a ref's prefix must
+            # match the document's declared OpenAPI version. A
+            # 3.0 document cannot use ``#/$defs/``; a 3.1
+            # document cannot use ``#/components/schemas/`` for
+            # shared subschemas (the components.schemas block in
+            # 3.1 is reserved for the OpenAPI component model —
+            # it is still legal, so we are permissive on the
+            # 3.1 side: a 3.1 doc may use either prefix).
+            if namespace == "defs" and not _is_openapi_3_1(document_version):
+                raise InvalidContractError(
+                    f"schema {schema_name!r} $ref={ref!r} is mismatched: "
+                    f"document declares OpenAPI {document_version!r} "
+                    f"but ref uses the 3.1-only $defs namespace",
+                    error_code="INVALID_REF",
+                    context={
+                        "ref": ref,
+                        "schema_name": schema_name,
+                        "target": target_name,
+                        "namespace": namespace,
+                        "document_version": document_version,
+                    },
+                )
+            seen_key = f"{namespace}/{target_name}"
+            if seen_key in _seen:
                 raise InvalidContractError(
                     f"schema {schema_name!r} $ref={ref!r} forms a cycle (seen: {sorted(_seen)})",
                     error_code="INVALID_REF",
@@ -466,37 +546,64 @@ class OpenApiAdapter:
                         "ref": ref,
                         "schema_name": schema_name,
                         "target": target_name,
+                        "namespace": namespace,
                         "seen": sorted(_seen),
                     },
                 )
-            if target_name not in schemas:
+            if target_name not in target_table:
                 raise InvalidContractError(
                     f"schema {schema_name!r} $ref={ref!r} does not resolve "
-                    f"(no such schema in components.schemas)",
+                    f"(no such schema in {namespace})",
                     error_code="INVALID_REF",
-                    context={"ref": ref, "schema_name": schema_name, "target": target_name},
+                    context={
+                        "ref": ref,
+                        "schema_name": schema_name,
+                        "target": target_name,
+                        "namespace": namespace,
+                    },
                 )
-            target = schemas[target_name]
+            target = target_table[target_name]
             if not isinstance(target, dict):
                 raise InvalidContractError(
                     f"schema {schema_name!r} $ref={ref!r} points to a non-dict schema",
                     error_code="INVALID_REF",
-                    context={"ref": ref, "schema_name": schema_name, "target": target_name},
+                    context={
+                        "ref": ref,
+                        "schema_name": schema_name,
+                        "target": target_name,
+                        "namespace": namespace,
+                    },
                 )
             return OpenApiAdapter._inline_refs_impl(
-                target, schemas, target_name, _seen=_seen | {target_name}
+                target,
+                components_schemas=components_schemas,
+                defs=defs,
+                schema_name=target_name,
+                document_version=document_version,
+                _seen=_seen | {seen_key},
             )
-        # No $ref at this level. Walk into ``properties`` and ``items``
-        # so nested refs are also inlined.
+        # No $ref at this level. Walk into ``properties`` and ``items``.
         out = dict(schema)
         if "properties" in out and isinstance(out["properties"], dict):
             out["properties"] = {
-                k: OpenApiAdapter._inline_refs_impl(v, schemas, schema_name, _seen=_seen)
+                k: OpenApiAdapter._inline_refs_impl(
+                    v,
+                    components_schemas=components_schemas,
+                    defs=defs,
+                    schema_name=schema_name,
+                    document_version=document_version,
+                    _seen=_seen,
+                )
                 for k, v in out["properties"].items()
             }
         if "items" in out:
             out["items"] = OpenApiAdapter._inline_refs_impl(
-                out["items"], schemas, schema_name, _seen=_seen
+                out["items"],
+                components_schemas=components_schemas,
+                defs=defs,
+                schema_name=schema_name,
+                document_version=document_version,
+                _seen=_seen,
             )
         return out
 

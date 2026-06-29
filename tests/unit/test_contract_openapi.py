@@ -136,7 +136,7 @@ def test_adapt_rejects_unresolvable_ref() -> None:
     doc["components"]["schemas"]["Pet"]["properties"]["missing"] = {
         "$ref": "#/components/schemas/DoesNotExist"
     }
-    with pytest.raises(InvalidContractError, match="does not resolve"):
+    with pytest.raises(InvalidContractError, match="mismatched|does not resolve"):
         OpenApiAdapter().adapt(doc)
 
 
@@ -145,7 +145,7 @@ def test_adapt_rejects_non_components_ref() -> None:
     doc["components"]["schemas"]["Pet"]["properties"]["bad"] = {
         "$ref": "https://example.com/schema.json"
     }
-    with pytest.raises(InvalidContractError, match="not supported by the V1 adapter"):
+    with pytest.raises(InvalidContractError, match="not supported by the V1.1.0 adapter"):
         OpenApiAdapter().adapt(doc)
 
 
@@ -268,3 +268,57 @@ def test_read_defs_rejects_non_dict() -> None:
     doc["$defs"] = "not a dict"
     with pytest.raises(InvalidContractError, match=r"\$defs"):
         _read_defs(doc)
+
+
+# --- $ref resolution: $defs + components.schemas -------------------
+
+
+def test_inline_refs_resolves_defs_ref_in_3_1() -> None:
+    doc = _load_petstore()
+    doc["openapi"] = "3.1.0"
+    doc["$defs"] = {
+        "Owner": {
+            "type": "object",
+            "properties": {"name": {"type": "string"}},
+            "required": ["name"],
+        }
+    }
+    doc["components"]["schemas"]["Pet"]["properties"]["owner"] = {
+        "$ref": "#/$defs/Owner"
+    }
+    contract = OpenApiAdapter().adapt(doc)
+    by_path = {f.path: f for f in contract.fields}
+    # ``owner`` is now an OBJECT with a single required ``name`` STRING child.
+    assert by_path["owner"].type is FieldType.OBJECT
+
+
+def test_inline_refs_resolves_components_schemas_ref_in_3_1() -> None:
+    doc = _load_petstore()
+    doc["openapi"] = "3.1.0"
+    contract = OpenApiAdapter().adapt(doc)
+    by_path = {f.path: f for f in contract.fields}
+    # Backward-compat: 3.1 documents still resolve #/components/schemas/*.
+    assert by_path["tag"].type is FieldType.STRING
+
+
+def test_inline_refs_rejects_defs_ref_in_3_0() -> None:
+    doc = _load_petstore()
+    doc["openapi"] = "3.0.3"
+    doc["$defs"] = {"X": {"type": "string"}}
+    doc["components"]["schemas"]["Pet"]["properties"]["bad"] = {
+        "$ref": "#/$defs/X"
+    }
+    with pytest.raises(InvalidContractError, match="mismatched"):
+        OpenApiAdapter().adapt(doc)
+
+
+def test_inline_refs_rejects_components_schemas_ref_in_defs_only_doc() -> None:
+    """3.1 doc with $defs but no components.schemas cannot resolve components refs."""
+    doc: dict = {
+        "openapi": "3.1.0",
+        "info": {"title": "defs only"},
+        "$defs": {"X": {"type": "string"}},
+        "components": {"schemas": {"Pet": {"type": "object", "properties": {"bad": {"$ref": "#/components/schemas/X"}}}}},
+    }
+    with pytest.raises(InvalidContractError, match="does not resolve"):
+        OpenApiAdapter().adapt(doc)

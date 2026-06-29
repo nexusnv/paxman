@@ -23,7 +23,7 @@ pytestmark = pytest.mark.unit
 
 
 _PETSTORE_PATH: Path = (
-    Path(__file__).parent.parent / "fixtures" / "contracts" / "openapi" / "petstore.yaml"
+    Path(__file__).parent.parent / "fixtures" / "contracts" / "openapi" / "petstore_3_0.yaml"
 )
 
 

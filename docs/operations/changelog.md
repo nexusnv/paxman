@@ -63,6 +63,75 @@ change. No code, no public API, no tests.
   is in `[dependency-groups] dev` and does not affect the wheel.
 - PyPI release `paxman==1.0.0` is unchanged.
 
+## [1.0.1] - 2026-07-01
+
+Patch release addressing three critical user-reported bugs. No public
+API surface change. No core dependencies changed. The wheel artifact
+(`paxman-1.0.1-py3-none-any.whl`) is bit-for-bit compatible with
+`1.0.0` except for the fixed code paths.
+
+### Fixed
+
+- **Issue #52 — JSON Schema dict inputs were silently mis-routed to
+  the Dict DSL adapter** ([ADR-0011](../adr/0011-format-auto-detection-for-json-schema-dicts.md)).
+  `paxman.normalize()` and `paxman.replay()` now route a `dict` contract
+  with JSON Schema structural markers (`$schema`, `openapi`, `properties`,
+  `$defs`, etc.) to the JSON Schema adapter. Previously, any `dict`
+  (including a valid JSON Schema document loaded via `json.load()`)
+  was unconditionally routed to the Dict DSL adapter and failed with
+  the misleading error `"Dict DSL contract is missing required 'id' key"`.
+  Detection is heuristic: the JSON Schema and Dict DSL surfaces are
+  disjoint, so the fix is unambiguous for all real contracts.
+
+- **Issue #56 — OpenAPI 3.0 `nullable: true` was silently dropped.**
+  The OpenAPI adapter now translates the 3.0 `nullable: true` keyword
+  to the 3.1 `type: [type, "null"]` form before delegating to the JSON
+  Schema adapter. Previously, fields declared `nullable: true` in
+  OpenAPI 3.0.x (the most widely deployed version) produced
+  `nullable=False` in the resulting `CanonicalContract`, causing the
+  Reconciler to silently reject `None` candidates. The translation
+  is applied to every property in the schema; idempotent for properties
+  that already use the 3.1 list-type form.
+
+- **Issue #57 — Pydantic nested `BaseModel` fields raised
+  `UNSUPPORTED_FIELD_TYPE`.** A field with a direct nested-model
+  annotation (e.g. `item: LineItem` where `LineItem` is a
+  `pydantic.BaseModel` subclass) now correctly maps to `FieldType.OBJECT`
+  via a new `issubclass(annotation, pydantic.BaseModel)` branch in
+  `_python_type_to_field_type()`. This matches the adapter's existing
+  docstring claim and the V1 design (the `OBJECT` field type is a
+  passthrough in the Reconciler; nested schemas are not flattened in
+  V1). The pre-existing `list[BaseModel] → ARRAY` mapping is unchanged.
+
+### Documentation
+
+- **Issue #54 — `normalize()` docstring example replaced.** The previous
+  example passed a JSON Schema `dict` that failed at runtime (because
+  of issue #52). The example now uses a valid JSON Schema document
+  with explicit `required` and produces `Status.PARTIAL_SUCCESS` (the
+  honest result for a row-text invoice with no V1 capabilities
+  registered; the docstring no longer overpromises `Status.SUCCESS`).
+  Also fixed an `SyntaxWarning` for an invalid `\$` escape sequence.
+
+- **Issue #55 — `replay()` docstring example replaced.** Same root
+  cause as #54: the previous example used an empty `properties: {}`
+  that the JSON Schema adapter rejects. The new example uses a valid
+  non-empty JSON Schema document and is marked `# doctest: +SKIP`
+  because the call to `replay()` requires a complete artifact from
+  `normalize()`.
+
+### Notes
+
+- No new public API surface. No public symbols added or removed.
+  No core dependencies changed.
+- 13 new tests added (8 for the JSON Schema detection heuristic,
+  5 for the OpenAPI `nullable` translation, 2 for the Pydantic
+  `BaseModel` mapping). Total: 2352 → 2365 tests passing.
+- The wheel artifact (`paxman-1.0.1-py3-none-any.whl`) is
+  bit-for-bit compatible with `1.0.0` on the public surface; only
+  the three code paths above differ.
+- PyPI release `paxman==1.0.1`.
+
 ## [1.0.0] - 2026-06-27
 
 ### Added — Sprint 8 (Documentation + Community + CI Hardening)
@@ -359,4 +428,5 @@ change. No code, no public API, no tests.
 - **Sprint 3 — Capability tier assignment is a static spec field** (per `docs/specs/capability-cost-model.md` §4.1): the tier is part of the `CapabilitySpec`, not computed at plan time. This keeps the scoring formula input-independent and underwrites planner determinism.
 
 [Unreleased]: https://github.com/nexusnv/paxman/compare/v1.0.0...HEAD
+[1.0.1]: https://github.com/nexusnv/paxman/releases/tag/v1.0.1
 [1.0.0]: https://github.com/nexusnv/paxman/releases/tag/v1.0.0

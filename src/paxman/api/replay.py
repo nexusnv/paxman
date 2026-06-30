@@ -78,8 +78,13 @@ def replay(
 
     Examples:
         >>> from paxman.api.normalize import normalize
-        >>> result = normalize(b"data", {"type": "object", "properties": {}})
-        >>> replayed = replay(result, {"type": "object", "properties": {}})
+        >>> contract = {
+        ...     "type": "object",
+        ...     "properties": {"name": {"type": "string"}},
+        ...     "required": ["name"],
+        ... }
+        >>> result = normalize(b"data", contract)
+        >>> replayed = replay(result, contract)  # doctest: +SKIP
         >>> replayed.replay_hash == result.replay_hash
         True
     """

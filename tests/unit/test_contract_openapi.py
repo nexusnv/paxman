@@ -185,6 +185,98 @@ def test_adapt_accepts_3_1_x() -> None:
     assert contract.id == "Swagger Petstore"
 
 
+# --- nullable translation (3.0 -> 3.1) ------------------------------
+
+
+def test_adapt_3_0_nullable_true_becomes_nullable() -> None:
+    """OpenAPI 3.0 ``nullable: true`` is translated to ``type: [type, "null"]``."""
+    doc = {
+        "openapi": "3.0.3",
+        "info": {"title": "Nullable", "version": "1.0"},
+        "paths": {},
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "required": ["nickname"],
+                    "properties": {
+                        "nickname": {"type": "string", "nullable": True},
+                    },
+                }
+            }
+        },
+    }
+    contract = OpenApiAdapter().adapt(doc)
+    nickname = next(f for f in contract.fields if f.name == "nickname")
+    assert nickname.nullable is True
+
+
+def test_adapt_3_0_nullable_false_stays_non_nullable() -> None:
+    """OpenAPI 3.0 ``nullable: false`` (or absent) keeps the field non-nullable."""
+    doc = {
+        "openapi": "3.0.3",
+        "info": {"title": "Nullable", "version": "1.0"},
+        "paths": {},
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string", "nullable": False},
+                        "age": {"type": "integer"},
+                    },
+                }
+            }
+        },
+    }
+    contract = OpenApiAdapter().adapt(doc)
+    by_name = {f.name: f for f in contract.fields}
+    assert by_name["name"].nullable is False
+    assert by_name["age"].nullable is False
+
+
+def test_adapt_3_1_type_array_null_is_nullable() -> None:
+    """OpenAPI 3.1 ``type: [string, "null"]`` is recognized as nullable."""
+    doc = {
+        "openapi": "3.1.0",
+        "info": {"title": "Nullable31", "version": "1.0"},
+        "paths": {},
+        "components": {
+            "schemas": {
+                "Pet": {
+                    "type": "object",
+                    "properties": {
+                        "nickname": {"type": ["string", "null"]},
+                    },
+                }
+            }
+        },
+    }
+    contract = OpenApiAdapter().adapt(doc)
+    nickname = next(f for f in contract.fields if f.name == "nickname")
+    assert nickname.nullable is True
+
+
+def test_translate_nullable_3_0_to_3_1_idempotent() -> None:
+    """Translating an already-3.1-style list type with nullable: true is safe."""
+    from paxman.contract.adapters.openapi import _translate_nullable_3_0_to_3_1
+
+    # Already a list with "null" present: still works, no double-null.
+    prop = {"type": ["string", "null"], "nullable": True}
+    out = _translate_nullable_3_0_to_3_1(prop)
+    assert out["type"] == ["string", "null"]
+    assert "nullable" not in out
+
+
+def test_translate_nullable_3_0_to_3_1_passthrough_when_not_dict() -> None:
+    """Non-dict property values are returned unchanged."""
+    from paxman.contract.adapters.openapi import _translate_nullable_3_0_to_3_1
+
+    assert _translate_nullable_3_0_to_3_1("string") == "string"
+    assert _translate_nullable_3_0_to_3_1(None) is None
+    assert _translate_nullable_3_0_to_3_1(42) == 42
+
+
 # --- input validation -----------------------------------------------
 
 

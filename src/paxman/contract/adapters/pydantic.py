@@ -168,6 +168,14 @@ def _python_type_to_field_type(
             return FieldType.MONEY
     except TypeError:
         pass
+    # Nested Pydantic BaseModel → OBJECT (matches the docstring mapping;
+    # V1 does not flatten nested schemas — the OBJECT type is a passthrough
+    # in the Reconciler).
+    try:
+        if inspect.isclass(annotation) and issubclass(annotation, pydantic.BaseModel):
+            return FieldType.OBJECT
+    except TypeError:
+        pass
     # Literal → ENUM
     if typing.get_origin(annotation) is typing.Literal:
         return FieldType.ENUM

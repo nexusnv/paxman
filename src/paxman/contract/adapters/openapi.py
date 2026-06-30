@@ -321,6 +321,15 @@ class OpenApiAdapter:
         if inlined_schema.get(_PAXMAN_TYPE_KEY) == "MONEY":
             json_schema_doc[_PAXMAN_TYPE_KEY] = "MONEY"
 
+        # Translate OpenAPI 3.0 ``nullable: true`` on each property
+        # to JSON Schema ``type: [type, "null"]``. The JSON Schema
+        # adapter only knows the 3.1 nullable form, so we normalize
+        # 3.0 -> 3.1 here before delegating.
+        json_schema_doc["properties"] = {
+            name: _translate_nullable_3_0_to_3_1(prop)
+            for name, prop in json_schema_doc["properties"].items()
+        }
+
         # --- Delegate to the JSON Schema adapter -------------------------
         # The JSON Schema adapter lives in ``contract/adapters/`` as a
         # sibling of the OpenAPI adapter. This is NOT a DAG violation:
@@ -666,6 +675,35 @@ class OpenApiAdapter:
                 _seen=_seen,
             )
         return out
+
+
+def _translate_nullable_3_0_to_3_1(prop: object) -> dict[str, typing.Any]:
+    """Translate OpenAPI 3.0 ``nullable: true`` to JSON Schema ``type: [type, "null"]``.
+
+    OpenAPI 3.0 uses ``nullable: true`` as a sibling of ``type``; OpenAPI 3.1
+    (and JSON Schema 2020-12) use ``type`` as a list containing ``"null"``.
+    The V1 JSON Schema adapter only understands the 3.1 form, so this
+    helper normalizes 3.0 properties before delegation.
+
+    Args:
+        prop: A property dict (or other value) from an OpenAPI schema's
+            ``properties`` map. Non-dicts are returned unchanged.
+
+    Returns:
+        A new dict with ``nullable: true`` translated to a list ``type``,
+        or the input unchanged if no translation is needed.
+    """
+    if not isinstance(prop, dict):
+        return prop  # type: ignore[return-value]
+    if prop.get("nullable") is not True:
+        return prop
+    out = {k: v for k, v in prop.items() if k != "nullable"}
+    type_value = out.get("type")
+    if isinstance(type_value, str):
+        out["type"] = [type_value, "null"]
+    elif isinstance(type_value, list) and "null" not in type_value:
+        out["type"] = [*type_value, "null"]
+    return out
 
 
 # Self-register.

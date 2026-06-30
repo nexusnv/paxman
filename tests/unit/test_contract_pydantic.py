@@ -235,6 +235,38 @@ def test_adapt_money_subclass() -> None:
     assert f.type is FieldType.MONEY
 
 
+def test_adapt_nested_basemodel_inline_becomes_object() -> None:
+    """A field with a direct ``BaseModel`` annotation maps to FieldType.OBJECT."""
+
+    class LineItem(pydantic.BaseModel):
+        description: str
+        quantity: int
+
+    class Invoice(pydantic.BaseModel):
+        supplier_name: str
+        item: LineItem
+
+    contract = PydanticAdapter().adapt(Invoice)
+    by_name = {f.name: f for f in contract.fields}
+    assert by_name["supplier_name"].type is FieldType.STRING
+    assert by_name["item"].type is FieldType.OBJECT
+
+
+def test_adapt_nested_basemodel_list_still_becomes_array() -> None:
+    """``list[BaseModel]`` still maps to FieldType.ARRAY (per-list, not per-item)."""
+
+    class LineItem(pydantic.BaseModel):
+        description: str
+
+    class Invoice(pydantic.BaseModel):
+        line_items: list[LineItem]
+
+    contract = PydanticAdapter().adapt(Invoice)
+    f = contract.fields[0]
+    assert f.name == "line_items"
+    assert f.type is FieldType.ARRAY
+
+
 # --- adapt: Optional ---------------------------------------------------------
 
 

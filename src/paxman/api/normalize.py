@@ -20,6 +20,8 @@ library. It orchestrates the full pipeline:
 
 from __future__ import annotations
 
+import typing
+
 import attrs
 
 from paxman.artifact._hash import compute_replay_hash
@@ -53,13 +55,75 @@ __all__ = [
 # ---------------------------------------------------------------------------
 
 
+# JSON Schema structural markers used to disambiguate a `dict` contract
+# (see ADR-0011). The dict surface of JSON Schema and Dict DSL is disjoint
+# in these markers: JSON Schema uses ``$schema``, ``$defs``, ``properties``,
+# etc.; Dict DSL uses ``id`` and ``fields``.
+_JSON_SCHEMA_DICT_MARKERS: typing.Final[frozenset[str]] = frozenset(
+    {
+        "$schema",
+        "openapi",
+        "$defs",
+        "definitions",
+        "properties",
+        "patternProperties",
+        "additionalProperties",
+        "propertyNames",
+        "required",
+        "allOf",
+        "anyOf",
+        "oneOf",
+        "not",
+        "items",
+        "prefixItems",
+        "contains",
+        "minProperties",
+        "maxProperties",
+        "minItems",
+        "maxItems",
+        "uniqueItems",
+        "pattern",
+        "const",
+        "enum",
+        "multipleOf",
+        "minimum",
+        "maximum",
+        "exclusiveMinimum",
+        "exclusiveMaximum",
+        "minLength",
+        "maxLength",
+        "format",
+        "$id",
+        "$ref",
+        "$comment",
+        "$anchor",
+        "title",
+        "description",
+        "default",
+        "examples",
+        "readOnly",
+        "writeOnly",
+        "deprecated",
+        "contentEncoding",
+        "contentMediaType",
+    }
+)
+
+
+def _looks_like_json_schema_dict(contract: dict[str, typing.Any]) -> bool:
+    """Return True if *contract* has JSON Schema structural markers (ADR-0011)."""
+    return any(key in contract for key in _JSON_SCHEMA_DICT_MARKERS)
+
+
 def _detect_format(contract: object) -> str:
     """Auto-detect the contract adapter ``format_id`` for *contract*.
 
     Detection order:
 
     1. Pydantic ``BaseModel`` (duck-typed via ``model_fields``).
-    2. :class:`dict` — Dict DSL.
+    2. :class:`dict` — JSON Schema if it has JSON Schema structural
+       markers (``$schema``, ``openapi``, ``properties``, ``$defs``,
+       etc.; see ADR-0011); otherwise Dict DSL.
     3. :class:`str` — JSON Schema (``json_schema:draft-2020-12``) then
        OpenAPI (``openapi:3.0``).
 
@@ -75,8 +139,11 @@ def _detect_format(contract: object) -> str:
     # Pydantic BaseModel (duck-type: v2+ has ``model_fields``).
     if hasattr(contract, "model_fields"):
         return "pydantic"
-    # Dict DSL
     if isinstance(contract, dict):
+        if _looks_like_json_schema_dict(contract):
+            if "openapi" in contract:
+                return "openapi:3.0"
+            return "json_schema:draft-2020-12"
         return "dict_dsl"
     # String: try JSON Schema then OpenAPI.
     if isinstance(contract, str):
@@ -215,12 +282,16 @@ def normalize(
     Examples:
         >>> from paxman.budget import Budget
         >>> result = normalize(
-        ...     input_data=b"ACME Corp\\nTotal: \\$1,234.56",
-        ...     contract={"type": "object", "properties": {"name": {"type": "string"}}},
-        ...     budget=Budget(max_total_cost_usd=0.10),
+        ...     input_data=b"ACME Corp\nTotal: 1,234.56",
+        ...     contract={
+        ...         "type": "object",
+        ...         "properties": {"name": {"type": "string"}},
+        ...         "required": ["name"],
+        ...     },
+        ...     budget=Budget(max_total_cost_usd="0.10"),
         ... )
         >>> result.status  # doctest: +SKIP
-        <Status.SUCCESS: 'SUCCESS'>
+        <Status.PARTIAL_SUCCESS: 'PARTIAL_SUCCESS'>
     """
     # ------------------------------------------------------------------
     # Step 1: Adapt contract

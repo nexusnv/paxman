@@ -53,12 +53,57 @@ class TestDetectFormat:
         assert _detect_format(FakePydanticModel) == "pydantic"
 
     def test_dict_dsl_detected(self) -> None:
-        """A plain ``dict`` is detected as ``"dict_dsl"``."""
-        assert _detect_format({"type": "object", "properties": {}}) == "dict_dsl"
+        """A ``dict`` with Dict DSL markers (``id`` and ``fields``) is detected as ``"dict_dsl"``."""
+        assert (
+            _detect_format(
+                {
+                    "id": "demo",
+                    "fields": [{"name": "x", "type": "STRING", "required": True}],
+                }
+            )
+            == "dict_dsl"
+        )
 
     def test_empty_dict_detected(self) -> None:
         """An empty dict is detected as ``"dict_dsl"``."""
         assert _detect_format({}) == "dict_dsl"
+
+    def test_dict_with_json_schema_type_and_properties_is_json_schema(self) -> None:
+        """A dict with ``type: "object"`` and ``properties`` is JSON Schema (ADR-0011)."""
+        assert (
+            _detect_format({"type": "object", "properties": {"x": {"type": "string"}}})
+            == "json_schema:draft-2020-12"
+        )
+
+    def test_dict_with_dollar_schema_keyword_is_json_schema(self) -> None:
+        """A dict with the JSON Schema ``$schema`` keyword is JSON Schema (ADR-0011)."""
+        assert (
+            _detect_format(
+                {
+                    "$schema": "https://json-schema.org/draft/2020-12/schema",
+                    "type": "object",
+                }
+            )
+            == "json_schema:draft-2020-12"
+        )
+
+    def test_dict_with_openapi_keyword_is_openapi(self) -> None:
+        """A dict with the OpenAPI ``openapi`` keyword is OpenAPI (ADR-0011)."""
+        assert _detect_format({"openapi": "3.1.0", "info": {}}) == "openapi:3.0"
+
+    def test_dict_with_combinator_keyword_is_json_schema(self) -> None:
+        """A dict with any JSON Schema combinator keyword is JSON Schema (ADR-0011)."""
+        for keyword in ("allOf", "anyOf", "oneOf", "not", "$ref"):
+            assert _detect_format({keyword: []}) == "json_schema:draft-2020-12", keyword
+
+    def test_dict_with_constraint_keyword_is_json_schema(self) -> None:
+        """A dict with any JSON Schema constraint keyword is JSON Schema (ADR-0011)."""
+        for keyword in ("pattern", "const", "enum", "minLength", "maxLength", "format"):
+            assert _detect_format({keyword: "x"}) == "json_schema:draft-2020-12", keyword
+
+    def test_dict_with_dollar_defs_is_json_schema(self) -> None:
+        """A dict with ``$defs`` (JSON Schema 2020-12 definitions) is JSON Schema (ADR-0011)."""
+        assert _detect_format({"$defs": {}, "type": "object"}) == "json_schema:draft-2020-12"
 
     def test_str_with_json_schema_adapter(self) -> None:
         """A ``str`` that matches the JSON Schema adapter returns the adapter format_id.

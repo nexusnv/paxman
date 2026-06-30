@@ -191,7 +191,7 @@ def test_artifact_minimal() -> None:
     assert art.statistics is None
     assert art.contract_id == ""
     assert isinstance(art.paxman_version, str)
-    assert art.paxman_version == "1.0.0"
+    assert art.paxman_version == "1.0.1"
     assert isinstance(art.planner_version, str)
     assert art.capability_versions == {}
     assert art.metadata == {}

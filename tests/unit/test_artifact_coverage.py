@@ -55,7 +55,7 @@ def _make_artifact(**overrides: object) -> ExecutionArtifact:
         "replay_hash": "",
         "statistics": None,
         "contract_id": "contract_test",
-        "paxman_version": "1.0.0",
+        "paxman_version": "1.0.1",
         "planner_version": "1",
         "capability_versions": {},
     }

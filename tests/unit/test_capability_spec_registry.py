@@ -353,18 +353,55 @@ def test_xpath_extraction_spec_is_registerable() -> None:
     assert "MIXED" in looked_up.spec.input_types
 
 
+# --- V1.1.0 post-extraction cleanup transforms (sub-issue #69) ---------
+
+
+def test_case_normalization_spec_is_registerable() -> None:
+    """The V1.1.0 case_normalization spec is registerable with the correct shape."""
+    from paxman.capabilities.v1.case_normalization import CaseNormalizationCapability
+
+    cap = CaseNormalizationCapability()
+    register(cap, replace=True)
+    looked_up = get("case_normalization", "1.0")
+    assert looked_up.spec.id == "case_normalization"
+    assert looked_up.spec.version == "1.0"
+    assert looked_up.spec.tier is CapabilityTier.LOCAL_DETERMINISTIC
+    assert looked_up.spec.deterministic is True
+    assert looked_up.spec.cost_estimate == CostHint(tokens=0, ms=1, usd=0.0)
+    assert looked_up.spec.input_types == ("STRING",)
+    assert looked_up.spec.output_type == "STRING"
+
+
+def test_trim_extraction_spec_is_registerable() -> None:
+    """The V1.1.0 trim_extraction spec is registerable with the correct shape."""
+    from paxman.capabilities.v1.trim_extraction import TrimExtractionCapability
+
+    cap = TrimExtractionCapability()
+    register(cap, replace=True)
+    looked_up = get("trim_extraction", "1.0")
+    assert looked_up.spec.id == "trim_extraction"
+    assert looked_up.spec.version == "1.0"
+    assert looked_up.spec.tier is CapabilityTier.LOCAL_DETERMINISTIC
+    assert looked_up.spec.deterministic is True
+    assert looked_up.spec.cost_estimate == CostHint(tokens=0, ms=1, usd=0.0)
+    assert looked_up.spec.input_types == ("STRING",)
+    assert looked_up.spec.output_type == "STRING"
+
+
 # --- ADR-0012: V1 capabilities self-register on import --------------------
 #
-# V1 ships 8 built-in capabilities (per PACKAGE_STRUCTURE.md §12,
+# V1 ships 10 built-in capabilities (per PACKAGE_STRUCTURE.md §12,
 # ARCHITECTURE.md §4.3, and ADR-0012):
 #
 # - 5 original V1 capabilities (Sprint 3):
 #   text_extraction, regex_extraction, lookup, inference, validation
 # - 3 V1.1.0 format-aware extraction capabilities (PR #71, sub-issue
-#   of #67):
+#   #68 of #67):
 #   json_path_extraction, csv_extraction, xpath_extraction
+# - 2 V1.1.0 post-extraction cleanup transforms (sub-issue #69 of #67):
+#   case_normalization, trim_extraction
 #
-# All 8 self-register on import and are re-registered by
+# All 10 self-register on import and are re-registered by
 # ``_bootstrap_v1_capabilities()`` after a ``reset()`` call. This
 # constant is the single source of truth for the V1 built-in set; any
 # new first-party capability MUST be added here AND to the
@@ -379,11 +416,13 @@ _V1_CAPABILITY_IDS: tuple[str, ...] = (
     "json_path_extraction",
     "csv_extraction",
     "xpath_extraction",
+    "case_normalization",
+    "trim_extraction",
 )
 
 
 def test_v1_capabilities_self_register_on_import() -> None:
-    """All eight V1 capabilities self-register on import (ADR-0012).
+    """All ten V1 capabilities self-register on import (ADR-0012).
 
     The fixtures above call :func:`reset` between tests, which
     clears the registry. Importing the V1 module is what
@@ -405,7 +444,7 @@ def test_v1_capabilities_self_register_on_import() -> None:
 
 def test_bootstrap_re_registers_all_v1_capabilities_after_reset() -> None:
     """After :func:`reset`, the next :func:`all_capabilities` call
-    re-registers **all eight** V1 capabilities uniformly (ADR-0012).
+    re-registers **all ten** V1 capabilities uniformly (ADR-0012).
 
     Pre-ADR-0012, the bootstrap only re-registered ``lookup``;
     the other seven were silently absent until the caller
@@ -474,7 +513,7 @@ def test_v1_1_format_extractors_have_import_time_registration_hook() -> None:
     #
     # We deliberately do NOT call ``all_capabilities()`` here, because
     # that would trigger ``_bootstrap_v1_capabilities()`` (which
-    # re-registers all 8 V1 capabilities uniformly), masking a
+    # re-registers all 10 V1 capabilities uniformly), masking a
     # broken individual hook. We read the private table directly via
     # a fresh ``all_capabilities()`` snapshot taken immediately after
     # the hook — but only after checking that the hook alone populated
@@ -493,6 +532,53 @@ def test_v1_1_format_extractors_have_import_time_registration_hook() -> None:
         # from masking the hook. We do this by reading the private
         # table directly: the hook is the only thing that should
         # populate the entry for the expected_id.
+        _registry._capabilities.clear()
+        assert expected_id not in _registry._capabilities, (
+            f"registry was not empty before invoking {mod.__name__}._register_on_import()"
+        )
+        mod._register_on_import()
+        registered_ids = {cid for cid, _ in _registry._capabilities.keys()}
+        assert registered_ids == {expected_id}, (
+            f"{mod.__name__}._register_on_import() should register only "
+            f"{expected_id!r}; got: {sorted(registered_ids)}"
+        )
+
+
+def test_v1_1_cleanup_transforms_have_import_time_registration_hook() -> None:
+    """The 2 V1.1.0 cleanup transforms each ship a module-level
+    ``_register_on_import()`` hook (ADR-0012, per-module invariant).
+
+    Sibling to ``test_v1_1_format_extractors_have_import_time_registration_hook``
+    for the format extractors; ensures the same import-time
+    contract is honored by the cleanup-transform modules.
+
+    This test goes further than just checking that the hook symbol
+    exists: it explicitly clears the registry, calls the hook, and
+    asserts the capability actually shows up — so a module that
+    defines the function but forgets to invoke it (or wires it up
+    to the wrong thing) fails the test.
+    """
+    import paxman.capabilities.v1.case_normalization as case_mod
+    import paxman.capabilities.v1.trim_extraction as trim_mod
+
+    for mod in (case_mod, trim_mod):
+        assert hasattr(mod, "_register_on_import"), (
+            f"{mod.__name__} is missing the _register_on_import() hook required by ADR-0012"
+        )
+        assert callable(mod._register_on_import), (
+            f"{mod.__name__}._register_on_import is not callable"
+        )
+
+    from paxman.capabilities import registry as _registry
+
+    modules_with_expected_ids: tuple[tuple[types.ModuleType, str], ...] = (
+        (case_mod, "case_normalization"),
+        (trim_mod, "trim_extraction"),
+    )
+    for mod, expected_id in modules_with_expected_ids:
+        # Wipe the registry AND prevent the self-healing bootstrap
+        # from masking the hook. Same pattern as the format-extractor
+        # test above.
         _registry._capabilities.clear()
         assert expected_id not in _registry._capabilities, (
             f"registry was not empty before invoking {mod.__name__}._register_on_import()"

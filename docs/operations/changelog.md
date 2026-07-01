@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security — Issue #72 (Hardened XML parsing for `xpath_extraction`)
+
+- **`xpath_extraction` capability is now hardened against XML entity-expansion
+  attacks.** The capability now uses `defusedxml.ElementTree.fromstring` when
+  the `xml-secure` optional extra is installed (`pip install paxman[xml-secure]`).
+  When `defusedxml` is not installed, the capability falls back to stdlib
+  `xml.etree.ElementTree.fromstring` and emits a one-shot `structlog.info`
+  log at module import time. The fallback is observable so callers who care
+  about XML security can detect the unhardened mode at startup and install
+  the extra. See [ADR-0013](../adr/0013-defusedxml-optional-extra.md) for
+  the full rationale and considered options.
+
+- **`xml-secure` optional extra** — `pip install paxman[xml-secure]` installs
+  `defusedxml>=0.7.1` to harden XML parsing. The extra is included in
+  `paxman[all]` so CI exercises the hardened path automatically.
+
+- **[ADR-0013](../adr/0013-defusedxml-optional-extra.md)** — documents the
+  optional-extra-with-feature-detect-and-fallback pattern; the Pillow
+  precedent (`Image.py:60-64`) is the in-ecosystem reference.
+
 ### Added — Issue #21 (V1.0.x: Hero cards for reference examples)
 
 - **Reference-examples hero cards on the docs homepage.** `docs/index.md`

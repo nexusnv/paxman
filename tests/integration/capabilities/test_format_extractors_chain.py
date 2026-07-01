@@ -27,7 +27,7 @@ import pytest
 import paxman
 import paxman.contract.adapters.dict_dsl  # self-registration of the Dict DSL adapter
 from paxman.capabilities.base import CapabilityContext
-from paxman.capabilities.registry import register
+from paxman.capabilities.registry import register, reset
 from paxman.capabilities.v1.csv_extraction import CsvExtractionCapability
 from paxman.capabilities.v1.json_path_extraction import JsonPathExtractionCapability
 from paxman.capabilities.v1.xpath_extraction import XPathExtractionCapability
@@ -43,15 +43,21 @@ _FIXTURES_DIR = Path(__file__).resolve().parents[2] / "fixtures"
 
 @pytest.fixture(autouse=True)
 def _register_format_extractors() -> None:
-    """Register the three V1.1.0 format extractors for the test session.
+    """Register the three V1.1.0 format extractors and reset the registry on exit.
 
     Per the V1 registry contract (see Oracle review for issue #70), only
     ``lookup`` self-registers on import. The three new LOCAL_DETERMINISTIC
-    extractors must be registered explicitly by the caller.
+    extractors must be registered explicitly by the caller. We ``reset()``
+    on exit so this fixture does not leak state into other integration
+    tests in the same run (golden-artifact tests in particular assume
+    the registry is empty at start).
     """
+    reset()
     register(CsvExtractionCapability(), replace=True)
     register(JsonPathExtractionCapability(), replace=True)
     register(XPathExtractionCapability(), replace=True)
+    yield
+    reset()
 
 
 def _load_csv() -> bytes:

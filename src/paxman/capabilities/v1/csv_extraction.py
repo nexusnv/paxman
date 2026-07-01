@@ -293,9 +293,7 @@ class CsvExtractionCapability:
                         Diagnostic(
                             code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
                             severity=DiagnosticSeverity.ERROR,
-                            message=(
-                                f"csv_extraction: column {column!r} not found in header"
-                            ),
+                            message=(f"csv_extraction: column {column!r} not found in header"),
                             context={
                                 "field_path": ctx.field_path,
                                 "column_name": column,

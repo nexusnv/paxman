@@ -137,13 +137,42 @@ class JsonPathExtractionCapability:
         raise TypeError(msg)
 
     @staticmethod
-    def _resolve_json_pointer(document: object, pointer: str) -> tuple[object, tuple[str, ...]]:
+    def _is_canonical_array_index(token: str) -> bool:
+        """Return True iff *token* is a canonical RFC 6901 array index.
+
+        The JSON-Pointer ABNF (RFC 6901 §3) restricts array indices to
+        ``"0" | [1-9][0-9]*`` — i.e. a single zero, or one non-zero
+        digit followed by any number of decimal digits. ``-1``,
+        ``01``, ``+0``, and ``1.0`` are all rejected.
+        """
+        if not token:
+            return False
+        # The literal "0" is the JSON-Pointer ABNF's "first index" token,
+        # not a hardcoded credential. The nosec / noqa suppress the
+        # bandit B105 and ruff S105 false positives.
+        first_index = "0"  # nosec B105
+        if token == first_index:
+            return True
+        if token[0] == "0":
+            return False  # leading zero, e.g. "01"
+        return token.isdigit()
+
+    @classmethod
+    def _resolve_json_pointer(
+        cls, document: object, pointer: str
+    ) -> tuple[object, tuple[str, ...]]:
         """Walk a JSON-Pointer against *document*.
 
         Returns ``(value, matched_path)`` where ``matched_path`` is a
         tuple of segment labels (with the ``"root"`` prefix) describing
-        the location. Raises :class:`KeyError` / :class:`IndexError`
-        on a miss so the caller can emit a ``PATTERN_NO_MATCH`` diagnostic.
+        the location. Raises:
+
+        - :class:`KeyError` / :class:`IndexError` on a miss (caller
+          emits a ``PATTERN_NO_MATCH`` diagnostic).
+        - :class:`ValueError` when the current value is not a
+          container at the requested depth, or when an array index
+          is not in canonical RFC 6901 form (caller emits a
+          ``CAPABILITY_INVOKE_FAILED`` diagnostic).
         """
         if pointer == "/":
             return document, ("root",)
@@ -152,9 +181,18 @@ class JsonPathExtractionCapability:
         for raw in parts:
             token = raw.replace("~1", "/").replace("~0", "~")
             if isinstance(current, list):
+                if not cls._is_canonical_array_index(token):
+                    msg = (
+                        f"non-canonical JSON-Pointer array index: {token!r} "
+                        "(must match RFC 6901 ABNF '0' | [1-9][0-9]*)"
+                    )
+                    raise ValueError(msg)
                 current = current[int(token)]
+            elif isinstance(current, dict):
+                current = current[token]
             else:
-                current = current[token]  # type: ignore[index]
+                msg = f"cannot index non-container at segment {token!r} of pointer {pointer!r}"
+                raise ValueError(msg)
         return current, ("root", *parts)
 
     @staticmethod
@@ -292,7 +330,7 @@ class JsonPathExtractionCapability:
                 ),
             )
 
-        text = ctx.raw_input.decode("utf-8", errors="replace")
+        text = ctx.raw_input.decode("utf-8-sig", errors="replace")
         try:
             document = json.loads(text)
         except json.JSONDecodeError as exc:

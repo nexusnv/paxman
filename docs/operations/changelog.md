@@ -215,7 +215,7 @@ behavior (raises on conflict) is preserved.
   `TestBootstrapV1Capabilities` (2 tests for the T3 regression fix).
   Total: 2380 → 2405 tests passing.
 - The wheel artifact (`paxman-1.0.2-py3-none-any.whl`) is
-  bit-for-bit compatible with `1.0.1` on the public surface for
+  behaviorally compatible with `1.0.1` on the public surface for
   callers that do not call the new `replace=True` keyword; only the
   fixed code paths and the new `replace` parameter differ.
 - PyPI release `paxman==1.0.2`.

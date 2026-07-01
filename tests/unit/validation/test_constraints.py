@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import typing
+
 from paxman.contract._types import Constraint, ConstraintKind
 from paxman.validation.constraints import check_constraint
 
@@ -120,12 +122,21 @@ def test_check_constraint_max_length_fail() -> None:
 
 
 def test_check_constraint_unknown_kind_is_noop() -> None:
-    """Unknown constraint kinds return (True, '') — V1 no-op."""
-    # This test verifies the fallback behavior for unknown kinds.
-    # We can't easily create a truly unknown kind, but we can verify
-    # the function handles gracefully by checking the ISO_4217 path
-    # which is the last handled kind.
-    constraint = Constraint(kind=ConstraintKind.ISO_4217, params={})
-    passed, reason = check_constraint(constraint, "EUR")
+    """Unknown constraint kinds return (True, '') — V1 no-op.
+
+    The default-branch of `check_constraint` is exercised when a
+    constraint's `kind` is not one of the 7 known `ConstraintKind`
+    enum values. The function should treat unknown kinds as a
+    no-op (V1 invariant: the contract layer catches unknown kinds
+    at validation time; this is a defensive default).
+    """
+
+    class _FakeConstraint:
+        """A constraint-like object whose kind is not a ConstraintKind enum."""
+
+        kind = "not_a_real_constraint_kind"
+        params: typing.ClassVar[dict[str, object]] = {}
+
+    passed, reason = check_constraint(_FakeConstraint(), "anything")
     assert passed is True
     assert reason == ""

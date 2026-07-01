@@ -335,14 +335,17 @@ class PydanticAdapter:
                 error_code="INVALID_FIELD",
                 context={"model": model_cls.__name__, "field_name": name},
             )
+        # Optional handling FIRST, so we unwrap the right inner type.
+        # For Optional[Annotated[int, Field(ge=0)]] the outer wrapper is
+        # Union, not Annotated — _is_optional strips it to Annotated[int, ...],
+        # then _unwrap_annotated strips Annotated to bare int.
+        is_optional, unwrapped = _is_optional(annotation)
         # Strip ``Annotated[T, ...]`` and capture metadata. Metadata is
         # currently unused because Pydantic v2 stores constraints in
         # ``field_info.metadata`` directly (Pydantic itself unwraps the
         # Annotated when constructing FieldInfo), but we keep the call
         # for forward-compat with future Pydantic versions.
-        unwrapped, _metadata = _unwrap_annotated(annotation)
-        # Optional handling.
-        is_optional, unwrapped = _is_optional(unwrapped)
+        unwrapped, _metadata = _unwrap_annotated(unwrapped)
         # Money subclass detection on the unwrapped type.
         field_type = _python_type_to_field_type(unwrapped)
         if field_type is None:

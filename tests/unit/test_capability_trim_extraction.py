@@ -23,7 +23,7 @@ pytestmark = pytest.mark.unit
 _UNSET: object = object()
 
 
-def _ctx(value: object = None, chars: object = _UNSET, **extra: object) -> CapabilityContext:
+def _ctx(value: object = _UNSET, chars: object = _UNSET, **extra: object) -> CapabilityContext:
     """Build a ``CapabilityContext`` for trim_extraction tests.
 
     The capability ignores ``raw_input``; we pass an empty bytes

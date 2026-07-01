@@ -18,6 +18,13 @@ Supported modes (V1):
 - ``"lower"`` — ``str.lower()``.
 - ``"upper"`` — ``str.upper()``.
 - ``"title"`` — ``str.title()`` (word-initial upper, rest lower).
+  **Caveat:** ``str.title()`` is **not** name-aware. Embedded
+  all-caps tokens like ``"ACME"`` become ``"Acme"`` (losing the
+  canonical acronym casing), and apostrophes are handled by the
+  stdlib's cap-following pattern (which is rarely what callers
+  want for proper nouns). Callers needing name-aware casing
+  should use ``mode="preserve"`` and apply their own transform.
+  See ADR-0014 §"Limitations" for the full V1 deferral.
 - ``"preserve"`` — return the input verbatim (no-op identity).
 
 An unknown mode is a hard error (``CAPABILITY_INVOKE_FAILED``
@@ -93,6 +100,15 @@ def _normalize(value: str, mode: str) -> str:
     Pure function; no I/O; no exception handling. The caller is
     responsible for validating *mode* and *value* type first
     (this function trusts its inputs).
+
+    Caveat for ``mode == "title"``: this is a thin wrapper over
+    stdlib ``str.title()``, which is **not** name-aware. Embedded
+    all-caps tokens (acronyms) become title-case
+    (``"ACME Corp"`` → ``"Acme Corp"``), and apostrophe-following
+    letters are uppercased
+    (``"they're here"`` → ``"They'Re Here"``). Callers needing
+    name-aware casing should use ``mode="preserve"`` and apply
+    their own transform. See ADR-0014 §"Limitations".
     """
     if mode == "lower":
         return value.lower()

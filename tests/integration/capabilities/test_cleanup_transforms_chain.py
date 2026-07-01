@@ -26,15 +26,16 @@ the chain step in place.
 
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 import pytest
 
 import paxman
+import paxman.capabilities.registry as registry
 import paxman.contract.adapters.dict_dsl  # self-registration of the Dict DSL adapter
 from paxman.capabilities.base import CapabilityContext
 from paxman.capabilities.registry import register, reset
+from paxman.capabilities.result import DiagnosticCode
 from paxman.capabilities.v1.case_normalization import CaseNormalizationCapability
 from paxman.capabilities.v1.trim_extraction import TrimExtractionCapability
 from tests.fixtures.contracts.dict_dsl.with_cleanup_chain import (
@@ -81,7 +82,7 @@ def _load_csv() -> bytes:
 
 def test_case_normalization_is_in_registry() -> None:
     """The registered case_normalization spec is reachable via the registry."""
-    spec = paxman.capabilities.registry.get_latest("case_normalization").spec
+    spec = registry.get_latest("case_normalization").spec
     assert spec.id == "case_normalization"
     assert spec.version == "1.0"
     assert spec.tier.value == 1  # LOCAL_DETERMINISTIC
@@ -90,7 +91,7 @@ def test_case_normalization_is_in_registry() -> None:
 
 def test_trim_extraction_is_in_registry() -> None:
     """The registered trim_extraction spec is reachable via the registry."""
-    spec = paxman.capabilities.registry.get_latest("trim_extraction").spec
+    spec = registry.get_latest("trim_extraction").spec
     assert spec.id == "trim_extraction"
     assert spec.version == "1.0"
     assert spec.tier.value == 1  # LOCAL_DETERMINISTIC
@@ -127,7 +128,7 @@ def test_regex_to_case_to_trim_chain_produces_normalized_value() -> None:
     # We use a named group so ``regex_extraction`` extracts the
     # group value (per the V1 spec, a single named group is
     # extracted; without a named group, the whole match is used).
-    regex_cap = paxman.capabilities.registry.get_latest("regex_extraction")
+    regex_cap = registry.get_latest("regex_extraction")
     regex_ctx = CapabilityContext(
         raw_input=csv_bytes,
         field_path=field_path,
@@ -140,7 +141,7 @@ def test_regex_to_case_to_trim_chain_produces_normalized_value() -> None:
     assert extracted == "ACME Corp"
 
     # Step 2: case_normalization (lowercase).
-    case_cap = paxman.capabilities.registry.get_latest("case_normalization")
+    case_cap = registry.get_latest("case_normalization")
     case_ctx = CapabilityContext(
         raw_input=b"",
         field_path=field_path,
@@ -153,7 +154,7 @@ def test_regex_to_case_to_trim_chain_produces_normalized_value() -> None:
     assert lower_cased == "acme corp"
 
     # Step 3: trim_extraction (strip trailing colon).
-    trim_cap = paxman.capabilities.registry.get_latest("trim_extraction")
+    trim_cap = registry.get_latest("trim_extraction")
     trim_ctx = CapabilityContext(
         raw_input=b"",
         field_path=field_path,
@@ -185,7 +186,7 @@ def test_chain_is_byte_equal_on_replay() -> None:
     """
     csv_bytes = _load_csv()
     extracted: str = (
-        paxman.capabilities.registry.get_latest("regex_extraction")
+        registry.get_latest("regex_extraction")
         .invoke(
             CapabilityContext(
                 raw_input=csv_bytes,
@@ -201,7 +202,7 @@ def test_chain_is_byte_equal_on_replay() -> None:
 
     def _run_once() -> str:
         lower = (
-            paxman.capabilities.registry.get_latest("case_normalization")
+            registry.get_latest("case_normalization")
             .invoke(
                 CapabilityContext(
                     raw_input=b"",
@@ -214,7 +215,7 @@ def test_chain_is_byte_equal_on_replay() -> None:
             .value
         )
         return (
-            paxman.capabilities.registry.get_latest("trim_extraction")
+            registry.get_latest("trim_extraction")
             .invoke(
                 CapabilityContext(
                     raw_input=b"",
@@ -258,7 +259,7 @@ def test_cleanup_chain_does_not_break_existing_csv_extractor() -> None:
     V1.1.0 format-extractors slice) must still be reachable; the
     cleanup transforms do not crowd it out.
     """
-    csv_spec = paxman.capabilities.registry.get_latest("csv_extraction").spec
+    csv_spec = registry.get_latest("csv_extraction").spec
     assert csv_spec.id == "csv_extraction"
     assert csv_spec.tier.value == 1
 
@@ -277,7 +278,7 @@ def test_chain_handles_chain_of_chains() -> None:
     value = "  ACME Corp  :  "
     # Stage 2: trim first (preserves the rest of the content).
     trimmed = (
-        paxman.capabilities.registry.get_latest("trim_extraction")
+        registry.get_latest("trim_extraction")
         .invoke(
             CapabilityContext(
                 raw_input=b"",
@@ -292,7 +293,7 @@ def test_chain_handles_chain_of_chains() -> None:
     assert trimmed == "ACME Corp"
     # Stage 3: case_normalization then trim again.
     lower = (
-        paxman.capabilities.registry.get_latest("case_normalization")
+        registry.get_latest("case_normalization")
         .invoke(
             CapabilityContext(
                 raw_input=b"",
@@ -306,7 +307,7 @@ def test_chain_handles_chain_of_chains() -> None:
     )
     assert lower == "acme corp"
     final = (
-        paxman.capabilities.registry.get_latest("trim_extraction")
+        registry.get_latest("trim_extraction")
         .invoke(
             CapabilityContext(
                 raw_input=b"",
@@ -328,7 +329,7 @@ def test_chain_with_unknown_mode_fails_loudly() -> None:
     by the case_normalization capability: a misspelled mode key
     in a contract fails loudly, not silently.
     """
-    result = paxman.capabilities.registry.get_latest("case_normalization").invoke(
+    result = registry.get_latest("case_normalization").invoke(
         CapabilityContext(
             raw_input=b"",
             field_path="supplier",
@@ -340,17 +341,36 @@ def test_chain_with_unknown_mode_fails_loudly() -> None:
     assert result.diagnostics[0].code.value == "CAPABILITY_INVOKE_FAILED"
 
 
-def test_regex_pattern_does_not_match_returns_no_candidate() -> None:
-    """If the regex step produces no candidates, the chain has nothing to feed forward.
+def test_chain_with_missing_value_fails_loudly() -> None:
+    """The cleanup transforms fail loudly when ``ctx.config["value"]`` is missing.
 
-    This is the documented behavior — the cleanup transforms read
-    from ``ctx.config["value"]``, so if the upstream step produced
-    no candidate, the chain is a no-op.
+    The post-resolution input pattern is a hard contract:
+    ``ctx.config["value"]`` is **required**. If the upstream step
+    produced no candidate and the caller forwards a missing
+    ``value`` to a cleanup transform, the capability does **not**
+    silently no-op — it returns a ``CAPABILITY_INVOKE_FAILED``
+    diagnostic. This test exercises that contract on both cleanup
+    transforms directly, not on the regex step (a regex non-match
+    is a separate concern owned by ``regex_extraction``).
     """
-    pattern = re.compile(r"^XXXXX$")
-    raw = b"ACME Corp"
-    assert not pattern.search(raw.decode())
-    # The chain starts with no upstream candidate, so there is
-    # nothing for case_normalization or trim_extraction to clean.
-    # This is the boundary contract: a cleanup transform is a
-    # no-op when its ``value`` is absent, not a synthesis step.
+    # case_normalization: missing value is a hard failure.
+    case_ctx = CapabilityContext(
+        raw_input=b"",
+        field_path="supplier",
+        field_type_name="STRING",
+        config={"mode": "lower"},
+    )
+    case_result = registry.get_latest("case_normalization").invoke(case_ctx)
+    assert case_result.candidates == ()
+    assert case_result.diagnostics[0].code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
+
+    # trim_extraction: missing value is a hard failure.
+    trim_ctx = CapabilityContext(
+        raw_input=b"",
+        field_path="supplier",
+        field_type_name="STRING",
+        config={},
+    )
+    trim_result = registry.get_latest("trim_extraction").invoke(trim_ctx)
+    assert trim_result.candidates == ()
+    assert trim_result.diagnostics[0].code is DiagnosticCode.CAPABILITY_INVOKE_FAILED

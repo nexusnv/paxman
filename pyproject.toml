@@ -142,6 +142,12 @@ ignore = [
 # Adapters legitimately deal with `Any` (external contract types are arbitrary);
 # suppress ANN401 so the adapter signatures are not noisier than they need to be.
 "src/paxman/contract/adapters/*.py" = ["ANN401"]
+# V1's stdlib-only constraint (DEPENDENCIES.md) forbids `defusedxml`. The
+# xpath_extraction capability parses XML via :func:`xml.etree.ElementTree.fromstring`
+# under a bounded size cap and Paxman's replay-time evaluation. The
+# ``# nosec B314`` bandit directive stays inline at the call site. The
+# defusedxml migration is tracked as the V1.2 follow-up in issue #72.
+"src/paxman/capabilities/v1/xpath_extraction.py" = ["S314"]
 
 [tool.ruff.format]
 quote-style = "double"

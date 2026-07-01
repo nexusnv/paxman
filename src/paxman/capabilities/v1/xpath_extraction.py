@@ -88,12 +88,8 @@ _log = get_logger("paxman.capabilities.xpath_extraction")
 # is observable via the log so callers who care about XML security can
 # detect the unhardened mode at startup.
 try:
-    from defusedxml.common import (  # type: ignore[import-untyped]
-        DefusedXmlException as _DefusedXmlException,
-    )
-    from defusedxml.ElementTree import (  # type: ignore[import-untyped]
-        fromstring as _defused_fromstring,
-    )
+    from defusedxml.common import DefusedXmlException as _DefusedXmlException
+    from defusedxml.ElementTree import fromstring as _defused_fromstring
 except ImportError:  # pragma: no cover  (defusedxml is always installed in the test env)
     _defused_fromstring = None
     _DefusedXmlException = None

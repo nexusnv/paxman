@@ -192,6 +192,15 @@ disallow_untyped_defs = false
 module = ["paxman.testing", "paxman.testing.__init__"]
 disallow_untyped_decorators = false
 
+[[tool.mypy.overrides]]
+# ``defusedxml`` is the optional-extra security dep used by
+# ``xpath_extraction`` (ADR-0013, issue #72). The upstream package does
+# not ship type stubs, so we suppress the ``import-untyped`` diagnostic
+# here rather than via an inline ``# type: ignore`` at the call site
+# (per ``AGENTS.md``: no inline suppressions in ``src/paxman/``).
+module = ["defusedxml", "defusedxml.*"]
+ignore_missing_imports = true
+
 # --- Pytest ------------------------------------------------------------------
 
 [tool.pytest.ini_options]

@@ -37,6 +37,7 @@ import typing
 
 import attrs
 
+from paxman.contract._format_hint import FormatHint
 from paxman.contract._types import Constraint, ContractPolicy, EnumValueSet, ResolutionPolicy
 from paxman.types import FieldType
 
@@ -187,6 +188,15 @@ class CanonicalField:
             field's :attr:`required` flag and ``default`` are independent.
         constraints: Tuple of :class:`~paxman.contract._types.Constraint`
             rules. Defaults to an empty tuple.
+        format_hints: Wire-format hints for input-format-aware
+            tier-1 extractors. Tuple of :class:`FormatHint` members
+            (``CSV`` / ``JSON`` / ``XML`` in V1.1.0; future members
+            are additive). Empty tuple means "no format preference" —
+            the planner falls back to the existing tier-1 selection
+            logic. See `ADR-0015
+            <../adr/0015-format-aware-executor-auto-dispatch.md>`_
+            and `issue #73
+            <https://github.com/nexusnv/paxman/issues/73>`_.
 
     Raises:
         TypeError: If any field has the wrong type.
@@ -204,7 +214,7 @@ class CanonicalField:
         ...     type=FieldType.STRING,
         ...     required=True,
         ... )
-        CanonicalField(id='field_a1b2c3d4e5f6', path='supplier_name', name='supplier_name', type=<FieldType.STRING: 'STRING'>, required=True, critical=False, nullable=False, description=None, confidence_threshold=0.8, evidence_required=False, semantic_tags=(), fallback_policy=ResolutionPolicy(strategy=<ResolutionStrategy.UNRESOLVED: 'UNRESOLVED'>, require_human_review=False), enum_values=None, default=None, constraints=())
+        CanonicalField(id='field_a1b2c3d4e5f6', path='supplier_name', name='supplier_name', type=<FieldType.STRING: 'STRING'>, required=True, critical=False, nullable=False, description=None, confidence_threshold=0.8, evidence_required=False, semantic_tags=(), fallback_policy=ResolutionPolicy(strategy=<ResolutionStrategy.UNRESOLVED: 'UNRESOLVED'>, require_human_review=False), enum_values=None, default=None, constraints=(), format_hints=())
     """
 
     id: str = attrs.field()
@@ -223,6 +233,7 @@ class CanonicalField:
     enum_values: EnumValueSet | None = None
     default: typing.Any = None
     constraints: tuple[Constraint, ...] = ()
+    format_hints: tuple[FormatHint, ...] = ()
 
     def __attrs_post_init__(self) -> None:
         """Validate all field invariants.
@@ -288,6 +299,17 @@ class CanonicalField:
                     f"enum_values is only allowed for ENUM fields, "
                     f"not {self.type.name}, on field {self.name!r}"
                 )
+        # --- format_hints ---
+        if not isinstance(self.format_hints, tuple):
+            raise TypeError(
+                f"format_hints must be a tuple of FormatHint, "
+                f"got {type(self.format_hints).__name__}"
+            )
+        bad = [v for v in self.format_hints if not isinstance(v, FormatHint)]
+        if bad:
+            raise TypeError(
+                f"format_hints must be a tuple of FormatHint, got non-FormatHint values: {bad!r}"
+            )
         # --- default / type coupling (best-effort) ---
         self._validate_default()
 

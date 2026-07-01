@@ -58,6 +58,11 @@ import typing
 
 import attrs
 
+from paxman.contract import (
+    FormatHint,
+    FormatHintValidationError,
+    parse_format_hints,
+)
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -474,7 +479,42 @@ class DictDSLAdapter:
             constraints=tuple(constraints),
             default=default_value,
             enum_values=enum_values,
+            format_hints=self._parse_format_hints(raw, contract_id=contract_id, name=name),
         )
+
+    # =====================================================================
+    # Internal: format_hints parsing
+    # =====================================================================
+
+    @staticmethod
+    def _parse_format_hints(
+        raw: typing.Mapping[str, typing.Any],
+        *,
+        contract_id: str,
+        name: str,
+    ) -> tuple[FormatHint, ...]:
+        """Parse the per-field ``format_hints`` list.
+
+        Returns an empty tuple when ``format_hints`` is absent.
+        Delegates to :func:`parse_format_hints` and wraps its
+        :class:`FormatHintValidationError` in the adapter's
+        standard :class:`InvalidContractError` with
+        ``error_code="INVALID_FORMAT_HINT"`` and the
+        ``contract_id`` / ``field_name`` context.
+
+        Raises:
+            InvalidContractError: with ``error_code="INVALID_FORMAT_HINT"``
+                if the value is not a list, or if any element is not
+                a known format hint.
+        """
+        try:
+            return parse_format_hints(raw.get("format_hints"), field_name=name)
+        except FormatHintValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"contract_id": contract_id, **exc.context},
+            ) from exc
 
     # =====================================================================
     # Internal: constraint parsing
@@ -800,6 +840,8 @@ class DictDSLAdapter:
             out["tags"] = list(f.semantic_tags)
         if f.constraints:
             out["constraints"] = [DictDSLAdapter._export_constraint(c) for c in f.constraints]
+        if f.format_hints:
+            out["format_hints"] = [h.value for h in f.format_hints]
         if f.default is not None:
             out["default"] = DictDSLAdapter._export_default(f.default, f.type)
         if f.enum_values is not None:

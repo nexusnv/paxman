@@ -1371,3 +1371,106 @@ def test_adapt_money_default_non_numeric_amount_raises() -> None:
         JsonSchemaAdapter().adapt(schema)
     assert excinfo.value.error_code == "INVALID_FIELD"
     assert "not-a-number" in excinfo.value.context["amount"]
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_from_extension() -> None:
+    """x-paxman-format-hints extension surfaces to CanonicalField.format_hints."""
+    from paxman.contract import FormatHint
+    from paxman.contract.adapters.json_schema import JsonSchemaAdapter
+
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+            "supplier": {
+                "type": "string",
+                "x-paxman-format-hints": ["csv", "json"],
+            },
+            "amount": {"type": "number"},
+        },
+        "required": ["supplier", "amount"],
+    }
+    adapter = JsonSchemaAdapter()
+    canonical = adapter.adapt(schema)
+    supplier = next(f for f in canonical.fields if f.name == "supplier")
+    assert supplier.format_hints == (FormatHint.CSV, FormatHint.JSON)
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_invalid_value() -> None:
+    """Unknown format_hint values are rejected with INVALID_FORMAT_HINT."""
+    from paxman.contract.adapters.json_schema import JsonSchemaAdapter
+
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+            "supplier": {
+                "type": "string",
+                "x-paxman-format-hints": ["pdf"],
+            },
+        },
+        "required": ["supplier"],
+    }
+    adapter = JsonSchemaAdapter()
+    with pytest.raises(InvalidContractError) as exc_info:
+        adapter.adapt(schema)
+    assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_must_be_list() -> None:
+    """x-paxman-format-hints must be a list; non-list values are rejected."""
+    from paxman.contract.adapters.json_schema import JsonSchemaAdapter
+
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+            "supplier": {
+                "type": "string",
+                "x-paxman-format-hints": "csv",  # string, not list
+            },
+        },
+        "required": ["supplier"],
+    }
+    adapter = JsonSchemaAdapter()
+    with pytest.raises(InvalidContractError) as exc_info:
+        adapter.adapt(schema)
+    assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_export_round_trip() -> None:
+    """adapt + export round-trip preserves format_hints."""
+    from paxman.contract import FormatHint
+    from paxman.contract.adapters.json_schema import JsonSchemaAdapter
+
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+            "supplier": {
+                "type": "string",
+                "x-paxman-format-hints": ["csv", "json"],
+            },
+            "amount": {"type": "number"},
+        },
+        "required": ["supplier", "amount"],
+    }
+    adapter = JsonSchemaAdapter()
+    canonical = adapter.adapt(schema)
+    supplier = next(f for f in canonical.fields if f.name == "supplier")
+    assert supplier.format_hints == (FormatHint.CSV, FormatHint.JSON)
+
+    exported = adapter.export(canonical)
+    exported_props = exported["properties"]
+    assert exported_props["supplier"]["x-paxman-format-hints"] == ["csv", "json"]
+    # amount has no format_hints; the export must not include the
+    # extension key for it.
+    assert "x-paxman-format-hints" not in exported_props.get("amount", {})

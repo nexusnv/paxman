@@ -15,9 +15,30 @@ and ``ARCHITECTURE.md`` §4.3):
 - :mod:`paxman.capabilities.v1.validation` — verify a candidate
   value against a constraint (deterministic).
 
-The first three capabilities (text_extraction, regex_extraction,
-validation) plus the inference SPI and stub provider ship initially;
-``lookup`` follows.
+Registration contract (per ADR-0012)
+-----------------------------------
+
+**All five V1 capabilities self-register on import.** Each module
+ends with a ``_register_on_import()`` hook that calls
+``paxman.capabilities.registry.register(<Capability>(), replace=True)``
+at module load time, so importing this package populates the global
+capability registry with all five V1 capabilities.
+
+This is symmetric with the contract adapter side: the four built-in
+adapters (``pydantic``, ``json_schema``, ``dict_dsl``, ``openapi``)
+also self-register on import (see the corresponding
+``_register_on_import()`` hooks in
+``src/paxman/contract/adapters/*.py``).
+
+Third-party capabilities — anything outside the V1 built-in set —
+use :func:`paxman.register_capability` (the public SPI in
+``src/paxman/api/registry.py``). See ``docs/reference/extending.md``
+§2.3 for the extension guide.
+
+The :func:`~paxman.capabilities.registry._bootstrap_v1_capabilities`
+helper re-registers the V1 capabilities after a
+:func:`~paxman.capabilities.registry.reset` call (used by test
+fixtures).
 
 Boundary rules
 --------------
@@ -31,9 +52,11 @@ keeps the planner decoupled from the concrete implementations.
 from __future__ import annotations
 
 # Importing the v1 modules triggers their ``_register_on_import``
-# hooks, which register the capabilities with the global
-# capability registry. This is the V1 convention: capabilities
-# self-register on import.
+# hooks, which register all five V1 capabilities with the global
+# capability registry (per ADR-0012). This is the V1 convention:
+# built-in capabilities self-register on import, symmetric with
+# the contract adapter side. Third-party capabilities use
+# ``paxman.register_capability()``.
 from paxman.capabilities.v1 import (
     inference,
     lookup,

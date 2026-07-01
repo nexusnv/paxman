@@ -108,6 +108,50 @@ class CsvExtractionCapability:
         """The :class:`CapabilitySpec` for ``csv_extraction@1.0``."""
         return _CSV_EXTRACTION_SPEC
 
+    # --- Result builders --------------------------------------------------
+    #
+    # The capability's failure modes all produce a CapabilityResult
+    # with no candidates, exactly one Diagnostic, and a context that
+    # includes ``field_path``. These two helpers keep the call sites
+    # short and consistent.
+
+    @staticmethod
+    def _failed(message: str, field_path: str, **ctx: object) -> CapabilityResult:
+        """Build a ``CAPABILITY_INVOKE_FAILED`` result with one Diagnostic."""
+        return CapabilityResult(
+            candidates=(),
+            diagnostics=(
+                Diagnostic(
+                    code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
+                    severity=DiagnosticSeverity.ERROR,
+                    message=f"csv_extraction: {message}",
+                    context={"field_path": field_path, **ctx},
+                ),
+            ),
+        )
+
+    @staticmethod
+    def _no_match(message: str, field_path: str, **ctx: object) -> CapabilityResult:
+        """Build a ``PATTERN_NO_MATCH`` result with one Diagnostic.
+
+        The ``candidates`` and ``evidence`` tuples are both empty
+        (no matches; nothing to attach evidence to).
+        """
+        return CapabilityResult(
+            candidates=(),
+            evidence=(),
+            diagnostics=(
+                Diagnostic(
+                    code=DiagnosticCode.PATTERN_NO_MATCH,
+                    severity=DiagnosticSeverity.INFO,
+                    message=f"csv_extraction: {message}",
+                    context={"field_path": field_path, **ctx},
+                ),
+            ),
+        )
+
+    # --- Column validation ------------------------------------------------
+
     @staticmethod
     def _validate_column(
         column: object, field_path: str
@@ -119,69 +163,41 @@ class CsvExtractionCapability:
         """
         # Reject bool explicitly: ``isinstance(True, int)`` is True.
         if isinstance(column, bool):
-            return None, CapabilityResult(
-                candidates=(),
-                diagnostics=(
-                    Diagnostic(
-                        code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                        severity=DiagnosticSeverity.ERROR,
-                        message=(
-                            "csv_extraction: config['column'] must be a non-empty str "
-                            "or a non-negative int, got bool"
-                        ),
-                        context={"field_path": field_path},
-                    ),
-                ),
+            return None, CsvExtractionCapability._failed(
+                "config['column'] must be a non-empty str or a non-negative int, got bool",
+                field_path,
             )
         if isinstance(column, str):
             if not column:
-                return None, CapabilityResult(
-                    candidates=(),
-                    diagnostics=(
-                        Diagnostic(
-                            code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                            severity=DiagnosticSeverity.ERROR,
-                            message="csv_extraction: config['column'] is an empty string",
-                            context={"field_path": field_path},
-                        ),
-                    ),
+                return None, CsvExtractionCapability._failed(
+                    "config['column'] is an empty string", field_path
                 )
             return column, None
         if isinstance(column, int):
             if column < 0:
-                return None, CapabilityResult(
-                    candidates=(),
-                    diagnostics=(
-                        Diagnostic(
-                            code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                            severity=DiagnosticSeverity.ERROR,
-                            message=(
-                                f"csv_extraction: config['column'] must be non-negative, got {column}"
-                            ),
-                            context={"field_path": field_path, "column": column},
-                        ),
-                    ),
+                return None, CsvExtractionCapability._failed(
+                    f"config['column'] must be non-negative, got {column}",
+                    field_path,
+                    column=column,
                 )
             return column, None
-        return None, CapabilityResult(
-            candidates=(),
-            diagnostics=(
-                Diagnostic(
-                    code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                    severity=DiagnosticSeverity.ERROR,
-                    message=(
-                        "csv_extraction: config['column'] must be a non-empty str "
-                        f"or a non-negative int, got {type(column).__name__}"
-                    ),
-                    context={"field_path": field_path},
-                ),
-            ),
+        return None, CsvExtractionCapability._failed(
+            "config['column'] must be a non-empty str "
+            f"or a non-negative int, got {type(column).__name__}",
+            field_path,
         )
+
+    # --- Parsing ----------------------------------------------------------
 
     @staticmethod
     def _parse_csv(raw: bytes) -> list[list[str]] | CapabilityResult:
-        """Parse *raw* as CSV, sniffing the dialect. Returns rows on success."""
-        text = raw.decode("utf-8", errors="replace")
+        """Parse *raw* as CSV, sniffing the dialect. Returns rows on success.
+
+        A leading UTF-8 BOM (``\\xef\\xbb\\xbf``) is stripped before parsing so
+        that BOM-prefixed CSVs (common from Excel-on-Windows exports)
+        do not leak into the first column header.
+        """
+        text = raw.decode("utf-8-sig", errors="replace")
         try:
             sample = text[:4096]
             try:
@@ -191,17 +207,12 @@ class CsvExtractionCapability:
             reader = csv.reader(io.StringIO(text), dialect=dialect)
             return list(reader)
         except csv.Error as exc:
-            return CapabilityResult(
-                candidates=(),
-                diagnostics=(
-                    Diagnostic(
-                        code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                        severity=DiagnosticSeverity.ERROR,
-                        message=f"csv_extraction: input is not valid CSV: {exc}",
-                        context={"field_path": "<resolved-by-caller>"},
-                    ),
-                ),
+            return CsvExtractionCapability._failed(
+                f"input is not valid CSV: {exc}",
+                "<resolved-by-caller>",
             )
+
+    # --- Main entry point -------------------------------------------------
 
     def invoke(self, ctx: CapabilityContext) -> CapabilityResult:
         """Parse the input as CSV and emit one candidate per row.
@@ -221,87 +232,38 @@ class CsvExtractionCapability:
             return err
 
         if not ctx.raw_input:
-            return CapabilityResult(
-                candidates=(),
-                diagnostics=(
-                    Diagnostic(
-                        code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                        severity=DiagnosticSeverity.ERROR,
-                        message="csv_extraction: raw_input is empty",
-                        context={"field_path": ctx.field_path},
-                    ),
-                ),
-            )
+            return self._failed("raw_input is empty", ctx.field_path)
 
         parsed = self._parse_csv(ctx.raw_input)
         if isinstance(parsed, CapabilityResult):
-            # Patch the field_path (parse-time error doesn't know it).
-            return CapabilityResult(
-                candidates=(),
-                diagnostics=(
-                    Diagnostic(
-                        code=parsed.diagnostics[0].code,
-                        severity=parsed.diagnostics[0].severity,
-                        message=parsed.diagnostics[0].message,
-                        context={"field_path": ctx.field_path},
-                    ),
-                ),
-            )
+            # Parse-time error doesn't yet know field_path; rebuild the
+            # diagnostic with the correct field_path.
+            old = parsed.diagnostics[0]
+            return self._failed(old.message.removeprefix("csv_extraction: "), ctx.field_path)
 
         rows = parsed
         if not rows:
-            return CapabilityResult(
-                candidates=(),
-                diagnostics=(
-                    Diagnostic(
-                        code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                        severity=DiagnosticSeverity.ERROR,
-                        message="csv_extraction: input has no rows",
-                        context={"field_path": ctx.field_path},
-                    ),
-                ),
-            )
+            return self._failed("input has no rows", ctx.field_path)
 
         header = rows[0]
         if isinstance(column, int):
             if column >= len(header):
-                return CapabilityResult(
-                    candidates=(),
-                    diagnostics=(
-                        Diagnostic(
-                            code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                            severity=DiagnosticSeverity.ERROR,
-                            message=(
-                                f"csv_extraction: column index {column} out of range "
-                                f"(header has {len(header)} columns)"
-                            ),
-                            context={
-                                "field_path": ctx.field_path,
-                                "column_index": column,
-                                "header_width": len(header),
-                            },
-                        ),
-                    ),
+                return self._failed(
+                    f"column index {column} out of range (header has {len(header)} columns)",
+                    ctx.field_path,
+                    column_index=column,
+                    header_width=len(header),
                 )
             resolved_name: str = header[column]
             col_index: int = column
+        elif column not in header:
+            return self._failed(
+                f"column {column!r} not found in header",
+                ctx.field_path,
+                column_name=column,
+                header=list(header),
+            )
         else:
-            if column not in header:
-                return CapabilityResult(
-                    candidates=(),
-                    diagnostics=(
-                        Diagnostic(
-                            code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                            severity=DiagnosticSeverity.ERROR,
-                            message=(f"csv_extraction: column {column!r} not found in header"),
-                            context={
-                                "field_path": ctx.field_path,
-                                "column_name": column,
-                                "header": list(header),
-                            },
-                        ),
-                    ),
-                )
             resolved_name = column
             col_index = header.index(column)
 
@@ -329,23 +291,11 @@ class CsvExtractionCapability:
             candidates.append(Candidate(value=cell, evidence_refs=(ev,)))
 
         if not candidates:
-            return CapabilityResult(
-                candidates=(),
-                evidence=(),
-                diagnostics=(
-                    Diagnostic(
-                        code=DiagnosticCode.PATTERN_NO_MATCH,
-                        severity=DiagnosticSeverity.INFO,
-                        message=(
-                            f"csv_extraction: column {resolved_name!r} has no non-empty values"
-                        ),
-                        context={
-                            "field_path": ctx.field_path,
-                            "csv_column": resolved_name,
-                            "rows_scanned": len(rows) - 1,
-                        },
-                    ),
-                ),
+            return self._no_match(
+                f"column {resolved_name!r} has no non-empty values",
+                ctx.field_path,
+                csv_column=resolved_name,
+                rows_scanned=len(rows) - 1,
             )
 
         return CapabilityResult(

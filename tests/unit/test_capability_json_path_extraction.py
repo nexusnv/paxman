@@ -119,6 +119,14 @@ def test_unicode_input() -> None:
     assert [c.value for c in result.candidates] == ["日本語 🎉"]
 
 
+def test_strips_utf8_bom() -> None:
+    """A leading UTF-8 BOM is stripped so json.loads does not reject valid input."""
+    cap = JsonPathExtractionCapability()
+    raw = b'\xef\xbb\xbf{"supplier": "ACME"}'
+    result = cap.invoke(_ctx(raw, pointer="/supplier"))
+    assert [c.value for c in result.candidates] == ["ACME"]
+
+
 # --- failure modes --------------------------------------------------------
 
 
@@ -313,6 +321,51 @@ def test_array_at_pointer_index_for_object() -> None:
     result = cap.invoke(_ctx(raw, pointer="/0"))
     assert result.candidates == ()
     assert result.diagnostics[0].code is DiagnosticCode.PATTERN_NO_MATCH
+
+
+def test_non_canonical_negative_array_index() -> None:
+    """``/-1`` is non-canonical per RFC 6901 ABNF and returns a CAPABILITY_INVOKE_FAILED diagnostic."""
+    cap = JsonPathExtractionCapability()
+    raw = b'["a", "b", "c"]'
+    result = cap.invoke(_ctx(raw, pointer="/-1"))
+    assert result.candidates == ()
+    d = result.diagnostics[0]
+    assert d.code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
+    assert "non-canonical" in d.message.lower()
+
+
+def test_non_canonical_leading_zero_array_index() -> None:
+    """``/01`` (leading zero) is non-canonical per RFC 6901 ABNF."""
+    cap = JsonPathExtractionCapability()
+    raw = b'["a", "b", "c"]'
+    result = cap.invoke(_ctx(raw, pointer="/01"))
+    assert result.candidates == ()
+    d = result.diagnostics[0]
+    assert d.code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
+    assert "non-canonical" in d.message.lower()
+
+
+def test_canonical_array_index_works() -> None:
+    """``/0`` and ``/2`` are canonical and resolve to the list element."""
+    cap = JsonPathExtractionCapability()
+    raw = b'["a", "b", "c"]'
+    assert [c.value for c in cap.invoke(_ctx(raw, pointer="/0")).candidates] == ["a"]
+    assert [c.value for c in cap.invoke(_ctx(raw, pointer="/2")).candidates] == ["c"]
+    # ``/10`` is canonical but out of range for a 3-element list → PATTERN_NO_MATCH.
+    result = cap.invoke(_ctx(raw, pointer="/10"))
+    assert result.candidates == ()
+    assert result.diagnostics[0].code is DiagnosticCode.PATTERN_NO_MATCH
+
+
+def test_pointer_indexing_into_scalar_returns_diagnostic() -> None:
+    """Indexing past a scalar in a pointer is an unsupported-syntax failure."""
+    cap = JsonPathExtractionCapability()
+    raw = b'{"a": 1}'
+    result = cap.invoke(_ctx(raw, pointer="/a/0"))
+    assert result.candidates == ()
+    d = result.diagnostics[0]
+    assert d.code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
+    assert "non-container" in d.message.lower() or "cannot index" in d.message.lower()
 
 
 def test_resolve_pointer_rejects_empty_string_directly() -> None:

@@ -19,6 +19,9 @@ Module layout
   Dict DSL, OpenAPI).
 - :mod:`paxman.contract.adapters.base` — the :class:`ContractAdapter` Protocol
   (the SPI).
+- :mod:`paxman.contract._format_hint` — :class:`FormatHint` enum and string
+  resolver (the V1.1.0+ format-aware dispatch contract; see ADR-0015 and
+  `issue #73 <https://github.com/nexusnv/paxman/issues/73>`_).
 
 Boundary rules (per ``PACKAGE_STRUCTURE.md`` §2):
 
@@ -38,6 +41,7 @@ from paxman.contract._types import (
     EnumValueSet,
     ResolutionPolicy,
 )
+from paxman.contract._format_hint import FormatHint
 from paxman.contract.canonical import (
     CanonicalContract,
     CanonicalField,
@@ -53,6 +57,7 @@ __all__ = [
     "EnumValue",
     "EnumValueSet",
     "FieldType",
+    "FormatHint",
     "MoneyValue",
     "ResolutionPolicy",
 ]

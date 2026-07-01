@@ -37,6 +37,7 @@ Each ADR follows MADR 4.0 with the following sections:
 | [0011](./0011-format-auto-detection-for-json-schema-dicts.md) | Format Auto-Detection for JSON Schema Dicts | Accepted | 2026-07-01 | Detect JSON Schema structural markers in `dict` contracts before falling through to Dict DSL. |
 | [0012](./0012-v1-capabilities-self-register-on-import.md) | V1 Capabilities Self-Register on Import | Accepted | 2026-07-01 | All 5 V1 capabilities self-register on import, mirroring the 4 contract adapters. `paxman.register_capability()` stays public for third-party extensions. |
 | [0013](./0013-defusedxml-optional-extra.md) | defusedxml as Optional Security Extra | Accepted | 2026-07-01 | `xml-secure` extra with `defusedxml>=0.7.1`; feature-detect at module import with stdlib fallback and one-shot `structlog.info` log. |
+| [0014](./0014-v1-1-0-cleanup-transforms.md) | V1.1.0 Post-Extraction Cleanup Transforms | Accepted | 2026-07-01 | Two new `LOCAL_DETERMINISTIC` capabilities (`case_normalization`, `trim_extraction`) read from `ctx.config["value"]` (post-resolution input pattern) and never read `ctx.raw_input`. Closes the case-mismatch and trailing-junk gaps with stdlib-only code; no new public SPI, no new tier, no new core dep. |
 
 ## Conventions
 

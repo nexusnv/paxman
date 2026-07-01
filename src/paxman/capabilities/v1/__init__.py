@@ -15,7 +15,7 @@ and ``ARCHITECTURE.md`` §4.3):
 - :mod:`paxman.capabilities.v1.validation` — verify a candidate
   value against a constraint (deterministic).
 
-V1.1.0 additions (sub-issues of #67; see #68 and #70):
+V1.1.0 additions (sub-issues of #67; see #68, #69, and #70):
 
 - :mod:`paxman.capabilities.v1.json_path_extraction` — extract
   values from a JSON document via JSON-Pointer or a limited
@@ -24,6 +24,12 @@ V1.1.0 additions (sub-issues of #67; see #68 and #70):
   from a CSV document for a named or indexed column.
 - :mod:`paxman.capabilities.v1.xpath_extraction` — extract values
   from an XML/HTML document via a documented subset of XPath.
+- :mod:`paxman.capabilities.v1.case_normalization` — case-transform
+  a pre-resolved string value (``lower`` / ``upper`` / ``title`` /
+  ``preserve``).
+- :mod:`paxman.capabilities.v1.trim_extraction` — strip leading
+  and trailing whitespace + common punctuation from a pre-resolved
+  string value.
 
 Registration contract (per ADR-0012)
 -----------------------------------
@@ -32,11 +38,13 @@ Registration contract (per ADR-0012)
 module ends with a ``_register_on_import()`` hook that calls
 ``paxman.capabilities.registry.register(<Capability>(), replace=True)``
 at module load time, so importing this package populates the global
-capability registry with the V1 built-in surface (the **eight** V1
+capability registry with the V1 built-in surface (the **ten** V1
 capabilities: the five V1.0.0 originals — ``text_extraction``,
 ``regex_extraction``, ``lookup``, ``inference``, ``validation`` —
 plus the three V1.1.0 format-aware extraction additions —
-``json_path_extraction``, ``csv_extraction``, ``xpath_extraction``).
+``json_path_extraction``, ``csv_extraction``, ``xpath_extraction`` —
+plus the two V1.1.0 post-extraction cleanup transforms —
+``case_normalization``, ``trim_extraction``).
 
 This is symmetric with the contract adapter side: the four built-in
 adapters (``pydantic``, ``json_schema``, ``dict_dsl``, ``openapi``)
@@ -72,23 +80,27 @@ from __future__ import annotations
 # the contract adapter side. Third-party capabilities use
 # ``paxman.register_capability()``.
 from paxman.capabilities.v1 import (
+    case_normalization,
     csv_extraction,
     inference,
     json_path_extraction,
     lookup,
     regex_extraction,
     text_extraction,
+    trim_extraction,
     validation,
     xpath_extraction,
 )
 
 __all__: list[str] = [
+    "case_normalization",
     "csv_extraction",
     "inference",
     "json_path_extraction",
     "lookup",
     "regex_extraction",
     "text_extraction",
+    "trim_extraction",
     "validation",
     "xpath_extraction",
 ]

@@ -22,23 +22,43 @@ capabilities must respect.
 
 ---
 
-## 1. The five V1 capabilities
+## 1. The V1 capability set
 
-Paxman V1 ships **exactly five capabilities**:
+Paxman V1 ships **ten** capabilities (5 V1.0.0 originals + 3 V1.1.0
+format-aware extractors + 2 V1.1.0 post-extraction cleanup
+transforms; see [ADR-0014](../adr/0014-v1-1-0-cleanup-transforms.md)
+for the V1.1.0 cleanup-transform slice and the prior format-extractor
+shipped in PR #71 for the V1.1.0 format extractors):
 
 | Capability | Tier | Input | Output | V1 use case |
 |---|---|---|---|---|
 | `text_extraction` | `LOCAL_DETERMINISTIC` | raw input | `bytes` (text payload) | Pull text out of `text/plain` / `text/html` (PDF/OCR is V2). |
 | `regex_extraction` | `LOCAL_DETERMINISTIC` | `CapabilityContext` (text + span) | `list[Candidate]` (one per regex match) | Pull structured values with named groups. |
+| `json_path_extraction` | `LOCAL_DETERMINISTIC` | `CapabilityContext` (JSON bytes) | `list[Candidate]` (one per match) | V1.1.0: extract values from a JSON document via JSON-Pointer or a limited JSONPath subset. |
+| `csv_extraction` | `LOCAL_DETERMINISTIC` | `CapabilityContext` (CSV bytes) | `list[Candidate]` (one per non-empty row) | V1.1.0: extract values from a CSV document for a named or indexed column. |
+| `xpath_extraction` | `LOCAL_DETERMINISTIC` | `CapabilityContext` (XML/HTML bytes) | `list[Candidate]` (one per element) | V1.1.0: extract values from an XML/HTML document via a documented subset of XPath. |
+| `case_normalization` | `LOCAL_DETERMINISTIC` | `ctx.config["value"]` (string) | one `Candidate` (case-normalized) | V1.1.0: case-transform a pre-resolved value (`lower` / `upper` / `title` / `preserve`). |
+| `trim_extraction` | `LOCAL_DETERMINISTIC` | `ctx.config["value"]` (string) | one `Candidate` (trimmed) | V1.1.0: strip leading/trailing whitespace + common punctuation from a pre-resolved value. |
 | `lookup` | `STRUCTURED_LOOKUP` | `CapabilityContext` (key) | `list[Candidate]` (one per lookup hit) | V1: in-memory dict backend. Vector search is V2. |
 | `inference` | `LOCAL_INFERENCE` / `REMOTE_INFERENCE` | `CapabilityContext` (text + prompt) | `list[Candidate]` (one per completion) | Delegate to a model provider. V1 ships a stub; real providers are V2. |
 | `validation` | `LOCAL_DETERMINISTIC` | `CapabilityContext` (text + candidate) | `list[Candidate]` (filtered + diagnostic) | Reject candidates that fail type/range/regex/enum/ISO-4217 checks. |
 
-Two capabilities are **non-deterministic** in general: `inference`
-(when backed by a non-deterministic model). The other three are
-deterministic. Non-determinism is recorded in the artifact's evidence
-and does **not** break replay (replay rehydrates the recorded truth;
-it does not re-invoke capabilities).
+The first **seven** (everything except `lookup`, `inference`,
+`validation`) are tier-1 (`LOCAL_DETERMINISTIC`) extractors. The
+cleanup transforms (`case_normalization`, `trim_extraction`) read
+exclusively from `ctx.config["value"]` — the post-resolution input
+pattern — and never read `ctx.raw_input`. This is the new shape
+introduced in V1.1.0 that lets cleanup transforms chain naturally
+after any tier-1 step.
+
+Of the ten V1 capabilities, only `inference` is
+**non-deterministic in general** (when backed by a non-deterministic
+model). The other nine — `text_extraction`, `regex_extraction`,
+`json_path_extraction`, `csv_extraction`, `xpath_extraction`,
+`case_normalization`, `trim_extraction`, `lookup`, and `validation`
+— are deterministic. Non-determinism is recorded in the artifact's
+evidence and does **not** break replay (replay rehydrates the
+recorded truth; it does not re-invoke capabilities).
 
 ---
 
@@ -242,9 +262,20 @@ Capabilities **must**:
 |---|---|---|
 | `paxman.capabilities.v1.text_extraction` | `TextExtractionCapability` | `LOCAL_DETERMINISTIC` |
 | `paxman.capabilities.v1.regex_extraction` | `RegexExtractionCapability` | `LOCAL_DETERMINISTIC` |
+| `paxman.capabilities.v1.json_path_extraction` | `JsonPathExtractionCapability` | `LOCAL_DETERMINISTIC` (V1.1.0) |
+| `paxman.capabilities.v1.csv_extraction` | `CsvExtractionCapability` | `LOCAL_DETERMINISTIC` (V1.1.0) |
+| `paxman.capabilities.v1.xpath_extraction` | `XPathExtractionCapability` | `LOCAL_DETERMINISTIC` (V1.1.0) |
+| `paxman.capabilities.v1.case_normalization` | `CaseNormalizationCapability` | `LOCAL_DETERMINISTIC` (V1.1.0) |
+| `paxman.capabilities.v1.trim_extraction` | `TrimExtractionCapability` | `LOCAL_DETERMINISTIC` (V1.1.0) |
 | `paxman.capabilities.v1.lookup` | `LookupCapability` | `STRUCTURED_LOOKUP` |
 | `paxman.capabilities.v1.inference` | `InferenceCapability` | `LOCAL_INFERENCE` / `REMOTE_INFERENCE` |
 | `paxman.capabilities.v1.validation` | `ValidationCapability` | `LOCAL_DETERMINISTIC` |
+
+The V1.1.0 capabilities (5 rows marked V1.1.0 above) ship in
+V1.1.0 alongside the V1.0.0 originals. The format-extractor
+slice (`json_path_extraction`, `csv_extraction`, `xpath_extraction`)
+landed in PR #71; the cleanup-transform slice (`case_normalization`,
+`trim_extraction`) is recorded in [ADR-0014](../adr/0014-v1-1-0-cleanup-transforms.md).
 
 The V1 inference capability is **pluggable**: it takes an
 `InferenceProvider` (the `InferenceProvider` SPI) at registration

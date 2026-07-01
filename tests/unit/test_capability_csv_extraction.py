@@ -92,7 +92,7 @@ def test_handles_tab_delimiter() -> None:
 def test_unicode_input() -> None:
     """UTF-8 encoded input is supported."""
     cap = CsvExtractionCapability()
-    raw = "name\n日本語 🎉\nCafé".encode("utf-8")
+    raw = "name\n日本語 🎉\nCafé".encode()
     result = cap.invoke(_ctx(raw, column="name"))
     assert [c.value for c in result.candidates] == ["日本語 🎉", "Café"]
 

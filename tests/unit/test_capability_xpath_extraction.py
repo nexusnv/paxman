@@ -85,10 +85,7 @@ def test_predicate_excludes_non_matching() -> None:
 def test_resolves_with_namespace() -> None:
     """Namespace prefixes are honored when declared in config['namespaces']."""
     cap = XPathExtractionCapability()
-    raw = (
-        b'<root xmlns:inv="http://example.com/invoice">'
-        b"<inv:supplier>ACME</inv:supplier></root>"
-    )
+    raw = b'<root xmlns:inv="http://example.com/invoice"><inv:supplier>ACME</inv:supplier></root>'
     result = cap.invoke(
         _ctx(
             raw,
@@ -102,7 +99,7 @@ def test_resolves_with_namespace() -> None:
 def test_unicode_input() -> None:
     """UTF-8 encoded XML input is supported."""
     cap = XPathExtractionCapability()
-    raw = "<root><name>日本語 🎉</name></root>".encode("utf-8")
+    raw = "<root><name>日本語 🎉</name></root>".encode()
     result = cap.invoke(_ctx(raw, xpath="/root/name"))
     assert [c.value for c in result.candidates] == ["日本語 🎉"]
 
@@ -179,10 +176,7 @@ def test_unsupported_text_node() -> None:
 def test_undeclared_namespace_prefix() -> None:
     """A namespace prefix not in config['namespaces'] is an error."""
     cap = XPathExtractionCapability()
-    raw = (
-        b'<root xmlns:inv="http://example.com/invoice">'
-        b"<inv:supplier>ACME</inv:supplier></root>"
-    )
+    raw = b'<root xmlns:inv="http://example.com/invoice"><inv:supplier>ACME</inv:supplier></root>'
     result = cap.invoke(_ctx(raw, xpath="/root/inv:supplier"))
     assert result.candidates == ()
     d = result.diagnostics[0]

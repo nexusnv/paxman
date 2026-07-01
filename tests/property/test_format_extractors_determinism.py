@@ -17,7 +17,8 @@ import string
 
 import hypothesis
 import pytest
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from paxman.capabilities.base import CapabilityContext
 from paxman.capabilities.v1.csv_extraction import CsvExtractionCapability
@@ -32,9 +33,7 @@ pytestmark = [pytest.mark.deterministic, pytest.mark.property]
 
 @given(
     data=st.dictionaries(
-        keys=st.text(
-            alphabet=string.ascii_lowercase, min_size=1, max_size=5
-        ),
+        keys=st.text(alphabet=string.ascii_lowercase, min_size=1, max_size=5),
         values=st.one_of(
             st.text(max_size=20),
             st.integers(min_value=0, max_value=1000),
@@ -44,9 +43,7 @@ pytestmark = [pytest.mark.deterministic, pytest.mark.property]
         max_size=5,
     )
 )
-@hypothesis.settings(
-    derandomize=True, deadline=None, max_examples=100
-)
+@hypothesis.settings(derandomize=True, deadline=None, max_examples=100)
 def test_json_path_extraction_is_deterministic(data: dict) -> None:
     """The same JSON input + pointer returns the same candidates twice."""
     cap = JsonPathExtractionCapability()
@@ -71,9 +68,7 @@ def test_json_path_extraction_is_deterministic(data: dict) -> None:
 @given(
     rows=st.lists(
         st.lists(
-            st.text(
-                alphabet=string.ascii_letters + " ", min_size=0, max_size=10
-            ),
+            st.text(alphabet=string.ascii_letters + " ", min_size=0, max_size=10),
             min_size=2,
             max_size=2,
         ),
@@ -81,9 +76,7 @@ def test_json_path_extraction_is_deterministic(data: dict) -> None:
         max_size=10,
     )
 )
-@hypothesis.settings(
-    derandomize=True, deadline=None, max_examples=100
-)
+@hypothesis.settings(derandomize=True, deadline=None, max_examples=100)
 def test_csv_extraction_is_deterministic(rows: list[list[str]]) -> None:
     """The same CSV input + column returns the same candidates twice."""
     cap = CsvExtractionCapability()
@@ -111,14 +104,12 @@ def test_csv_extraction_is_deterministic(rows: list[list[str]]) -> None:
         max_size=5,
     )
 )
-@hypothesis.settings(
-    derandomize=True, deadline=None, max_examples=100
-)
+@hypothesis.settings(derandomize=True, deadline=None, max_examples=100)
 def test_xpath_extraction_is_deterministic(values: list[str]) -> None:
     """The same XML input + xpath returns the same candidates twice."""
     cap = XPathExtractionCapability()
     items = "".join(f"<item>{v}</item>" for v in values)
-    raw = f"<root>{items}</root>".encode("utf-8")
+    raw = f"<root>{items}</root>".encode()
     ctx = CapabilityContext(
         raw_input=raw,
         field_path="field",

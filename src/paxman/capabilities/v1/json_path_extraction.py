@@ -137,9 +137,7 @@ class JsonPathExtractionCapability:
         raise TypeError(msg)
 
     @staticmethod
-    def _resolve_json_pointer(
-        document: object, pointer: str
-    ) -> tuple[object, tuple[str, ...]]:
+    def _resolve_json_pointer(document: object, pointer: str) -> tuple[object, tuple[str, ...]]:
         """Walk a JSON-Pointer against *document*.
 
         Returns ``(value, matched_path)`` where ``matched_path`` is a
@@ -174,14 +172,10 @@ class JsonPathExtractionCapability:
         if head in ("*", "[*]"):
             if isinstance(current, list):
                 for i, item in enumerate(current):
-                    JsonPathExtractionCapability._walk_jsonpath(
-                        item, tail, (*path, f"[{i}]"), out
-                    )
+                    JsonPathExtractionCapability._walk_jsonpath(item, tail, (*path, f"[{i}]"), out)
             elif isinstance(current, dict):
                 for k, v in current.items():
-                    JsonPathExtractionCapability._walk_jsonpath(
-                        v, tail, (*path, k), out
-                    )
+                    JsonPathExtractionCapability._walk_jsonpath(v, tail, (*path, k), out)
             else:
                 msg = f"cannot expand '*' on non-container at {path}"
                 raise ValueError(msg)
@@ -198,9 +192,7 @@ class JsonPathExtractionCapability:
                 msg = f"expected list at {key!r}, got {type(container).__name__}"
                 raise ValueError(msg)
             value = container[int(idx)]
-            JsonPathExtractionCapability._walk_jsonpath(
-                value, tail, (*path, f"{key}[{idx}]"), out
-            )
+            JsonPathExtractionCapability._walk_jsonpath(value, tail, (*path, f"{key}[{idx}]"), out)
         else:
             if isinstance(current, dict):
                 value = current[head]
@@ -209,9 +201,7 @@ class JsonPathExtractionCapability:
             else:
                 msg = f"cannot index non-container at {path}"
                 raise ValueError(msg)
-            JsonPathExtractionCapability._walk_jsonpath(
-                value, tail, (*path, head), out
-            )
+            JsonPathExtractionCapability._walk_jsonpath(value, tail, (*path, head), out)
 
     @classmethod
     def _resolve_jsonpath(

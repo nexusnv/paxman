@@ -296,3 +296,70 @@ def test_register_rejects_non_capabilityspec() -> None:
 
     with pytest.raises(TypeError, match=r"capability\.spec must be a CapabilitySpec"):
         register(_BadSpec())  # type: ignore[arg-type]
+
+
+# ---------------------------------------------------------------------------
+# Bootstrap fix (v1.0.2 #64 regression): _bootstrap_v1_capabilities
+# ---------------------------------------------------------------------------
+
+
+class TestBootstrapV1Capabilities:
+    """After #64, the v1 package is no longer loaded transitively. The
+    bootstrap in :func:`all_capabilities` must actively import the v1
+    lookup module so the planner always sees a registered ``lookup``
+    capability. This test catches a regression where the bootstrap
+    becomes a no-op (e.g. if someone removes the
+    ``importlib.import_module`` call in favor of a ``sys.modules.get``
+    short-circuit).
+    """
+
+    def test_all_capabilities_re_registers_lookup_after_reset(self) -> None:
+        """After ``reset()`` empties the registry, ``all_capabilities()``
+        must transparently re-register the V1 ``lookup`` capability.
+        This is the contract that golden-artifact tests rely on.
+
+        We test the side effect via the private ``_capabilities`` dict
+        rather than via :func:`all_capabilities` (which would itself
+        trigger the bootstrap, making the test vacuous).
+        """
+        from paxman.capabilities import registry as _registry
+
+        # Empty the registry (simulates test isolation).
+        reset()
+        # Verify the underlying dict is empty (before bootstrap).
+        assert len(_registry._capabilities) == 0, (
+            f"precondition: registry should be empty after reset(), got {_registry._capabilities!r}"
+        )
+        # Trigger the bootstrap by calling all_capabilities().
+        caps = all_capabilities()
+        # The V1 lookup must now be re-registered.
+        assert ("lookup", "1.0") in caps, (
+            "all_capabilities() should re-register the V1 lookup "
+            "capability when the registry is empty"
+        )
+        # And the underlying dict must now contain it.
+        assert ("lookup", "1.0") in _registry._capabilities
+
+    def test_bootstrap_does_not_register_uncalled_capabilities(self) -> None:
+        """The bootstrap must only register ``lookup`` (the only V1
+        capability that self-registers on import). The other 4 V1
+        capabilities (text_extraction, regex_extraction, inference,
+        validation) are NOT part of the default registry — they must
+        be registered explicitly by the user. This matches the
+        original V1 design.
+        """
+        reset()
+        caps = all_capabilities()
+        registered = set(caps)
+        # ``lookup`` is the only V1 capability that auto-registers.
+        assert ("lookup", "1.0") in registered
+        # The other V1 capabilities must NOT be auto-registered.
+        for other in (
+            "text_extraction",
+            "regex_extraction",
+            "inference",
+            "validation",
+        ):
+            assert (other, "1.0") not in registered, (
+                f"{other} must not be auto-registered by the bootstrap"
+            )

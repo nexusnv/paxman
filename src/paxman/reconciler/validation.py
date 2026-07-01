@@ -26,7 +26,8 @@ is a *capability*: a capability invocation is part of a
 :class:`~paxman.planner.field_plan.FieldPlan` and is invoked by the
 Executor. The Reconciler does not run capabilities. Instead, it
 imports the same underlying pure check
-(:func:`_check_constraint`) used by the capability. This is
+(:func:`paxman.validation.constraints.check_constraint`) used by the
+capability. This is
 deliberately the "honest" path: the Reconciler applies the same
 rules the capability would, without going through the capability
 machinery.

@@ -352,19 +352,36 @@ def test_xpath_extraction_spec_is_registerable() -> None:
 
 
 # --- ADR-0012: V1 capabilities self-register on import --------------------
+#
+# V1 ships 8 built-in capabilities (per PACKAGE_STRUCTURE.md §12,
+# ARCHITECTURE.md §4.3, and ADR-0012):
+#
+# - 5 original V1 capabilities (Sprint 3):
+#   text_extraction, regex_extraction, lookup, inference, validation
+# - 3 V1.1.0 format-aware extraction capabilities (PR #71, sub-issue
+#   of #67):
+#   json_path_extraction, csv_extraction, xpath_extraction
+#
+# All 8 self-register on import and are re-registered by
+# ``_bootstrap_v1_capabilities()`` after a ``reset()`` call. This
+# constant is the single source of truth for the V1 built-in set; any
+# new first-party capability MUST be added here AND to the
+# import-linter ``source_modules`` list in pyproject.toml (see #80).
 
-
-_V1_CAPABILITY_IDS = (
+_V1_CAPABILITY_IDS: tuple[str, ...] = (
     "text_extraction",
     "regex_extraction",
     "lookup",
     "inference",
     "validation",
+    "json_path_extraction",
+    "csv_extraction",
+    "xpath_extraction",
 )
 
 
 def test_v1_capabilities_self_register_on_import() -> None:
-    """All five V1 capabilities self-register on import (ADR-0012).
+    """All eight V1 capabilities self-register on import (ADR-0012).
 
     The fixtures above call :func:`reset` between tests, which
     clears the registry. Importing the V1 module is what
@@ -386,11 +403,19 @@ def test_v1_capabilities_self_register_on_import() -> None:
 
 def test_bootstrap_re_registers_all_v1_capabilities_after_reset() -> None:
     """After :func:`reset`, the next :func:`all_capabilities` call
-    re-registers **all five** V1 capabilities uniformly (ADR-0012).
+    re-registers **all eight** V1 capabilities uniformly (ADR-0012).
 
     Pre-ADR-0012, the bootstrap only re-registered ``lookup``;
-    the other four were silently absent until the caller
+    the other seven were silently absent until the caller
     explicitly registered them.
+
+    Regression test for #79: the 3 V1.1.0 format extractors
+    (``json_path_extraction``, ``csv_extraction``, ``xpath_extraction``)
+    were added in PR #71 but not wired into
+    ``_bootstrap_v1_capabilities()``; the bootstrap dropped them
+    silently after any ``reset()`` call (e.g. in
+    ``tests/unit/test_planner_heuristics_planner.py`` and
+    ``tests/property/test_planner_determinism.py`` fixtures).
     """
     # Populate the registry once, then wipe it.
     import paxman.capabilities.v1  # noqa: F401
@@ -408,3 +433,33 @@ def test_bootstrap_re_registers_all_v1_capabilities_after_reset() -> None:
             f"Bootstrap did not re-register V1 capability {cid!r} "
             f"after reset(); got: {sorted(registered)}"
         )
+
+
+def test_v1_1_format_extractors_have_import_time_registration_hook() -> None:
+    """The 3 V1.1.0 format extractors each ship a module-level
+    ``_register_on_import()`` hook that registers the capability on
+    import (ADR-0012, per-module invariant).
+
+    This is the import-time side of the ADR-0012 contract; the
+    ``_bootstrap_v1_capabilities()`` helper is the post-``reset()``
+    side. Both must be present for a V1 first-party capability.
+    """
+    import paxman.capabilities.v1.csv_extraction as csv_mod
+    import paxman.capabilities.v1.json_path_extraction as json_path_mod
+    import paxman.capabilities.v1.xpath_extraction as xpath_mod
+
+    for mod in (csv_mod, json_path_mod, xpath_mod):
+        assert hasattr(mod, "_register_on_import"), (
+            f"{mod.__name__} is missing the _register_on_import() hook "
+            f"required by ADR-0012 (see #79)"
+        )
+        assert callable(mod._register_on_import), (
+            f"{mod.__name__}._register_on_import is not callable"
+        )
+        # And the hook must have been invoked at module load time —
+        # i.e. the capability must already be in the registry before
+        # we call reset() here. We assert by checking the hook is the
+        # function object (not None) and by inspecting the module's
+        # own capability class identity (verified by the
+        # self-registration test above; here we only assert the
+        # hook is present and importable).

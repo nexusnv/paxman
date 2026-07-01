@@ -48,9 +48,9 @@ import typing
 import attrs
 
 from paxman.capabilities.result import Candidate
-from paxman.capabilities.v1.validation import _check_constraint
 from paxman.contract._types import ConstraintKind
 from paxman.contract.canonical import CanonicalField
+from paxman.validation.constraints import check_constraint as _check_constraint
 
 __all__ = [
     "PROMPT_INJECTION_PATTERNS",

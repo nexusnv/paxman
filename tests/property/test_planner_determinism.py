@@ -20,11 +20,7 @@ from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
 
 from paxman.budget import Policy
-from paxman.capabilities.registry import register, reset
-from paxman.capabilities.v1.inference import InferenceCapability
-from paxman.capabilities.v1.regex_extraction import RegexExtractionCapability
-from paxman.capabilities.v1.text_extraction import TextExtractionCapability
-from paxman.capabilities.v1.validation import ValidationCapability
+from paxman.capabilities.registry import reset
 from paxman.contract._types import ContractPolicy
 from paxman.contract.canonical import CanonicalContract, CanonicalField
 from paxman.planner.input_profile import make_profile
@@ -108,12 +104,16 @@ def _policy_strategy(draw: st.DrawFn) -> Policy:
 
 @pytest.fixture(autouse=True)
 def _reset_registry() -> None:
-    """Register the 4 V1 capabilities, then reset between tests."""
+    """Reset the global registry between tests.
+
+    Per ADR-0012, all five V1 capabilities self-register on import.
+    The fixture only needs to call :func:`reset` to clear any
+    third-party registrations left behind by prior tests; the V1
+    capabilities are re-registered automatically on the next
+    :func:`all_capabilities` call via
+    :func:`_bootstrap_v1_capabilities`.
+    """
     reset()
-    register(RegexExtractionCapability())
-    register(ValidationCapability())
-    register(TextExtractionCapability())
-    register(InferenceCapability())
     yield
     reset()
 

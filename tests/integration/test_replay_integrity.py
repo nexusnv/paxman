@@ -177,3 +177,62 @@ class TestContractIdMismatch:
         # Should not raise, because the hash is consistent.
         result = paxman.replay(tampered, contract=DICT_DSL_INVOICE)
         assert result.replay_hash == tampered.replay_hash
+
+
+# ---------------------------------------------------------------------------
+# Issue #60 — capability_versions must be derived from the reconciled
+# evidence set (single source of truth). Previously the field was built
+# from pre-reconciliation evidence, which caused stale entries to leak
+# into replay verification.
+# ---------------------------------------------------------------------------
+
+
+class TestCapabilityVersionsConsistency:
+    """``ExecutionArtifact.capability_versions`` must be a subset of
+    ``ExecutionArtifact.evidence`` capability_ids (single source of truth).
+
+    This invariant was violated before the fix for #60, which built
+    ``capability_versions`` from the raw pre-reconciliation evidence
+    set (``cr.evidence``) while ``artifact.evidence`` was built from
+    the reconciled set (``rr.evidence_refs``). The asymmetry could
+    leave ``capability_versions`` with stale entries that triggered
+    false ``CapabilityNotFoundError`` during replay.
+    """
+
+    def test_capability_versions_keys_subset_of_evidence(
+        self, artifact: ExecutionArtifact
+    ) -> None:
+        """Every ``capability_id`` in ``capability_versions`` appears in ``evidence``."""
+        evidence_cap_ids = {ev.capability_id for ev in artifact.evidence}
+        version_cap_ids = set(artifact.capability_versions)
+        assert version_cap_ids.issubset(evidence_cap_ids), (
+            f"capability_versions has capability_ids not in evidence: "
+            f"{version_cap_ids - evidence_cap_ids}"
+        )
+
+    def test_capability_versions_pairs_subset_of_evidence_pairs(
+        self, artifact: ExecutionArtifact
+    ) -> None:
+        """Every ``(capability_id, capability_version)`` pair in ``capability_versions``
+        appears in ``evidence``. Catches a regression where the same cap_id is
+        recorded with a version that is not in the reconciled evidence."""
+        evidence_pairs = {
+            (ev.capability_id, ev.capability_version) for ev in artifact.evidence
+        }
+        version_pairs = set(artifact.capability_versions.items())
+        assert version_pairs.issubset(evidence_pairs), (
+            f"capability_versions has pairs not in evidence: "
+            f"{version_pairs - evidence_pairs}"
+        )
+
+    def test_replay_succeeds_on_normal_artifact(
+        self, artifact: ExecutionArtifact
+    ) -> None:
+        """End-to-end: a normal ``normalize()`` artifact must replay without
+        ``CapabilityNotFoundError``. This is the original failure mode of #60 —
+        stale ``capability_versions`` entries caused the replay check
+        (artifact/replay.py:199) to fail."""
+        # Should not raise. The fixture produces a normal artifact.
+        result = paxman.replay(artifact, contract=DICT_DSL_INVOICE)
+        # The replayed artifact has the same capability_versions as the original.
+        assert result.capability_versions == artifact.capability_versions

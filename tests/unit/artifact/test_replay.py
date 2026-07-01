@@ -135,7 +135,7 @@ def test_replay_artifact_raises_on_artifact_from_future() -> None:
 @pytest.mark.deterministic
 def test_replay_artifact_accepts_same_version() -> None:
     """Artifact with same version passes check."""
-    art = _make_artifact(paxman_version="1.0.1")
+    art = _make_artifact(paxman_version="1.0.2")
     contract = _make_contract()
     registry = _MockRegistry()
     result = replay_artifact(art, contract, registry)

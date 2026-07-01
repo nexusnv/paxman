@@ -62,6 +62,7 @@ import typing
 from paxman.budget import Budget, Policy
 from paxman.capabilities.registry import all_capabilities
 from paxman.capabilities.spec import CapabilitySpec, CapabilityTier
+from paxman.contract._format_hint import FormatHint
 from paxman.contract.canonical import CanonicalField
 from paxman.planner.field_plan import FieldPlan, FieldPlanStep
 from paxman.planner.input_profile import InputProfile
@@ -186,6 +187,64 @@ def select_local_deterministic(
                     capability_version=spec.version,
                     config={},
                     note=f"local-deterministic tier={spec.tier.value}",
+                )
+            )
+    return out
+
+
+def select_format_aware(
+    field: CanonicalField,
+    registry: typing.Mapping[tuple[str, str], object] | None = None,
+) -> list[FieldPlanStep]:
+    """Step 1.5: format-aware tier-1 capabilities for *field*.
+
+    Returns the list of :class:`FieldPlanStep` records for
+    ``LOCAL_DETERMINISTIC``-tier capabilities that declare a
+    :attr:`~paxman.capabilities.spec.CapabilitySpec.format_hint`
+    matching one of *field*'s
+    :attr:`~paxman.contract.canonical.CanonicalField.format_hints`.
+
+    The selection is **member-agnostic**: it iterates the
+    registered specs and checks ``spec.format_hint in
+    field.format_hints``, NOT a hard-coded list of the V1.1.0
+    members. A new ``FormatHint`` member added in a follow-up
+    minor release is matched automatically.
+
+    Args:
+        field: The :class:`CanonicalField`.
+        registry: Optional capability registry (defaults to global).
+
+    Returns:
+        A list of :class:`FieldPlanStep` records, in plan order
+        (the enum's iteration order for ties). Empty when the
+        field has no ``format_hints`` or no registered capability
+        matches.
+
+    See Also:
+        `GitHub issue #73 <https://github.com/nexusnv/paxman/issues/73>`_
+        §2b for the member-agnostic design contract.
+        `ADR-0015 <../adr/0015-format-aware-executor-auto-dispatch.md>`_
+        for the full design.
+    """
+    if not field.format_hints:
+        return []
+    specs = _specs_by_tier(CapabilityTier.LOCAL_DETERMINISTIC, registry)
+    out: list[FieldPlanStep] = []
+    for spec in specs:
+        if spec.format_hint is None:
+            continue
+        if not _accepts_field_type(spec, field):
+            continue
+        if spec.format_hint in field.format_hints:
+            out.append(
+                FieldPlanStep(
+                    capability_id=spec.id,
+                    capability_version=spec.version,
+                    config={},
+                    note=(
+                        f"format-aware tier={spec.tier.value} "
+                        f"format={spec.format_hint.value}"
+                    ),
                 )
             )
     return out

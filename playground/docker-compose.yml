@@ -1,0 +1,16 @@
+services:
+  jupyter:
+    build:
+      context: ..
+      dockerfile: playground/Dockerfile
+    image: paxman-playground-jupyter
+    container_name: paxman-playground
+    ports:
+      - "127.0.0.1:${JUPYTER_PORT:-8888}:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/playground/notebooks
+      - ./data:/home/jovyan/playground/data
+    environment:
+      - JUPYTER_TOKEN=${JUPYTER_TOKEN:-paxman-dev}
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

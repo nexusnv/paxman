@@ -32,7 +32,12 @@ Boundary rules (per ``PACKAGE_STRUCTURE.md`` §2):
 
 from __future__ import annotations
 
-from paxman.contract._format_hint import FormatHint
+from paxman.contract._format_hint import (
+    FormatHint,
+    FormatHintValidationError,
+    parse_format_hints,
+    resolve_format_hint,
+)
 from paxman.contract._types import (
     # FieldType is intentionally re-exported from paxman.types (single source of
     # truth); the contract layer uses it but does not redefine it.
@@ -58,6 +63,9 @@ __all__ = [
     "EnumValueSet",
     "FieldType",
     "FormatHint",
+    "FormatHintValidationError",
     "MoneyValue",
     "ResolutionPolicy",
+    "parse_format_hints",
+    "resolve_format_hint",
 ]

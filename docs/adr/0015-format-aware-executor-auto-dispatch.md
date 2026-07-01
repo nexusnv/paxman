@@ -130,7 +130,84 @@ The new `FormatHint` enum is the **second** opt-in format-related contract in Pa
 - No new core dependency, no new optional extra. The change is stdlib-only.
 - Replay is unaffected. The `FormatHint` attribute is on the `CanonicalField`, which is part of the artifact's serialized contract. The artifact's serialized form is unchanged for fields that do not declare `format_hints`; for fields that do, the new attribute is added to the field's serialized form and a future replay that calls `paxman.replay()` (with a contract that declares the same `format_hints`) reproduces the same plan.
 
-## Cross-references
+## Validation
+
+The decision is verified by the following evidence:
+
+- **Unit tests** —
+  `tests/unit/contract/test_format_hint.py` covers the
+  `FormatHint` enum and `resolve_format_hint` resolver
+  (member-agnostic lookup, case-insensitive string
+  resolution, rejection of unknown values, type
+  rejection);
+  `tests/unit/contract/test_canonical_field_format_hints.py`
+  pins the `CanonicalField.format_hints` attribute
+  (default empty tuple, member-agnostic acceptance,
+  type-rejection);
+  `tests/unit/capabilities/test_spec_format_hint.py` pins
+  `CapabilitySpec.format_hint` (default `None`,
+  member-agnostic acceptance, tuple-rejection);
+  `tests/unit/planner/test_heuristics_format_hints.py`
+  pins `select_format_aware` (CSV / JSON / XML dispatch,
+  per-capability config keys, member-agnostic source
+  check, input-type filter);
+  `tests/unit/executor/test_field_runner_format_dispatch.py`
+  pins the chain-walk order and the
+  Diagnostic-preservation contract at the runner level.
+- **Per-adapter round-trip tests** —
+  `tests/unit/test_contract_dict_dsl.py`,
+  `tests/unit/test_contract_pydantic.py`,
+  `tests/unit/test_contract_json_schema.py`,
+  `tests/unit/test_contract_openapi.py` cover
+  `format_hints` parse + export on each of the four
+  adapters.
+- **End-to-end integration test** —
+  `tests/integration/executor/test_format_dispatch_normalize.py`
+  verifies that `paxman.normalize(csv_bytes, contract_with_hints)`
+  resolves the supplier field via `csv_extraction`
+  without the caller calling
+  `paxman.capabilities.registry.register(...)` (the
+  ADR-0012 self-registration contract), and that a
+  field without `format_hints` is dispatched exactly
+  as on v1.1.0 HEAD.
+- **Public surface growth** — exactly one new public
+  symbol: `paxman.FormatHint` (and the supporting
+  `paxman.FormatHintValidationError` /
+  `paxman.parse_format_hints` /
+  `paxman.resolve_format_hint` for adapter
+  writers). The public API snapshot at
+  `tests/fixtures/public_api_snapshot.json` is
+  regenerated to include the new symbols.
+- **`make ci` green** — 10/10 local CI checks pass;
+  13/13 GitHub Actions checks pass (lint, format,
+  typecheck, pyright, imports, interrogate, bandit,
+  pip-audit, test-examples, test-cov ≥ 90 %,
+  unit-tests × 3 Python versions, property tests,
+  integration tests). Coverage 94.79 %.
+- **Member-agnostic design** — the dispatch
+  (`spec.format_hint in field.format_hints`) and the
+  resolver (`FormatHint(value)`) are member-agnostic
+  by construction. Adding a new `FormatHint` member
+  is a single-file change in
+  `src/paxman/contract/_format_hint.py` plus adding
+  the matching capability. No executor / planner /
+  adapter changes are required. This is locked in by
+  a static-source test in
+  `tests/unit/planner/test_heuristics_format_hints.py`
+  (`test_member_agnostic_dispatch`) and the pre-PR
+  `grep -rn "FormatHint\."` guard that confirms zero
+  hard-coded member references in
+  `src/paxman/executor/`, `src/paxman/planner/`, or
+  `src/paxman/contract/adapters/`.
+- **Diagnostic preservation** —
+  `tests/unit/executor/test_field_runner_format_dispatch.py::test_diagnostic_preserved_on_format_aware_miss`
+  asserts that a format-aware capability miss
+  surfaces the capability's `Diagnostic` records on
+  the per-field result (PATTERN_NO_MATCH or
+  CAPABILITY_INVOKE_FAILED), not a generic UNRESOLVED.
+  The V1.1.0 "no silent miss" contract is preserved.
+
+## References
 
 - **Issue #73** — the Approved Design Spec. The plan in `.sisyphus/plans/issue-73-format-aware-executor-auto-dispatch.md` is the source of truth for the implementation.
 - **ADR-0001** — field-centric planning. The new `select_format_aware` step emits one `FieldPlanStep` per matching capability, attached to the same per-field plan.

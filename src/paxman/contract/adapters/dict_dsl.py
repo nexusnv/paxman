@@ -58,7 +58,11 @@ import typing
 
 import attrs
 
-from paxman.contract._format_hint import FormatHint, resolve_format_hint
+from paxman.contract import (
+    FormatHint,
+    FormatHintValidationError,
+    parse_format_hints,
+)
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -491,45 +495,26 @@ class DictDSLAdapter:
     ) -> tuple[FormatHint, ...]:
         """Parse the per-field ``format_hints`` list.
 
-        Accepts a list of strings (case-insensitive) or
-        :class:`FormatHint` members. Strings are resolved via
-        :func:`resolve_format_hint` (member-agnostic). Duplicate
-        values are deduplicated; order is preserved.
-
         Returns an empty tuple when ``format_hints`` is absent.
+        Delegates to :func:`parse_format_hints` and wraps its
+        :class:`FormatHintValidationError` in the adapter's
+        standard :class:`InvalidContractError` with
+        ``error_code="INVALID_FORMAT_HINT"`` and the
+        ``contract_id`` / ``field_name`` context.
 
         Raises:
             InvalidContractError: with ``error_code="INVALID_FORMAT_HINT"``
                 if the value is not a list, or if any element is not
                 a known format hint.
         """
-        raw_format_hints = raw.get("format_hints", [])
-        if not isinstance(raw_format_hints, list):
+        try:
+            return parse_format_hints(raw.get("format_hints"), field_name=name)
+        except FormatHintValidationError as exc:
             raise InvalidContractError(
-                f"field {name!r} 'format_hints' must be a list, "
-                f"got {type(raw_format_hints).__name__}",
-                error_code="INVALID_FORMAT_HINT",
+                str(exc),
+                error_code=exc.error_code,
                 context={"contract_id": contract_id, "field_name": name},
-            )
-        out: list[FormatHint] = []
-        seen: set[FormatHint] = set()
-        for raw_h in raw_format_hints:
-            try:
-                hint = resolve_format_hint(raw_h)
-            except (TypeError, ValueError) as exc:
-                raise InvalidContractError(
-                    f"field {name!r} has invalid format_hint {raw_h!r}: {exc}",
-                    error_code="INVALID_FORMAT_HINT",
-                    context={
-                        "contract_id": contract_id,
-                        "field_name": name,
-                        "raw": repr(raw_h),
-                    },
-                ) from exc
-            if hint not in seen:
-                seen.add(hint)
-                out.append(hint)
-        return tuple(out)
+            ) from exc
 
     # =====================================================================
     # Internal: constraint parsing

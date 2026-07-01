@@ -56,6 +56,8 @@ def test_returns_matching_step_for_csv() -> None:
     assert len(steps) == 1
     assert steps[0].capability_id == "csv_extraction"
     assert steps[0].capability_version == "1.0"
+    # The CSV extractor consumes ``config["column"]``.
+    assert dict(steps[0].config) == {"column": "x"}
 
 
 def test_returns_matching_step_for_json() -> None:
@@ -64,6 +66,11 @@ def test_returns_matching_step_for_json() -> None:
     steps = select_format_aware(field)
     assert len(steps) == 1
     assert steps[0].capability_id == "json_path_extraction"
+    # The JSON extractor consumes ``config["pointer"]`` (a
+    # JSON-Pointer into the input), not ``config["column"]``.
+    assert dict(steps[0].config) == {"pointer": "/x"}, (
+        f"json_path_extraction must receive a 'pointer' config; got {dict(steps[0].config)}"
+    )
 
 
 def test_returns_matching_step_for_xml() -> None:
@@ -72,6 +79,11 @@ def test_returns_matching_step_for_xml() -> None:
     steps = select_format_aware(field)
     assert len(steps) == 1
     assert steps[0].capability_id == "xpath_extraction"
+    # The XML extractor consumes ``config["xpath"]`` (an XPath
+    # expression), not ``config["column"]``.
+    assert dict(steps[0].config) == {"xpath": "//x"}, (
+        f"xpath_extraction must receive an 'xpath' config; got {dict(steps[0].config)}"
+    )
 
 
 def test_returns_steps_for_all_matching_hints() -> None:

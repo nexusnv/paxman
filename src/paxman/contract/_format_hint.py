@@ -124,4 +124,74 @@ def resolve_format_hint(value: object) -> FormatHint:
     )
 
 
-__all__ = ["FormatHint", "resolve_format_hint"]
+class FormatHintValidationError(ValueError):
+    """Raised by :func:`parse_format_hints` for invalid input.
+
+    Carries ``error_code`` so the four contract adapters can wrap
+    it in their own ``InvalidContractError`` with the project
+    standard error_code "INVALID_FORMAT_HINT".
+    """
+
+    def __init__(self, message: str, *, error_code: str = "INVALID_FORMAT_HINT") -> None:
+        super().__init__(message)
+        self.error_code = error_code
+
+
+def parse_format_hints(
+    raw: object,
+    *,
+    field_name: str,
+) -> tuple[FormatHint, ...]:
+    """Validate, resolve, and deduplicate a wire-form ``format_hints`` value.
+
+    Accepts a list of strings or :class:`FormatHint` members (or
+    ``None`` / an empty list to mean "no hints"). Returns a tuple
+    of deduplicated :class:`FormatHint` members, preserving
+    insertion order.
+
+    The function is **member-agnostic**: it looks up by enum value
+    via :func:`resolve_format_hint`, not by enumerating the V1.1.0
+    members. A new member added in a follow-up minor release is
+    resolved automatically.
+
+    Args:
+        raw: The wire-form value. Must be a list, ``None``, or
+            absent. Strings or other types are rejected.
+        field_name: The field name, used only in the error
+            message.
+
+    Returns:
+        A tuple of deduplicated :class:`FormatHint` members.
+
+    Raises:
+        FormatHintValidationError: With ``error_code="INVALID_FORMAT_HINT"``
+            if *raw* is not a list, or if any element is not a
+            known format hint.
+    """
+    if raw is None:
+        return ()
+    if not isinstance(raw, list):
+        raise FormatHintValidationError(
+            f"field {field_name!r} 'format_hints' must be a list, got {type(raw).__name__}"
+        )
+    out: list[FormatHint] = []
+    seen: set[FormatHint] = set()
+    for item in raw:
+        try:
+            hint = resolve_format_hint(item)
+        except (TypeError, ValueError) as exc:
+            raise FormatHintValidationError(
+                f"field {field_name!r} has invalid format_hint {item!r}: {exc}"
+            ) from exc
+        if hint not in seen:
+            seen.add(hint)
+            out.append(hint)
+    return tuple(out)
+
+
+__all__ = [
+    "FormatHint",
+    "FormatHintValidationError",
+    "parse_format_hints",
+    "resolve_format_hint",
+]

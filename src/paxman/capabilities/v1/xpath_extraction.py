@@ -73,7 +73,7 @@ from paxman.capabilities.result import (
     EvidenceRef,
 )
 from paxman.capabilities.spec import CapabilitySpec, CapabilityTier, CostHint
-from paxman.contract._format_hint import FormatHint
+from paxman.contract import FormatHint
 from paxman.logging import get_logger
 
 __all__ = ["XPathExtractionCapability"]

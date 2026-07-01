@@ -86,7 +86,11 @@ import typing
 
 import attrs
 
-from paxman.contract._format_hint import FormatHint, resolve_format_hint
+from paxman.contract import (
+    FormatHint,
+    FormatHintValidationError,
+    parse_format_hints,
+)
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -607,46 +611,19 @@ class JsonSchemaAdapter:
     ) -> tuple[FormatHint, ...]:
         """Extract ``format_hints`` from a JSON Schema property.
 
-        The extension lives at ``x-paxman-format-hints`` (a list of
-        strings or :class:`FormatHint` members). Strings are
-        resolved via :func:`resolve_format_hint`
-        (member-agnostic). Duplicate values are deduplicated;
-        order is preserved.
-
-        Returns an empty tuple when the extension is absent.
-
-        Raises:
-            InvalidContractError: with ``error_code="INVALID_FORMAT_HINT"``
-                if the extension value is not a list, or if any
-                element is not a known format hint.
+        The extension lives at ``x-paxman-format-hints``. Delegates
+        to :func:`parse_format_hints` and wraps its
+        :class:`FormatHintValidationError` in the adapter's
+        standard :class:`InvalidContractError`.
         """
-        raw_format_hints = schema.get("x-paxman-format-hints", [])
-        if not isinstance(raw_format_hints, list):
+        try:
+            return parse_format_hints(schema.get("x-paxman-format-hints"), field_name=name)
+        except FormatHintValidationError as exc:
             raise InvalidContractError(
-                f"property {name!r} 'x-paxman-format-hints' must be a list, "
-                f"got {type(raw_format_hints).__name__}",
-                error_code="INVALID_FORMAT_HINT",
+                str(exc),
+                error_code=exc.error_code,
                 context={"contract_id": contract_id, "property": name},
-            )
-        out: list[FormatHint] = []
-        seen: set[FormatHint] = set()
-        for raw_h in raw_format_hints:
-            try:
-                hint = resolve_format_hint(raw_h)
-            except (TypeError, ValueError) as exc:
-                raise InvalidContractError(
-                    f"property {name!r} has invalid format_hint {raw_h!r}: {exc}",
-                    error_code="INVALID_FORMAT_HINT",
-                    context={
-                        "contract_id": contract_id,
-                        "property": name,
-                        "raw": repr(raw_h),
-                    },
-                ) from exc
-            if hint not in seen:
-                seen.add(hint)
-                out.append(hint)
-        return tuple(out)
+            ) from exc
 
     def _extract_constraints(
         self,
@@ -781,11 +758,15 @@ class JsonSchemaAdapter:
             }
             if f.description is not None:
                 out["description"] = f.description
+            if f.format_hints:
+                out["x-paxman-format-hints"] = [h.value for h in f.format_hints]
             return out
         if f.type is FieldType.DATE:
             out = {"type": "string", "format": "date"}
             if f.description is not None:
                 out["description"] = f.description
+            if f.format_hints:
+                out["x-paxman-format-hints"] = [h.value for h in f.format_hints]
             return out
         out = {"type": _FIELD_TYPE_TO_JSON_TYPE[f.type]}
         if f.nullable:
@@ -797,6 +778,8 @@ class JsonSchemaAdapter:
             out["default"] = f.default
         for c in f.constraints:
             self._export_constraint(c, out)
+        if f.format_hints:
+            out["x-paxman-format-hints"] = [h.value for h in f.format_hints]
         return out
 
     def _export_money_property(self, f: CanonicalField) -> dict[str, typing.Any]:
@@ -816,6 +799,8 @@ class JsonSchemaAdapter:
                 "amount": str(f.default.amount),
                 "currency": f.default.currency,
             }
+        if f.format_hints:
+            out["x-paxman-format-hints"] = [h.value for h in f.format_hints]
         return out
 
     @staticmethod

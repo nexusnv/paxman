@@ -80,7 +80,11 @@ import attrs
 import pydantic
 from pydantic_core import PydanticUndefined
 
-from paxman.contract._format_hint import FormatHint, resolve_format_hint
+from paxman.contract import (
+    FormatHint,
+    FormatHintValidationError,
+    parse_format_hints,
+)
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -427,50 +431,22 @@ class PydanticAdapter:
 
         The Pydantic adapter accepts a list of strings (or
         :class:`FormatHint` members) under the
-        ``x-paxman-format-hints`` extension key. Strings are
-        resolved via :func:`resolve_format_hint`
-        (member-agnostic). Duplicate values are deduplicated;
-        order is preserved.
-
-        Returns an empty tuple when the extension is absent.
-
-        Raises:
-            InvalidContractError: with ``error_code="INVALID_FORMAT_HINT"``
-                if the extension value is not a list, or if any
-                element is not a known format hint.
+        ``x-paxman-format-hints`` extension key. Delegates to
+        :func:`parse_format_hints` and wraps its
+        :class:`FormatHintValidationError` in the adapter's
+        standard :class:`InvalidContractError`.
         """
         extra = field_info.json_schema_extra
-        if extra is None:
+        if extra is None or not isinstance(extra, dict):
             return ()
-        if not isinstance(extra, dict):
-            return ()
-        raw_format_hints = extra.get("x-paxman-format-hints", [])
-        if not isinstance(raw_format_hints, list):
+        try:
+            return parse_format_hints(extra.get("x-paxman-format-hints"), field_name=name)
+        except FormatHintValidationError as exc:
             raise InvalidContractError(
-                f"field {name!r} 'x-paxman-format-hints' must be a list, "
-                f"got {type(raw_format_hints).__name__}",
-                error_code="INVALID_FORMAT_HINT",
+                str(exc),
+                error_code=exc.error_code,
                 context={"model": model_cls.__name__, "field_name": name},
-            )
-        out: list[FormatHint] = []
-        seen: set[FormatHint] = set()
-        for raw_h in raw_format_hints:
-            try:
-                hint = resolve_format_hint(raw_h)
-            except (TypeError, ValueError) as exc:
-                raise InvalidContractError(
-                    f"field {name!r} has invalid format_hint {raw_h!r}: {exc}",
-                    error_code="INVALID_FORMAT_HINT",
-                    context={
-                        "model": model_cls.__name__,
-                        "field_name": name,
-                        "raw": repr(raw_h),
-                    },
-                ) from exc
-            if hint not in seen:
-                seen.add(hint)
-                out.append(hint)
-        return tuple(out)
+            ) from exc
 
     def _constraints_from_field(
         self,
@@ -597,6 +573,12 @@ class PydanticAdapter:
             field_kwargs["description"] = f.description
         for c in f.constraints:
             self._export_constraint_to_field(c, field_kwargs)
+        if f.format_hints:
+            extra = field_kwargs.get("json_schema_extra", {})
+            if not isinstance(extra, dict):
+                extra = {}
+            extra["x-paxman-format-hints"] = [h.value for h in f.format_hints]
+            field_kwargs["json_schema_extra"] = extra
         if f.enum_values is not None:
             # Override annotation with a Literal of the allowed values.
             annotation = typing.Literal[tuple(f.enum_values)]

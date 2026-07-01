@@ -33,7 +33,7 @@ from decimal import Decimal
 
 import attrs
 
-from paxman.contract._format_hint import FormatHint
+from paxman.contract import FormatHint
 
 __all__ = [
     "CapabilitySpec",

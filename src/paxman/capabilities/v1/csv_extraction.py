@@ -67,7 +67,7 @@ from paxman.capabilities.result import (
     EvidenceRef,
 )
 from paxman.capabilities.spec import CapabilitySpec, CapabilityTier, CostHint
-from paxman.contract._format_hint import FormatHint
+from paxman.contract import FormatHint
 
 __all__ = ["CsvExtractionCapability"]
 

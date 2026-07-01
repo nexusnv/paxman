@@ -741,3 +741,18 @@ def test_format_hints_invalid_value() -> None:
     with pytest.raises(InvalidContractError) as exc_info:
         adapter.adapt(M)
     assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_must_be_list() -> None:
+    """x-paxman-format-hints must be a list; non-list values are rejected."""
+    from pydantic import BaseModel, Field
+
+    class M(BaseModel):
+        supplier: str = Field(json_schema_extra={"x-paxman-format-hints": "csv"})  # str, not list
+
+    adapter = PydanticAdapter()
+    with pytest.raises(InvalidContractError) as exc_info:
+        adapter.adapt(M)
+    assert exc_info.value.error_code == "INVALID_FORMAT_HINT"

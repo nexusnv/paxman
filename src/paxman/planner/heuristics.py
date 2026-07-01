@@ -236,11 +236,15 @@ def select_format_aware(
         if not _accepts_field_type(spec, field):
             continue
         if spec.format_hint in field.format_hints:
+            # V1.1.0 format extractors consume ``config["column"]``
+            # (column name or index). The dispatch itself is
+            # member-agnostic — only this per-capability config
+            # detail is V1.1.0-specific.
             out.append(
                 FieldPlanStep(
                     capability_id=spec.id,
                     capability_version=spec.version,
-                    config={},
+                    config={"column": field.name},
                     note=(
                         f"format-aware tier={spec.tier.value} "
                         f"format={spec.format_hint.value}"

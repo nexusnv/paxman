@@ -296,3 +296,54 @@ def test_register_rejects_non_capabilityspec() -> None:
 
     with pytest.raises(TypeError, match=r"capability\.spec must be a CapabilitySpec"):
         register(_BadSpec())  # type: ignore[arg-type]
+
+
+# --- V1.1.0 format-aware extraction specs ---------------------------------
+
+
+def test_json_path_extraction_spec_is_registerable() -> None:
+    """The V1.1.0 json_path_extraction spec is registerable with the correct shape."""
+    from paxman.capabilities.v1.json_path_extraction import (
+        JsonPathExtractionCapability,
+    )
+
+    cap = JsonPathExtractionCapability()
+    register(cap, replace=True)
+    looked_up = get("json_path_extraction", "1.0")
+    assert looked_up.spec.id == "json_path_extraction"
+    assert looked_up.spec.version == "1.0"
+    assert looked_up.spec.tier is CapabilityTier.LOCAL_DETERMINISTIC
+    assert looked_up.spec.deterministic is True
+    assert looked_up.spec.cost_estimate == CostHint(tokens=0, ms=1, usd=0.0)
+    assert "STRING" in looked_up.spec.input_types
+    assert "MIXED" in looked_up.spec.input_types
+
+
+def test_csv_extraction_spec_is_registerable() -> None:
+    """The V1.1.0 csv_extraction spec is registerable with the correct shape."""
+    from paxman.capabilities.v1.csv_extraction import CsvExtractionCapability
+
+    cap = CsvExtractionCapability()
+    register(cap, replace=True)
+    looked_up = get("csv_extraction", "1.0")
+    assert looked_up.spec.id == "csv_extraction"
+    assert looked_up.spec.version == "1.0"
+    assert looked_up.spec.tier is CapabilityTier.LOCAL_DETERMINISTIC
+    assert looked_up.spec.deterministic is True
+    assert looked_up.spec.cost_estimate == CostHint(tokens=0, ms=1, usd=0.0)
+    assert "STRING" in looked_up.spec.input_types
+    assert "MIXED" in looked_up.spec.input_types
+
+
+def test_xpath_extraction_spec_is_registerable() -> None:
+    """The V1.1.0 xpath_extraction spec is registerable with the correct shape."""
+    from paxman.capabilities.v1.xpath_extraction import XPathExtractionCapability
+
+    cap = XPathExtractionCapability()
+    register(cap, replace=True)
+    looked_up = get("xpath_extraction", "1.0")
+    assert looked_up.spec.id == "xpath_extraction"
+    assert looked_up.spec.version == "1.0"
+    assert looked_up.spec.tier is CapabilityTier.LOCAL_DETERMINISTIC
+    assert looked_up.spec.deterministic is True
+    assert looked_up.spec.cost_estimate == CostHint(tokens=0, ms=1, usd=0.0)

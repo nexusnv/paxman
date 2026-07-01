@@ -20,6 +20,17 @@ Type mapping (Pydantic annotation → ``FieldType``):
 - ``list`` / ``tuple`` / ``set`` → ``ARRAY``
 - ``pydantic.Json`` → ``STRING`` (Pydantic v2's "arbitrary JSON" type)
 
+**V1 limitation:** ``float`` is mapped to ``DECIMAL`` in V1. There is no
+separate ``FLOAT`` type, so the Pydantic adapter maps ``float`` to
+``DECIMAL`` as a convenience. The downside: the Reconciler may apply
+money-specific logic (currency policy, FX) to ``float`` fields that the
+caller did not intend as money (probabilities, temperatures, ratios, etc.).
+For money fields where you want money-specific reconciliation, use
+``Decimal`` explicitly (or the dedicated :class:`MoneyValue` payload).
+For other numeric fields, be aware that a ``float`` will be treated as a
+money-like DECIMAL. A proper ``FLOAT`` type is tracked for V2 — see
+`issue #61 <https://github.com/nexusnv/paxman/issues/61>`_.
+
 A Pydantic model with a ``Decimal`` + ``str`` currency pair is **not**
 auto-detected as MONEY; callers must opt in via a custom subclass of
 ``pydantic.BaseModel`` named ``Money`` (see ``adapt_money_class`` below)
@@ -73,6 +84,7 @@ import datetime
 import enum
 import inspect
 import re
+import types
 import typing
 from decimal import Decimal
 
@@ -132,18 +144,13 @@ class Money(pydantic.BaseModel):
 def _is_optional(annotation: typing.Any) -> tuple[bool, typing.Any]:
     """Return ``(True, inner)`` if *annotation* is ``Optional[X]`` or ``X | None``."""
     origin = typing.get_origin(annotation)
-    args = typing.get_args(annotation)
-    if origin is typing.Union and type(None) in args:  # Optional[X] / Union[X, None]
-        non_none = [a for a in args if a is not type(None)]
-        if len(non_none) == 1:
-            return True, non_none[0]
-        # Union of multiple non-None types → not supported in V1.
-        return False, annotation
-    if origin is not None and getattr(origin, "__name__", "") == "UnionType":
-        # PEP 604: `int | None`
-        non_none = [a for a in args if a is not type(None)]
-        if len(non_none) == 1:
-            return True, non_none[0]
+    if origin is typing.Union or origin is types.UnionType:  # Optional / PEP 604
+        args = typing.get_args(annotation)
+        if type(None) in args:
+            non_none = [a for a in args if a is not type(None)]
+            if len(non_none) == 1:
+                return True, non_none[0]
+            # Union of multiple non-None types → not supported in V1.
     return False, annotation
 
 
@@ -339,14 +346,17 @@ class PydanticAdapter:
                 error_code="INVALID_FIELD",
                 context={"model": model_cls.__name__, "field_name": name},
             )
+        # Optional handling FIRST, so we unwrap the right inner type.
+        # For Optional[Annotated[int, Field(ge=0)]] the outer wrapper is
+        # Union, not Annotated — _is_optional strips it to Annotated[int, ...],
+        # then _unwrap_annotated strips Annotated to bare int.
+        is_optional, unwrapped = _is_optional(annotation)
         # Strip ``Annotated[T, ...]`` and capture metadata. Metadata is
         # currently unused because Pydantic v2 stores constraints in
         # ``field_info.metadata`` directly (Pydantic itself unwraps the
         # Annotated when constructing FieldInfo), but we keep the call
         # for forward-compat with future Pydantic versions.
-        unwrapped, _metadata = _unwrap_annotated(annotation)
-        # Optional handling.
-        is_optional, unwrapped = _is_optional(unwrapped)
+        unwrapped, _metadata = _unwrap_annotated(unwrapped)
         # Money subclass detection on the unwrapped type.
         field_type = _python_type_to_field_type(unwrapped)
         if field_type is None:

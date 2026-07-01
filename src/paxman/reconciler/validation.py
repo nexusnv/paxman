@@ -7,7 +7,7 @@ each candidate:
 1. **Constraint validation.** Run the candidate's value through every
    :class:`~paxman.contract._types.Constraint` attached to the field.
    The check is delegated to
-   :func:`paxman.capabilities.v1.validation._check_constraint`, the
+   :func:`paxman.validation.constraints.check_constraint`, the
    pure helper used by the ``validation`` capability. The Reconciler
    does **not** invoke the capability — it calls the helper directly
    (per `ADR-0003`: the Reconciler never executes capabilities).
@@ -26,7 +26,8 @@ is a *capability*: a capability invocation is part of a
 :class:`~paxman.planner.field_plan.FieldPlan` and is invoked by the
 Executor. The Reconciler does not run capabilities. Instead, it
 imports the same underlying pure check
-(:func:`_check_constraint`) used by the capability. This is
+(:func:`paxman.validation.constraints.check_constraint`) used by the
+capability. This is
 deliberately the "honest" path: the Reconciler applies the same
 rules the capability would, without going through the capability
 machinery.
@@ -48,9 +49,9 @@ import typing
 import attrs
 
 from paxman.capabilities.result import Candidate
-from paxman.capabilities.v1.validation import _check_constraint
 from paxman.contract._types import ConstraintKind
 from paxman.contract.canonical import CanonicalField
+from paxman.validation.constraints import check_constraint as _check_constraint
 
 __all__ = [
     "PROMPT_INJECTION_PATTERNS",
@@ -163,7 +164,7 @@ def validate_candidate(
     """Validate a candidate value against the field's constraints.
 
     Runs every :class:`Constraint` attached to *field* through
-    :func:`~paxman.capabilities.v1.validation._check_constraint`.
+    :func:`~paxman.validation.constraints.check_constraint`.
     Also runs the prompt-injection heuristic on string values.
 
     Args:

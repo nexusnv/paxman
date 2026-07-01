@@ -23,7 +23,7 @@ __all__ = [
 ]
 
 
-def register_adapter(adapter: ContractAdapter) -> None:
+def register_adapter(adapter: ContractAdapter, *, replace: bool = False) -> None:
     """Register a :class:`ContractAdapter` globally.
 
     Registered adapters are available for contract detection and
@@ -33,10 +33,14 @@ def register_adapter(adapter: ContractAdapter) -> None:
         adapter: The adapter instance to register. Must implement the
             :class:`ContractAdapter` protocol (``format_id``, ``adapt``,
             ``export``).
+        replace: If ``True``, replace any existing adapter with the
+            same ``format_id``. Defaults to ``False`` (raises on
+            conflict, preserving existing semantics).
 
     Raises:
         paxman.errors.InvalidContractError: If an adapter with the
-            same ``format_id`` is already registered.
+            same ``format_id`` is already registered and
+            ``replace=False``.
         TypeError: If *adapter* does not implement the protocol.
 
     Examples:
@@ -46,11 +50,12 @@ def register_adapter(adapter: ContractAdapter) -> None:
         ...     def adapt(self, external): ...
         ...     def export(self, canonical): ...
         >>> register_adapter(MyAdapter())  # doctest: +SKIP
+        >>> register_adapter(MyAdapter(), replace=True)  # doctest: +SKIP
     """
-    _register_adapter(adapter)
+    _register_adapter(adapter, replace=replace)
 
 
-def register_capability(capability: Capability) -> None:
+def register_capability(capability: Capability, *, replace: bool = False) -> None:
     """Register a :class:`Capability` globally.
 
     Registered capabilities are discovered by the planner and
@@ -60,10 +65,14 @@ def register_capability(capability: Capability) -> None:
         capability: The capability instance to register. Must implement
             the :class:`Capability` protocol (``spec`` property and
             ``invoke`` method).
+        replace: If ``True``, replace any existing capability with the
+            same ``(id, version)``. Defaults to ``False`` (raises on
+            conflict, preserving existing semantics).
 
     Raises:
         paxman.errors.InvalidContractError: If a capability with the
-            same ``(id, version)`` is already registered.
+            same ``(id, version)`` is already registered and
+            ``replace=False``.
         TypeError: If *capability* does not implement the protocol.
 
     Examples:
@@ -73,8 +82,9 @@ def register_capability(capability: Capability) -> None:
         ...     def spec(self): ...
         ...     def invoke(self, ctx): ...
         >>> register_capability(MyCapability())  # doctest: +SKIP
+        >>> register_capability(MyCapability(), replace=True)  # doctest: +SKIP
     """
-    _register_capability(capability)
+    _register_capability(capability, replace=replace)
 
 
 def get_adapter(format_id: str) -> ContractAdapter | None:

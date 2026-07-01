@@ -30,12 +30,13 @@ shared across processes; this is intentional.
 
 from __future__ import annotations
 
-import sys
+import importlib
 import types
 
 from paxman.capabilities.base import Capability
 from paxman.capabilities.spec import CapabilitySpec
 from paxman.errors import InvalidContractError
+from paxman.logging import get_logger
 
 __all__ = [
     "all_capabilities",
@@ -250,17 +251,53 @@ def _bootstrap_v1_capabilities() -> None:
     user. This matches the original behaviour: importing
     ``paxman.capabilities.v1`` only registers ``lookup``.
 
-    The bootstrap is a no-op if the V1 module has not been
-    imported yet (in which case the user has explicitly opted
-    out of V1 capabilities).
+    The V1 lookup module is actively imported via
+    :func:`importlib.import_module` (regardless of whether the
+    v1 package was previously imported) so the bootstrap is
+    self-sufficient. If the import fails (e.g. the v1 package is
+    not installed, or has a missing dependency that causes a real
+    ImportError), the failure is logged at WARNING level and the
+    bootstrap is a no-op — the caller is responsible for
+    diagnosing a missing v1 module via the WARNING log.
+
+    .. note::
+        **v1.0.2 fix for #64 regression:** the previous implementation
+        used ``sys.modules.get("paxman.capabilities.v1.lookup")`` to
+        short-circuit, which meant the bootstrap only ran if some
+        OTHER code had already imported the v1 module. Before #64
+        the reconciler imported ``paxman.capabilities.v1.validation``
+        (the layer violation that #64 fixed), which transitively
+        loaded the v1 package and triggered ``lookup``'s
+        ``_register_on_import`` hook. After #64, no subsystem imports
+        from ``paxman.capabilities.v1.*``, so the v1 module is never
+        loaded by default — leaving ``lookup`` unregistered and the
+        planner producing empty field plans for the goldens.
+
+        The fix: actively import the v1 lookup module via
+        :func:`importlib.import_module` so the bootstrap is
+        self-sufficient. This restores the implicit-availability
+        behavior the bootstrap was designed for, without re-
+        introducing the layer violation.
     """
-    # Defer the import to call time. Using ``sys.modules`` first lets
-    # us short-circuit when the V1 module is not yet imported (avoids
-    # triggering the import cycle at static analysis time, which
-    # pyright reports as an error).
-    lookup_module = sys.modules.get("paxman.capabilities.v1.lookup")
-    if lookup_module is None:
-        # V1 module not available; nothing to bootstrap.
+    # Defer the import to call time so we don't trigger the v1
+    # import at static analysis time. After #64 (extract
+    # _check_constraint), the v1 package is no longer loaded
+    # transitively, so we must actively import the lookup module
+    # to trigger its self-registration.
+    try:
+        lookup_module = importlib.import_module("paxman.capabilities.v1.lookup")
+    except ImportError as exc:
+        # The v1 module is not available. This is expected when the
+        # user has not installed the v1 capabilities. Log at WARNING
+        # so a real ImportError (e.g. a missing dependency inside
+        # the v1 module) is observable, rather than silently leaving
+        # the registry empty.
+        _log = get_logger("paxman.capabilities.registry")
+        _log.warning(
+            "v1_lookup_bootstrap_skipped",
+            reason="import_error",
+            error=str(exc),
+        )
         return
     # Re-register the V1 capabilities that self-register on import.
     # The lookup capability's ``_register_on_import`` hook only runs

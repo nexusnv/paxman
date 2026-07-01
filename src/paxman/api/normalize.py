@@ -39,6 +39,7 @@ from paxman.errors import (
     ReconciliationError,
 )
 from paxman.executor.executor import run as _run_executor
+from paxman.logging import get_logger
 from paxman.planner.input_profile import InputProfile, make_profile
 from paxman.planner.planner import plan as _plan
 from paxman.reconciler.reconciler import reconcile as _reconcile
@@ -416,12 +417,33 @@ def normalize(
             )
         )
 
-    # Collect capability versions from candidate evidence.
+    # Collect capability versions from the SAME evidence set that goes
+    # into artifact.evidence (single source of truth, fixes #60).
+    # Previously this iterated cr.evidence (pre-reconciliation) while
+    # artifact.evidence was built from rr.evidence_refs (reconciled),
+    # which could leave stale entries in capability_versions and trigger
+    # false CapabilityNotFoundError during replay.
     capability_versions: dict[str, str] = {}
-    for cr in candidate_results:
-        for ev in cr.evidence:
-            if isinstance(ev, EvidenceRef):
-                capability_versions[ev.capability_id] = ev.capability_version
+    _log = get_logger("paxman.api.normalize")
+    for ev in evidence:
+        if isinstance(ev, EvidenceRef):
+            cap_id = ev.capability_id
+            cap_ver = ev.capability_version
+            if cap_id in capability_versions and capability_versions[cap_id] != cap_ver:
+                # Same capability registered with different versions across
+                # fields. We keep the last-encountered version (last-write-wins
+                # was the pre-fix behavior; a real fix would require either
+                # a new DiagnosticCode — which needs an ADR per the closed
+                # V1 set invariant — or a behavioral change. Logging at
+                # WARNING is observable without expanding the DiagnosticCode
+                # enum.
+                _log.warning(
+                    "capability_version_conflict",
+                    capability_id=cap_id,
+                    previous_version=capability_versions[cap_id],
+                    new_version=cap_ver,
+                )
+            capability_versions[cap_id] = cap_ver
 
     overall_status = _compute_overall_status(resolved_results, canonical, policy)
 

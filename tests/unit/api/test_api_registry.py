@@ -61,11 +61,11 @@ class TestRegisterAndGetAdapter:
     """Round-trip and error-path tests for adapter registration."""
 
     def test_register_adapter_calls_internal(self) -> None:
-        """``register_adapter`` delegates to the internal registry."""
+        """``register_adapter`` delegates to the internal registry with replace=False."""
         adapter = _MockAdapter()
         with patch("paxman.api.registry._register_adapter") as mock_reg:
             register_adapter(adapter)
-            mock_reg.assert_called_once_with(adapter)
+            mock_reg.assert_called_once_with(adapter, replace=False)
 
     def test_get_adapter_returns_adapter_when_found(self) -> None:
         """``get_adapter`` returns the adapter when the internal lookup succeeds."""
@@ -107,11 +107,11 @@ class TestRegisterAndGetCapability:
     """Round-trip and error-path tests for capability registration."""
 
     def test_register_capability_calls_internal(self) -> None:
-        """``register_capability`` delegates to the internal registry."""
+        """``register_capability`` delegates to the internal registry with replace=False."""
         capability = _MockCapability()
         with patch("paxman.api.registry._register_capability") as mock_reg:
             register_capability(capability)
-            mock_reg.assert_called_once_with(capability)
+            mock_reg.assert_called_once_with(capability, replace=False)
 
     def test_get_capability_returns_capability_when_found(self) -> None:
         """``get_capability`` returns the capability when the internal lookup succeeds."""
@@ -158,7 +158,7 @@ class TestRoundTrip:
             patch("paxman.api.registry._get_adapter", return_value=adapter) as mock_get,
         ):
             register_adapter(adapter)
-            mock_reg.assert_called_once_with(adapter)
+            mock_reg.assert_called_once_with(adapter, replace=False)
 
             result = get_adapter("mock_format")
             assert result is adapter
@@ -174,8 +174,57 @@ class TestRoundTrip:
             ) as mock_get,
         ):
             register_capability(capability)
-            mock_reg.assert_called_once_with(capability)
+            mock_reg.assert_called_once_with(capability, replace=False)
 
             result = get_capability("mock_cap")
             assert result is capability
             mock_get.assert_called_once_with("mock_cap")
+
+
+# ---------------------------------------------------------------------------
+# replace=True (issue #59)
+# ---------------------------------------------------------------------------
+
+
+class TestRegisterReplaceFlag:
+    """Tests for issue #59 — public register_* must expose ``replace=True``."""
+
+    def test_register_adapter_forwards_replace_true(self) -> None:
+        """``register_adapter(..., replace=True)`` forwards the flag to the internal registry."""
+        adapter = _MockAdapter()
+        with patch("paxman.api.registry._register_adapter") as mock_reg:
+            register_adapter(adapter, replace=True)
+            mock_reg.assert_called_once_with(adapter, replace=True)
+
+    def test_register_capability_forwards_replace_true(self) -> None:
+        """``register_capability(..., replace=True)`` forwards the flag to the internal registry."""
+        capability = _MockCapability()
+        with patch("paxman.api.registry._register_capability") as mock_reg:
+            register_capability(capability, replace=True)
+            mock_reg.assert_called_once_with(capability, replace=True)
+
+    def test_register_adapter_default_replace_is_false(self) -> None:
+        """``register_adapter()`` without ``replace`` defaults to ``False`` (raises on conflict)."""
+        adapter = _MockAdapter()
+        with patch("paxman.api.registry._register_adapter") as mock_reg:
+            register_adapter(adapter)
+            mock_reg.assert_called_once_with(adapter, replace=False)
+
+    def test_register_capability_default_replace_is_false(self) -> None:
+        """``register_capability()`` without ``replace`` defaults to ``False`` (raises on conflict)."""
+        capability = _MockCapability()
+        with patch("paxman.api.registry._register_capability") as mock_reg:
+            register_capability(capability)
+            mock_reg.assert_called_once_with(capability, replace=False)
+
+    def test_register_adapter_replace_kwarg_only(self) -> None:
+        """``replace`` is keyword-only; positional use is rejected."""
+        adapter = _MockAdapter()
+        with pytest.raises(TypeError):
+            register_adapter(adapter, True)  # type: ignore[misc]
+
+    def test_register_capability_replace_kwarg_only(self) -> None:
+        """``replace`` is keyword-only; positional use is rejected."""
+        capability = _MockCapability()
+        with pytest.raises(TypeError):
+            register_capability(capability, True)  # type: ignore[misc]

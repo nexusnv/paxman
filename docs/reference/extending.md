@@ -128,6 +128,19 @@ class ContractAdapter(Protocol):
 - **Map semantic tags** if the format supports metadata.
 - **Validate before returning** — the adapter's output must be a valid `CanonicalContract`.
 
+> **V1 limitation — mapping `float` to `DECIMAL`:** V1 has only 9
+> `FieldType` values and no separate `FLOAT` type. Adapters that map a
+> floating-point annotation to a `FieldType` must use `DECIMAL` (the
+> Reconciler will then treat the field as money-like — currency policy,
+> FX). For money fields this is correct; for non-money numerics
+> (probabilities, temperatures, ratios) the caller may hit money-specific
+> validation errors. Adapter authors who want a clean separation should
+> preserve the user's `Decimal` annotation for money fields and consider
+> documenting the float → DECIMAL caveat. A proper `FLOAT` type is
+> tracked for V2 — see
+> [issue #61](https://github.com/nexusnv/paxman/issues/61). The Pydantic
+> adapter's module docstring documents this caveat explicitly.
+
 ### 1.5 What adapters MUST NOT do
 
 - **Read raw input** — adapters only see contracts, not the data being normalized.

@@ -40,9 +40,9 @@ contract, the :func:`reconcile` function executes the following steps:
 
 Boundary rules (per `ADR-0003` and ``PACKAGE_STRUCTURE.md`` §7.4):
 
-- The Reconciler **never** executes capabilities. It calls
-  :func:`paxman.capabilities.v1.validation._check_constraint`
-  directly (a pure helper, not a capability invocation).
+- The Reconciler **never** executes capabilities. Constraint checks
+  are delegated to :func:`paxman.validation.constraints.check_constraint`
+  (a pure helper, not a capability invocation).
 - The Reconciler **never** reads the raw input.
 - The Reconciler **never** sees external schemas — only
   :class:`CanonicalContract`.

@@ -49,7 +49,19 @@ Extras are declared in `[project.optional-dependencies]` and installed with `pip
 | `openapi` | `openapi-spec-validator>=0.6` | `PaxmanOpenAPIAdapter` (best-effort) |
 | `all-adapters` | All of the above | Convenience meta-extra |
 
-### 3.2 Inference provider extras (V2+)
+### 3.2 Security extras
+
+| Extra | Dependencies | Required by |
+|---|---|---|
+| `xml-secure` | `defusedxml>=0.7.1` | `XPathExtractionCapability` — hardened XML parsing (recommended). See [ADR-0013](../adr/0013-defusedxml-optional-extra.md). |
+
+When `xml-secure` is not installed, `XPathExtractionCapability` falls back
+to the standard library `xml.etree.ElementTree` and emits a one-shot
+`structlog.info` log at module import time. The fallback is observable so
+callers who care about XML security can detect the unhardened mode at
+startup and install the extra.
+
+### 3.3 Inference provider extras (V2+)
 
 V1 ships a stub provider; V2 will ship reference providers:
 
@@ -60,14 +72,14 @@ V1 ships a stub provider; V2 will ship reference providers:
 | `inference-cohere` | `cohere>=4.0` | `CohereProvider` | No (V2) |
 | `all-providers` | All of the above | Convenience | No (V2) |
 
-### 3.3 Convenience extras
+### 3.4 Convenience extras
 
 | Extra | Dependencies | Purpose |
 |---|---|---|
-| `all` | All adapter extras | Every adapter |
+| `all` | All adapter + security extras | Every adapter + hardened XML |
 | `dev` | (use PEP 735 instead) | Deprecated; use `uv sync --dev` |
 
-### 3.4 Examples
+### 3.5 Examples
 
 ```bash
 # Just the core
@@ -201,6 +213,9 @@ paxman[json-schema]
 
 paxman[openapi]
 └── openapi-spec-validator
+
+paxman[xml-secure]
+└── defusedxml
 
 paxman[inference-openai]  (V2)
 └── openai

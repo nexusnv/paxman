@@ -173,6 +173,23 @@ def test_unsupported_text_node() -> None:
     assert result.diagnostics[0].code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
 
 
+def test_descendant_axis_unsupported() -> None:
+    """The ``//`` descendant axis is outside the V1 documented subset.
+
+    V1 supports absolute child-element paths only. ``//root/item``
+    is a non-misclassification: the user wrote descendant-axis syntax
+    which is not in the V1 subset, and the capability surfaces a
+    ``CAPABILITY_INVOKE_FAILED`` rather than a silent miss.
+    """
+    cap = XPathExtractionCapability()
+    raw = b"<root><item>a</item><item>b</item></root>"
+    result = cap.invoke(_ctx(raw, xpath="//root/item"))
+    assert result.candidates == ()
+    d = result.diagnostics[0]
+    assert d.code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
+    assert "//" in d.message or "descendant" in d.message.lower()
+
+
 def test_undeclared_namespace_prefix() -> None:
     """A namespace prefix not in config['namespaces'] is an error."""
     cap = XPathExtractionCapability()

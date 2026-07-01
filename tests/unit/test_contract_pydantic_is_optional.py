@@ -6,7 +6,6 @@ The PEP 604 branch of ``_is_optional`` must use ``origin is types.UnionType``
 
 from __future__ import annotations
 
-import typing
 from typing import Annotated, Optional
 from unittest import mock
 

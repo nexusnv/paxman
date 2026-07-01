@@ -33,6 +33,8 @@ from decimal import Decimal
 
 import attrs
 
+from paxman.contract._format_hint import FormatHint
+
 __all__ = [
     "CapabilitySpec",
     "CapabilityTier",
@@ -231,6 +233,13 @@ class CapabilitySpec:
             capability depends on (e.g., ``("openai",)`` for a
             remote-inference capability). Empty for self-contained
             capabilities. Defaults to an empty tuple.
+        format_hint: Wire-format hint declaring which :class:`FormatHint`
+            this capability consumes. ``None`` for capabilities that do
+            not consume raw input bytes (cleanup transforms, lookup,
+            inference, validation). Defaults to ``None``. See
+            `ADR-0015 <../adr/0015-format-aware-executor-auto-dispatch.md>`_
+            and `issue #73
+            <https://github.com/nexusnv/paxman/issues/73>`_.
 
     Examples:
         >>> CapabilitySpec(
@@ -251,6 +260,7 @@ class CapabilitySpec:
     tier: CapabilityTier = CapabilityTier.LOCAL_DETERMINISTIC
     deterministic: bool = True
     required_providers: tuple[str, ...] = ()
+    format_hint: FormatHint | None = None
 
     def __attrs_post_init__(self) -> None:
         """Validate invariants.
@@ -284,4 +294,9 @@ class CapabilitySpec:
         if not isinstance(self.required_providers, tuple):
             raise TypeError(
                 f"required_providers must be a tuple, got {type(self.required_providers).__name__}"
+            )
+        if self.format_hint is not None and not isinstance(self.format_hint, FormatHint):
+            raise TypeError(
+                f"format_hint must be a FormatHint or None, "
+                f"got {type(self.format_hint).__name__}"
             )

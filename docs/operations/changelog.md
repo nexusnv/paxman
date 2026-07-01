@@ -63,6 +63,163 @@ change. No code, no public API, no tests.
   is in `[dependency-groups] dev` and does not affect the wheel.
 - PyPI release `paxman==1.0.0` is unchanged.
 
+## [1.0.2] - 2026-07-03
+
+Patch release addressing all 7 open bugs filed against v1.0.0 in the `v1.0.x`
+milestone. The release follows the project's Friday-patch policy
+([milestone description](https://github.com/nexusnv/paxman/milestone/3)):
+hotfixes land on `main` as soon as their PRs are merged, and a tagged
+release is cut every Friday. No new public API surface, no new core
+dependencies, no behavior change for callers who did not trigger the
+bug paths.
+
+The only public-API delta is **additive and backward-compatible**:
+`paxman.register_adapter()` and `paxman.register_capability()` gain
+a keyword-only `replace: bool = False` parameter. The default
+behavior (raises on conflict) is preserved.
+
+### Fixed
+
+- **Issue #58 — Pydantic adapter: `Optional[Annotated[T, ...]]` is now
+  accepted.** Previously raised `UNSUPPORTED_FIELD_TYPE` because
+  `_unwrap_annotated` ran BEFORE `_is_optional`, so the inner
+  `Annotated` was passed to `_python_type_to_field_type` which has no
+  `Annotated` branch. The fix swaps the call order: `_is_optional`
+  first, then `_unwrap_annotated` on the (now possibly inner) type.
+  This is the documented recommended pattern for Pydantic v2 with
+  `Optional[Annotated[int, Field(ge=0)]]` and equivalent
+  `Annotated[int, ...] | None` / `Union[Annotated[int, ...], None]`
+  forms. **Note:** Pydantic v2 does not propagate the `Field(ge=0)`
+  constraint into `field_info.metadata` when `Optional` wraps
+  `Annotated`; the constraint is buried inside the `Union`'s args.
+  This is a Pydantic v2 limitation, not a Paxman one; the field is
+  *accepted* (the previous failure mode) but the constraint is not
+  preserved in V1.
+
+- **Issue #59 — Public `register_capability()` and `register_adapter()`
+  now accept `replace: bool = False`.** Previously the public
+  functions did not forward the `replace` keyword that the internal
+  registry functions support. Plugin authors using the documented
+  public API could not re-register an existing capability or adapter;
+  the only workaround was to import the private registry module,
+  which violates the boundary rule. The new kwarg is keyword-only
+  with a default of `False` (raises on conflict, preserving existing
+  semantics). Calling `register_capability(cap, replace=True)`
+  atomically replaces any existing entry with the same
+  `(id, version)`.
+
+- **Issue #60 — `ExecutionArtifact.capability_versions` is now derived
+  from the reconciled evidence set (single source of truth).** Previously
+  the field was built from the raw, pre-reconciliation evidence
+  (`cr.evidence`) while `artifact.evidence` was built from the
+  reconciled, merged evidence (`rr.evidence_refs`). The asymmetry
+  could leave `capability_versions` with stale entries that triggered
+  false `CapabilityNotFoundError` during replay. When the same
+  `capability_id` is seen with different versions across fields, a
+  `structlog` WARNING is now emitted (event:
+  `capability_version_conflict`) and the last-encountered version
+  wins (last-write-wins, preserving pre-fix behavior). The replay check
+  in `artifact/replay.py` is unchanged; it now sees a consistent
+  `capability_versions` set. **Note:** the plan originally proposed
+  emitting a `Diagnostic` with a new `DiagnosticCode` value; the
+  implementation uses `structlog` instead because the `DiagnosticCode`
+  enum is a **closed V1 set** (adding a new code requires an ADR per
+  `src/paxman/capabilities/result.py` and
+  `PACKAGE_STRUCTURE.md` §5.4 invariant #5). A `DiagnosticCode` is
+  tracked for V2.
+
+- **Issue #61 — Pydantic adapter: `float → DECIMAL` conflation is now
+  documented loudly.** V1 has no separate `FLOAT` type, so the
+  Pydantic adapter maps `float` to `DECIMAL` as a convenience. The
+  downside: the Reconciler may apply money-specific logic (currency
+  policy, FX) to `float` fields that the caller did not intend as
+  money (probabilities, temperatures, ratios). A proper `FLOAT` type
+  would require changes to the Reconciler, all 4 adapters, and
+  existing artifacts — too large for a v1.0.x bugfix release. The
+  limitation is now documented in three places:
+  `src/paxman/contract/adapters/pydantic.py` (module docstring),
+  `docs/concepts/contracts.md` (V1 field types section), and
+  `docs/reference/extending.md` (§1.4, "What adapters MUST do").
+  Callers who hit this should use `Decimal` explicitly for money
+  fields and accept the V1 conflation for other numerics.
+
+- **Issue #62 — Pydantic adapter: `_is_optional()` uses
+  `types.UnionType` identity, not a fragile `__name__` string
+  comparison.** The previous check
+  `getattr(origin, "__name__", "") == "UnionType"` depended on a
+  CPython implementation detail: the `__name__` attribute of
+  `types.UnionType`. The correct, idiomatic check is
+  `origin is types.UnionType`, which is the documented behavior of
+  `typing.get_origin()` for PEP 604 (`X | None`) syntax. The fix
+  collapses the two near-identical branches in `_is_optional` into
+  one. A regression test locks the fix in place: the test injects a
+  fake origin with `__name__ == "UnionType"` that is NOT the real
+  `types.UnionType`, and asserts the identity check rejects it
+  (catches a regression to string-based matching more thoroughly
+  than the original proposed mock-patch test, which was unworkable
+  on CPython 3.13+ where `types.UnionType.__name__` is immutable).
+
+- **Issue #64 — Reconciler no longer imports the private
+  `_check_constraint` from `paxman.capabilities.v1.validation`.** The
+  import violated the boundary rule stated in
+  `src/paxman/capabilities/v1/__init__.py:25-28` and
+  `docs/reference/package-structure.md` §2 ("no subsystem may import
+  `paxman.capabilities.v1.*` directly"). The fix extracts the helper
+  to a new subsystem-internal module `paxman.validation.constraints`
+  (with byte-equivalent semantics — the same function body, no
+  behavior change). The capabilities v1 package keeps a re-export
+  shim (`from paxman.validation.constraints import check_constraint
+  as _check_constraint`) so any third-party code that imported the
+  private name still works. The reconciler now depends on the new
+  public (internal-API) module. The boundary rule is now fully
+  enforceable: `grep -rn "from paxman.capabilities.v1" src/paxman/{contract,planner,executor,reconciler,artifact,api}/` returns empty.
+
+  **Bootstrap follow-up (post-Oracle review):** the T3 fix had a
+  side-effect: the `_bootstrap_v1_capabilities` function in
+  `src/paxman/capabilities/registry.py` used a
+  `sys.modules.get(...)` short-circuit, which was a no-op unless
+  something else had already imported the v1 package. Before T3,
+  the reconciler's import (the layer violation) transitively loaded
+  the v1 package and triggered `lookup`'s `_register_on_import`
+  hook. After T3, no subsystem imports from `paxman.capabilities.v1.*`,
+  so the v1 module was never loaded by default — leaving `lookup`
+  unregistered and the planner producing empty field plans for the
+  goldens. The bootstrap was changed to actively call
+  `importlib.import_module("paxman.capabilities.v1.lookup")`,
+  restoring the implicit-availability behavior the bootstrap was
+  designed for, without reintroducing the layer violation. No
+  behavior change for users who were not relying on implicit
+  registration (the "opt out by not importing" semantics are
+  preserved). All 8 golden artifacts are stable; the bootstrap fix
+  is locked in by `TestBootstrapV1Capabilities` in
+  `tests/unit/test_capability_spec_registry.py`.
+
+### Notes
+
+- No new public API symbols. The only public-API delta is additive:
+  `register_adapter` and `register_capability` each gain a `replace`
+  parameter (keyword-only, default `False`). The
+  `tests/fixtures/public_api_snapshot.json` has been regenerated to
+  reflect this. The 29-symbol public API total is unchanged.
+- No new core dependencies. No core `pyproject.toml` changes beyond
+  the version bump and the per-file-ignores entry for the new test
+  file.
+- 23 new tests added across 4 new test files / classes:
+  `tests/unit/test_contract_pydantic_is_optional.py` (8 tests for #62
+  + #58), `tests/unit/api/test_register_replace.py` via the existing
+  `test_api_registry.py` (6 tests for #59),
+  `tests/integration/test_replay_integrity.py`
+  `TestCapabilityVersionsConsistency` (3 tests for #60),
+  `tests/unit/validation/test_constraints.py` (15 tests for #64),
+  `tests/unit/test_capability_spec_registry.py`
+  `TestBootstrapV1Capabilities` (2 tests for the T3 regression fix).
+  Total: 2380 → 2405 tests passing.
+- The wheel artifact (`paxman-1.0.2-py3-none-any.whl`) is
+  bit-for-bit compatible with `1.0.1` on the public surface for
+  callers that do not call the new `replace=True` keyword; only the
+  fixed code paths and the new `replace` parameter differ.
+- PyPI release `paxman==1.0.2`.
+
 ## [1.0.1] - 2026-07-01
 
 Patch release addressing three critical user-reported bugs. No public

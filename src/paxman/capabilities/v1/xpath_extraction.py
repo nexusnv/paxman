@@ -61,7 +61,7 @@ Examples:
 from __future__ import annotations
 
 import typing
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # nosec B405  (see rationale below)
 
 from paxman.capabilities.base import CapabilityContext
 from paxman.capabilities.result import (
@@ -233,7 +233,7 @@ class XPathExtractionCapability:
             # should swap in defusedxml.ElementTree when added as an optional
             # extra in V1.2. ElementTree is guarded by the existing size cap
             # on raw_input and by Paxman's replay-time bounded evaluation.
-            root = ET.fromstring(ctx.raw_input)  # noqa: S314
+            root = ET.fromstring(ctx.raw_input)  # noqa: S314  # nosec B314
         except ET.ParseError as exc:
             return CapabilityResult(
                 candidates=(),

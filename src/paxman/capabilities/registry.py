@@ -30,7 +30,7 @@ shared across processes; this is intentional.
 
 from __future__ import annotations
 
-import sys
+import importlib
 import types
 
 from paxman.capabilities.base import Capability
@@ -253,13 +253,34 @@ def _bootstrap_v1_capabilities() -> None:
     The bootstrap is a no-op if the V1 module has not been
     imported yet (in which case the user has explicitly opted
     out of V1 capabilities).
+
+    .. note::
+        **v1.0.2 fix for #64 regression:** the previous implementation
+        used ``sys.modules.get("paxman.capabilities.v1.lookup")`` to
+        short-circuit, which meant the bootstrap only ran if some
+        OTHER code had already imported the v1 module. Before #64
+        the reconciler imported ``paxman.capabilities.v1.validation``
+        (the layer violation that #64 fixed), which transitively
+        loaded the v1 package and triggered ``lookup``'s
+        ``_register_on_import`` hook. After #64, no subsystem imports
+        from ``paxman.capabilities.v1.*``, so the v1 module is never
+        loaded by default — leaving ``lookup`` unregistered and the
+        planner producing empty field plans for the goldens.
+
+        The fix: actively import the v1 lookup module via
+        :func:`importlib.import_module` so the bootstrap is
+        self-sufficient. This restores the implicit-availability
+        behavior the bootstrap was designed for, without re-
+        introducing the layer violation.
     """
-    # Defer the import to call time. Using ``sys.modules`` first lets
-    # us short-circuit when the V1 module is not yet imported (avoids
-    # triggering the import cycle at static analysis time, which
-    # pyright reports as an error).
-    lookup_module = sys.modules.get("paxman.capabilities.v1.lookup")
-    if lookup_module is None:
+    # Defer the import to call time so we don't trigger the v1
+    # import at static analysis time. After #64 (extract
+    # _check_constraint), the v1 package is no longer loaded
+    # transitively, so we must actively import the lookup module
+    # to trigger its self-registration.
+    try:
+        lookup_module = importlib.import_module("paxman.capabilities.v1.lookup")
+    except ImportError:
         # V1 module not available; nothing to bootstrap.
         return
     # Re-register the V1 capabilities that self-register on import.

@@ -25,6 +25,7 @@
     "CurrencyPolicy",
     "ExecutionArtifact",
     "FieldType",
+    "FormatHint",
     "Policy",
     "ResolutionPolicy",
     "Status"
@@ -70,6 +71,7 @@
     "ExecutionArtifact",
     "ExecutionError",
     "FieldType",
+    "FormatHint",
     "HashMismatchError",
     "InferenceProviderError",
     "InvalidContractError",

@@ -97,6 +97,18 @@ def test_unicode_input() -> None:
     assert [c.value for c in result.candidates] == ["日本語 🎉", "Café"]
 
 
+def test_strips_utf8_bom() -> None:
+    """A leading UTF-8 BOM (\\xef\\xbb\\xbf) does not leak into the first header."""
+    cap = CsvExtractionCapability()
+    # BOM-prefixed CSV (common from Excel-on-Windows exports).
+    raw = b"\xef\xbb\xbfname,amount\nACME,100\nFoo,200\n"
+    result = cap.invoke(_ctx(raw, column="name"))
+    assert [c.value for c in result.candidates] == ["ACME", "Foo"]
+    # First evidence's header must NOT contain the BOM.
+    ev = result.candidates[0].evidence_refs[0]
+    assert ev.context["header"] == ["name", "amount"]
+
+
 def test_evidence_includes_header() -> None:
     """Evidence context records the full header for provenance."""
     cap = CsvExtractionCapability()

@@ -33,6 +33,9 @@ Each ADR follows MADR 4.0 with the following sections:
 | [0007](./0007-contract-adapter-set-v1.md) | V1 Contract Adapter Set | Accepted | 2026-06-22 | Required: Pydantic, JSON Schema, Dict DSL. Optional: OpenAPI. Not in V1: ERP, agent tool, wrapper. |
 | [0008](./0008-license-decision.md) | License Decision | Accepted | 2026-06-22 | MIT chosen for V1. Apache-2.0 is the documented alternative if patent concerns emerge. The full trade-off analysis is preserved on the [project wiki](https://github.com/nexusnv/paxman/wiki/Internal-Development/Decision-History/License-decision-full-analysis). |
 | [0009](./0009-dict-dsl-v1.md) | Dict DSL V1 Surface | Accepted | 2026-06-22 | Pure-Python `dict` DSL with 5 concepts (FieldSpec, Constraint, Tag, Policy, Contract). Rejected custom grammar and JSON Schema subset. |
+| [0010](./0010-budget-money-decimal.md) | Cost Pipeline Switched to `Decimal` | Accepted | 2026-06-26 | `Budget`, `CostHint`, `BudgetTracker`, `ExecutionState` use `Decimal` for USD; aligns with ADR-0004. |
+| [0011](./0011-format-auto-detection-for-json-schema-dicts.md) | Format Auto-Detection for JSON Schema Dicts | Accepted | 2026-07-01 | Detect JSON Schema structural markers in `dict` contracts before falling through to Dict DSL. |
+| [0012](./0012-v1-capabilities-self-register-on-import.md) | V1 Capabilities Self-Register on Import | Accepted | 2026-07-01 | All 5 V1 capabilities self-register on import, mirroring the 4 contract adapters. `paxman.register_capability()` stays public for third-party extensions. |
 
 ## Conventions
 

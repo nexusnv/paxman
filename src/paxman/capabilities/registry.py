@@ -215,9 +215,10 @@ def all_capabilities() -> types.MappingProxyType[tuple[str, str], Capability]:
     view of :data:`_capabilities` (read-only but reflecting
     future mutations), defeating the "snapshot" contract.
 
-    Self-healing: if the registry is empty, the V1 ``lookup``
-    capability (the only V1 capability that self-registers on
-    import) is re-registered. This protects against test-only
+    Self-healing: if the registry is empty, all five V1
+    capabilities (``text_extraction``, ``regex_extraction``,
+    ``lookup``, ``inference``, ``validation``) are re-registered
+    (per ADR-0012). This protects against test-only
     :func:`reset` calls that wipe the registry mid-test-suite
     and would otherwise leave the planner with no capabilities
     at all.
@@ -243,12 +244,12 @@ def _bootstrap_v1_capabilities() -> None:
     :func:`reset` to clear the registry do not break subsequent
     :func:`paxman.normalize` calls.
 
-    Only the V1 capabilities that **self-register on import** are
-    re-registered here. The rest (text_extraction,
-    regex_extraction, inference, validation) are not part of the
-    default registry; they must be registered explicitly by the
-    user. This matches the original behaviour: importing
-    ``paxman.capabilities.v1`` only registers ``lookup``.
+    Per ADR-0012, all five V1 capabilities
+    (``text_extraction``, ``regex_extraction``, ``lookup``,
+    ``inference``, ``validation``) self-register on import via
+    ``_register_on_import()`` at the bottom of each module. This
+    helper re-registers them uniformly after a :func:`reset` call
+    so the planner always has the V1 surface available.
 
     The bootstrap is a no-op if the V1 module has not been
     imported yet (in which case the user has explicitly opted
@@ -258,14 +259,18 @@ def _bootstrap_v1_capabilities() -> None:
     # us short-circuit when the V1 module is not yet imported (avoids
     # triggering the import cycle at static analysis time, which
     # pyright reports as an error).
-    lookup_module = sys.modules.get("paxman.capabilities.v1.lookup")
-    if lookup_module is None:
+    v1_module = sys.modules.get("paxman.capabilities.v1")
+    if v1_module is None:
         # V1 module not available; nothing to bootstrap.
         return
-    # Re-register the V1 capabilities that self-register on import.
-    # The lookup capability's ``_register_on_import`` hook only runs
-    # once at module load, so we re-do it here after a ``reset()``.
-    register(lookup_module.LookupCapability(), replace=True)
+    # Re-register every V1 capability uniformly. The
+    # ``_register_on_import`` hook only runs once at module load,
+    # so we re-do it here after a ``reset()`` (ADR-0012).
+    register(v1_module.text_extraction.TextExtractionCapability(), replace=True)
+    register(v1_module.regex_extraction.RegexExtractionCapability(), replace=True)
+    register(v1_module.lookup.LookupCapability(), replace=True)
+    register(v1_module.inference.InferenceCapability(), replace=True)
+    register(v1_module.validation.ValidationCapability(), replace=True)
 
 
 def reset() -> None:

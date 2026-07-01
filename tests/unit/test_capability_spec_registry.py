@@ -296,3 +296,62 @@ def test_register_rejects_non_capabilityspec() -> None:
 
     with pytest.raises(TypeError, match=r"capability\.spec must be a CapabilitySpec"):
         register(_BadSpec())  # type: ignore[arg-type]
+
+
+# --- ADR-0012: V1 capabilities self-register on import --------------------
+
+
+_V1_CAPABILITY_IDS = (
+    "text_extraction",
+    "regex_extraction",
+    "lookup",
+    "inference",
+    "validation",
+)
+
+
+def test_v1_capabilities_self_register_on_import() -> None:
+    """All five V1 capabilities self-register on import (ADR-0012).
+
+    The fixtures above call :func:`reset` between tests, which
+    clears the registry. Importing the V1 module is what
+    repopulates it, via the ``_register_on_import()`` hook at the
+    bottom of each :mod:`paxman.capabilities.v1.*` module.
+    """
+    reset()
+    # Importing the V1 module triggers the per-module
+    # ``_register_on_import()`` hooks (ADR-0012).
+    import paxman.capabilities.v1  # noqa: F401  (side effect: self-registration)
+
+    registered = {cid for cid, _ in all_capabilities().keys()}
+    for cid in _V1_CAPABILITY_IDS:
+        assert cid in registered, (
+            f"V1 capability {cid!r} did not self-register on import; "
+            f"registry contains: {sorted(registered)}"
+        )
+
+
+def test_bootstrap_re_registers_all_v1_capabilities_after_reset() -> None:
+    """After :func:`reset`, the next :func:`all_capabilities` call
+    re-registers **all five** V1 capabilities uniformly (ADR-0012).
+
+    Pre-ADR-0012, the bootstrap only re-registered ``lookup``;
+    the other four were silently absent until the caller
+    explicitly registered them.
+    """
+    # Populate the registry once, then wipe it.
+    import paxman.capabilities.v1  # noqa: F401
+
+    reset()
+    # The internal table is now empty. ``all_capabilities()`` is
+    # self-healing — calling it triggers the bootstrap, so it
+    # always returns the V1 surface after a ``reset()`` as long
+    # as the V1 module has been imported. We assert on the result
+    # of the self-heal, not on the empty state (which is private
+    # and would require touching ``_capabilities``).
+    registered = {cid for cid, _ in all_capabilities().keys()}
+    for cid in _V1_CAPABILITY_IDS:
+        assert cid in registered, (
+            f"Bootstrap did not re-register V1 capability {cid!r} "
+            f"after reset(); got: {sorted(registered)}"
+        )

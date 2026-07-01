@@ -513,7 +513,7 @@ class DictDSLAdapter:
             raise InvalidContractError(
                 str(exc),
                 error_code=exc.error_code,
-                context={"contract_id": contract_id, "field_name": name},
+                context={"contract_id": contract_id, **exc.context},
             ) from exc
 
     # =====================================================================

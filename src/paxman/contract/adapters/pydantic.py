@@ -445,7 +445,7 @@ class PydanticAdapter:
             raise InvalidContractError(
                 str(exc),
                 error_code=exc.error_code,
-                context={"model": model_cls.__name__, "field_name": name},
+                context={"model": model_cls.__name__, **exc.context},
             ) from exc
 
     def _constraints_from_field(

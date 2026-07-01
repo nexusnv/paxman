@@ -127,14 +127,24 @@ def resolve_format_hint(value: object) -> FormatHint:
 class FormatHintValidationError(ValueError):
     """Raised by :func:`parse_format_hints` for invalid input.
 
-    Carries ``error_code`` so the four contract adapters can wrap
-    it in their own ``InvalidContractError`` with the project
-    standard error_code "INVALID_FORMAT_HINT".
+    Carries ``error_code`` and a structured ``context`` dict so
+    the four contract adapters can wrap it in their own
+    :class:`~paxman.errors.InvalidContractError` without
+    re-deriving the structured context. The shape matches
+    :class:`~paxman.errors.PaxmanError`: ``error_code`` (str) +
+    ``context`` (dict).
     """
 
-    def __init__(self, message: str, *, error_code: str = "INVALID_FORMAT_HINT") -> None:
+    def __init__(
+        self,
+        message: str,
+        *,
+        error_code: str = "INVALID_FORMAT_HINT",
+        context: dict[str, object] | None = None,
+    ) -> None:
         super().__init__(message)
         self.error_code = error_code
+        self.context: dict[str, object] = dict(context) if context else {}
 
 
 def parse_format_hints(
@@ -157,31 +167,42 @@ def parse_format_hints(
     Args:
         raw: The wire-form value. Must be a list, ``None``, or
             absent. Strings or other types are rejected.
-        field_name: The field name, used only in the error
-            message.
+        field_name: The field name, included in the error
+            message and ``context``.
 
     Returns:
         A tuple of deduplicated :class:`FormatHint` members.
 
     Raises:
-        FormatHintValidationError: With ``error_code="INVALID_FORMAT_HINT"``
-            if *raw* is not a list, or if any element is not a
-            known format hint.
+        FormatHintValidationError: With
+            ``error_code="INVALID_FORMAT_HINT"`` and a populated
+            ``context`` dict (``{"field_name": ..., ...}``) if
+            *raw* is not a list, or if any element is not a known
+            format hint.
     """
     if raw is None:
         return ()
     if not isinstance(raw, list):
         raise FormatHintValidationError(
-            f"field {field_name!r} 'format_hints' must be a list, got {type(raw).__name__}"
+            f"field {field_name!r} 'format_hints' must be a list, got {type(raw).__name__}",
+            context={
+                "field_name": field_name,
+                "raw_type": type(raw).__name__,
+            },
         )
     out: list[FormatHint] = []
     seen: set[FormatHint] = set()
-    for item in raw:
+    for index, item in enumerate(raw):
         try:
             hint = resolve_format_hint(item)
         except (TypeError, ValueError) as exc:
             raise FormatHintValidationError(
-                f"field {field_name!r} has invalid format_hint {item!r}: {exc}"
+                f"field {field_name!r} has invalid format_hint {item!r}: {exc}",
+                context={
+                    "field_name": field_name,
+                    "index": index,
+                    "raw_item": item,
+                },
             ) from exc
         if hint not in seen:
             seen.add(hint)

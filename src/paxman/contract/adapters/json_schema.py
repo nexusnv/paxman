@@ -622,7 +622,7 @@ class JsonSchemaAdapter:
             raise InvalidContractError(
                 str(exc),
                 error_code=exc.error_code,
-                context={"contract_id": contract_id, "property": name},
+                context={"contract_id": contract_id, "property": name, **exc.context},
             ) from exc
 
     def _extract_constraints(
@@ -758,15 +758,13 @@ class JsonSchemaAdapter:
             }
             if f.description is not None:
                 out["description"] = f.description
-            if f.format_hints:
-                out["x-paxman-format-hints"] = [h.value for h in f.format_hints]
+            self._write_format_hints(f, out)
             return out
         if f.type is FieldType.DATE:
             out = {"type": "string", "format": "date"}
             if f.description is not None:
                 out["description"] = f.description
-            if f.format_hints:
-                out["x-paxman-format-hints"] = [h.value for h in f.format_hints]
+            self._write_format_hints(f, out)
             return out
         out = {"type": _FIELD_TYPE_TO_JSON_TYPE[f.type]}
         if f.nullable:
@@ -778,8 +776,7 @@ class JsonSchemaAdapter:
             out["default"] = f.default
         for c in f.constraints:
             self._export_constraint(c, out)
-        if f.format_hints:
-            out["x-paxman-format-hints"] = [h.value for h in f.format_hints]
+        self._write_format_hints(f, out)
         return out
 
     def _export_money_property(self, f: CanonicalField) -> dict[str, typing.Any]:
@@ -799,9 +796,14 @@ class JsonSchemaAdapter:
                 "amount": str(f.default.amount),
                 "currency": f.default.currency,
             }
+        self._write_format_hints(f, out)
+        return out
+
+    @staticmethod
+    def _write_format_hints(f: CanonicalField, out: dict[str, typing.Any]) -> None:
+        """Write the ``x-paxman-format-hints`` extension onto *out* if *f* carries any hints."""
         if f.format_hints:
             out["x-paxman-format-hints"] = [h.value for h in f.format_hints]
-        return out
 
     @staticmethod
     def _export_constraint(c: Constraint, schema: dict[str, typing.Any]) -> None:

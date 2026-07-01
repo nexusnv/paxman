@@ -1515,3 +1515,30 @@ def test_format_hints_must_be_list() -> None:
             }
         )
     assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_error_context() -> None:
+    """FormatHintValidationError raises with a structured ``context``
+    dict that the four adapters merge into their own
+    ``InvalidContractError`` context."""
+    from paxman.contract import FormatHintValidationError, parse_format_hints
+    from paxman.contract._format_hint import FormatHint
+
+    with pytest.raises(FormatHintValidationError) as exc_info:
+        parse_format_hints("not-a-list", field_name="x")
+    assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+    assert exc_info.value.context == {
+        "field_name": "x",
+        "raw_type": "str",
+    }
+
+    with pytest.raises(FormatHintValidationError) as exc_info:
+        parse_format_hints([FormatHint.CSV, "pdf"], field_name="y")
+    assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+    assert exc_info.value.context == {
+        "field_name": "y",
+        "index": 1,
+        "raw_item": "pdf",
+    }

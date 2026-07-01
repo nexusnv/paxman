@@ -80,6 +80,11 @@ import attrs
 import pydantic
 from pydantic_core import PydanticUndefined
 
+from paxman.contract import (
+    FormatHint,
+    FormatHintValidationError,
+    parse_format_hints,
+)
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -377,6 +382,8 @@ class PydanticAdapter:
         # Build constraints from Field metadata.
         constraints: list[Constraint] = []
         constraints.extend(self._constraints_from_field(name, field_info, field_type, model_cls))
+        # Extract format_hints from json_schema_extra (x-paxman-format-hints).
+        format_hints = self._extract_format_hints(name, field_info, model_cls)
         # Stable field id.
         fid = f"field_{model_cls.__name__}_{name}"
         return CanonicalField(
@@ -390,6 +397,7 @@ class PydanticAdapter:
             default=default,
             constraints=tuple(constraints),
             enum_values=enum_values,
+            format_hints=format_hints,
         )
 
     @staticmethod
@@ -411,6 +419,34 @@ class PydanticAdapter:
             error_code="INVALID_FIELD",
             context={"model": model.__name__, "field_name": name},
         )
+
+    @staticmethod
+    def _extract_format_hints(
+        name: str,
+        field_info: pydantic.fields.FieldInfo,
+        model_cls: type,
+    ) -> tuple[FormatHint, ...]:
+        """Extract ``format_hints`` from a Pydantic ``Field``'s
+        ``json_schema_extra`` extension.
+
+        The Pydantic adapter accepts a list of strings (or
+        :class:`FormatHint` members) under the
+        ``x-paxman-format-hints`` extension key. Delegates to
+        :func:`parse_format_hints` and wraps its
+        :class:`FormatHintValidationError` in the adapter's
+        standard :class:`InvalidContractError`.
+        """
+        extra = field_info.json_schema_extra
+        if extra is None or not isinstance(extra, dict):
+            return ()
+        try:
+            return parse_format_hints(extra.get("x-paxman-format-hints"), field_name=name)
+        except FormatHintValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"model": model_cls.__name__, **exc.context},
+            ) from exc
 
     def _constraints_from_field(
         self,
@@ -537,6 +573,12 @@ class PydanticAdapter:
             field_kwargs["description"] = f.description
         for c in f.constraints:
             self._export_constraint_to_field(c, field_kwargs)
+        if f.format_hints:
+            extra = field_kwargs.get("json_schema_extra", {})
+            if not isinstance(extra, dict):
+                extra = {}
+            extra["x-paxman-format-hints"] = [h.value for h in f.format_hints]
+            field_kwargs["json_schema_extra"] = extra
         if f.enum_values is not None:
             # Override annotation with a Literal of the allowed values.
             annotation = typing.Literal[tuple(f.enum_values)]

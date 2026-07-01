@@ -25,9 +25,13 @@
     "CurrencyPolicy",
     "ExecutionArtifact",
     "FieldType",
+    "FormatHint",
+    "FormatHintValidationError",
     "Policy",
     "ResolutionPolicy",
-    "Status"
+    "Status",
+    "parse_format_hints",
+    "resolve_format_hint"
   ],
   "functions": {
     "normalize": {
@@ -70,6 +74,7 @@
     "ExecutionArtifact",
     "ExecutionError",
     "FieldType",
+    "FormatHint",
     "HashMismatchError",
     "InferenceProviderError",
     "InvalidContractError",

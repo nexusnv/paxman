@@ -82,6 +82,13 @@ A `CanonicalField` carries:
   regex, enum, ISO-4217, …).
 - `confidence_threshold` — read-only threshold used by the planner to
   set `target_confidence` on the `FieldPlan`.
+- `format_hints` — wire-format hints for input-format-aware
+  tier-1 extractors. Tuple of `FormatHint` members
+  (`CSV` / `JSON` / `XML` in V1.1.0; future members are
+  additive). Empty tuple means "no format preference" — the
+  planner falls back to the existing tier-1 selection logic.
+  See [ADR-0015](../adr/0015-format-aware-executor-auto-dispatch.md)
+  and [issue #73](https://github.com/nexusnv/paxman/issues/73).
 
 > **The MONEY type is first-class** ([ADR-0004](../adr/0004-money-first-class-type.md)):
 > it is a structured type with currency + precision, **not** a

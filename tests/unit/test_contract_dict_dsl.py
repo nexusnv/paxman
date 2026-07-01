@@ -1435,3 +1435,110 @@ def test_export_includes_description() -> None:
     )
     exported = adapter.export(c)
     assert exported["fields"][0]["description"] == "A field"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_round_trip() -> None:
+    """format_hints are parsed, stored on the field, and re-exported."""
+    from paxman.contract import FormatHint
+
+    adapter = _adapter()
+    canonical = adapter.adapt(
+        {
+            "id": "c1",
+            "version": "1.0",
+            "fields": [
+                {
+                    "name": "supplier",
+                    "type": "STRING",
+                    "required": True,
+                    "format_hints": ["csv", "JSON"],
+                },
+                {"name": "amount", "type": "DECIMAL", "required": True},
+            ],
+        }
+    )
+    supplier = next(f for f in canonical.fields if f.name == "supplier")
+    assert supplier.format_hints == (FormatHint.CSV, FormatHint.JSON)
+    amount = next(f for f in canonical.fields if f.name == "amount")
+    assert amount.format_hints == ()
+
+    exported = adapter.export(canonical)
+    supplier_out = next(f for f in exported["fields"] if f["name"] == "supplier")
+    assert supplier_out["format_hints"] == ["csv", "json"]
+    amount_out = next(f for f in exported["fields"] if f["name"] == "amount")
+    assert "format_hints" not in amount_out
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_invalid_string() -> None:
+    """Unknown format_hint values are rejected with INVALID_FORMAT_HINT."""
+    adapter = _adapter()
+    with pytest.raises(InvalidContractError) as exc_info:
+        adapter.adapt(
+            {
+                "id": "c1",
+                "version": "1.0",
+                "fields": [
+                    {
+                        "name": "supplier",
+                        "type": "STRING",
+                        "required": True,
+                        "format_hints": ["pdf"],
+                    },
+                ],
+            }
+        )
+    assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_must_be_list() -> None:
+    """format_hints must be a list; non-list values are rejected."""
+    adapter = _adapter()
+    with pytest.raises(InvalidContractError) as exc_info:
+        adapter.adapt(
+            {
+                "id": "c1",
+                "version": "1.0",
+                "fields": [
+                    {
+                        "name": "supplier",
+                        "type": "STRING",
+                        "required": True,
+                        "format_hints": "csv",
+                    },
+                ],
+            }
+        )
+    assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_error_context() -> None:
+    """FormatHintValidationError raises with a structured ``context``
+    dict that the four adapters merge into their own
+    ``InvalidContractError`` context."""
+    from paxman.contract import FormatHintValidationError, parse_format_hints
+    from paxman.contract._format_hint import FormatHint
+
+    with pytest.raises(FormatHintValidationError) as exc_info:
+        parse_format_hints("not-a-list", field_name="x")
+    assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+    assert exc_info.value.context == {
+        "field_name": "x",
+        "raw_type": "str",
+    }
+
+    with pytest.raises(FormatHintValidationError) as exc_info:
+        parse_format_hints([FormatHint.CSV, "pdf"], field_name="y")
+    assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+    assert exc_info.value.context == {
+        "field_name": "y",
+        "index": 1,
+        "raw_item": "pdf",
+    }

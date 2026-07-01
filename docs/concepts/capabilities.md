@@ -51,11 +51,14 @@ pattern — and never read `ctx.raw_input`. This is the new shape
 introduced in V1.1.0 that lets cleanup transforms chain naturally
 after any tier-1 step.
 
-Two capabilities are **non-deterministic** in general: `inference`
-(when backed by a non-deterministic model). The other nine are
-deterministic. Non-determinism is recorded in the artifact's evidence
-and does **not** break replay (replay rehydrates the recorded truth;
-it does not re-invoke capabilities).
+Of the ten V1 capabilities, only `inference` is
+**non-deterministic in general** (when backed by a non-deterministic
+model). The other nine — `text_extraction`, `regex_extraction`,
+`json_path_extraction`, `csv_extraction`, `xpath_extraction`,
+`case_normalization`, `trim_extraction`, `lookup`, and `validation`
+— are deterministic. Non-determinism is recorded in the artifact's
+evidence and does **not** break replay (replay rehydrates the
+recorded truth; it does not re-invoke capabilities).
 
 ---
 

@@ -129,6 +129,34 @@ The V1.1.0 capability set grows from **8** to **10** built-in capabilities:
 - **Note on `chars=None`:** explicitly **not** an error; it is the signal to fall back to the default char set (matches the "no key" case).
 - **Never reads `ctx.raw_input`**.
 
+### Limitations
+
+The two cleanup transforms are stdlib-only pure functions by design.
+The most material V1 limitation is in `case_normalization`'s
+`mode="title"` branch:
+
+- **`mode="title"` is `str.title()` and is not name-aware.** The
+  stdlib `str.title()` does not understand proper-noun casing
+  rules. Embedded all-caps tokens like `"ACME"` become `"Acme"`
+  (losing the canonical acronym casing). Apostrophes follow the
+  stdlib cap-following pattern, which is rarely what callers want
+  for proper nouns (e.g. `"o'brien".title()` → `"O'Brien"` works
+  by accident, but `"they're here".title()` → `"They'Re Here"`
+  capitalises the letter after the apostrophe, which is almost
+  never correct). Callers needing name-aware casing should use
+  `mode="preserve"` upstream and apply their own transform, or
+  add a downstream capability to handle the acronym/proper-noun
+  cases. V1 does not need this; deferred to a future slice if a
+  real use case emerges.
+- **`mode="lower"` / `mode="upper"` are `str.lower()` / `str.upper()`** and follow the same locale-blind semantics. Locale-specific case-folding (e.g. Turkish dotless I) is out of V1 scope; V1 is stdlib-only by design (per ADR-0007).
+
+The limitations are documented inline in
+`src/paxman/capabilities/v1/case_normalization.py` (the
+`_normalize` docstring) and the module docstring, so callers
+inspecting the source or the public docs are not surprised by
+the stdlib behavior. The implementation is intentionally
+unchanged — the caveat is in the documentation.
+
 ### Why a separate ADR (and a separate ADR number) from the format-extractor slice
 
 [Issue #67](https://github.com/nexusnv/paxman/issues/67) groups the 5 V1.1.0 capabilities into two slices: the 3 format extractors (sub-issue #68, shipped in PR #71) and the 2 cleanup transforms (sub-issue #69, this ADR's slice). The format-extractor slice shipped first and did not create an ADR — the project accepted the slice in PR #71 without an ADR, and the closure note on #68 explicitly says "the design spec was shipped in PR #71". This ADR fills that documentation gap retroactively for the format-extractor slice **and** records the cleanup-transform slice in a single decision record.

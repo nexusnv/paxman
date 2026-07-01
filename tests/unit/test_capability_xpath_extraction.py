@@ -184,6 +184,33 @@ def test_undeclared_namespace_prefix() -> None:
     assert "namespace" in d.message.lower() or "prefix" in d.message.lower()
 
 
+def test_undeclared_namespace_in_attribute_predicate_returns_diagnostic() -> None:
+    """A namespace prefix inside [@ns:attr] still produces a diagnostic.
+
+    The V1 pre-check (``_check_undeclared_prefixes``) does not currently
+    detect namespace prefixes inside attribute predicates — only at
+    the element-name level. The downstream ``findall()`` call still
+    fails, so a diagnostic is returned; the user just sees a less
+    specific error message than "undeclared namespace prefix".
+
+    This test pins the current behavior so the V1.2 follow-up
+    (issue filed separately) can improve the error message without
+    a silent regression.
+    """
+    cap = XPathExtractionCapability()
+    raw = b'<root xmlns:inv="http://x"><item inv:foo="bar">ACME</item></root>'
+    result = cap.invoke(_ctx(raw, xpath='/root/item[@inv:foo="bar"]'))
+    assert result.candidates == ()
+    assert len(result.diagnostics) == 1
+    # The diagnostic code is CAPABILITY_INVOKE_FAILED (from findall SyntaxError)
+    # OR PATTERN_NO_MATCH (if the pre-check root-mismatch path is taken).
+    # We accept either; what matters is "a diagnostic, not silent success".
+    assert result.diagnostics[0].code in {
+        DiagnosticCode.CAPABILITY_INVOKE_FAILED,
+        DiagnosticCode.PATTERN_NO_MATCH,
+    }
+
+
 def test_path_root_mismatch() -> None:
     """An xpath that does not start with the actual document root returns PATTERN_NO_MATCH."""
     cap = XPathExtractionCapability()

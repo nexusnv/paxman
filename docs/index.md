@@ -81,6 +81,7 @@ assert rehydrated == artifact  # byte-equal
 | Migrate from LlamaIndex / LangChain / Unstructured | [Migration guide](concepts/MIGRATION_GUIDE.md) |
 | Contribute to Paxman | [Contributing](contributing/index.md) |
 | Read the v1.0.0 release notes | [Release notes v1.0.0](concepts/RELEASE_NOTES_v1.0.0.md) |
+| Read the v1.0.1 release notes | [Release notes v1.0.1](concepts/RELEASE_NOTES_v1.0.1.md) |
 
 ## Reference examples
 

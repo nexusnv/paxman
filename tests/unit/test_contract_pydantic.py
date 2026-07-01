@@ -705,3 +705,42 @@ def test_adapt_dict_generic_type() -> None:
 
     contract = PydanticAdapter().adapt(M)
     assert contract.fields[0].type is FieldType.OBJECT
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_from_json_schema_extra() -> None:
+    """format_hints are read from ``x-paxman-format-hints`` in
+    ``json_schema_extra``."""
+    from paxman.contract import FormatHint
+    from pydantic import BaseModel, Field
+
+    class M(BaseModel):
+        supplier: str = Field(
+            json_schema_extra={"x-paxman-format-hints": ["csv"]}
+        )
+        amount: str  # no hints
+
+    adapter = PydanticAdapter()
+    canonical = adapter.adapt(M)
+    supplier = next(f for f in canonical.fields if f.name == "supplier")
+    assert supplier.format_hints == (FormatHint.CSV,)
+    amount = next(f for f in canonical.fields if f.name == "amount")
+    assert amount.format_hints == ()
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_invalid_value() -> None:
+    """Unknown format_hint values are rejected with INVALID_FORMAT_HINT."""
+    from pydantic import BaseModel, Field
+
+    class M(BaseModel):
+        supplier: str = Field(
+            json_schema_extra={"x-paxman-format-hints": ["pdf"]}
+        )
+
+    adapter = PydanticAdapter()
+    with pytest.raises(InvalidContractError) as exc_info:
+        adapter.adapt(M)
+    assert exc_info.value.error_code == "INVALID_FORMAT_HINT"

@@ -7,7 +7,7 @@ each candidate:
 1. **Constraint validation.** Run the candidate's value through every
    :class:`~paxman.contract._types.Constraint` attached to the field.
    The check is delegated to
-   :func:`paxman.capabilities.v1.validation._check_constraint`, the
+   :func:`paxman.validation.constraints.check_constraint`, the
    pure helper used by the ``validation`` capability. The Reconciler
    does **not** invoke the capability — it calls the helper directly
    (per `ADR-0003`: the Reconciler never executes capabilities).
@@ -163,7 +163,7 @@ def validate_candidate(
     """Validate a candidate value against the field's constraints.
 
     Runs every :class:`Constraint` attached to *field* through
-    :func:`~paxman.capabilities.v1.validation._check_constraint`.
+    :func:`~paxman.validation.constraints.check_constraint`.
     Also runs the prompt-injection heuristic on string values.
 
     Args:

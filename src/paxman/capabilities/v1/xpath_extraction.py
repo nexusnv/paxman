@@ -73,6 +73,7 @@ from paxman.capabilities.result import (
     EvidenceRef,
 )
 from paxman.capabilities.spec import CapabilitySpec, CapabilityTier, CostHint
+from paxman.contract import FormatHint
 from paxman.logging import get_logger
 
 __all__ = ["XPathExtractionCapability"]
@@ -115,6 +116,8 @@ else:  # pragma: no cover  (defusedxml is always installed in the test env)
 
 
 #: Singleton spec for ``xpath_extraction@1.0``. Reused across instances.
+# XML covers both XML and HTML (per docs/concepts/capabilities.md);
+# a future html_extraction capability would declare FormatHint.HTML.
 _XPATH_EXTRACTION_SPEC: typing.Final[CapabilitySpec] = CapabilitySpec(
     id="xpath_extraction",
     version="1.0",
@@ -124,6 +127,7 @@ _XPATH_EXTRACTION_SPEC: typing.Final[CapabilitySpec] = CapabilitySpec(
     tier=CapabilityTier.LOCAL_DETERMINISTIC,
     deterministic=True,
     required_providers=(),
+    format_hint=FormatHint.XML,
 )
 
 

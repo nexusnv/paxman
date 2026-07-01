@@ -70,6 +70,7 @@ from paxman.capabilities.result import (
     EvidenceRef,
 )
 from paxman.capabilities.spec import CapabilitySpec, CapabilityTier, CostHint
+from paxman.contract import FormatHint
 
 __all__ = ["JsonPathExtractionCapability"]
 
@@ -84,6 +85,7 @@ _JSON_PATH_EXTRACTION_SPEC: typing.Final[CapabilitySpec] = CapabilitySpec(
     tier=CapabilityTier.LOCAL_DETERMINISTIC,
     deterministic=True,
     required_providers=(),
+    format_hint=FormatHint.JSON,
 )
 
 

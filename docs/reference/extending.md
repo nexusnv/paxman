@@ -244,11 +244,31 @@ class Capability(Protocol):
 
 4. **Register the capability:**
 
+   If your capability is a **V1 built-in** (one of
+   `text_extraction`, `regex_extraction`, `lookup`, `inference`,
+   `validation`), it is **already registered** by the time you
+   `import paxman` — all five V1 capabilities self-register on
+   import (see [ADR-0012](../adr/0012-v1-capabilities-self-register-on-import.md)
+   and the `_register_on_import()` hook at the bottom of each
+   `paxman.capabilities.v1.*` module). You do not need to call
+   `register_capability()` for a V1 built-in.
+
+   For **third-party capabilities** (anything outside the V1
+   built-in set, including the example below), register the
+   instance explicitly:
+
    ```python
    import paxman
 
    paxman.register_capability(DateParserCapability())
    ```
+
+   `register_capability()` is the public SPI for third-party
+   capability registration. Re-registering a V1 built-in with
+   the same instance is a no-op; re-registering a V1 built-in
+   with a different instance requires `replace=True` (or
+   re-importing the V1 module, which already calls
+   `replace=True`).
 
 5. **Write tests:**
 
@@ -349,6 +369,13 @@ class InferenceProvider(Protocol):
    ```
 
 3. **Register the provider with the `inference` capability:**
+
+   The `inference` capability itself is already registered (all V1
+   built-ins self-register on import; see
+   [ADR-0012](../adr/0012-v1-capabilities-self-register-on-import.md)).
+   You are registering a **new instance** of the `inference`
+   capability that wraps your provider; this overrides the default
+   stub provider:
 
    ```python
    import paxman

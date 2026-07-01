@@ -6,6 +6,8 @@ XPath against the raw input parsed as XML.
 
 from __future__ import annotations
 
+import importlib.util
+
 import pytest
 
 from paxman.capabilities.base import CapabilityContext
@@ -270,3 +272,128 @@ def test_determinism() -> None:
     assert [c.evidence_refs[0].context for c in r1.candidates] == [
         c.evidence_refs[0].context for c in r2.candidates
     ]
+
+
+# --- backend detection (issue #72, ADR-0013) --------------------------------
+
+
+def test_xml_backend_is_detected() -> None:
+    """The module exposes ``_XML_BACKEND`` and selects one of the two backends."""
+    from paxman.capabilities.v1 import xpath_extraction
+
+    assert xpath_extraction._XML_BACKEND in {"defusedxml", "stdlib"}
+
+
+def test_defusedxml_is_available_in_test_env() -> None:
+    """``defusedxml`` is installed in the test environment.
+
+    The CI install line uses ``uv sync --frozen --all-extras --dev``,
+    which installs every extra including ``xml-secure``. If this test
+    fails, the test env is misconfigured (likely a regression in the
+    lockfile or the extras declaration in ``pyproject.toml``).
+    """
+    assert importlib.util.find_spec("defusedxml") is not None, (
+        "defusedxml must be installed in the test env (via [xml-secure] or [all]). "
+        "If you removed [xml-secure] from `all`, restore it. "
+        "If the env is bare, run: uv sync --all-extras --dev"
+    )
+
+
+def test_xml_backend_is_defusedxml_when_extra_installed() -> None:
+    """When ``defusedxml`` is installed, the backend is ``defusedxml``.
+
+    This is the load-bearing assertion: if the feature-detect selects
+    ``stdlib`` while ``defusedxml`` is installed, the hardened path is
+    not being exercised and a regression would ship uncaught.
+    """
+    from paxman.capabilities.v1 import xpath_extraction
+
+    if importlib.util.find_spec("defusedxml") is not None:
+        assert xpath_extraction._XML_BACKEND == "defusedxml"
+
+
+def test_billion_laughs_rejected_by_defusedxml() -> None:
+    """A billion-laughs entity-expansion payload is rejected by ``defusedxml``.
+
+    ``defusedxml`` raises ``EntitiesForbidden`` (a ``DefusedXmlException``);
+    stdlib would silently expand the entities. The capability must not
+    return expanded entity content as a candidate. Under the hardened
+    backend, the payload is rejected with a ``CAPABILITY_INVOKE_FAILED``
+    diagnostic and zero candidates.
+    """
+    from paxman.capabilities.v1 import xpath_extraction
+
+    if xpath_extraction._XML_BACKEND != "defusedxml":
+        pytest.skip("test only meaningful under the defusedxml backend")
+
+    cap = XPathExtractionCapability()
+    billion_laughs = (
+        b"<?xml version='1.0'?>"
+        b"<!DOCTYPE lolz ["
+        b"  <!ENTITY lol 'lol'>"
+        b"  <!ENTITY lol2 '&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;&lol;'>"
+        b"  <!ENTITY lol3 '&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;&lol2;'>"
+        b"]>"
+        b"<root><item>&lol3;</item></root>"
+    )
+    result = cap.invoke(_ctx(billion_laughs, xpath="/root/item"))
+    assert result.candidates == ()
+    assert len(result.diagnostics) == 1
+    assert result.diagnostics[0].code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
+    # The diagnostic message includes the defusedxml exception class name.
+    assert "EntitiesForbidden" in result.diagnostics[0].message
+
+
+def test_dtd_with_entity_rejected_by_defusedxml() -> None:
+    """A DTD declaring internal entities is rejected by ``defusedxml``.
+
+    ``defusedxml`` rejects internal entity declarations (the most common
+    XXE / billion-laughs vector). DTDs without entity declarations are
+    permitted — only the entity expansion surface is hardened. The
+    capability surfaces a ``CAPABILITY_INVOKE_FAILED`` diagnostic and
+    zero candidates.
+    """
+    from paxman.capabilities.v1 import xpath_extraction
+
+    if xpath_extraction._XML_BACKEND != "defusedxml":
+        pytest.skip("test only meaningful under the defusedxml backend")
+
+    cap = XPathExtractionCapability()
+    # DTD with internal entity declaration — defusedxml rejects this.
+    payload = (
+        b"<?xml version='1.0'?><!DOCTYPE root [  <!ENTITY exfil 'secret'>]><root>&exfil;</root>"
+    )
+    result = cap.invoke(_ctx(payload, xpath="/root"))
+    assert result.candidates == ()
+    assert len(result.diagnostics) == 1
+    assert result.diagnostics[0].code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
+    assert "EntitiesForbidden" in result.diagnostics[0].message
+
+
+def test_malformed_xml_returns_diagnostic_under_both_backends() -> None:
+    """Malformed input returns ``CAPABILITY_INVOKE_FAILED`` under either backend.
+
+    This pins the behavior of the new ``_XML_PARSE_ERRORS`` exception
+    tuple: both ``ParseError`` (stdlib) and ``DefusedXmlException``
+    (defusedxml) are caught and surfaced as a single diagnostic shape.
+    """
+    cap = XPathExtractionCapability()
+    ctx = _ctx(b"<root><unclosed>", xpath="/root")
+    result = cap.invoke(ctx)
+    assert result.candidates == ()
+    assert len(result.diagnostics) == 1
+    assert result.diagnostics[0].code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
+
+
+def test_non_absolute_xpath_rejected() -> None:
+    """A relative xpath (no leading ``/``) is rejected as unsupported syntax.
+
+    V1 supports absolute paths only. The capability surfaces a
+    ``CAPABILITY_INVOKE_FAILED`` diagnostic.
+    """
+    cap = XPathExtractionCapability()
+    raw = b"<root><supplier>ACME</supplier></root>"
+    result = cap.invoke(_ctx(raw, xpath="root/supplier"))
+    assert result.candidates == ()
+    assert result.diagnostics[0].code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
+    assert "absolute" in result.diagnostics[0].message.lower()

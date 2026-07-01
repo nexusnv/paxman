@@ -86,6 +86,7 @@ import typing
 
 import attrs
 
+from paxman.contract._format_hint import FormatHint, resolve_format_hint
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -476,6 +477,7 @@ class JsonSchemaAdapter:
             description=schema.get("description") or schema.get("title"),
             default=default,
             constraints=tuple(constraints),
+            format_hints=self._extract_format_hints(name, schema, contract_id),
         )
 
     def _adapt_enum_property(
@@ -510,6 +512,7 @@ class JsonSchemaAdapter:
                 Constraint(kind=ConstraintKind.ENUM, params={"values": list(enum_values)}),
             ),
             enum_values=enum_values,
+            format_hints=self._extract_format_hints(name, schema, contract_id),
         )
 
     def _adapt_date_property(
@@ -530,6 +533,7 @@ class JsonSchemaAdapter:
             description=schema.get("description") or schema.get("title"),
             default=schema.get("default"),
             constraints=(),
+            format_hints=self._extract_format_hints(name, schema, contract_id),
         )
 
     def _adapt_money_property(
@@ -592,7 +596,57 @@ class JsonSchemaAdapter:
             description=schema.get("description") or schema.get("title"),
             default=default,
             constraints=(Constraint(kind=ConstraintKind.ISO_4217, params={}),),
+            format_hints=self._extract_format_hints(name, schema, contract_id),
         )
+
+    @staticmethod
+    def _extract_format_hints(
+        name: str,
+        schema: dict[str, typing.Any],
+        contract_id: str,
+    ) -> tuple[FormatHint, ...]:
+        """Extract ``format_hints`` from a JSON Schema property.
+
+        The extension lives at ``x-paxman-format-hints`` (a list of
+        strings or :class:`FormatHint` members). Strings are
+        resolved via :func:`resolve_format_hint`
+        (member-agnostic). Duplicate values are deduplicated;
+        order is preserved.
+
+        Returns an empty tuple when the extension is absent.
+
+        Raises:
+            InvalidContractError: with ``error_code="INVALID_FORMAT_HINT"``
+                if the extension value is not a list, or if any
+                element is not a known format hint.
+        """
+        raw_format_hints = schema.get("x-paxman-format-hints", [])
+        if not isinstance(raw_format_hints, list):
+            raise InvalidContractError(
+                f"property {name!r} 'x-paxman-format-hints' must be a list, "
+                f"got {type(raw_format_hints).__name__}",
+                error_code="INVALID_FORMAT_HINT",
+                context={"contract_id": contract_id, "property": name},
+            )
+        out: list[FormatHint] = []
+        seen: set[FormatHint] = set()
+        for raw_h in raw_format_hints:
+            try:
+                hint = resolve_format_hint(raw_h)
+            except (TypeError, ValueError) as exc:
+                raise InvalidContractError(
+                    f"property {name!r} has invalid format_hint {raw_h!r}: {exc}",
+                    error_code="INVALID_FORMAT_HINT",
+                    context={
+                        "contract_id": contract_id,
+                        "property": name,
+                        "raw": repr(raw_h),
+                    },
+                ) from exc
+            if hint not in seen:
+                seen.add(hint)
+                out.append(hint)
+        return tuple(out)
 
     def _extract_constraints(
         self,

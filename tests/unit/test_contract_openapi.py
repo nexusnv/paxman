@@ -702,3 +702,37 @@ def test_adapt_merges_ref_siblings_override_inlined_target() -> None:
     assert name.description == "from sibling"
     # The target's minLength is preserved (no conflict on that key).
     assert any(c.kind.value == "min_length" for c in name.constraints)
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_format_hints_from_extension() -> None:
+    """OpenAPI components/schemas x-paxman-format-hints extension is
+    surfaced to CanonicalField.format_hints (OpenAPI delegates to
+    JsonSchemaAdapter which already handles the extension)."""
+    from paxman.contract import FormatHint
+    from paxman.contract.adapters.openapi import OpenApiAdapter
+
+    spec = {
+        "openapi": "3.0.0",
+        "info": {"title": "t", "version": "1.0"},
+        "paths": {},
+        "components": {
+            "schemas": {
+                "Invoice": {
+                    "type": "object",
+                    "properties": {
+                        "supplier": {
+                            "type": "string",
+                            "x-paxman-format-hints": ["csv"],
+                        },
+                    },
+                    "required": ["supplier"],
+                }
+            }
+        },
+    }
+    adapter = OpenApiAdapter()
+    canonical = adapter.adapt(spec)
+    supplier = next(f for f in canonical.fields if f.name == "supplier")
+    assert supplier.format_hints == (FormatHint.CSV,)

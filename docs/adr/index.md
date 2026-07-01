@@ -36,6 +36,7 @@ Each ADR follows MADR 4.0 with the following sections:
 | [0010](./0010-budget-money-decimal.md) | Cost Pipeline Switched to `Decimal` | Accepted | 2026-06-26 | `Budget`, `CostHint`, `BudgetTracker`, `ExecutionState` use `Decimal` for USD; aligns with ADR-0004. |
 | [0011](./0011-format-auto-detection-for-json-schema-dicts.md) | Format Auto-Detection for JSON Schema Dicts | Accepted | 2026-07-01 | Detect JSON Schema structural markers in `dict` contracts before falling through to Dict DSL. |
 | [0012](./0012-v1-capabilities-self-register-on-import.md) | V1 Capabilities Self-Register on Import | Accepted | 2026-07-01 | All 5 V1 capabilities self-register on import, mirroring the 4 contract adapters. `paxman.register_capability()` stays public for third-party extensions. |
+| [0013](./0013-defusedxml-optional-extra.md) | defusedxml as Optional Security Extra | Accepted | 2026-07-01 | `xml-secure` extra with `defusedxml>=0.7.1`; feature-detect at module import with stdlib fallback and one-shot `structlog.info` log. |
 
 ## Conventions
 

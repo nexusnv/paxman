@@ -61,7 +61,7 @@ Examples:
 from __future__ import annotations
 
 import typing
-import xml.etree.ElementTree as ET  # nosec B405  (see rationale below)
+import xml.etree.ElementTree as _stdlib_ET  # nosec B405  (stdlib fallback only; defusedxml path is the hardened one)
 
 from paxman.capabilities.base import CapabilityContext
 from paxman.capabilities.result import (
@@ -73,8 +73,45 @@ from paxman.capabilities.result import (
     EvidenceRef,
 )
 from paxman.capabilities.spec import CapabilitySpec, CapabilityTier, CostHint
+from paxman.logging import get_logger
 
 __all__ = ["XPathExtractionCapability"]
+
+
+_log = get_logger("paxman.capabilities.xpath_extraction")
+
+
+# --- XML backend feature-detect (ADR-0013) -----------------------------------
+# Prefer ``defusedxml.ElementTree`` when the ``xml-secure`` extra is installed;
+# fall back to stdlib with a one-shot INFO log otherwise. ``defusedxml`` is
+# the canonical fix for bandit B314 / ruff S314 (see ADR-0013). The fallback
+# is observable via the log so callers who care about XML security can
+# detect the unhardened mode at startup.
+try:
+    from defusedxml.common import DefusedXmlException as _DefusedXmlException
+    from defusedxml.ElementTree import fromstring as _defused_fromstring
+except ImportError:  # pragma: no cover  (defusedxml is always installed in the test env)
+    _defused_fromstring = None
+    _DefusedXmlException = None
+
+
+if _defused_fromstring is not None and _DefusedXmlException is not None:
+    _fromstring = _defused_fromstring
+    _XML_BACKEND: str = "defusedxml"
+    _XML_PARSE_ERRORS: tuple[type[BaseException], ...] = (
+        _stdlib_ET.ParseError,
+        _DefusedXmlException,
+    )
+else:  # pragma: no cover  (defusedxml is always installed in the test env)
+    _fromstring = _stdlib_ET.fromstring
+    _XML_BACKEND = "stdlib"
+    _XML_PARSE_ERRORS = (_stdlib_ET.ParseError,)
+    _log.info(
+        "xpath_extraction: using stdlib XML parser "
+        "(install paxman[xml-secure] for hardened parsing)",
+        backend="stdlib",
+        hint="pip install paxman[xml-secure]",
+    )
 
 
 #: Singleton spec for ``xpath_extraction@1.0``. Reused across instances.
@@ -233,14 +270,21 @@ class XPathExtractionCapability:
             )
 
         try:
-            # S314 (xml untrusted data) is acknowledged in pyproject.toml
-            # under per-file-ignores for this file. The rationale is
-            # V1's stdlib-only constraint (DEPENDENCIES.md) — defusedxml
-            # migration is a V1.2 follow-up (issue #72). ElementTree is
-            # bounded by the existing size cap on raw_input and by
-            # Paxman's replay-time evaluation.
-            root = ET.fromstring(ctx.raw_input)  # nosec B314
-        except ET.ParseError as exc:
+            # ``_fromstring`` is selected at module import time by the
+            # feature-detect block above. When ``defusedxml`` is installed
+            # (the ``xml-secure`` extra), this call is hardened against
+            # entity-expansion attacks (billion laughs, DTD retrieval).
+            # When ``defusedxml`` is not installed, the call falls back to
+            # the stdlib parser; the ``# nosec B314`` below acknowledges
+            # that the unhardened path is the residual attack surface
+            # (see ADR-0013 for the full rationale).
+            root = _fromstring(ctx.raw_input)  # nosec B314
+        except _XML_PARSE_ERRORS as exc:
+            # ``_XML_PARSE_ERRORS`` is ``(ParseError, DefusedXmlException)``
+            # when hardened, or ``(ParseError,)`` otherwise. ``ParseError``
+            # exposes ``.position``; ``DefusedXmlException`` does not, so
+            # we fall back to ``None`` for hardened-rejection paths.
+            position = getattr(exc, "position", None)
             return CapabilityResult(
                 candidates=(),
                 diagnostics=(
@@ -251,7 +295,7 @@ class XPathExtractionCapability:
                         context={
                             "field_path": ctx.field_path,
                             "xpath": xpath,
-                            "position": exc.position,
+                            "position": position,
                         },
                     ),
                 ),
@@ -282,10 +326,10 @@ class XPathExtractionCapability:
                 # The xpath references a different root than the document.
                 # ElementTree will raise ``SyntaxError``; convert that to
                 # PATTERN_NO_MATCH at the call site below.
-                elements: list[ET.Element] = []
+                elements: list[_stdlib_ET.Element] = []
             else:
                 elements = root.findall(relative_xpath, namespaces)
-        except (ET.ParseError, SyntaxError) as exc:
+        except (_stdlib_ET.ParseError, SyntaxError) as exc:
             return CapabilityResult(
                 candidates=(),
                 diagnostics=(

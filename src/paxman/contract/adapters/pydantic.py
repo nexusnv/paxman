@@ -73,6 +73,7 @@ import datetime
 import enum
 import inspect
 import re
+import types
 import typing
 from decimal import Decimal
 
@@ -132,18 +133,13 @@ class Money(pydantic.BaseModel):
 def _is_optional(annotation: typing.Any) -> tuple[bool, typing.Any]:
     """Return ``(True, inner)`` if *annotation* is ``Optional[X]`` or ``X | None``."""
     origin = typing.get_origin(annotation)
-    args = typing.get_args(annotation)
-    if origin is typing.Union and type(None) in args:  # Optional[X] / Union[X, None]
-        non_none = [a for a in args if a is not type(None)]
-        if len(non_none) == 1:
-            return True, non_none[0]
-        # Union of multiple non-None types → not supported in V1.
-        return False, annotation
-    if origin is not None and getattr(origin, "__name__", "") == "UnionType":
-        # PEP 604: `int | None`
-        non_none = [a for a in args if a is not type(None)]
-        if len(non_none) == 1:
-            return True, non_none[0]
+    if origin is typing.Union or origin is types.UnionType:  # Optional / PEP 604
+        args = typing.get_args(annotation)
+        if type(None) in args:
+            non_none = [a for a in args if a is not type(None)]
+            if len(non_none) == 1:
+                return True, non_none[0]
+            # Union of multiple non-None types → not supported in V1.
     return False, annotation
 
 

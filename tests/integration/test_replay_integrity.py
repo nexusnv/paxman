@@ -199,9 +199,7 @@ class TestCapabilityVersionsConsistency:
     false ``CapabilityNotFoundError`` during replay.
     """
 
-    def test_capability_versions_keys_subset_of_evidence(
-        self, artifact: ExecutionArtifact
-    ) -> None:
+    def test_capability_versions_keys_subset_of_evidence(self, artifact: ExecutionArtifact) -> None:
         """Every ``capability_id`` in ``capability_versions`` appears in ``evidence``."""
         evidence_cap_ids = {ev.capability_id for ev in artifact.evidence}
         version_cap_ids = set(artifact.capability_versions)
@@ -216,18 +214,13 @@ class TestCapabilityVersionsConsistency:
         """Every ``(capability_id, capability_version)`` pair in ``capability_versions``
         appears in ``evidence``. Catches a regression where the same cap_id is
         recorded with a version that is not in the reconciled evidence."""
-        evidence_pairs = {
-            (ev.capability_id, ev.capability_version) for ev in artifact.evidence
-        }
+        evidence_pairs = {(ev.capability_id, ev.capability_version) for ev in artifact.evidence}
         version_pairs = set(artifact.capability_versions.items())
         assert version_pairs.issubset(evidence_pairs), (
-            f"capability_versions has pairs not in evidence: "
-            f"{version_pairs - evidence_pairs}"
+            f"capability_versions has pairs not in evidence: {version_pairs - evidence_pairs}"
         )
 
-    def test_replay_succeeds_on_normal_artifact(
-        self, artifact: ExecutionArtifact
-    ) -> None:
+    def test_replay_succeeds_on_normal_artifact(self, artifact: ExecutionArtifact) -> None:
         """End-to-end: a normal ``normalize()`` artifact must replay without
         ``CapabilityNotFoundError``. This is the original failure mode of #60 —
         stale ``capability_versions`` entries caused the replay check

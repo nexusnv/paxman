@@ -1,4 +1,5 @@
 """Tests for the extracted check_constraint helper (issue #64)."""
+
 from __future__ import annotations
 
 from paxman.contract._types import Constraint, ConstraintKind

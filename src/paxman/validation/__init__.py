@@ -10,4 +10,5 @@ The boundary rule in :mod:`paxman.capabilities.v1.__init__` (per
 reconciler now depend on :func:`paxman.validation.constraints.check_constraint`,
 which is a thin wrapper around the original helper.
 """
+
 from __future__ import annotations

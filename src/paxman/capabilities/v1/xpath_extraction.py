@@ -99,6 +99,11 @@ _UNSUPPORTED_TOKENS: typing.Final[tuple[str, ...]] = (
     "node()",
     "::",
     "*[",
+    # The ``//`` abbreviation (descendant-or-self axis) is not in the
+    # V1 documented subset. V1 supports absolute child-element paths
+    # only. ``if "//" in xpath`` is a safe substring check: a valid
+    # absolute path like ``/root/item`` does not contain ``//``.
+    "//",
 )
 
 
@@ -228,12 +233,13 @@ class XPathExtractionCapability:
             )
 
         try:
-            # S314 (xml untrusted data): V1's stdlib-only constraint (DEPENDENCIES.md)
-            # forbids defusedxml. We accept the risk for V1; a follow-up
-            # should swap in defusedxml.ElementTree when added as an optional
-            # extra in V1.2. ElementTree is guarded by the existing size cap
-            # on raw_input and by Paxman's replay-time bounded evaluation.
-            root = ET.fromstring(ctx.raw_input)  # noqa: S314  # nosec B314
+            # S314 (xml untrusted data) is acknowledged in pyproject.toml
+            # under per-file-ignores for this file. The rationale is
+            # V1's stdlib-only constraint (DEPENDENCIES.md) — defusedxml
+            # migration is a V1.2 follow-up (issue #72). ElementTree is
+            # bounded by the existing size cap on raw_input and by
+            # Paxman's replay-time evaluation.
+            root = ET.fromstring(ctx.raw_input)  # nosec B314
         except ET.ParseError as exc:
             return CapabilityResult(
                 candidates=(),

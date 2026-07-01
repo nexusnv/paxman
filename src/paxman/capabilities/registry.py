@@ -246,12 +246,13 @@ def _bootstrap_v1_capabilities() -> None:
     :func:`reset` to clear the registry do not break subsequent
     :func:`paxman.normalize` calls.
 
-    Per ADR-0012, all eight V1 capabilities
-    (``text_extraction``, ``regex_extraction``, ``lookup``,
-    ``inference``, ``validation``, plus the three V1.1.0
-    format-aware extraction additions
-    ``json_path_extraction``, ``csv_extraction``,
-    ``xpath_extraction``) self-register on import via
+    Per ADR-0012, all ten V1 capabilities (``text_extraction``,
+    ``regex_extraction``, ``lookup``, ``inference``,
+    ``validation``, plus the three V1.1.0 format-aware extraction
+    additions ``json_path_extraction``, ``csv_extraction``,
+    ``xpath_extraction``, plus the two V1.1.0 post-extraction
+    cleanup transforms ``case_normalization``,
+    ``trim_extraction``) self-register on import via
     ``_register_on_import()`` at the bottom of each module. This
     helper re-registers them uniformly after a :func:`reset` call
     so the planner always has the V1 surface available.
@@ -284,6 +285,12 @@ def _bootstrap_v1_capabilities() -> None:
     register(v1_module.json_path_extraction.JsonPathExtractionCapability(), replace=True)
     register(v1_module.csv_extraction.CsvExtractionCapability(), replace=True)
     register(v1_module.xpath_extraction.XPathExtractionCapability(), replace=True)
+    # V1.1.0 post-extraction cleanup transforms (PR for #69; sub-issue
+    # of #67). Re-registered here for the same reason as the format
+    # extractors above: the bootstrap is the post-``reset()`` recovery
+    # path that restores the full V1 surface uniformly.
+    register(v1_module.case_normalization.CaseNormalizationCapability(), replace=True)
+    register(v1_module.trim_extraction.TrimExtractionCapability(), replace=True)
 
 
 def reset() -> None:

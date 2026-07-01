@@ -62,6 +62,47 @@ recorded truth; it does not re-invoke capabilities).
 
 ---
 
+## 1.1 Format-aware auto-dispatch (V1.1.0+)
+
+The V1.1.0 format extractors (`json_path_extraction`, `csv_extraction`,
+`xpath_extraction`) understand structured input bytes. The planner
+auto-dispatches to them when the field declares a matching
+`format_hints` value and a registered capability carries a matching
+`format_hint`. The default is unchanged: a field with no
+`format_hints` is dispatched exactly as on V1.0.0.
+
+**The opt-in contract.** A field declares
+`format_hints: tuple[FormatHint, ...]` on the `CanonicalField`. A
+tier-1 capability declares `format_hint: FormatHint | None` on its
+`CapabilitySpec`. The planner matches on intersection:
+`cap.format_hint in field.format_hints`. Both sides must opt in;
+neither side is auto-detected.
+
+**The member-agnostic design.** The `FormatHint` enum is flat and
+additive. V1.1.0 ships three members — `CSV`, `JSON`, `XML`. New
+members (PDF, YAML, EMAIL, HTML, TSV, …) land by adding a member
+to the enum and a capability to the registry. **No executor,
+planner, or adapter changes are required** — all consumers iterate
+the enum or compare against `cap.format_hint` directly.
+
+**Scope.** This dispatch is **only** for tier-1 capabilities that
+consume raw input bytes. Cleanup transforms (`case_normalization`,
+`trim_extraction`), `lookup`, `inference`, and `validation` do
+not declare `format_hint` — they read `ctx.config["value"]` or
+operate on candidates, not on raw input.
+
+**Diagnostic preservation.** When the auto-dispatched capability
+misses (e.g. CSV input without the named column), the executor
+preserves the capability's structured `Diagnostic` records
+in `CandidateResult.diagnostics`. The V1.1.0 "no silent miss"
+contract is preserved.
+
+See [ADR-0015](../adr/0015-format-aware-executor-auto-dispatch.md)
+and [issue #73](https://github.com/nexusnv/paxman/issues/73) for
+the full design.
+
+---
+
 ## 2. The Capability SPI
 
 Every capability implements the `Capability` Protocol (see

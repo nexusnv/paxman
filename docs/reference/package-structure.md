@@ -94,6 +94,7 @@ It converts caller-provided contracts (Pydantic, JSON Schema, Dict DSL, OpenAPI)
 ```text
 contract/
 ├── canonical.py        # CanonicalContract + CanonicalField data models
+├── _format_hint.py     # FormatHint enum + string resolver (V1.1.0+ format-aware dispatch; ADR-0015)
 ├── validator.py        # rejects invalid contracts → INVALID_CONTRACT
 ├── semantics.py        # semantic tag handling, structural vs semantic layers
 ├── registry.py         # adapter lookup by contract format

@@ -14,6 +14,21 @@ to Paxman. The full SPI walkthrough is in
 [EXTENDING.md §2](../reference/extending.md); this document is a 5-minute
 checklist.
 
+> **Does your capability consume raw input bytes whose format
+> determines applicability?** If yes (e.g. CSV / JSON / XML /
+> future PDF / YAML / EMAIL), declare
+> `format_hint=FormatHint.<MEMBER>` on its `CapabilitySpec`. This
+> opts the capability into the planner's format-aware
+> auto-dispatch. If no (cleanup transforms like
+> `case_normalization` / `trim_extraction`, `lookup`, `inference`,
+> `validation`), leave `format_hint = None` — the attribute is
+> documented as "set iff the capability consumes raw input bytes
+> whose format determines applicability." Adding a new
+> `FormatHint` enum member is a single-file change in
+> `src/paxman/contract/_format_hint.py`; the executor, planner,
+> and four adapters require no changes. See
+> [ADR-0015](../adr/0015-format-aware-executor-auto-dispatch.md).
+
 ---
 
 ## 1. When to add a new capability

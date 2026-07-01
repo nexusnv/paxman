@@ -18,7 +18,11 @@ from paxman.capabilities.v1.case_normalization import CaseNormalizationCapabilit
 pytestmark = pytest.mark.unit
 
 
-def _ctx(value: object = None, mode: object = None, **extra: object) -> CapabilityContext:
+# Sentinel for "key not present" — ``None`` is a valid value.
+_UNSET: object = object()
+
+
+def _ctx(value: object = _UNSET, mode: object = _UNSET, **extra: object) -> CapabilityContext:
     """Build a ``CapabilityContext`` for case_normalization tests.
 
     The capability ignores ``raw_input``; we pass an empty bytes
@@ -36,10 +40,6 @@ def _ctx(value: object = None, mode: object = None, **extra: object) -> Capabili
         field_type_name="STRING",
         config=config,
     )
-
-
-# Sentinel for "key not present" — ``None`` is a valid value.
-_UNSET: object = object()
 
 
 # --- spec -----------------------------------------------------------------

@@ -58,6 +58,7 @@ import typing
 
 import attrs
 
+from paxman.contract._format_hint import FormatHint, resolve_format_hint
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -474,7 +475,61 @@ class DictDSLAdapter:
             constraints=tuple(constraints),
             default=default_value,
             enum_values=enum_values,
+            format_hints=self._parse_format_hints(raw, contract_id=contract_id, name=name),
         )
+
+    # =====================================================================
+    # Internal: format_hints parsing
+    # =====================================================================
+
+    @staticmethod
+    def _parse_format_hints(
+        raw: typing.Mapping[str, typing.Any],
+        *,
+        contract_id: str,
+        name: str,
+    ) -> tuple[FormatHint, ...]:
+        """Parse the per-field ``format_hints`` list.
+
+        Accepts a list of strings (case-insensitive) or
+        :class:`FormatHint` members. Strings are resolved via
+        :func:`resolve_format_hint` (member-agnostic). Duplicate
+        values are deduplicated; order is preserved.
+
+        Returns an empty tuple when ``format_hints`` is absent.
+
+        Raises:
+            InvalidContractError: with ``error_code="INVALID_FORMAT_HINT"``
+                if the value is not a list, or if any element is not
+                a known format hint.
+        """
+        raw_format_hints = raw.get("format_hints", [])
+        if not isinstance(raw_format_hints, list):
+            raise InvalidContractError(
+                f"field {name!r} 'format_hints' must be a list, "
+                f"got {type(raw_format_hints).__name__}",
+                error_code="INVALID_FORMAT_HINT",
+                context={"contract_id": contract_id, "field_name": name},
+            )
+        out: list[FormatHint] = []
+        seen: set[FormatHint] = set()
+        for raw_h in raw_format_hints:
+            try:
+                hint = resolve_format_hint(raw_h)
+            except (TypeError, ValueError) as exc:
+                raise InvalidContractError(
+                    f"field {name!r} has invalid format_hint {raw_h!r}: {exc}",
+                    error_code="INVALID_FORMAT_HINT",
+                    context={
+                        "contract_id": contract_id,
+                        "field_name": name,
+                        "raw": repr(raw_h),
+                    },
+                ) from exc
+            if hint not in seen:
+                seen.add(hint)
+                out.append(hint)
+        return tuple(out)
 
     # =====================================================================
     # Internal: constraint parsing
@@ -800,6 +855,8 @@ class DictDSLAdapter:
             out["tags"] = list(f.semantic_tags)
         if f.constraints:
             out["constraints"] = [DictDSLAdapter._export_constraint(c) for c in f.constraints]
+        if f.format_hints:
+            out["format_hints"] = [h.value for h in f.format_hints]
         if f.default is not None:
             out["default"] = DictDSLAdapter._export_default(f.default, f.type)
         if f.enum_values is not None:

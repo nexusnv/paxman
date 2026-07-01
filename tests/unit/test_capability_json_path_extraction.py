@@ -88,9 +88,7 @@ def test_resolves_boolean() -> None:
     cap = JsonPathExtractionCapability()
     raw = b'{"paid": true, "refunded": false}'
     assert [c.value for c in cap.invoke(_ctx(raw, pointer="/paid")).candidates] == ["true"]
-    assert [c.value for c in cap.invoke(_ctx(raw, pointer="/refunded")).candidates] == [
-        "false"
-    ]
+    assert [c.value for c in cap.invoke(_ctx(raw, pointer="/refunded")).candidates] == ["false"]
 
 
 def test_resolves_null() -> None:
@@ -111,7 +109,7 @@ def test_wildcard_produces_multiple_candidates() -> None:
 def test_unicode_input() -> None:
     """Multi-byte unicode is supported."""
     cap = JsonPathExtractionCapability()
-    raw = '{"name": "日本語 🎉"}'.encode("utf-8")
+    raw = '{"name": "日本語 🎉"}'.encode()
     result = cap.invoke(_ctx(raw, pointer="/name"))
     assert [c.value for c in result.candidates] == ["日本語 🎉"]
 

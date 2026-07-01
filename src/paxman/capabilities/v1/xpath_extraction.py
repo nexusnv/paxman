@@ -121,16 +121,11 @@ class XPathExtractionCapability:
             if token in xpath:
                 return f"unsupported xpath syntax: contains {token!r}"
         if not xpath.startswith("/"):
-            return (
-                f"unsupported xpath syntax {xpath!r} "
-                "(V1 supports absolute paths only)"
-            )
+            return f"unsupported xpath syntax {xpath!r} (V1 supports absolute paths only)"
         return None
 
     @staticmethod
-    def _check_undeclared_prefixes(
-        xpath: str, namespaces: dict[str, str]
-    ) -> str | None:
+    def _check_undeclared_prefixes(xpath: str, namespaces: dict[str, str]) -> str | None:
         """Return an error message if any namespace prefix is undeclared, else ``None``."""
         for token in xpath.split("/"):
             if ":" not in token or token.startswith("@"):
@@ -138,8 +133,7 @@ class XPathExtractionCapability:
             prefix = token.split("[", 1)[0].split(":", 1)[0]
             if prefix and prefix not in namespaces:
                 return (
-                    f"undeclared namespace prefix {prefix!r} "
-                    "(declare it in config['namespaces'])"
+                    f"undeclared namespace prefix {prefix!r} (declare it in config['namespaces'])"
                 )
         return None
 
@@ -163,9 +157,7 @@ class XPathExtractionCapability:
                     Diagnostic(
                         code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
                         severity=DiagnosticSeverity.ERROR,
-                        message=(
-                            "xpath_extraction: config['xpath'] must be a non-empty string"
-                        ),
+                        message=("xpath_extraction: config['xpath'] must be a non-empty string"),
                         context={"field_path": ctx.field_path},
                     ),
                 ),
@@ -272,9 +264,7 @@ class XPathExtractionCapability:
             if root_tag is not None and xpath.startswith("/"):
                 first_segment = xpath.split("/", 2)[1]
                 if first_segment:
-                    root_local = (
-                        root_tag.split("}", 1)[-1] if "}" in root_tag else root_tag
-                    )
+                    root_local = root_tag.split("}", 1)[-1] if "}" in root_tag else root_tag
                     if "}" in first_segment:
                         tag_local = first_segment.split("}", 1)[-1]
                     else:
@@ -296,9 +286,7 @@ class XPathExtractionCapability:
                     Diagnostic(
                         code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
                         severity=DiagnosticSeverity.ERROR,
-                        message=(
-                            f"xpath_extraction: xpath failed to evaluate: {exc}"
-                        ),
+                        message=(f"xpath_extraction: xpath failed to evaluate: {exc}"),
                         context={"field_path": ctx.field_path, "xpath": xpath},
                     ),
                 ),

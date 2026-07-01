@@ -347,3 +347,5 @@ def test_xpath_extraction_spec_is_registerable() -> None:
     assert looked_up.spec.tier is CapabilityTier.LOCAL_DETERMINISTIC
     assert looked_up.spec.deterministic is True
     assert looked_up.spec.cost_estimate == CostHint(tokens=0, ms=1, usd=0.0)
+    assert "STRING" in looked_up.spec.input_types
+    assert "MIXED" in looked_up.spec.input_types

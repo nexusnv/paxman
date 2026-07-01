@@ -1,215 +1,500 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
-# .coderabbit.yaml
 language: en
+
 early_access: true
-enable_free_tier: true
+
 reviews:
-  enabled: true
-  profile: chill
-  instructions: >-
-    # Code Review Instructions
-
-    - Ensure the code follows best practices and coding standards.
-    - For **Python** code, follow
-      [PEP 20](https://www.python.org/dev/peps/pep-0020/) and
-      [CEP-8](https://gist.github.com/reactive-firewall/b7ee98df9e636a51806e62ef9c4ab161)
-      standards.
-    - For **BASH** and **Shellscript** code, follow
-      [Pure BASH Bible](https://github.com/dylanaraps/pure-bash-bible) and
-      [CEP-5](https://gist.github.com/reactive-firewall/3d2bd3cf37f87974df6f7bee31a05a89)
-      standards.
-    - Check all **BASH** files start with an
-      [extensive disclaimer](https://gist.github.com/reactive-firewall/866b42d175ae3ebefcb2a5878b30ea17).
-    - Check for security vulnerabilities and potential issues.
-    - Ensure the code follows the **DRY, AHA, and SOLID** principles.
-
-    # Documentation Review Instructions
-    - Verify that documentation and comments are clear and comprehensive.
-    - Verify that documentation and comments are free of spelling mistakes.
-    - Verify that technical documentation includes a "References" section at
-      the end of documentation, using the same format as actual RFCs, with
-      both "Normative References" and "Informative References".
-
-    # Test Code Review Instructions
-    - Ensure that test code is automated, comprehensive, and follows testing best practices.
-    - Verify that all critical functionality is covered by tests.
-    - Ensure that test code follow
-      [CEP-8](https://gist.github.com/reactive-firewall/d840ee9990e65f302ce2a8d78ebe73f6)
-
-    # Misc.
-    - Confirm that the code meets the project's requirements and objectives.
-    - Confirm that copyright years are up-to date whenever a file is changed.
   request_changes_workflow: true
-  high_level_summary: true
-  high_level_summary_placeholder: '@coderabbitai summary'
-  auto_title_placeholder: '@coderabbitai'
-  review_status: true
-  poem: false
   collapse_walkthrough: false
-  sequence_diagrams: true
-  changed_files_summary: true
   labeling_instructions:
     - label: Python Lang
-      instructions: Apply when the PR/MR contains changes to python source-code.
+      instructions: Apply when the PR/MR contains changes to python source-code (src/paxman/**/*.py, tests/**/*.py,
+        examples/**/*.py).
     - label: Bash Lang
-      instructions: >-
-        Apply when the PR/MR contains changes to shell-scripts or BASH code
-        snippets.
+      instructions: Apply when the PR/MR contains changes to shell-scripts or BASH code snippets (scripts/**, .github/**/*.sh,
+        examples/**/scripts/**).
     - label: Make Lang
-      instructions: >-
-        Apply when the PR/MR contains changes to the file `Makefile` or makefile
-        code snippets.
+      instructions: Apply when the PR/MR contains changes to the file `Makefile` or makefile code snippets.
     - label: Documentation
-      instructions: >-
-        Apply whenever project documentation (namely markdown source-code) is
-        updated by the PR/MR. Also apply when PR contains a commit with a commit
-        message prefixed with "[DOCUMENTATION] "
+      instructions: Apply whenever project documentation (Markdown source-code under docs/, README.md, or mkdocs.yml) is
+        updated by the PR/MR. Also apply when the PR contains a commit whose message is prefixed with "[DOCUMENTATION]
+        ".
+    - label: ADR
+      instructions: Apply when the PR/MR modifies or adds an Architecture Decision Record under `docs/adr/`.
+    - label: Spec
+      instructions: Apply when the PR/MR modifies or adds a design specification under `docs/specs/`.
+    - label: Build / CI
+      instructions: Apply when the PR/MR changes CI configuration (`.github/workflows/**`, `.pre-commit-config.yaml`,
+        `pyproject.toml` tooling sections, `Makefile`).
+    - label: Dependency
+      instructions: Apply when the PR/MR changes dependency declarations in `pyproject.toml` (the `[project].dependencies`,
+        `[project.optional-dependencies]`, or `[dependency-groups]` sections) or `uv.lock`.
+    - label: Public API
+      instructions: Apply when the PR/MR adds, renames, or removes symbols exported from the `paxman` package or its public
+        submodules (`paxman.testing`, `paxman.api`).
+    - label: Replay / Determinism
+      instructions: Apply when the PR/MR touches replay, artifact serialization, hash computation, or the
+        `executor`/`reconciler`/`artifact` subsystems in any way that could affect determinism.
     - label: Linter
-      instructions: >-
-        Apply when the purpose of the PR/MR is related to fixing the feedback
-        from a linter. Also apply if suggested fixes are used and improve the
-        code's compliance with the PEP-8 standard.
-  path_filters: ['!*.xc*/**', '!node_modules/**', '!dist/**', '!build/**', '!.git/**', '!venv/**', '!__pycache__/**']
+      instructions: Apply when the purpose of the PR/MR is related to fixing feedback from the project's linters (ruff, mypy,
+        pyright, import-linter, interrogate, bandit). Also apply if suggested fixes are used and improve the code's
+        compliance with the project's ruff configuration in `pyproject.toml`.
+  path_filters:
+    - "!*.xc*/**"
+    - "!node_modules/**"
+    - "!dist/**"
+    - "!build/**"
+    - "!.git/**"
+    - "!venv/**"
+    - "!.venv/**"
+    - "!__pycache__/**"
+    - "!.mypy_cache/**"
+    - "!.ruff_cache/**"
+    - "!.import_linter_cache/**"
+    - "!.hypothesis/**"
+    - "!.codegraph/**"
+    - "!site/**"
+    - "!.benchmarks/**"
+    - "!coverage.json"
+    - "!coverage.xml"
+    - "!.coverage"
+    - "!uv.lock"
+    - "!.playwright-cli/**"
+    - "!.worktrees/**"
+    - "!.sisyphus/**"
   path_instructions:
     - path: README.md
       instructions: >-
-        1. Consider the file 'README.md' the overview/introduction of the project.
-           Also consider the 'README.md' file the first place to look for project documentation.
+        1. Consider the file 'README.md' the overview/introduction of the project and the first place to look for
+        project documentation.
 
-        2. When reviewing the file 'README.md' it should be linted with help
-           from the tools `markdownlint` and `languagetool`, pointing out any issues.
+        2. When reviewing the file 'README.md' it should be linted with help from `markdownlint`, pointing out any
+        issues. The project uses GitHub-flavored Markdown.
 
-        3. You may assume the file 'README.md' will contain GitHub flavor Markdown.
-    - path: '**/*.py'
+        3. README content that is a *stub* linking to the Read the Docs site (e.g. CONTRIBUTING.md, SECURITY.md,
+        CHANGELOG.md) is intentional and should not be flagged as "incomplete" — only flag genuinely stale links or
+        wrong content.
+
+        4. Do not suggest moving example code, performance numbers, or quickstart content out of the README — those are
+        kept in-tree on purpose.
+    - path: "**/*.py"
       instructions: >-
-        When reviewing Python code for this project:
+        When reviewing Python code for Paxman (a contract-driven deterministic normalization engine):
 
-        1. Prioritize portability over clarity, especially when dealing with cross-Python compatibility. However, with the priority in mind, do still consider improvements to clarity when relevant.
+        1. Style: follow `ruff` rules configured in `pyproject.toml` (select: E, F, W, I, B, UP, ANN, ASYNC, S, RUF).
+        Ruff is the source of truth for style; the project does **not** use Flake8. The line length is 100 (enforced by
+        ruff format, `E501` is ignored). Quote style is double-quotes, spaces for indentation, LF line endings. Target
+        Python version is 3.11+.
 
-        2. As a general guideline, consider the code style advocated in the PEP 8 standard (excluding the use of spaces for indentation) and evaluate suggested changes for code style compliance.
+        2. Type safety: mypy runs in `--strict` mode against `src/paxman/` (Python 3.12). pyright cross-validates.
+        **Zero-tolerance anti-patterns** that the CI rejects and you must flag:
+           - `# type: ignore`, `# pyright: ignore`, `# noqa`
+           - `as any` equivalents (e.g. `cast(..., Any)` to silence a real error)
+           - Empty `except:` or `try/except: pass` blocks
+           - `delete` of failing tests
+        Suggest the typed alternative instead. For test code (`tests/**`) asserts (`S101`) and missing annotations
+        (`ANN`) are allowed by per-file-ignores.
 
-        3. As a style convention, consider the code style advocated in [CEP-8](https://gist.github.com/reactive-firewall/b7ee98df9e636a51806e62ef9c4ab161) and evaluate suggested changes for code style compliance.
+        3. Data classes: use `attrs` (with `@attrs.define` or `@attrs.frozen`) for internal core types, **not**
+        pydantic. Pydantic is reserved for the `contract/adapters/pydantic.py` adapter. Typing-extensions (`Self`,
+        `TypeAlias`, `Protocol`) is preferred over hand-rolled equivalents.
 
-        4. As a general guideline, try to provide any relevant, official, and supporting documentation links to any tool's suggestions in review comments. This guideline is important for posterity.
+        4. Naming: `snake_case` for modules/functions, `PascalCase` for classes, `SCREAMING_SNAKE_CASE` for enum
+        members, status values, confidence bands, and error codes. Public symbols must have type hints. Docstrings are
+        enforced at 100% coverage on the public surface by `interrogate` (Google style).
 
-        5. As a general rule, undocumented function definitions and class definitions in the project's Python code are assumed incomplete. Please consider suggesting a short summary of the code for any of these incomplete definitions as docstrings when reviewing.
+        5. Architectural boundaries (per PACKAGE_STRUCTURE.md and `pyproject.toml`'s `import-linter` contracts — CI
+        fails if these are violated):
+           - `contract/` is the only layer that knows about external schemas.
+           - `planner/` never executes; it emits `FieldPlan` objects only.
+           - `capabilities/` never assign confidence and never read the canonical
+             contract directly.
+           - `executor/` never replans, never assigns confidence, never reads raw input.
+           - `reconciler/` is the sole confidence assigner; never executes; never
+             reads raw input; never sees external schemas.
+           - `artifact/` is the replay-of-truth boundary — replay must be pure
+             deserialization, never invoke capabilities/planner/executor/reconciler.
+           - `api/` is the public surface; no internal concepts leak (no `FieldPlan`,
+             no `CapabilitySpec`, no `TruthLayer` by name).
+           - The 9 cross-cutting modules at the package root
+             (`errors.py`, `types.py`, `protocols.py`, `versioning.py`,
+             `logging.py`, `budget.py`, `clock.py`, `ids.py`, `serialization.py`)
+             must not import from any subsystem layer.
+        Flag any new import that crosses these boundaries.
 
-        6. Verify Flake8's configuration file is located at ".flake8.ini"
-    - path: tests/*
+        6. Domain invariants you should know about when reviewing:
+           - `MONEY` is a structured type: amount (Decimal, never float) +
+             ISO-4217 currency + precision. Flag any float arithmetic on monetary
+             values. Only `reconciler/money.py` may import `decimal` directly;
+             other reconciler modules must use `MoneyValue`.
+           - Confidence bands are fixed: `CERTAIN`, `HIGH`, `MEDIUM`, `LOW`,
+             `UNTRUSTED`. Confidence is assigned **only** by the Reconciler.
+             Planner may emit `target_confidence` only. Capabilities return no
+             confidence.
+           - V1 is sequential execution only (ADR-0006). Do not suggest async
+             parallelism in `executor/`.
+           - V1 public API is synchronous and not thread-safe. Do not suggest
+             async/threaded entry points.
+           - JSON serialization uses sorted keys, no whitespace, RFC 8785-style
+             canonical form. Do not suggest `json.dumps(..., indent=2)` in code
+             that participates in replay.
+           - Secrets are by reference only — never embed API keys in artifacts.
+           - Raw input is never logged by default (`Policy.log_raw_input: bool = False`).
+           - Inference output is untrusted until validated.
+           - Determinism is a hard test-fail invariant. Property tests use
+             Hypothesis `derandomize=True`. Flag any non-determinism source:
+             `time.time()`, `datetime.now()`, `uuid4()`, `set`/`dict` iteration
+             over a non-sorted key set used in a hash, `os.urandom()`,
+             `random.random()`, multi-threading, or unseeded RNG.
+
+        7. Errors: every exception in `src/paxman/` carries an `error_code` (string) and a `context` dict. Flag any
+        `raise PaxmanError("...")` without structured context.
+
+        8. Do not silently refactor while fixing a bug — fix minimally.
+
+        9. When suggesting a change, include a short rationale that cites the relevant ADR number (e.g. "per ADR-0005
+        the Reconciler is the sole confidence assigner") or a section in PACKAGE_STRUCTURE.md / ARCHITECTURE.md so the
+        suggestion can be traced.
+    - path: tests/**/*.py
       instructions: >-
-        When reviewing test code:
+        When reviewing test code under `tests/`:
 
-        1. Prioritize portability over clarity, especially when dealing with cross-Python compatibility. However, with the priority in mind, do still consider improvements to clarity when relevant.
+        1. Style: ruff is the source of truth (no Flake8). The per-file-ignore `tests/**/*.py = ["S101", "ANN"]` permits
+        `assert` and missing annotations in test files. The `examples/**/tests/**/*.py` per-file-ignore additionally
+        permits `S603` (subprocess calls).
 
-        2. As a general guideline, consider the code style advocated in the PEP 8 standard (excluding the use of spaces for indentation) and evaluate suggested changes for code style compliance.
+        2. Test markers: use the markers declared in `pyproject.toml` (`tool.pytest.ini_options.markers`):
+        `deterministic`, `replay`, `property`, `slow`, `integration`, `unit`. New markers must be added to
+        `pyproject.toml` first, otherwise `--strict-markers` rejects them.
 
-        3. As a style convention, consider the code style advocated in [CEP-8](https://gist.github.com/reactive-firewall/b7ee98df9e636a51806e62ef9c4ab161) and evaluate suggested changes for code style compliance, pointing out any violations discovered.
+        3. Property tests: must use Hypothesis with `derandomize=True` (or be in a `@given(...)` that the project's test
+        strategy controls). Flag any seeded-randomness bypass.
 
-        4. As a general guideline, try to provide any relevant, official, and supporting documentation links to any tool's suggestions in review comments. This guideline is important for posterity.
+        4. Replay tests must verify byte-equality of the rehydrated artifact to the original (`assert rehydrated ==
+        artifact`). Flag any replay test that only checks a subset of fields.
 
-        5. As a project rule, Python source files with names prefixed by the string "test_" and located in the project's "tests" directory are the project's unit-testing code. It is safe, albeit a heuristic, to assume these are considered part of the project's minimal acceptance testing unless a justifying exception to this assumption is documented.
+        5. Test data: vendored data lives in `tests/fixtures/`. Real PII is forbidden. License gating is enforced by
+        `scripts/fetch_test_data.py --validate-licenses`. Flag any test that reads from a path not in the vendored
+        corpus or that introduces unvetted third-party data.
 
-        6. As a project rule, any files without extensions and with names prefixed by either the string "check_" or the string "test_", and located in the project's "tests" directory, are the project's non-unit test code. "Non-unit test" in this context refers to any type of testing other than unit testing, such as (but not limited to) functional testing, style linting, regression testing, etc. It can also be assumed that non-unit testing code is usually written as Bash shell scripts.
-    - path: requirements.txt
+        6. Public API stability: there is a `tests/test_public_api.py` snapshot test. Adding a new symbol to the public
+        surface (anything re-exported from `paxman` or `paxman.testing` or `paxman.api`) **requires an ADR** and an
+        update to that snapshot. Flag new public exports that lack an ADR.
+
+        7. Coverage targets (CI fails below): `errors.py` and `versioning.py` must be 100%; `contract/`, `planner/`,
+        `executor/`, `reconciler/` must be ≥ 90%; `artifact/` must be ≥ 95%; overall fail-under is 90. Flag deletions of
+        tests whose corresponding code would drop below these thresholds.
+
+        8. Hypothesis strategies for the public testing surface live in `paxman.testing` (re-exported). Prefer composing
+        those strategies over building ad-hoc ones.
+
+        9. Do not delete or weaken a failing test to make the suite pass. A determinism violation is a hard test
+        failure, not a flake.
+    - path: src/paxman/**/contract/**
       instructions: >-
-        * The project's own Python dependencies are recorded in 'requirements.txt' for production code.
+        When reviewing the `contract/` subsystem:
 
-        * The project's testing-specific Python dependencies are recorded in 'tests/requirements.txt' and are used for testing the project.
+        1. `contract/` is the only layer that knows about external schemas (pydantic, jsonschema,
+        openapi-spec-validator, plain dict). Flag any import of these libraries from outside `contract/`.
 
-        * The project's documentation-specific Python dependencies are recorded in 'docs/requirements.txt' and are used only for generating Python-focused documentation for the project. 'docs/requirements.txt' may be absent if not applicable.
+        2. The contract layer must not depend on any other subsystem (`planner`, `executor`, `reconciler`, `artifact`,
+        `capabilities`, `api`). This is enforced by `import-linter` in `pyproject.toml`.
 
-        Consider these 'requirements.txt' files the records of truth regarding project dependencies.
-    - path: tests/requirements.txt
+        3. Adapters translate 4 input formats (Pydantic / JSON Schema / OpenAPI / Dict DSL) into `CanonicalContract`.
+        Adding a new adapter requires an ADR (see ADR-0007) and must follow the `Adapter` protocol in
+        `contract/adapters/base.py`.
+
+        4. V1 ships exactly 4 adapters (Pydantic, JSON Schema, OpenAPI, Dict DSL). Flag any new adapter or any reference
+        to a V2 adapter (ERP, agent tool, wrapper) — those are explicitly out of V1.
+    - path: src/paxman/**/planner/**
       instructions: >-
-        * The multicast project's own dependencies are recorded in
-        './requirements.txt' for production code.
+        When reviewing the `planner/` subsystem:
 
-        * The multicast project's own test code dependencies are recorded in
-        'tests/requirements.txt' for testing the project.
+        1. The planner is a pure function (ADR-0002) — no LLM, no agent, no network calls, no filesystem access. Flag
+        any of these.
 
-        Consider these the records of truth regarding project test code dependencies.
+        2. The planner never executes; it emits `FieldPlan` objects only. Flag any code path that mutates state outside
+        the planner module.
+
+        3. The planner may read the canonical contract (its only consumer) and may emit `target_confidence`, but it
+        never assigns final confidence (per ADR-0005).
+
+        4. The planner must not import from `executor`, `reconciler`, `artifact`, or `api` (enforced by
+        `import-linter`).
+    - path: src/paxman/**/capabilities/**
+      instructions: >-
+        When reviewing the `capabilities/` subsystem:
+
+        1. The 5 V1 capabilities are atomic and named: `text_extraction`, `regex_extraction`, `lookup`, `inference`,
+        `validation`. Each lives in its own module under `capabilities/v1/`. Flag any new capability not added via ADR.
+
+        2. Capabilities never assign confidence and never read the canonical contract directly. They operate on
+        `CapabilitySpec` + raw input and return `CapabilityResult` candidates only.
+
+        3. Capabilities must not import from `planner`, `executor`, `reconciler`, `artifact`, or `api`.
+
+        4. The `inference` capability in V1 is a stub provider (no real remote LLM calls). Flag any code that calls a
+        remote API in V1.
+    - path: src/paxman/**/executor/**
+      instructions: >-
+        When reviewing the `executor/` subsystem:
+
+        1. The executor runs field plans **sequentially** (ADR-0006). No parallel field execution, no async, no thread
+        pools in V1.
+
+        2. The executor never replans, never assigns confidence, and never reads raw input directly (it receives
+        prepared context from the planner).
+
+        3. The executor tracks `Budget` and stops early on budget exhaustion. Flag any code path that bypasses the
+        budget tracker.
+
+        4. The executor must not import from `reconciler`, `artifact`, or `api`.
+    - path: src/paxman/**/reconciler/**
+      instructions: >-
+        When reviewing the `reconciler/` subsystem:
+
+        1. The reconciler is the **sole** confidence assigner (ADR-0005). It is the only place where final confidence
+        values appear. Flag any confidence assignment outside `reconciler/`.
+
+        2. The reconciler merges candidate results, resolves truth conflicts, and produces the final resolved values. It
+        never executes capabilities and never reads raw input — it operates on `Candidate` objects from the executor.
+
+        3. The reconciler never sees external schemas (those are normalized to `CanonicalContract` by `contract/`
+        first).
+
+        4. `reconciler/money.py` is the only module in the reconciler that may import `decimal` directly. All other
+        reconciler modules must use `MoneyValue` (a contract-level structured type). This is enforced by
+        `tests/unit/test_reconciler_static_checks.py`.
+
+        5. MONEY fields are amount (Decimal, never float) + ISO-4217 currency + precision. Flag any float arithmetic on
+        monetary values.
+
+        6. The reconciler must not import from `artifact` or `api`.
+    - path: src/paxman/**/artifact/**
+      instructions: >-
+        When reviewing the `artifact/` subsystem:
+
+        1. The artifact is the replay-of-truth boundary. `paxman.replay(artifact, contract=...)` is **pure
+        deserialization** — it must never invoke `planner`, `executor`, `reconciler`, or any capability. Flag any new
+        code path that does.
+
+        2. The artifact format includes a SHA-256 `replay_hash` that is deterministic over the captured truth. Flag any
+        non-deterministic serialization (e.g. `json.dumps` without `sort_keys=True`, `dict` iteration over non-sorted
+        keys, `time.time()`, `uuid.uuid4()`).
+
+        3. The artifact must not embed secrets (by-reference only) and must not embed raw input by default
+        (`Policy.log_raw_input: bool = False`).
+
+        4. The artifact must not import from `api/`.
+    - path: pyproject.toml
+      instructions: >-
+        When reviewing `pyproject.toml`:
+
+        1. **Core dependencies are capped at 4 packages** (DEPENDENCIES.md §1, current count: `attrs`,
+        `typing-extensions`, `structlog`, `packaging`). Adding a new core dependency requires an ADR. Optional extras
+        (pydantic, jsonschema, openapi-spec-validator) are exempt from the cap but each still requires an ADR.
+
+        2. **Forbidden runtime dependencies**: `numpy`, `torch`, `requests`, and any package that pulls them in
+        transitively for core use. Flag any such addition.
+
+        3. Ruff config is the source of truth for lint/format. Do not suggest adding flake8 / black / isort — they would
+        conflict with ruff.
+
+        4. mypy is `strict = true` against `src/paxman/`. Do not relax this.
+
+        5. import-linter contracts in `[tool.importlinter]` enforce the subsystem boundary rules in
+        PACKAGE_STRUCTURE.md. New boundary rules belong in import-linter, not as a docstring comment.
+
+        6. Coverage thresholds in `[tool.coverage.report]` are V1 acceptance criteria (`fail-under = 90`; `errors.py`
+        and `versioning.py` at 100%; subsystems at 90%+). Do not lower them without an ADR.
+    - path: docs/adr/**/*.md
+      instructions: >-
+        When reviewing Architecture Decision Records under `docs/adr/`:
+
+        1. ADRs follow the MADR 4.0 format (see `docs/adr/index.md` and `docs/adr/0001-field-centric-planning.md` for
+        the template).
+
+        2. **Once an ADR is `Accepted`, it is immutable.** A reversal or refinement must be a new ADR that marks the old
+        one `Superseded` with a back-link. Flag any edit to the prose of an Accepted ADR that changes its decision —
+        instead suggest a new ADR.
+
+        3. New ADRs go in `docs/adr/NNNN-kebab-case-title.md` with a 4-digit monotonically increasing number. Update
+        `docs/adr/index.md` in the same PR.
+
+        4. When to write an ADR (per `docs/adr/index.md`): new public API surface, new public SPI, system boundary
+        change, new core dependency, artifact format change, replay model change, public API deprecation. Flag any PR
+        touching these areas that lacks an ADR.
+
+        5. Cross-link ADRs from the related docs (ARCHITECTURE.md, PACKAGE_STRUCTURE.md, GLOSSARY.md) only when the doc
+        also changes — do not stage out-of-band link updates.
+    - path: docs/specs/**/*.md
+      instructions: >-
+        When reviewing design specifications under `docs/specs/`:
+
+        1. These are developer-reference, implementation-level specs (Dict DSL, Input Profile, Capability Cost Model).
+        They are **not** the architectural source of truth — that role is owned by `docs/adr/`. Flag any spec that
+        contradicts an Accepted ADR; the ADR wins.
+
+        2. Specs may evolve freely (unlike ADRs). Version-bump the spec title or add a "Changelog" section when behavior
+        changes.
+
+        3. Specs must be precise enough to be implemented against. Flag hand-wavy language (`"etc."`, `"and so on"`,
+        `"TBD"`) in normative sections. Examples and rationale sections may be looser.
+    - path: docs/concepts/**/*.md
+      instructions: >-
+        When reviewing concept documentation under `docs/concepts/`:
+
+        1. These are the mental-model docs read by users first. Lint with `markdownlint`.
+
+        2. Cross-references to ADRs must use the form `[ADR-0005](../adr/0005-confidence-ownership.md)`. Verify the link
+        target exists.
+
+        3. Migration guides (e.g. `MIGRATION_GUIDE.md`) and release notes (`RELEASE_NOTES_vX.Y.Z.md`) are append-only
+        historical artifacts. Flag edits that rewrite past behavior descriptions — prefer a new entry that supersedes
+        the old.
+    - path: docs/howto/**/*.md
+      instructions: >-
+        When reviewing how-to guides under `docs/howto/`:
+
+        1. These are 5-minute task recipes (add_adapter, add_capability, add_inference_provider, replay_artifact). They
+        must be runnable end-to-end against the current code. Flag any code snippet that no longer matches the public
+        API.
+
+        2. Code snippets should be `python` fenced blocks and should import directly from `paxman` or its public
+        submodules (`paxman.testing`). Flag snippets that use private internals.
+
+        3. Each how-to must end with a verification step (run a test, an example, or `make ci`) so the reader can prove
+        the recipe works.
+    - path: docs/reference/**/*.md
+      instructions: >-
+        When reviewing reference documentation under `docs/reference/`:
+
+        1. These are the authoritative descriptions of the architecture, package structure, glossary, replay model,
+        extending guide, and dependency policy. They are the prose companion to the ADRs.
+
+        2. Architecture changes belong in ADRs first, with a back-link from the reference doc. Flag reference doc
+        changes that have no corresponding ADR.
+
+        3. The glossary (`docs/reference/glossary.md`) is the vocabulary source of truth. New project-specific terms
+        must be added there before being used in other docs.
+    - path: docs/contributing/**/*.md
+      instructions: >-
+        When reviewing contributing docs under `docs/contributing/`:
+
+        1. The development guide (`development.md`), testing strategy (`testing-strategy.md`), and test data policy
+        (`test-data.md`) describe the contributor workflow. CI tooling must match what these docs say (and vice versa).
+        Flag drift.
+
+        2. The maintainers guide (`maintainers.md`) defines the merge process and reviewer rotation. Edits to it should
+        be reviewed by a maintainer.
+    - path: .github/workflows/**
+      instructions: >-
+        When reviewing GitHub Actions workflows under `.github/workflows/`:
+
+        1. Workflows are pinned by SHA, not by tag, for third-party actions (supply-chain hardening). Flag any `uses:
+        foo/bar@vN` or `@main` on a third-party action.
+
+        2. The 9 CI checks (per the `ci.yml` workflow) are the gate for merge: `install-frozen`, `lint`, `format-check`,
+        `typecheck`, `typecheck-pyright`, `imports`, `docs-check`, `security`, `test-cov`. Do not suggest skipping or
+        weakening any of them without an ADR.
+
+        3. `actionlint` is the linter for workflow files. Do not re-flag issues it would already catch (false-positive
+        `${{ }}` in conditionals, suggestions to remove valid `${{ }}` syntax).
+
+        4. Workflows must not print raw input by default. Flag any `run:` step that echoes `${{ github.event.* }}`
+        payloads to logs.
     - path: .github/**
       instructions: >-
-        * When the project is hosted on GitHub: All GitHub-specific configurations, templates, and tools should be found in the '.github' directory tree.
+        When reviewing other files under `.github/`:
 
-        * 'actionlint' erroneously generates false positives when dealing with GitHub's `${{ ... }}` syntax in conditionals.
+        1. Issue templates, PR templates, and CODEOWNERS define the triage and review process. Changes here should be
+        cross-checked with the contributing guide.
 
-        * 'actionlint' erroneously generates incorrect solutions when suggesting the removal of valid `${{ ... }}` syntax.
-    - path: docs/*
+        2. Do not remove or weaken required status checks in branch protection (those live in GitHub settings, not in
+        the repo, but PR descriptions that propose doing so should be flagged).
+    - path: mkdocs.yml
       instructions: >-
-        When a project contains a `docs/` directory:
+        When reviewing `mkdocs.yml`:
 
-        1. Consider the files in the `docs/` directory tree the core/main/in-depth documentation of the project. Also consider the 'docs/**.md' files the second place to look for project documentation after the 'README.md' file.
+        1. The nav structure mirrors the on-disk directory layout under `docs/`. A new doc must be added in both the
+        file tree and the nav. Flag missing nav entries for files that exist on disk.
 
-        2. When reviewing the documentation files (e.g. `docs/**.md`), they should additionally be linted with help from the tool `markdownlint`, pointing out any issues.
+        2. MkDocs Material is the theme. Plugin and Markdown extension changes can affect the rendered site — verify
+        with `mkdocs build --strict` locally.
+    - path: "**/*.md"
+      instructions: >-
+        General Markdown rules for the whole project:
 
-        3. When reviewing the documentation files in `docs/` directory, they should additionally be linted with help from the tool `languagetool`, pointing out any issues.
-  abort_on_close: true
+        1. The project uses GitHub-flavored Markdown. Lint with `markdownlint`.
+
+        2. Wrap inline code with single backticks; use fenced blocks (```python, ```bash, ```yaml) for multi-line
+        snippets. Specify a language on every fenced block.
+
+        3. Internal links must be relative paths that exist in the repo (or be a Read the Docs site link). Flag absolute
+        file:// links and links to deleted files.
+
+        4. Headings must be in title case and have a blank line before and after.
+
+        5. The README, CONTRIBUTING, SECURITY, and CHANGELOG stubs in the repo root are intentional links to the docs
+        site (`docs/contributing/`, `docs/security/`, `docs/operations/`). Do not flag them as "incomplete" — only flag
+        stale links.
+    - path: examples/**/src/**/*.py
+      instructions: >-
+        When reviewing example package code under `examples/`:
+
+        1. Examples are standalone mini-packages (backend_service, ai_agent_ingest, saas_procurement). They have their
+        own `pyproject.toml` and are installed with `uv pip install -e ".[dev]"`.
+
+        2. Example code may use `Any` for tool/agent contract parameters (per-file-ignore `examples/**/*.py =
+        ["ANN401"]`). Do not flag that as a style issue.
+
+        3. Example tests use the additional per-file-ignore `S603` (subprocess calls). Do not flag subprocess usage in
+        example tests as a security issue.
+
+        4. Examples must import from the **public** `paxman` API only — no imports from `paxman._internal`,
+        `paxman.contract._types`, or any module prefixed with `_`.
+
+        5. Examples must be runnable end-to-end. The README quickstart for each example is the source of truth for the
+        run command.
+    - path: scripts/**
+      instructions: >-
+        When reviewing scripts under `scripts/`:
+
+        1. `scripts/fetch_test_data.py` is a vendoring tool. The download step is stubbed in V1; the real download is a
+        separate concern. License gating is enforced by `--validate-licenses`.
+
+        2. Shell scripts in `scripts/` should be POSIX-ish bash and should be lintable with `shellcheck`. Do not suggest
+        bashisms that `shellcheck` would flag.
+
+        3. Scripts are excluded from ruff (`extend-exclude` in `pyproject.toml`). They are not part of the library and
+        should not be subject to the same style rules.
   auto_review:
-    enabled: true
-    auto_incremental_review: true
-    ignore_title_keywords: []
-    labels: []
-    drafts: false
+    ignore_title_keywords:
+      - WIP
+      - wip
+      - "[skip review]"
+      - "[norabbit]"
+      - DO NOT REVIEW
     base_branches:
-      - stable
-      - master
+      - main
       - HOTFIX-*
-      - v1.1.0
-  tools:
-    languagetool:
+      - sprint-*
+      - v*.*.*
+      - release/*
+  finishing_touches:
+    unit_tests:
+      enabled: false
+    simplify:
       enabled: true
-      language: en-US
-      configuration:
-        level: picky
-        mother_tongue: en
-        dictionary:
-          - 'reactive-firewall'
-          - 'CEP-9'
-          - 'CEP-8'
-          - 'CEP-7'
-          - 'CEP-5'
-          - 'Shellscript'
-          - 'bash'
-        disabled_rules:
-          - EN_QUOTES
-          - CONSECUTIVE_SPACES
-        enabled_rules:
-          - STYLE
-          - EN_CONTRACTION_SPELLING
-          - EN_WORD_COHERENCY
-          - IT_IS_OBVIOUS
-          - TWELFTH_OF_NEVER
-          - OXFORD_SPELLING
-          - PASSIVE_VOICE
-    shellcheck:
-      enabled: true
-    ruff:
-      enabled: true
-      configuration:
-        extend_select:
-          - E  # Pycodestyle errors (style issues)
-          - F  # PyFlakes codes (logical errors)
-          - W  # Pycodestyle warnings
-          - N  # PEP 8 naming conventions
-        ignore:
-          - W191
-          - W391
-          - E117
-          - D208
-        line_length: 100
-        dummy_variable_rgx: '^(_.*|junk|extra)$'  # Variables starting with '_' or named 'junk' or 'extras', are considered dummy variables
-        external:
-          flake8-blind-except: {}
-          flake8-docstrings: {}
-          flake8-comprehensions: {}
-          flake8-debugger: {}
-          flake8-eradicate: {}
-          # Include other Flake8 plugins as needed
-    markdownlint:
-      enabled: true
-    yamllint:
-      enabled: true
-      configuration_file: ".yamllint.conf"
-chat:
-  auto_reply: true
+
+knowledge_base:
+  jira:
+    usage: disabled
+  linear:
+    usage: disabled
+  mcp:
+    usage: enabled
+
+issue_enrichment:
+  auto_enrich:
+    enabled: true

@@ -2294,7 +2294,7 @@ wheels = [
 
 [[package]]
 name = "paxman"
-version = "1.0.0"
+version = "1.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "attrs" },
@@ -2305,6 +2305,7 @@ dependencies = [
 
 [package.optional-dependencies]
 all = [
+    { name = "defusedxml" },
     { name = "jsonschema" },
     { name = "openapi-spec-validator" },
     { name = "pydantic" },
@@ -2320,6 +2321,9 @@ pydantic = [
 ]
 test = [
     { name = "hypothesis" },
+]
+xml-secure = [
+    { name = "defusedxml" },
 ]
 
 [package.dev-dependencies]
@@ -2352,16 +2356,17 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "attrs", specifier = ">=23.0" },
+    { name = "defusedxml", marker = "extra == 'xml-secure'", specifier = ">=0.7.1" },
     { name = "hypothesis", marker = "extra == 'test'", specifier = ">=6.0" },
     { name = "jsonschema", marker = "extra == 'json-schema'", specifier = ">=4.20" },
     { name = "openapi-spec-validator", marker = "extra == 'openapi'", specifier = ">=0.6" },
     { name = "packaging", specifier = ">=24.0" },
-    { name = "paxman", extras = ["pydantic", "json-schema", "openapi"], marker = "extra == 'all'" },
+    { name = "paxman", extras = ["pydantic", "json-schema", "openapi", "xml-secure"], marker = "extra == 'all'" },
     { name = "pydantic", marker = "extra == 'pydantic'", specifier = ">=2.5" },
     { name = "structlog", specifier = ">=24.1" },
     { name = "typing-extensions", specifier = ">=4.0" },
 ]
-provides-extras = ["pydantic", "json-schema", "openapi", "all", "test"]
+provides-extras = ["pydantic", "json-schema", "openapi", "xml-secure", "all", "test"]
 
 [package.metadata.requires-dev]
 dev = [

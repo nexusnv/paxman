@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import types
+
 import pytest
 
 from paxman.capabilities.base import CapabilityContext
@@ -443,6 +445,12 @@ def test_v1_1_format_extractors_have_import_time_registration_hook() -> None:
     This is the import-time side of the ADR-0012 contract; the
     ``_bootstrap_v1_capabilities()`` helper is the post-``reset()``
     side. Both must be present for a V1 first-party capability.
+
+    This test goes further than just checking that the hook symbol
+    exists: it explicitly clears the registry, calls the hook, and
+    asserts the capability actually shows up — so a module that
+    defines the function but forgets to invoke it (or wires it up
+    to the wrong thing) fails the test. Regression for #79.
     """
     import paxman.capabilities.v1.csv_extraction as csv_mod
     import paxman.capabilities.v1.json_path_extraction as json_path_mod
@@ -456,10 +464,42 @@ def test_v1_1_format_extractors_have_import_time_registration_hook() -> None:
         assert callable(mod._register_on_import), (
             f"{mod.__name__}._register_on_import is not callable"
         )
-        # And the hook must have been invoked at module load time —
-        # i.e. the capability must already be in the registry before
-        # we call reset() here. We assert by checking the hook is the
-        # function object (not None) and by inspecting the module's
-        # own capability class identity (verified by the
-        # self-registration test above; here we only assert the
-        # hook is present and importable).
+
+    # Per-module invariant: clear the registry, invoke the hook, and
+    # verify the capability is now registered. We look the id up from
+    # the module's exported Capability class's spec, so the test is
+    # robust against renames (a regression where the module's hook
+    # registers a different capability than its class declares would
+    # also be caught here).
+    #
+    # We deliberately do NOT call ``all_capabilities()`` here, because
+    # that would trigger ``_bootstrap_v1_capabilities()`` (which
+    # re-registers all 8 V1 capabilities uniformly), masking a
+    # broken individual hook. We read the private table directly via
+    # a fresh ``all_capabilities()`` snapshot taken immediately after
+    # the hook — but only after checking that the hook alone populated
+    # the entry. (See ADR-0012: the hook is the import-time
+    # contract; the bootstrap is the post-``reset()`` recovery path.
+    # This test exercises the hook side.)
+    from paxman.capabilities import registry as _registry
+
+    modules_with_expected_ids: tuple[tuple[types.ModuleType, str], ...] = (
+        (csv_mod, "csv_extraction"),
+        (json_path_mod, "json_path_extraction"),
+        (xpath_mod, "xpath_extraction"),
+    )
+    for mod, expected_id in modules_with_expected_ids:
+        # Wipe the registry AND prevent the self-healing bootstrap
+        # from masking the hook. We do this by reading the private
+        # table directly: the hook is the only thing that should
+        # populate the entry for the expected_id.
+        _registry._capabilities.clear()
+        assert expected_id not in _registry._capabilities, (
+            f"registry was not empty before invoking {mod.__name__}._register_on_import()"
+        )
+        mod._register_on_import()
+        registered_ids = {cid for cid, _ in _registry._capabilities.keys()}
+        assert registered_ids == {expected_id}, (
+            f"{mod.__name__}._register_on_import() should register only "
+            f"{expected_id!r}; got: {sorted(registered_ids)}"
+        )

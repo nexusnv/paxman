@@ -1,0 +1,100 @@
+openapi: 3.1.0
+info:
+  title: Paxman Petstore 3.1
+  version: 1.0.0
+  license:
+    name: MIT
+jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+
+# 3.1 introduces a root-level $defs block (parallel to
+# components.schemas). The walker accepts refs into either namespace.
+$defs:
+  Tag:
+    type: object
+    required:
+      - name
+    properties:
+      name:
+        type: string
+        minLength: 1
+        maxLength: 32
+  Category:
+    type: object
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+
+paths:
+  /pets:
+    # 3.1 path-item parameters are MERGED with operation parameters
+    # by (name, in). The V1 adapter accepts and ignores this block
+    # (per non-goal N3), but its presence is the 3.1 way.
+    parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          maximum: 100
+    get:
+      summary: List pets
+      operationId: listPets
+      responses:
+        "200":
+          description: OK
+
+# Webhooks: 3.1-only top-level map. The V1 adapter accepts and
+# ignores it; full webhook parsing is V2.
+webhooks:
+  newPet:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/$defs/Tag"
+
+components:
+  schemas:
+    Pet:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          minLength: 1
+        # 3.1 nullable idiom: type: [string, null].
+        nickname:
+          type:
+            - string
+            - "null"
+        tag:
+          $ref: "#/$defs/Tag"
+        category:
+          $ref: "#/$defs/Category"
+        available:
+          type: boolean
+        status:
+          type: string
+          enum:
+            - available
+            - pending
+            - sold
+        birthday:
+          type: string
+          format: date
+        weight_kg:
+          type: number
+          minimum: 0
+        photo_urls:
+          type: array
+          items:
+            type: string
+          minItems: 0
+          maxItems: 10

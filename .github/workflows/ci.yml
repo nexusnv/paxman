@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, v1.1.0]
   pull_request:
-    branches: [main]
+    branches: [main, v1.1.0]
 
 # Cancel in-progress runs for the same PR when a new commit is pushed.
 concurrency:

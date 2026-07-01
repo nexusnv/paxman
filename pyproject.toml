@@ -133,6 +133,11 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["S101", "ANN"]  # asserts + untyped fixtures are OK in tests
+# test_contract_pydantic_is_optional.py intentionally exercises the typing.Optional
+# / typing.Union / PEP 604 code paths in _is_optional. Using `X | None` syntax
+# would collapse the test surface (we'd be testing the same code path 3x instead
+# of 3 distinct paths). Suppress UP045 + UP007 for this file only.
+"tests/unit/test_contract_pydantic_is_optional.py" = ["UP045", "UP007"]
 "examples/**/tests/**/*.py" = ["S101", "ANN", "S603"]  # asserts + untyped fixtures + subprocess calls are OK in example tests
 # Example code legitimately uses `Any` for the tool/agent contract paramters
 # (the caller may pass any agent framework, any LLM, any contract type);

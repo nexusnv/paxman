@@ -1,0 +1,13 @@
+[project]
+name = "paxman-playground"
+version = "0.1.0"
+description = "Jupyter Lab playground in Docker Container for Paxman (v1.1.0). See ../playground/README.md."
+requires-python = ">=3.12"
+# No dependencies here - jupyterlab is installed via Docker or [tool.uv] dev-dependencies below.
+# Paxman itself is built from source in the Dockerfile stage 1, not pinned here.
+
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = ["jupyterlab>=4.3,<5", "pytest>=8"]

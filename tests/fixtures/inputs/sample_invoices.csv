@@ -1,0 +1,6 @@
+invoice_id,supplier,amount,currency
+INV-001,ACME Corp,1234.56,USD
+INV-002,Globex,2500.00,EUR
+INV-003,,NOT_A_NUMBER,USD
+INV-004,Initech,750.25,GBP
+INV-005,Soylent,99.99,USD

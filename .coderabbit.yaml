@@ -155,6 +155,7 @@ reviews:
       - stable
       - master
       - HOTFIX-*
+      - v1.1.0
   tools:
     languagetool:
       enabled: true

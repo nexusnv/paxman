@@ -1,6 +1,6 @@
-"""V1 capabilities package — concrete implementations of the 5 V1 capabilities.
+"""V1 capabilities package — concrete implementations of the V1 capabilities.
 
-V1 ships exactly these capabilities (per ``PACKAGE_STRUCTURE.md`` §12
+V1 ships these capabilities (per ``PACKAGE_STRUCTURE.md`` §12
 and ``ARCHITECTURE.md`` §4.3):
 
 - :mod:`paxman.capabilities.v1.text_extraction` — pull text from
@@ -15,30 +15,34 @@ and ``ARCHITECTURE.md`` §4.3):
 - :mod:`paxman.capabilities.v1.validation` — verify a candidate
   value against a constraint (deterministic).
 
-Registration contract (per ADR-0012)
------------------------------------
+V1.1.0 additions (sub-issues of #67; see #68 and #70):
 
-**All five V1 capabilities self-register on import.** Each module
-ends with a ``_register_on_import()`` hook that calls
-``paxman.capabilities.registry.register(<Capability>(), replace=True)``
-at module load time, so importing this package populates the global
-capability registry with all five V1 capabilities.
+- :mod:`paxman.capabilities.v1.json_path_extraction` — extract
+  values from a JSON document via JSON-Pointer or a limited
+  JSONPath subset.
+- :mod:`paxman.capabilities.v1.csv_extraction` — extract values
+  from a CSV document for a named or indexed column.
+- :mod:`paxman.capabilities.v1.xpath_extraction` — extract values
+  from an XML/HTML document via a documented subset of XPath.
 
-This is symmetric with the contract adapter side: the four built-in
-adapters (``pydantic``, ``json_schema``, ``dict_dsl``, ``openapi``)
-also self-register on import (see the corresponding
-``_register_on_import()`` hooks in
-``src/paxman/contract/adapters/*.py``).
+Registration
+------------
 
-Third-party capabilities — anything outside the V1 built-in set —
-use :func:`paxman.register_capability` (the public SPI in
-``src/paxman/api/registry.py``). See ``docs/reference/extending.md``
-§2.3 for the extension guide.
+Per the V1 registry contract (see :mod:`paxman.capabilities.registry`),
+**only** ``lookup`` self-registers on import (its module invokes
+``registry.register`` at the bottom of the file). All other v1
+capabilities — including the V1.1.0 additions — are **not**
+self-registering; callers register them explicitly via
+:func:`paxman.capabilities.registry.register` or
+:func:`paxman.register_capability`. The :mod:`paxman.capabilities.v1`
+package imports the modules for **type resolution / importability
+only**, not for registration. This is documented in the
+``_bootstrap_v1_capabilities`` docstring at
+``registry.py:246-251``.
 
-The :func:`~paxman.capabilities.registry._bootstrap_v1_capabilities`
-helper re-registers the V1 capabilities after a
-:func:`~paxman.capabilities.registry.reset` call (used by test
-fixtures).
+The first three capabilities (text_extraction, regex_extraction,
+validation) plus the inference SPI and stub provider ship initially;
+``lookup`` follows.
 
 Boundary rules
 --------------
@@ -51,24 +55,29 @@ keeps the planner decoupled from the concrete implementations.
 
 from __future__ import annotations
 
-# Importing the v1 modules triggers their ``_register_on_import``
-# hooks, which register all five V1 capabilities with the global
-# capability registry (per ADR-0012). This is the V1 convention:
-# built-in capabilities self-register on import, symmetric with
-# the contract adapter side. Third-party capabilities use
-# ``paxman.register_capability()``.
+# Importing the v1 modules makes the capability classes importable
+# via ``paxman.capabilities.v1.<name>``. Registration with the global
+# registry is *not* triggered by these imports for any module other
+# than ``lookup`` (which self-registers at the bottom of its file).
+# See the module docstring above for the full registration contract.
 from paxman.capabilities.v1 import (
+    csv_extraction,
     inference,
+    json_path_extraction,
     lookup,
     regex_extraction,
     text_extraction,
     validation,
+    xpath_extraction,
 )
 
 __all__: list[str] = [
+    "csv_extraction",
     "inference",
+    "json_path_extraction",
     "lookup",
     "regex_extraction",
     "text_extraction",
     "validation",
+    "xpath_extraction",
 ]

@@ -40,12 +40,14 @@
     },
     "register_adapter": {
       "parameters": [
-        "adapter"
+        "adapter",
+        "replace"
       ]
     },
     "register_capability": {
       "parameters": [
-        "capability"
+        "capability",
+        "replace"
       ]
     },
     "replay": {

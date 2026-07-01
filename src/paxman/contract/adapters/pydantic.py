@@ -20,6 +20,17 @@ Type mapping (Pydantic annotation → ``FieldType``):
 - ``list`` / ``tuple`` / ``set`` → ``ARRAY``
 - ``pydantic.Json`` → ``STRING`` (Pydantic v2's "arbitrary JSON" type)
 
+**V1 limitation:** ``float`` is mapped to ``DECIMAL`` in V1. There is no
+separate ``FLOAT`` type, so the Pydantic adapter maps ``float`` to
+``DECIMAL`` as a convenience. The downside: the Reconciler may apply
+money-specific logic (currency policy, FX) to ``float`` fields that the
+caller did not intend as money (probabilities, temperatures, ratios, etc.).
+For money fields where you want money-specific reconciliation, use
+``Decimal`` explicitly (or the dedicated :class:`MoneyValue` payload).
+For other numeric fields, be aware that a ``float`` will be treated as a
+money-like DECIMAL. A proper ``FLOAT`` type is tracked for V2 — see
+`issue #61 <https://github.com/nexusnv/paxman/issues/61>`_.
+
 A Pydantic model with a ``Decimal`` + ``str`` currency pair is **not**
 auto-detected as MONEY; callers must opt in via a custom subclass of
 ``pydantic.BaseModel`` named ``Money`` (see ``adapt_money_class`` below)

@@ -87,6 +87,16 @@ A `CanonicalField` carries:
 > it is a structured type with currency + precision, **not** a
 > `DECIMAL` with a tag. See [§6](#6-the-money-type) below.
 
+> **V1 limitation — `float` maps to `DECIMAL`:** The Pydantic adapter
+> maps `float` to `DECIMAL` because V1 has no separate `FLOAT` type.
+> The Reconciler may apply money-specific logic (currency policy, FX)
+> to `float` fields that the caller did not intend as money
+> (probabilities, temperatures, ratios, etc.). For money fields where
+> you want money-specific reconciliation, use `Decimal` explicitly
+> (or the dedicated `MoneyValue` payload via JSON Schema). A proper
+> `FLOAT` type is tracked for V2 — see
+> [issue #61](https://github.com/nexusnv/paxman/issues/61).
+
 ---
 
 ## 3. The four V1 formats

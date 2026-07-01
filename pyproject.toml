@@ -48,9 +48,16 @@ dependencies = [
 pydantic = ["pydantic>=2.5"]
 json-schema = ["jsonschema>=4.20"]
 openapi = ["openapi-spec-validator>=0.6"]
+# Security extra (ADR-0013): hardened XML parsing for xpath_extraction.
+# When installed, the capability uses defusedxml.ElementTree.fromstring
+# instead of xml.etree.ElementTree.fromstring, which is flagged by
+# bandit B314 / ruff S314 because the stdlib parser is vulnerable to
+# entity-expansion attacks (billion laughs, DTD retrieval).
+xml-secure = ["defusedxml>=0.7.1"]
 # Inference extras are V2; V1 ships a stub provider.
-# Convenience meta-extra.
-all = ["paxman[pydantic,json-schema,openapi]"]
+# Convenience meta-extra. ``--all-extras`` (used by ``make install-frozen``)
+# installs every extra, so CI exercises the hardened XML path automatically.
+all = ["paxman[pydantic,json-schema,openapi,xml-secure]"]
 
 # Test extras (Sprint 2+ will start using hypothesis).
 test = ["hypothesis>=6.0"]
@@ -142,12 +149,11 @@ ignore = [
 # Adapters legitimately deal with `Any` (external contract types are arbitrary);
 # suppress ANN401 so the adapter signatures are not noisier than they need to be.
 "src/paxman/contract/adapters/*.py" = ["ANN401"]
-# V1's stdlib-only constraint (DEPENDENCIES.md) forbids `defusedxml`. The
-# xpath_extraction capability parses XML via :func:`xml.etree.ElementTree.fromstring`
-# under a bounded size cap and Paxman's replay-time evaluation. The
-# ``# nosec B314`` bandit directive stays inline at the call site. The
-# defusedxml migration is tracked as the V1.2 follow-up in issue #72.
-"src/paxman/capabilities/v1/xpath_extraction.py" = ["S314"]
+# xpath_extraction uses defusedxml.ElementTree.fromstring when the
+# ``xml-secure`` extra is installed (per ADR-0013). The stdlib fallback
+# path retains an inline ``# nosec B314``; the hardened path is not
+# flagged by S314/B314, so no per-file ignore is required.
+# See: docs/adr/0013-defusedxml-optional-extra.md
 
 [tool.ruff.format]
 quote-style = "double"

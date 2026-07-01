@@ -84,4 +84,5 @@ class TestFormatHintReexport:
     def test_importable_from_contract_package(self) -> None:
         # Re-exported through paxman.contract.__init__ for adapter use.
         from paxman.contract import FormatHint as TopLevel
+
         assert TopLevel is FormatHint

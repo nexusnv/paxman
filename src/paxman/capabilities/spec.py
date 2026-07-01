@@ -297,6 +297,5 @@ class CapabilitySpec:
             )
         if self.format_hint is not None and not isinstance(self.format_hint, FormatHint):
             raise TypeError(
-                f"format_hint must be a FormatHint or None, "
-                f"got {type(self.format_hint).__name__}"
+                f"format_hint must be a FormatHint or None, got {type(self.format_hint).__name__}"
             )

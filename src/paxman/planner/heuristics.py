@@ -62,7 +62,6 @@ import typing
 from paxman.budget import Budget, Policy
 from paxman.capabilities.registry import all_capabilities
 from paxman.capabilities.spec import CapabilitySpec, CapabilityTier
-from paxman.contract._format_hint import FormatHint
 from paxman.contract.canonical import CanonicalField
 from paxman.planner.field_plan import FieldPlan, FieldPlanStep
 from paxman.planner.input_profile import InputProfile
@@ -245,10 +244,7 @@ def select_format_aware(
                     capability_id=spec.id,
                     capability_version=spec.version,
                     config={"column": field.name},
-                    note=(
-                        f"format-aware tier={spec.tier.value} "
-                        f"format={spec.format_hint.value}"
-                    ),
+                    note=(f"format-aware tier={spec.tier.value} format={spec.format_hint.value}"),
                 )
             )
     return out

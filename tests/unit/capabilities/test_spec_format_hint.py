@@ -64,10 +64,9 @@ class TestExistingCapabilitiesUnchanged:
 
     def test_all_capabilities_have_format_hint(self) -> None:
         from paxman.capabilities.registry import all_capabilities
+
         for cap in all_capabilities().values():
             assert hasattr(cap.spec, "format_hint")
             # Most capabilities leave it None; the three V1.1.0
             # format extractors are the exception, set in Task 5.
-            assert cap.spec.format_hint is None or isinstance(
-                cap.spec.format_hint, FormatHint
-            )
+            assert cap.spec.format_hint is None or isinstance(cap.spec.format_hint, FormatHint)

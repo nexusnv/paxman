@@ -29,9 +29,9 @@ from paxman.capabilities.registry import all_capabilities, register, reset
 from paxman.capabilities.v1.csv_extraction import CsvExtractionCapability
 from paxman.contract._format_hint import FormatHint
 from paxman.contract.canonical import CanonicalField
-from paxman.executor.field_runner import FieldRunner
 from paxman.executor.execution_state import ExecutionState
-from paxman.planner.field_plan import FieldPlan, FieldPlanStep
+from paxman.executor.field_runner import FieldRunner
+from paxman.planner.field_plan import FieldPlan
 from paxman.planner.heuristics import select_format_aware
 from paxman.types import FieldType
 
@@ -102,7 +102,7 @@ def test_diagnostic_preserved_on_format_aware_miss() -> None:
     # PATTERN_NO_MATCH diagnostic. The runner preserves it on the
     # per-field result rather than collapsing to UNRESOLVED.
     bad_csv = b"not,a,csv,at,all"
-    result = runner.run(
+    runner.run(
         field_plan=plan,
         raw_input=bad_csv,
         input_profile=None,

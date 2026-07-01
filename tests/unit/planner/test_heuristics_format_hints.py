@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from paxman.capabilities.registry import register, reset
-from paxman.capabilities.spec import CapabilitySpec, CapabilityTier, CostHint
 from paxman.capabilities.v1.csv_extraction import CsvExtractionCapability
 from paxman.capabilities.v1.json_path_extraction import JsonPathExtractionCapability
 from paxman.capabilities.v1.regex_extraction import RegexExtractionCapability

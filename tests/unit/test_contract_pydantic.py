@@ -712,13 +712,12 @@ def test_adapt_dict_generic_type() -> None:
 def test_format_hints_from_json_schema_extra() -> None:
     """format_hints are read from ``x-paxman-format-hints`` in
     ``json_schema_extra``."""
-    from paxman.contract import FormatHint
     from pydantic import BaseModel, Field
 
+    from paxman.contract import FormatHint
+
     class M(BaseModel):
-        supplier: str = Field(
-            json_schema_extra={"x-paxman-format-hints": ["csv"]}
-        )
+        supplier: str = Field(json_schema_extra={"x-paxman-format-hints": ["csv"]})
         amount: str  # no hints
 
     adapter = PydanticAdapter()
@@ -736,9 +735,7 @@ def test_format_hints_invalid_value() -> None:
     from pydantic import BaseModel, Field
 
     class M(BaseModel):
-        supplier: str = Field(
-            json_schema_extra={"x-paxman-format-hints": ["pdf"]}
-        )
+        supplier: str = Field(json_schema_extra={"x-paxman-format-hints": ["pdf"]})
 
     adapter = PydanticAdapter()
     with pytest.raises(InvalidContractError) as exc_info:

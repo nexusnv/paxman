@@ -37,8 +37,8 @@ import typing
 
 import attrs
 
-from paxman.contract._types import Constraint, ContractPolicy, EnumValueSet, ResolutionPolicy
 from paxman.contract._format_hint import FormatHint
+from paxman.contract._types import Constraint, ContractPolicy, EnumValueSet, ResolutionPolicy
 from paxman.types import FieldType
 
 __all__ = [
@@ -308,8 +308,7 @@ class CanonicalField:
         bad = [v for v in self.format_hints if not isinstance(v, FormatHint)]
         if bad:
             raise TypeError(
-                f"format_hints must be a tuple of FormatHint, "
-                f"got non-FormatHint values: {bad!r}"
+                f"format_hints must be a tuple of FormatHint, got non-FormatHint values: {bad!r}"
             )
         # --- default / type coupling (best-effort) ---
         self._validate_default()

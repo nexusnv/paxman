@@ -120,8 +120,7 @@ def resolve_format_hint(value: object) -> FormatHint:
                     f"{[m.value for m in FormatHint]}"
                 ) from exc
     raise TypeError(
-        f"format hint must be a FormatHint member or string, "
-        f"got {type(value).__name__}"
+        f"format hint must be a FormatHint member or string, got {type(value).__name__}"
     )
 
 

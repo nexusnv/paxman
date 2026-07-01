@@ -215,13 +215,15 @@ def all_capabilities() -> types.MappingProxyType[tuple[str, str], Capability]:
     view of :data:`_capabilities` (read-only but reflecting
     future mutations), defeating the "snapshot" contract.
 
-    Self-healing: if the registry is empty, all five V1
-    capabilities (``text_extraction``, ``regex_extraction``,
-    ``lookup``, ``inference``, ``validation``) are re-registered
-    (per ADR-0012). This protects against test-only
-    :func:`reset` calls that wipe the registry mid-test-suite
-    and would otherwise leave the planner with no capabilities
-    at all.
+    Self-healing: if the registry is empty, all eight V1
+    capabilities (the five V1.0.0 originals — ``text_extraction``,
+    ``regex_extraction``, ``lookup``, ``inference``, ``validation`` —
+    plus the three V1.1.0 format-aware extraction additions —
+    ``json_path_extraction``, ``csv_extraction``, ``xpath_extraction``)
+    are re-registered (per ADR-0012). This protects against
+    test-only :func:`reset` calls that wipe the registry
+    mid-test-suite and would otherwise leave the planner with
+    no capabilities at all.
 
     Returns:
         A read-only mapping of ``(id, version)`` → :class:`Capability`,
@@ -244,9 +246,12 @@ def _bootstrap_v1_capabilities() -> None:
     :func:`reset` to clear the registry do not break subsequent
     :func:`paxman.normalize` calls.
 
-    Per ADR-0012, all five V1 capabilities
+    Per ADR-0012, all eight V1 capabilities
     (``text_extraction``, ``regex_extraction``, ``lookup``,
-    ``inference``, ``validation``) self-register on import via
+    ``inference``, ``validation``, plus the three V1.1.0
+    format-aware extraction additions
+    ``json_path_extraction``, ``csv_extraction``,
+    ``xpath_extraction``) self-register on import via
     ``_register_on_import()`` at the bottom of each module. This
     helper re-registers them uniformly after a :func:`reset` call
     so the planner always has the V1 surface available.
@@ -271,6 +276,14 @@ def _bootstrap_v1_capabilities() -> None:
     register(v1_module.lookup.LookupCapability(), replace=True)
     register(v1_module.inference.InferenceCapability(), replace=True)
     register(v1_module.validation.ValidationCapability(), replace=True)
+    # V1.1.0 format-aware extraction capabilities (PR #71; sub-issue
+    # of #67). Re-registered here so a ``reset()`` followed by any
+    # ``all_capabilities()`` call (or any code path that consults the
+    # registry, including ``paxman.normalize``) restores the full V1
+    # surface. Regression for #79.
+    register(v1_module.json_path_extraction.JsonPathExtractionCapability(), replace=True)
+    register(v1_module.csv_extraction.CsvExtractionCapability(), replace=True)
+    register(v1_module.xpath_extraction.XPathExtractionCapability(), replace=True)
 
 
 def reset() -> None:

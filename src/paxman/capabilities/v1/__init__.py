@@ -32,9 +32,11 @@ Registration contract (per ADR-0012)
 module ends with a ``_register_on_import()`` hook that calls
 ``paxman.capabilities.registry.register(<Capability>(), replace=True)``
 at module load time, so importing this package populates the global
-capability registry with the V1 built-in surface (the five V1
-capabilities plus the three V1.1.0 format-aware extraction
-additions).
+capability registry with the V1 built-in surface (the **eight** V1
+capabilities: the five V1.0.0 originals — ``text_extraction``,
+``regex_extraction``, ``lookup``, ``inference``, ``validation`` —
+plus the three V1.1.0 format-aware extraction additions —
+``json_path_extraction``, ``csv_extraction``, ``xpath_extraction``).
 
 This is symmetric with the contract adapter side: the four built-in
 adapters (``pydantic``, ``json_schema``, ``dict_dsl``, ``openapi``)

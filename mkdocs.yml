@@ -95,6 +95,7 @@ nav:
       - Replay: concepts/replay.md
       - Migration guide: concepts/MIGRATION_GUIDE.md
       - Release notes v1.0.0: concepts/RELEASE_NOTES_v1.0.0.md
+      - Release notes v1.0.1: concepts/RELEASE_NOTES_v1.0.1.md
   - How-to guides:
       - Add a contract adapter: howto/add_adapter.md
       - Add a capability: howto/add_capability.md

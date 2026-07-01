@@ -373,11 +373,14 @@ source_modules = [
     "paxman.capabilities.result",
     "paxman.capabilities.spec",
     "paxman.capabilities.v1",
+    "paxman.capabilities.v1.csv_extraction",
     "paxman.capabilities.v1.inference",
+    "paxman.capabilities.v1.json_path_extraction",
     "paxman.capabilities.v1.lookup",
     "paxman.capabilities.v1.regex_extraction",
     "paxman.capabilities.v1.text_extraction",
     "paxman.capabilities.v1.validation",
+    "paxman.capabilities.v1.xpath_extraction",
 ]
 forbidden_modules = [
     "paxman.planner",

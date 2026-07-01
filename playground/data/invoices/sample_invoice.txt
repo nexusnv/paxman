@@ -1,0 +1,15 @@
+ACME Hardware Supplies
+Invoice #: INV-2026-0042
+Issued: 2026-06-30
+Due:    2026-07-30
+
+Bill To:
+  Globex Construction Sdn Bhd
+  12 Jalan Test, 50450 Kuala Lumpur
+
+Items:
+  1. M8 hex bolts (box of 100)  x  4   @   RM 45.00     = RM 180.00
+  2. Industrial drill bits set  x  1   @   RM 320.50    = RM 320.50
+
+Subtotal: RM 500.50
+Total:    RM 500.50

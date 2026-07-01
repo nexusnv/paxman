@@ -264,8 +264,11 @@ class XPathExtractionCapability:
             # element (which is what ET.fromstring returns). Strip the
             # leading "/<root_tag>" so the user can pass an absolute
             # xpath like ``/root/item`` and it resolves correctly.
+            # If the user's path does not start with the document
+            # root, we fall through to PATTERN_NO_MATCH below.
             relative_xpath = xpath
             root_tag = root.tag
+            root_matched = False
             if root_tag is not None and xpath.startswith("/"):
                 first_segment = xpath.split("/", 2)[1]
                 if first_segment:
@@ -277,9 +280,15 @@ class XPathExtractionCapability:
                     else:
                         tag_local = first_segment
                     if tag_local == root_local:
-                        # Drop "/<root_tag>" prefix and the next "/".
                         relative_xpath = xpath[len(first_segment) + 2 :]
-            elements = root.findall(relative_xpath, namespaces)
+                        root_matched = True
+            if not root_matched and xpath.startswith("/"):
+                # The xpath references a different root than the document.
+                # ElementTree will raise ``SyntaxError``; convert that to
+                # PATTERN_NO_MATCH at the call site below.
+                elements: list[ET.Element] = []
+            else:
+                elements = root.findall(relative_xpath, namespaces)
         except (ET.ParseError, SyntaxError) as exc:
             return CapabilityResult(
                 candidates=(),

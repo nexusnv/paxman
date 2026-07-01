@@ -436,6 +436,18 @@ def build_capability_chain(
                 )
             )
 
+    # Step 1.5: format-aware tier-1 dispatch. If the field declares
+    # ``format_hints`` and a registered capability declares a
+    # matching ``format_hint``, prepend that capability at the
+    # head of the chain. This is the V1.1.0+ format-aware
+    # executor auto-dispatch (issue #73, ADR-0015). The dispatch
+    # is member-agnostic: any new ``FormatHint`` member added in
+    # a follow-up minor release is matched automatically without
+    # changes to this function or the four contract adapters.
+    format_aware_steps = select_format_aware(field, registry)
+    if format_aware_steps:
+        chain = list(format_aware_steps) + chain
+
     # Step 2: local deterministic.
     chain.extend(select_local_deterministic(field, registry))
 

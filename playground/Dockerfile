@@ -4,8 +4,9 @@
 FROM python:3.12-slim AS builder
 WORKDIR /paxman-src
 
-# Install uv (matches repo convention)
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+# Pin the uv base to a specific release tag (builds are reproducible
+# even with --frozen lockfile resolution). Bump on intentional upgrades.
+COPY --from=ghcr.io/astral-sh/uv:0.5.10 /uv /usr/local/bin/uv
 
 # Copy only what uv needs first (cache-friendly layer)
 COPY pyproject.toml uv.lock ./
@@ -14,10 +15,14 @@ COPY src/ ./src/
 # Build a venv at /paxman-venv with all extras (so notebooks can use
 # pydantic, jsonschema, openapi, defusedxml).
 RUN uv sync --frozen --all-extras --python 3.12
-# Move the venv to a stable absolute path for the runtime stage
 RUN mv .venv /paxman-venv
-# Install jupyterlab into the same venv so the runtime stage is one venv
-RUN uv pip install --python /paxman-venv/bin/python "jupyterlab>=4.3,<5"
+
+# Install JupyterLab using playground/pyproject.toml as the single
+# source of truth for the version range. Excludes the dev group so
+# pytest and friends stay out of the runtime image.
+COPY playground/pyproject.toml playground/uv.lock /pg/
+RUN uv export --frozen --no-hashes --no-group dev --project /pg \
+    | uv pip install --python /paxman-venv/bin/python -
 
 # --- Stage 2: runtime with Jupyter Lab ----------------------------
 FROM python:3.12-slim
@@ -37,8 +42,8 @@ ENV JUPYTER_PORT=8888
 
 EXPOSE 8888
 
-CMD ["jupyter", "lab", \
-     "--ip=0.0.0.0", \
-     "--port=8888", \
-     "--no-browser", \
-     "--notebook-dir=/home/jovyan/playground/notebooks"]
+CMD ["sh", "-c", "exec jupyter lab \
+     --ip=0.0.0.0 \
+     --port=${JUPYTER_PORT} \
+     --no-browser \
+     --notebook-dir=/home/jovyan/playground/notebooks"]

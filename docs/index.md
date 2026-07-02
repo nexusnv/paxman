@@ -136,7 +136,7 @@ repo, `cd` into the example, and follow its README.
 
 > **New in v1.1.0+**
 
-Want to explore Paxman interactively without writing code from scratch? The [Jupyter Lab Playground in Docker Container](https://github.com/nexusnv/paxman/tree/main/playground) starts a Jupyter Lab environment with Paxman installed from source — notebooks cover contracts, all 5 V1 capabilities, replay, money, and budget/policy.
+Want to explore Paxman interactively without writing code from scratch? The [Jupyter Lab Playground in Docker Container](../playground/README.md) starts a Jupyter Lab environment with Paxman installed from source — notebooks cover contracts, all 5 V1 capabilities, replay, money, and budget/policy.
 
 ```bash
 git clone https://github.com/nexusnv/paxman.git
@@ -145,7 +145,7 @@ make playground-build && make playground-up
 # Open http://127.0.0.1:8888
 ```
 
-See the [`playground/README.md`](https://github.com/nexusnv/paxman/tree/main/playground) for details.
+See the [`playground/README.md`](../playground/README.md) for details.
 
 ## Project links
 

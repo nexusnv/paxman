@@ -3,11 +3,18 @@ name = "paxman-playground"
 version = "0.1.0"
 description = "Jupyter Lab playground in Docker Container for Paxman (v1.1.0). See ../playground/README.md."
 requires-python = ">=3.12"
-# No dependencies here - jupyterlab is installed via Docker or [tool.uv] dev-dependencies below.
-# Paxman itself is built from source in the Dockerfile stage 1, not pinned here.
+# jupyterlab is a runtime dependency: it ships in the Docker image so the
+# playground actually runs. Paxman itself is built from source in the
+# Dockerfile stage 1, not pinned here.
+dependencies = ["jupyterlab>=4.3,<5"]
 
 [tool.uv]
+# This is a non-package project (playground is not distributed on PyPI).
+# uv creates the venv without building a wheel.
 package = false
 
 [dependency-groups]
-dev = ["jupyterlab>=4.3,<5", "pytest>=8"]
+dev = ["pytest>=8"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "ANN", "S603"]

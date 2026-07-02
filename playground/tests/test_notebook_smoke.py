@@ -67,13 +67,24 @@ def test_notebook_exists(name: str) -> None:
 def _convert_to_script(notebook_path: Path) -> str:
     """Convert a notebook to a Python script using nbconvert."""
     result = subprocess.run(
-        [sys.executable, "-m", "jupyter", "nbconvert", "--to", "script", "--stdout", str(notebook_path)],
+        [
+            sys.executable,
+            "-m",
+            "jupyter",
+            "nbconvert",
+            "--to",
+            "script",
+            "--stdout",
+            str(notebook_path),
+        ],
         capture_output=True,
         text=True,
         timeout=30,
     )
     if result.returncode != 0:
-        pytest.skip(f"nbconvert failed for {notebook_path.name}: {result.stderr.strip()}")
+        pytest.skip(
+            f"nbconvert failed for {notebook_path.name}: {result.stderr.strip()}"
+        )
     return result.stdout
 
 
@@ -93,7 +104,9 @@ def test_notebook_no_internal_imports(name: str) -> None:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 for forbidden in FORBIDDEN_IMPORTS:
-                    if alias.name == forbidden or alias.name.startswith(forbidden + "."):
+                    if alias.name == forbidden or alias.name.startswith(
+                        forbidden + "."
+                    ):
                         pytest.fail(
                             f"{name} imports internal module '{alias.name}' "
                             f"(forbidden: {forbidden})"
@@ -101,7 +114,9 @@ def test_notebook_no_internal_imports(name: str) -> None:
         elif isinstance(node, ast.ImportFrom):
             if node.module:
                 for forbidden in FORBIDDEN_IMPORTS:
-                    if node.module == forbidden or node.module.startswith(forbidden + "."):
+                    if node.module == forbidden or node.module.startswith(
+                        forbidden + "."
+                    ):
                         pytest.fail(
                             f"{name} imports from internal module '{node.module}' "
                             f"(forbidden: {forbidden})"

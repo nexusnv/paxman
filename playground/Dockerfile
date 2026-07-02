@@ -21,8 +21,7 @@ RUN mv .venv /opt/paxman-venv
 # source of truth for the version range. Excludes the dev group so
 # pytest and friends stay out of the runtime image.
 COPY playground/pyproject.toml playground/uv.lock /pg/
-RUN uv export --frozen --no-hashes --no-group dev --project /pg \
-    | uv pip install --python /opt/paxman-venv/bin/python -r -
+RUN bash -c 'set -o pipefail && uv export --frozen --no-hashes --no-group dev --project /pg | uv pip install --python /opt/paxman-venv/bin/python -r -'
 
 # --- Stage 2: runtime with Jupyter Lab ----------------------------
 FROM python:3.12-slim

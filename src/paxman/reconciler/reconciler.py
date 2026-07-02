@@ -189,6 +189,7 @@ def _result_for_field(
                 else "no_mergeable_value"
             ),
             diagnostics=tuple(diags),
+            evidence_refs=merged_evidence,
         )
 
     # Step 10: produce the ResolvedResult.

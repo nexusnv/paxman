@@ -27,7 +27,7 @@ value != None).
 
 from __future__ import annotations
 
-from paxman.capabilities.result import Diagnostic, DiagnosticCode, DiagnosticSeverity
+from paxman.capabilities.result import Diagnostic, DiagnosticCode, DiagnosticSeverity, EvidenceRef
 from paxman.contract._types import ResolutionStrategy
 from paxman.contract.canonical import CanonicalField
 from paxman.reconciler.truth import ResolvedResult
@@ -41,6 +41,7 @@ def make_unresolved_result(
     field: CanonicalField,
     reason: str,
     diagnostics: tuple[Diagnostic, ...] = (),
+    evidence_refs: tuple[EvidenceRef, ...] = (),
 ) -> ResolvedResult:
     """Create a :class:`ResolvedResult` for an unresolved field.
 
@@ -58,6 +59,10 @@ def make_unresolved_result(
             ``"below_threshold"``, ``"validation_failed"``). Used
             only for diagnostics; the caller can override.
         diagnostics: Additional pre-built diagnostics to attach.
+        evidence_refs: Evidence references produced by capabilities
+            that ran for this field. Preserved so the artifact's
+            ``capability_versions`` accurately reflects all invoked
+            capabilities even when the field is unresolved.
 
     Returns:
         A :class:`ResolvedResult` with status ``"UNRESOLVED"``.
@@ -86,6 +91,7 @@ def make_unresolved_result(
         confidence_band=ConfidenceBand.UNTRUSTED,
         diagnostics=tuple(diags),
         status="UNRESOLVED",
+        evidence_refs=evidence_refs,
     )
 
 
@@ -118,6 +124,7 @@ def apply_fallback(
     field: CanonicalField,
     reason: str,
     diagnostics: tuple[Diagnostic, ...] = (),
+    evidence_refs: tuple[EvidenceRef, ...] = (),
 ) -> ResolvedResult:
     """Apply the field's fallback policy to produce a :class:`ResolvedResult`.
 
@@ -134,6 +141,10 @@ def apply_fallback(
         field: The :class:`CanonicalField` to apply fallback to.
         reason: Reason string for the diagnostic (if unresolved).
         diagnostics: Additional pre-built diagnostics to attach.
+        evidence_refs: Evidence references from the merge step.
+            Forwarded to :func:`make_unresolved_result` so the
+            artifact's ``capability_versions`` reflects all invoked
+            capabilities even for unresolved fields.
 
     Returns:
         A :class:`ResolvedResult` — either ``RESOLVED`` (with default)
@@ -165,6 +176,7 @@ def apply_fallback(
             diagnostics=tuple(diags),
             status="RESOLVED",
             merge_strategy_used="USE_DEFAULT",
+            evidence_refs=evidence_refs,
         )
     diags = list(diagnostics)
     if field.fallback_policy.strategy is ResolutionStrategy.REQUIRE_HUMAN:
@@ -176,4 +188,9 @@ def apply_fallback(
                 context={"field_path": field.path, "fallback": "REQUIRE_HUMAN"},
             )
         )
-    return make_unresolved_result(field=field, reason=reason, diagnostics=tuple(diags))
+    return make_unresolved_result(
+        field=field,
+        reason=reason,
+        diagnostics=tuple(diags),
+        evidence_refs=evidence_refs,
+    )

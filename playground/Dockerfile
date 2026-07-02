@@ -9,35 +9,37 @@ WORKDIR /paxman-src
 COPY --from=ghcr.io/astral-sh/uv:0.5.10 /uv /usr/local/bin/uv
 
 # Copy only what uv needs first (cache-friendly layer)
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 COPY src/ ./src/
 
-# Build a venv at /paxman-venv with all extras (so notebooks can use
+# Build a venv at /opt/paxman-venv with all extras (so notebooks can use
 # pydantic, jsonschema, openapi, defusedxml).
 RUN uv sync --frozen --all-extras --python 3.12
-RUN mv .venv /paxman-venv
+RUN mv .venv /opt/paxman-venv
 
 # Install JupyterLab using playground/pyproject.toml as the single
 # source of truth for the version range. Excludes the dev group so
 # pytest and friends stay out of the runtime image.
 COPY playground/pyproject.toml playground/uv.lock /pg/
 RUN uv export --frozen --no-hashes --no-group dev --project /pg \
-    | uv pip install --python /paxman-venv/bin/python -
+    | uv pip install --python /opt/paxman-venv/bin/python -r -
 
 # --- Stage 2: runtime with Jupyter Lab ----------------------------
 FROM python:3.12-slim
-WORKDIR /home/jovyan
 
-# Create non-root user (Jupyter convention)
+# Create non-root user (Jupyter convention). WORKDIR is set after
+# user creation so the home dir is owned by jovyan, not root.
 RUN useradd -m -s /bin/bash jovyan
-USER jovyan
 
-# Copy the built venv and playground contents
-COPY --from=builder --chown=jovyan:jovyan /paxman-venv /home/jovyan/.venv
+# Copy the built venv to the same absolute path so shebangs remain valid
+COPY --from=builder --chown=jovyan:jovyan /opt/paxman-venv /opt/paxman-venv
 COPY --chown=jovyan:jovyan playground /home/jovyan/playground
 
-# Put venv on PATH
-ENV PATH="/home/jovyan/.venv/bin:${PATH}"
+USER jovyan
+WORKDIR /home/jovyan
+
+# Put venv on PATH (consistent absolute path preserves shebangs)
+ENV PATH="/opt/paxman-venv/bin:${PATH}"
 ENV JUPYTER_PORT=8888
 
 EXPOSE 8888

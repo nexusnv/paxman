@@ -217,6 +217,17 @@ rehydrated = paxman.replay(artifact, contract=Invoice)
 assert rehydrated == artifact  # byte-equal
 ```
 
+### Jupyter Lab Playground in Docker Container (v1.1.0+)
+
+A containerized Jupyter Lab playground that builds Paxman from source.
+Open a browser and explore all 5 V1 capabilities interactively.
+
+```bash
+make playground-build && make playground-up
+```
+
+See [`playground/README.md`](./playground/README.md).
+
 ## Examples
 
 Paxman ships with 3 reference examples covering the 3 target personas.

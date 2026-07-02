@@ -105,3 +105,10 @@ coverage.json
 .benchmarks/
 site/
 .playwright-cli/
+
+# Jupyter Lab playground in Docker Container (issue #90)
+playground/data/out/*
+!playground/data/out/.gitkeep
+playground/.jupyter/
+playground/notebooks/.local/
+playground/.venv/

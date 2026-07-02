@@ -100,6 +100,8 @@ include = [
   "/README.md",
   "/CHANGELOG.md",
   "/LICENSE",
+  # Jupyter Lab playground in Docker Container (issue #90)
+  "/playground",
 ]
 
 # --- Ruff (lint + format) ----------------------------------------------------

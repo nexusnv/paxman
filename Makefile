@@ -183,6 +183,24 @@ publish-test: ## Publish to TestPyPI
 publish: ## Publish to PyPI
 	@echo "TODO(Sprint 10): publish to PyPI via trusted publishing"
 
+# --- Jupyter Lab playground (issue #90) --------------------------------------
+
+.PHONY: playground-build
+playground-build: ## Build the playground Docker image
+	docker compose -f playground/docker-compose.yml build
+
+.PHONY: playground-up
+playground-up: ## Start the playground (http://127.0.0.1:8888)
+	docker compose -f playground/docker-compose.yml up -d
+
+.PHONY: playground-down
+playground-down: ## Stop the playground
+	docker compose -f playground/docker-compose.yml down
+
+.PHONY: playground-logs
+playground-logs: ## Tail playground logs
+	docker compose -f playground/docker-compose.yml logs -f
+
 # --- Reference example smoke tests (Sprint 10) ------------------------------
 
 .PHONY: test-examples

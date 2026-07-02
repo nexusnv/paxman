@@ -93,6 +93,7 @@ def test_replay_golden_reproducible_in_subprocess_vs_in_process() -> None:
     isn't using a different default).
     """
     import paxman
+    import paxman.capabilities.v1
     import paxman.contract.adapters.dict_dsl
     from tests.fixtures.contracts.dict_dsl.invoice import DICT_DSL_INVOICE
 

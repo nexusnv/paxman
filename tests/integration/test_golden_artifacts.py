@@ -49,10 +49,10 @@ _ARTIFACTS_DIR = _TESTS_DIR / "fixtures" / "artifacts"
 # imports above.
 import importlib.util as _catalog_util  # noqa: E402
 
+import paxman.capabilities.v1  # noqa: E402
 import paxman.contract.adapters.dict_dsl  # noqa: E402
 import paxman.contract.adapters.json_schema  # noqa: E402
 import paxman.contract.adapters.pydantic  # noqa: E402
-import paxman.capabilities.v1  # noqa: E402
 
 _CATALOG_PATH = _THIS_DIR.parent / "fixtures" / "artifacts" / "_catalog.py"
 _catalog_spec = _catalog_util.spec_from_file_location(
@@ -227,3 +227,32 @@ def test_goldens_have_replay_hashes() -> None:
         assert h, f"Golden {path.name} has no replay_hash"
         assert len(h) == 64
         assert all(c in "0123456789abcdef" for c in h)
+
+
+# ---------------------------------------------------------------------------
+# D? — capability_versions correctness
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "name",
+    GOLDEN_FIXTURES_LIST,
+)
+def test_golden_capability_versions_includes_validation(name: str) -> None:
+    """Every golden includes ``validation`` in ``capability_versions``.
+
+    Regression test for the fix: previously, validation evidence was
+    dropped by ``apply_fallback()`` when ``merged_value is None``,
+    causing ``validation`` to be absent from ``capability_versions``.
+    This made the ``replay_hash`` identical whether or not capabilities
+    were registered, defeating the replay-isolation test.
+    """
+    golden = _load_golden(name)
+    cv = golden.get("capability_versions", {})
+    assert isinstance(cv, dict)
+    assert "validation" in cv, (
+        f"Golden {name} is missing 'validation' in capability_versions. Got: {cv}"
+    )
+    assert cv["validation"] == "1.0", (
+        f"Golden {name} has wrong validation version: {cv['validation']}"
+    )

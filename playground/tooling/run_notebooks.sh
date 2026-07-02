@@ -12,10 +12,14 @@
 #
 # The script runs each .ipynb in the configured NOTEBOOK_DIR and
 # reports pass/fail.  Returns exit code 0 if all pass, 1 otherwise.
+#
+# Each notebook gets a TIMEOUT_SEC (default 300) to complete; if it
+# hangs past that bound the script treats it as a failure.
 # ------------------------------------------------------------------
 set -euo pipefail
 
 NOTEBOOK_DIR="${1:-/home/jovyan/playground/notebooks}"
+TIMEOUT_SEC="${2:-300}"
 PASS=0
 FAIL=0
 FAILED_LIST=""
@@ -37,7 +41,7 @@ for nb in "$NOTEBOOK_DIR"/*.ipynb; do
     out_json=$(mktemp /tmp/nb-exec-XXXXXX.ipynb)
     err_log=$(mktemp /tmp/nb-err-XXXXXX.txt)
 
-    if jupyter nbconvert --execute --to notebook --output "$out_json" "$nb" 2>"$err_log"; then
+    if timeout "$TIMEOUT_SEC" jupyter nbconvert --execute --to notebook --output "$out_json" "$nb" 2>"$err_log"; then
         echo "  PASS: $name"
         PASS=$((PASS + 1))
     else

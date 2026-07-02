@@ -36,12 +36,14 @@ EXPECTED_NOTEBOOKS: list[str] = [
 ]
 
 # Internal modules notebooks must NEVER import directly.
+# Use top-level subsystem prefixes so all submodules are caught.
+# ``paxman.capabilities`` covers .base, .result, .spec, .registry, and .v1.
 FORBIDDEN_IMPORTS: list[str] = [
     "paxman.planner",
     "paxman.executor",
     "paxman.reconciler",
     "paxman.artifact._hash",
-    "paxman.capabilities.v1",
+    "paxman.capabilities",
     "paxman.contract._format_hint",
     "paxman.validation",
 ]

@@ -126,7 +126,7 @@ def _detect_format(contract: object) -> str:
        markers (``$schema``, ``openapi``, ``properties``, ``$defs``,
        etc.; see ADR-0011); otherwise Dict DSL.
     3. :class:`str` — JSON Schema (``json_schema:draft-2020-12``) then
-       OpenAPI (``openapi:3.0``).
+       OpenAPI (``openapi:3.x``).
 
     Args:
         contract: The external contract object.
@@ -143,12 +143,12 @@ def _detect_format(contract: object) -> str:
     if isinstance(contract, dict):
         if _looks_like_json_schema_dict(contract):
             if "openapi" in contract:
-                return "openapi:3.0"
+                return "openapi:3.x"
             return "json_schema:draft-2020-12"
         return "dict_dsl"
     # String: try JSON Schema then OpenAPI.
     if isinstance(contract, str):
-        for candidate in ("json_schema:draft-2020-12", "openapi:3.0"):
+        for candidate in ("json_schema:draft-2020-12", "openapi:3.x"):
             try:
                 get_adapter(candidate)
                 return candidate

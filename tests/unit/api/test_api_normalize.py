@@ -89,7 +89,7 @@ class TestDetectFormat:
 
     def test_dict_with_openapi_keyword_is_openapi(self) -> None:
         """A dict with the OpenAPI ``openapi`` keyword is OpenAPI (ADR-0011)."""
-        assert _detect_format({"openapi": "3.1.0", "info": {}}) == "openapi:3.0"
+        assert _detect_format({"openapi": "3.1.0", "info": {}}) == "openapi:3.x"
 
     def test_dict_with_combinator_keyword_is_json_schema(self) -> None:
         """A dict with any JSON Schema combinator keyword is JSON Schema (ADR-0011)."""
@@ -125,9 +125,9 @@ class TestDetectFormat:
                 object(),  # OpenAPI adapter found
             ]
             result = _detect_format('{"openapi": "3.0"}')
-            assert result == "openapi:3.0"
+            assert result == "openapi:3.x"
             mock_get.assert_any_call("json_schema:draft-2020-12")
-            mock_get.assert_any_call("openapi:3.0")
+            mock_get.assert_any_call("openapi:3.x")
 
     def test_str_raises_when_no_str_adapter(self) -> None:
         """A ``str`` raises ``InvalidContractError`` when no string adapter is registered."""

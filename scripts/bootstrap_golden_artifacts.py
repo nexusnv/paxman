@@ -67,6 +67,7 @@ import paxman.contract.adapters.dict_dsl
 import paxman.contract.adapters.json_schema  # noqa: F401
 import paxman.contract.adapters.pydantic  # noqa: F401
 import paxman.contract.adapters.openapi  # noqa: F401
+import paxman.capabilities.v1  # noqa: F401
 from paxman.artifact.artifact import ExecutionArtifact
 from paxman.artifact.serializer import encode_artifact
 

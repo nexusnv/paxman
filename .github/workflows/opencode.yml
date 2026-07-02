@@ -30,4 +30,4 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
-          model: opencode-go/minimax-m3
+          model: ${{ secrets.OPENCODE_MODEL_ID }}

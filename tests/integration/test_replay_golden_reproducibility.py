@@ -35,6 +35,7 @@ _SUBPROCESS_SCRIPT = textwrap.dedent(
 
     import paxman
     import paxman.contract.adapters.dict_dsl
+    import paxman.capabilities.v1
 
     from tests.fixtures.contracts.dict_dsl.invoice import DICT_DSL_INVOICE
     artifact = paxman.normalize(

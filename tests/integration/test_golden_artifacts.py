@@ -52,6 +52,7 @@ import importlib.util as _catalog_util  # noqa: E402
 import paxman.contract.adapters.dict_dsl  # noqa: E402
 import paxman.contract.adapters.json_schema  # noqa: E402
 import paxman.contract.adapters.pydantic  # noqa: E402
+import paxman.capabilities.v1  # noqa: E402
 
 _CATALOG_PATH = _THIS_DIR.parent / "fixtures" / "artifacts" / "_catalog.py"
 _catalog_spec = _catalog_util.spec_from_file_location(

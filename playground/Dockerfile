@@ -14,7 +14,12 @@ COPY src/ ./src/
 
 # Build a venv at /opt/paxman-venv with all extras (so notebooks can use
 # pydantic, jsonschema, openapi, defusedxml).
-RUN uv sync --frozen --all-extras --python 3.12
+# --no-editable is required: the default editable install would record
+# /paxman-src/src in a .pth file, but that path only exists in the builder
+# stage — the runtime image does not carry the source, so ``import paxman``
+# would resolve to an empty namespace package and ``paxman.contract`` would
+# raise ModuleNotFoundError.
+RUN uv sync --frozen --no-editable --all-extras --python 3.12
 RUN mv .venv /opt/paxman-venv
 
 # Install JupyterLab using playground/pyproject.toml as the single

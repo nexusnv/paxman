@@ -49,10 +49,29 @@ uv run --project playground jupyter lab --ip=127.0.0.1 --port=8888 --no-browser 
 
 1. Name it `NN-topic-name.ipynb` (e.g., `11-capability-csv-extraction.ipynb`).
 2. Follow the template: problem statement → imports → contract → sample input → normalize → inspect results → try-it-yourself.
-3. Run the smoke test to catch internal-import leaks.
-4. Open a PR.
+3. Run the smoke test to catch internal-import leaks (`uv run --project playground pytest playground/tests/`).
+4. Run all notebooks headlessly to confirm nothing is broken (see [Tooling](#tooling) below).
+5. Open a PR.
 
 **Important:** Keep notebooks 100% deterministic — no `datetime.now()`, no `random.*` without a seeded generator. Use `Decimal` for money literals.
+
+## Tooling
+
+The `tooling/` directory contains helper scripts for CI and local verification.
+
+### `tooling/run_notebooks.sh`
+
+Executes every `.ipynb` in the notebook directory headlessly via `jupyter nbconvert --execute` and reports pass/fail.
+
+```bash
+# From inside the running container:
+docker exec paxman-playground bash playground/tooling/run_notebooks.sh
+
+# From the host (with a venv that has paxman + jupyter installed):
+bash playground/tooling/run_notebooks.sh playground/notebooks
+```
+
+Returns exit code 0 if all notebooks pass, 1 if any fail. The script accepts an optional path argument (defaults to `/home/jovyan/playground/notebooks` inside the container).
 
 ## Troubleshooting
 

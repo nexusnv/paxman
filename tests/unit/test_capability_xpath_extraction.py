@@ -7,6 +7,8 @@ XPath against the raw input parsed as XML.
 from __future__ import annotations
 
 import importlib.util
+import sys
+import xml.etree.ElementTree as _stdlib_ET
 
 import pytest
 
@@ -397,3 +399,83 @@ def test_non_absolute_xpath_rejected() -> None:
     assert result.candidates == ()
     assert result.diagnostics[0].code is DiagnosticCode.CAPABILITY_INVOKE_FAILED
     assert "absolute" in result.diagnostics[0].message.lower()
+
+
+# --- _select_xml_backend helper (issue #81, ADR-0013) ------------------------
+
+
+def test_select_xml_backend_stdlib_fallback_when_defusedxml_missing() -> None:
+    """``_select_xml_backend`` returns the stdlib tuple when defusedxml unavailable.
+
+    Removes all ``defusedxml``-related modules from ``sys.modules`` to
+    simulate a bare ``pip install paxman`` (without the ``xml-secure``
+    extra). Verifies that the fallback selects ``stdlib`` and the
+    ``fromstring`` is the stdlib version.
+    """
+    from paxman.capabilities.v1.xpath_extraction import _select_xml_backend
+
+    # Collect all currently loaded defusedxml modules and replace
+    # them with None to block re-import within the helper.
+    defused_keys = [
+        k for k in sys.modules if k == "defusedxml" or k.startswith("defusedxml.")
+    ]
+    snapshot = {k: sys.modules[k] for k in defused_keys}
+    for k in defused_keys:
+        sys.modules[k] = None  # type: ignore[assignment]
+
+    try:
+        _fromstring, backend, errors = _select_xml_backend()
+        assert backend == "stdlib"
+        assert errors == (_stdlib_ET.ParseError,)
+        assert _fromstring is _stdlib_ET.fromstring
+    finally:
+        for k in defused_keys:
+            sys.modules[k] = snapshot[k]
+
+
+def test_select_xml_backend_stdlib_fallback_logs_message(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The stdlib fallback logs an INFO message with backend and hint fields.
+
+    Uses ``capsys`` because structlog's ``ConsoleRenderer`` writes
+    directly to stdout (bypassing stdlib logging handlers).
+    """
+    from paxman.capabilities.v1.xpath_extraction import _select_xml_backend
+
+    # Block defusedxml re-import to force the fallback.
+    defused_keys = [
+        k for k in sys.modules if k == "defusedxml" or k.startswith("defusedxml.")
+    ]
+    snapshot = {k: sys.modules[k] for k in defused_keys}
+    for k in defused_keys:
+        sys.modules[k] = None  # type: ignore[assignment]
+
+    try:
+        _select_xml_backend()
+        captured = capsys.readouterr()
+        assert "stdlib" in captured.out
+        assert "xml-secure" in captured.out
+    finally:
+        for k in defused_keys:
+            sys.modules[k] = snapshot[k]
+
+
+def test_select_xml_backend_defusedxml_when_available() -> None:
+    """``_select_xml_backend`` returns the defusedxml tuple when defusedxml is installed.
+
+    In CI, ``defusedxml`` is always available (installed via
+    ``--all-extras``). This test verifies the helper picks the
+    hardened backend when the extra is present.
+    """
+    import importlib
+
+    if importlib.util.find_spec("defusedxml") is None:
+        pytest.skip("defusedxml not installed in this environment")
+
+    from paxman.capabilities.v1.xpath_extraction import _select_xml_backend
+
+    _fromstring, backend, errors = _select_xml_backend()
+    assert backend == "defusedxml"
+    # When defusedxml is available, errors should include DefusedXmlException.
+    assert any("DefusedXmlException" in e.__name__ for e in errors)

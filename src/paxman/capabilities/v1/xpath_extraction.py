@@ -88,31 +88,58 @@ _log = get_logger("paxman.capabilities.xpath_extraction")
 # the canonical fix for bandit B314 / ruff S314 (see ADR-0013). The fallback
 # is observable via the log so callers who care about XML security can
 # detect the unhardened mode at startup.
-try:
-    from defusedxml.common import DefusedXmlException as _DefusedXmlException
-    from defusedxml.ElementTree import fromstring as _defused_fromstring
-except ImportError:  # pragma: no cover  (defusedxml is always installed in the test env)
-    _defused_fromstring = None
-    _DefusedXmlException = None
 
 
-if _defused_fromstring is not None and _DefusedXmlException is not None:
-    _fromstring = _defused_fromstring
-    _XML_BACKEND: str = "defusedxml"
-    _XML_PARSE_ERRORS: tuple[type[BaseException], ...] = (
-        _stdlib_ET.ParseError,
-        _DefusedXmlException,
-    )
-else:  # pragma: no cover  (defusedxml is always installed in the test env)
-    _fromstring = _stdlib_ET.fromstring
-    _XML_BACKEND = "stdlib"
-    _XML_PARSE_ERRORS = (_stdlib_ET.ParseError,)
+def _select_xml_backend() -> tuple[
+    typing.Callable[..., _stdlib_ET.Element],
+    str,
+    tuple[type[BaseException], ...],
+]:
+    """Detect the available XML backend at module-import time.
+
+    Tries to import ``defusedxml.ElementTree`` (the hardened parser;
+    installed via the ``xml-secure`` extra). When ``defusedxml`` is not
+    available, falls back to ``xml.etree.ElementTree`` and logs an INFO
+    message so callers who care about XML security can detect the
+    unhardened mode at startup.
+
+    Extracted into a helper so that unit tests can mock
+    ``sys.modules`` to exercise the stdlib fallback path.
+
+    Returns:
+        A tuple ``(fromstring, backend_name, parse_errors)``:
+
+        - **fromstring**: the ``fromstring`` callable for the selected backend.
+        - **backend_name**: ``"defusedxml"`` or ``"stdlib"``.
+        - **parse_errors**: a tuple of exception types to catch when
+          parsing fails (one or both of
+          ``xml.etree.ElementTree.ParseError`` and
+          ``defusedxml.common.DefusedXmlException``).
+    """
+    try:
+        from defusedxml.common import DefusedXmlException as _DefusedXmlException
+        from defusedxml.ElementTree import fromstring as _defused_fromstring
+    except ImportError:
+        _defused_fromstring = None
+        _DefusedXmlException = None
+
+    if _defused_fromstring is not None and _DefusedXmlException is not None:
+        return (
+            _defused_fromstring,
+            "defusedxml",
+            (_stdlib_ET.ParseError, _DefusedXmlException),
+        )
+
     _log.info(
         "xpath_extraction: using stdlib XML parser "
         "(install paxman[xml-secure] for hardened parsing)",
         backend="stdlib",
         hint="pip install paxman[xml-secure]",
     )
+    return (_stdlib_ET.fromstring, "stdlib", (_stdlib_ET.ParseError,))
+
+
+_fromstring, _XML_BACKEND, _XML_PARSE_ERRORS = _select_xml_backend()
 
 
 #: Singleton spec for ``xpath_extraction@1.0``. Reused across instances.

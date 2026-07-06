@@ -241,5 +241,5 @@ test-examples: ## Run all reference example test suites (smoke-tests persona cov
 ci: install-frozen lint format-check typecheck typecheck-pyright typecheck-pyright-strict imports docs-check security test-examples test-cov ## Run the full local-CI pipeline (11 checks: install → lint → format → typecheck → pyright → pyright-strict → imports → docs → security → test-examples → test-cov)
 	@echo ""
 	@echo "=========================================="
-	@echo "  CI GREEN ✓ (10 checks)"
+	@echo "  CI GREEN ✓ (11 checks)"
 	@echo "=========================================="

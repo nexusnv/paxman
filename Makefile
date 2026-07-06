@@ -90,6 +90,10 @@ typecheck: ## Run mypy --strict
 typecheck-pyright: ## Run pyright for cross-validation
 	$(UV) run pyright src/paxman
 
+.PHONY: typecheck-pyright-strict
+typecheck-pyright-strict: ## Run pyright in strict mode (advisory)
+	$(UV) run pyright --project pyrightconfig-strict.json src/paxman
+
 # --- Import-linter ------------------------------------------------------------
 
 .PHONY: imports
@@ -226,6 +230,7 @@ test-examples: ## Run all reference example test suites (smoke-tests persona cov
 #   3. format-check       — ruff format --check
 #   4. typecheck          — mypy --strict
 #   5. typecheck-pyright  — pyright (advisory in CI)
+#   5b. typecheck-pyright-strict — pyright strict (advisory in CI)
 #   6. imports            — import-linter
 #   7. docs-check         — interrogate (100% docstring coverage on public surface)
 #   8. security           — bandit (advisory in CI)
@@ -233,7 +238,7 @@ test-examples: ## Run all reference example test suites (smoke-tests persona cov
 #  10. test-cov           — pytest with coverage + per-subsystem threshold check
 
 .PHONY: ci
-ci: install-frozen lint format-check typecheck typecheck-pyright imports docs-check security test-examples test-cov ## Run the full local-CI pipeline (10 checks: install → lint → format → typecheck → pyright → imports → docs → security → test-examples → test-cov)
+ci: install-frozen lint format-check typecheck typecheck-pyright typecheck-pyright-strict imports docs-check security test-examples test-cov ## Run the full local-CI pipeline (11 checks: install → lint → format → typecheck → pyright → pyright-strict → imports → docs → security → test-examples → test-cov)
 	@echo ""
 	@echo "=========================================="
 	@echo "  CI GREEN ✓ (10 checks)"

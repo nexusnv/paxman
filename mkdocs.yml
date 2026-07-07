@@ -124,6 +124,10 @@ nav:
       - Testing strategy: contributing/testing-strategy.md
       - Test data policy: contributing/test-data.md
       - Code of conduct: contributing/code-of-conduct.md
+      - Engineering standards: contributing/engineering-standards.md
+  - Initiatives:
+      - Overview: initiatives/README.md
+      - Pyright Strict Mode: initiatives/pyright-strict-mode.md
   - Operations:
       - Changelog: operations/changelog.md
 

@@ -14,7 +14,7 @@ engineering investment with a stated success criterion.
 
 | Initiative | Issue | Status | Success Criterion |
 |---|---|---|---|
-| [Pyright Strict Mode](./pyright-strict-mode.md) | [#26](https://github.com/nexusnv/paxman/issues/26) | PR-0 in progress | B (future capability enablement) |
+| [Pyright Strict Mode](./pyright-strict-mode.md) | [#26](https://github.com/nexusnv/paxman/issues/26) | PR-1 in progress | B (future capability enablement) |
 
 ## When to create an Initiative
 

@@ -189,22 +189,31 @@ def test_policy_default_values() -> None:
 
 
 _V1_CAPABILITY_IDS = (
+    # V1.0.0 originals (ADR-0012).
     "text_extraction",
     "regex_extraction",
     "lookup",
     "inference",
     "validation",
+    # V1.1.0 format-aware extractors (ADR-0015; PR #71).
+    "json_path_extraction",
+    "csv_extraction",
+    "xpath_extraction",
+    # V1.1.0 post-extraction cleanup transforms (ADR-0014; PR #86).
+    "case_normalization",
+    "trim_extraction",
 )
 
 
 def test_v1_capabilities_self_register_on_import() -> None:
-    """All five V1 capabilities are present in the registry after
-    ``import paxman.capabilities.v1`` (ADR-0012).
+    """All ten V1 capabilities are present in the registry after
+    ``import paxman.capabilities.v1`` (ADR-0012, ADR-0014, ADR-0015).
 
-    This is the single-line promise of the new self-registration
+    This is the single-line promise of the self-registration
     contract: a fresh import populates the registry uniformly for
-    every V1 capability, with no ``register_capability()`` call
-    from the caller.
+    every V1 capability (5 V1.0.0 originals + 3 V1.1.0 format-aware
+    extractors + 2 V1.1.0 post-extraction cleanup transforms), with
+    no ``register_capability()`` call from the caller.
     """
     from paxman.capabilities import (
         registry,
@@ -224,8 +233,10 @@ def test_normalize_works_without_explicit_register_capability_call() -> None:
     ``register_capability()`` call (ADR-0012 approachability goal).
 
     Before ADR-0012, a fresh ``import paxman`` would leave the
-    capability registry empty for 4 of the 5 V1 capabilities, and
-    a call against a non-trivial contract would have failed with
+    capability registry empty for 4 of the 5 V1.0.0 originals
+    (and would have been silent about the 5 V1.1.0 additions after
+    they landed), and a call against a non-trivial contract would
+    have failed with
     ``InvalidContractError(error_code="CAPABILITY_NOT_FOUND")``.
 
     This test exercises the canonical invoice contract from

@@ -65,7 +65,7 @@ The following pyright rules are intentionally silenced in
 
 | Rule | Count | Justification | Audit Status |
 |---|---:|---|---|
-| `reportUnnecessaryIsInstance` | 251 | Deliberate runtime safety nets over `Any`-typed adapter inputs. Runtime correctness beats static elegance. | To be audited in PR-1 of [#26](https://github.com/nexusnv/paxman/issues/26) |
+| `reportUnnecessaryIsInstance` | 251 | Deliberate runtime safety nets over `Any`-typed adapter inputs. Runtime correctness beats static elegance. | Audited in PR-1 of [#26](https://github.com/nexusnv/paxman/issues/26) — confirmed as deliberate runtime safety nets; no removals |
 | `reportUnknownParameterType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | Not audited |
 | `reportUnknownArgumentType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | Not audited |
 | `reportUnknownLambdaType` | — | Carried forward from basic config. | Not audited |

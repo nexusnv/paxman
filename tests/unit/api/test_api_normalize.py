@@ -18,8 +18,8 @@ import pytest
 from paxman.api.normalize import (
     _compute_overall_status,
     _detect_and_adapt,
-    detect_format,
     _resolved_to_field_result,
+    detect_format,
 )
 from paxman.budget import Policy
 from paxman.contract.canonical import CanonicalContract, CanonicalField

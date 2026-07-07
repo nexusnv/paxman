@@ -159,7 +159,7 @@ def detect_conflicts(
         raise TypeError(f"field must be a CanonicalField, got {type(field).__name__}")
 
     # Filter out None values; only compare concrete candidate values.
-    concrete = [c for c in candidates if isinstance(c, Candidate) and c.value is not None]
+    concrete = [c for c in candidates if c.value is not None]
     if len(concrete) < 2:
         return None
 

@@ -147,10 +147,10 @@ def _result_for_field(
             if isinstance(cap_id, str) and cap_id not in seen_ids:
                 seen_ids.add(cap_id)
                 unique_capability_ids.append(cap_id)
-    total_evidence = sum(len(c.evidence_refs) for c in candidates if isinstance(c, Candidate))
+    total_evidence = sum(len(c.evidence_refs) for c in candidates)
     confidence = assign_confidence(
         candidate_count=sum(
-            1 for c in candidates if isinstance(c, Candidate) and c.value is not None
+            1 for c in candidates if c.value is not None
         ),
         evidence_count=total_evidence,
         capability_ids=tuple(unique_capability_ids),

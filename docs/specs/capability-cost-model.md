@@ -65,7 +65,9 @@ Violation of any rule raises `InvalidCapabilitySpec` with `error_code="INVALID_C
 
 ## 3. V1 Capability Cost Table
 
-The following table defines the baseline `CostHint` values for the five V1 capabilities.
+The following tables define the baseline `CostHint` values for the **ten** V1 capabilities (5 V1.0.0 originals + 3 V1.1.0 format-aware extractors + 2 V1.1.0 post-extraction cleanup transforms). The V1.0.0 baseline is preserved verbatim for historical reference; the V1.1.0 additions are sourced directly from each capability's `CapabilitySpec` (see `src/paxman/capabilities/v1/*`).
+
+### 3.0 V1.0.0 baseline (5 capabilities)
 
 | Capability | `tokens` | `ms` | `usd` | `deterministic` | Notes |
 |---|---|---|---|---|---|
@@ -75,7 +77,19 @@ The following table defines the baseline `CostHint` values for the five V1 capab
 | `inference` | 500 | 1500 | 0.001 | No | V1 stub provider. Values represent a typical small LLM call: ~1k-token prompt, ~1.5 s p50 latency, ~$0.001 per invocation. |
 | `validation` | 0 | 1 | 0.0 | Yes | Pure-Python constraint check. Deterministic. Microsecond-scale actual latency; 1 ms is a conservative floor. |
 
-### 3.1 Rationale for individual values
+### 3.1 V1.1.0 additions (5 capabilities)
+
+V1.1.0 added 3 format-aware extractors (per [ADR-0015](../adr/0015-format-aware-executor-auto-dispatch.md) and PR #71) and 2 post-extraction cleanup transforms (per [ADR-0014](../adr/0014-v1-1-0-cleanup-transforms.md) and PR #86). The values below are the `CostHint(...)` literals declared in each module's `_SPEC` constant.
+
+| Capability | `tokens` | `ms` | `usd` | `deterministic` | Notes |
+|---|---|---|---|---|---|
+| `json_path_extraction` | 0 | 1 | 0.0 | Yes | Pure-Python JSON-Pointer / JSONPath subset against pre-parsed JSON bytes. Microsecond-scale actual latency; 1 ms is a conservative floor. `format_hint=FormatHint.JSON` drives auto-dispatch. |
+| `csv_extraction` | 0 | 1 | 0.0 | Yes | Pure-Python CSV row scan for a named or indexed column. Microsecond-scale actual latency; 1 ms is a conservative floor. `format_hint=FormatHint.CSV` drives auto-dispatch. |
+| `xpath_extraction` | 0 | 1 | 0.0 | Yes | Stdlib `xml.etree.ElementTree` against a documented XPath subset. 1 ms conservative floor; the stdlib backend is used by default; `defusedxml` is an optional extra (ADR-0013). `format_hint=FormatHint.XML` drives auto-dispatch. |
+| `case_normalization` | 0 | 1 | 0.0 | Yes | Pure-Python `str.lower` / `str.upper` / `str.title` against `ctx.config["value"]` (post-resolution input pattern). Never reads `ctx.raw_input`. Microsecond-scale actual latency. |
+| `trim_extraction` | 0 | 1 | 0.0 | Yes | Pure-Python whitespace + common punctuation trim against `ctx.config["value"]`. Never reads `ctx.raw_input`. Microsecond-scale actual latency. |
+
+### 3.2 Rationale for individual values
 
 **`text_extraction` (0, 5, 0.0):** V1 handles `text/plain` and `text/html` only (no OCR). Local decode is cheap. The 5 ms accounts for HTML parsing overhead. Remote OCR providers (V2) will carry non-zero `tokens` and `usd`.
 

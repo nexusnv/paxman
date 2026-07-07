@@ -258,13 +258,19 @@ class Capability(Protocol):
 4. **Register the capability:**
 
    If your capability is a **V1 built-in** (one of
-   `text_extraction`, `regex_extraction`, `lookup`, `inference`,
-   `validation`), it is **already registered** by the time you
-   `import paxman` — all five V1 capabilities self-register on
-   import (see [ADR-0012](../adr/0012-v1-capabilities-self-register-on-import.md)
-   and the `_register_on_import()` hook at the bottom of each
-   `paxman.capabilities.v1.*` module). You do not need to call
-   `register_capability()` for a V1 built-in.
+   `text_extraction`, `regex_extraction`, `json_path_extraction`,
+   `csv_extraction`, `xpath_extraction`, `case_normalization`,
+   `trim_extraction`, `lookup`, `inference`, or `validation`), it is
+   **already registered** by the time you `import paxman` — all **ten**
+   V1 capabilities self-register on import (see
+   [ADR-0012](../adr/0012-v1-capabilities-self-register-on-import.md)
+   for the V1.0.0 originals,
+   [ADR-0014](../adr/0014-v1-1-0-cleanup-transforms.md) for the
+   V1.1.0 post-extraction cleanup transforms, and
+   [ADR-0015](../adr/0015-format-aware-executor-auto-dispatch.md) for
+   the V1.1.0 format-aware extractors; the `_register_on_import()`
+   hook sits at the bottom of each `paxman.capabilities.v1.*` module).
+   You do not need to call `register_capability()` for a V1 built-in.
 
    For **third-party capabilities** (anything outside the V1
    built-in set, including the example below), register the

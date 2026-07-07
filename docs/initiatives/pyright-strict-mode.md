@@ -1,6 +1,6 @@
 # Pyright Strict Mode
 
-> **Status:** Active (PR-0 in progress).
+> **Status:** Active (PR-1 in progress).
 > **Audience:** Paxman contributors and maintainers.
 > **Related docs:** [Engineering Standards](../contributing/engineering-standards.md), [Issue #26](https://github.com/nexusnv/paxman/issues/26), [Contributing](../contributing/index.md)
 

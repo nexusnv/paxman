@@ -139,7 +139,7 @@ class MoneyValue:
 #:   - ``a`` / ``a.b`` / ``a.b.c`` (dotted)
 #:   - ``a[]`` / ``a[].b`` / ``a.b[].c.d`` (with array segments)
 #: and rejects malformed forms like ``a.[].b``, ``a[]b``, ``.a``.
-_FIELD_PATH_PATTERN: typing.Final[re.Pattern[str]] = re.compile(
+FIELD_PATH_PATTERN: typing.Final[re.Pattern[str]] = re.compile(
     r"^[A-Za-z_][A-Za-z0-9_]*(?:\[\])?(?:\.(?:[A-Za-z_][A-Za-z0-9_]*(?:\[\])?))*$"
 )
 
@@ -248,7 +248,7 @@ class CanonicalField:
         # --- path ---
         if not isinstance(self.path, str) or not self.path:
             raise ValueError(f"path must be a non-empty string, got {self.path!r}")
-        if not _FIELD_PATH_PATTERN.match(self.path):
+        if not FIELD_PATH_PATTERN.match(self.path):
             raise ValueError(
                 f"path must match the JSON-Path-like pattern "
                 f"([A-Za-z_][A-Za-z0-9_]*(?:\\[\\])?(?:\\.[A-Za-z_][A-Za-z0-9_]*(?:\\[\\])?)*), got {self.path!r}"

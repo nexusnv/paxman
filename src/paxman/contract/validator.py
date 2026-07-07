@@ -39,7 +39,7 @@ import typing
 
 from paxman.contract._types import Constraint, ConstraintKind
 from paxman.contract.canonical import (
-    _FIELD_PATH_PATTERN,
+    FIELD_PATH_PATTERN,
     CanonicalContract,
     CanonicalField,
 )
@@ -96,7 +96,7 @@ def validate_canonical_field(field: CanonicalField) -> None:
     # so the documented ``InvalidPathError`` contract holds for callers
     # that build a field via ``object.__setattr__`` to bypass the
     # constructor (see ``test_validate_contract_*``).
-    if not isinstance(field.path, str) or not _FIELD_PATH_PATTERN.match(field.path):
+    if not isinstance(field.path, str) or not FIELD_PATH_PATTERN.match(field.path):
         raise InvalidPathError(
             f"field {field.name!r} has malformed path: {field.path!r}",
             error_code="INVALID_PATH",

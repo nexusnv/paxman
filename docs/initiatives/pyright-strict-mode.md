@@ -145,12 +145,15 @@ The following pyright rules are intentionally silenced in `pyrightconfig-strict.
 
 | Rule | Count | Justification | Audit Status |
 |---|---:|---|---|
-| `reportUnnecessaryIsInstance` | 239 | Deliberate runtime safety nets (constructor validation, parameter validation, type dispatch). Re-enabled in PR-1.5; remaining diagnostics are all legitimate. | Audited in PR-1.5 of [#26](https://github.com/nexusnv/paxman/issues/26) — 9 dead guards removed, 230 kept as deliberate safety nets |
 | `reportUnknownParameterType` | — | Carried forward from basic config | Not audited |
 | `reportUnknownArgumentType` | — | Carried forward from basic config | Not audited |
 | `reportUnknownLambdaType` | — | Carried forward from basic config | Not audited |
 | `reportUnknownVariableType` | — | Carried forward from basic config | Not audited |
 | `reportUnknownMemberType` | — | Carried forward from basic config | Not audited |
+
+**Note:** `reportUnnecessaryIsInstance` is **not** listed here because it was
+re-enabled in PR-1.5. The 239 visible diagnostics are all deliberate runtime
+safety nets (documented in [Engineering Standards §4](../contributing/engineering-standards.md#4-pr-15-audit-results-pyright-strict-mode-initiative-26)).
 
 **Policy:** Each silenced rule must have a one-line justification logged in
 [Engineering Standards](../contributing/engineering-standards.md). The justification

@@ -149,9 +149,7 @@ def _result_for_field(
                 unique_capability_ids.append(cap_id)
     total_evidence = sum(len(c.evidence_refs) for c in candidates)
     confidence = assign_confidence(
-        candidate_count=sum(
-            1 for c in candidates if c.value is not None
-        ),
+        candidate_count=sum(1 for c in candidates if c.value is not None),
         evidence_count=total_evidence,
         capability_ids=tuple(unique_capability_ids),
         has_validation_pass=has_validation_pass,

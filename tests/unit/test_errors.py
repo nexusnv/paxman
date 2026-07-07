@@ -188,10 +188,10 @@ def test_construction_with_context(cls: type) -> None:
 
 
 @pytest.mark.parametrize("cls", ALL_18)
-def test_construction_with_context_none_normalizes_to_empty_dict(cls: type) -> None:
-    """``context=None`` is normalized to ``{}`` (per the spec)."""
-    exc = cls("oops", context=None)
-    assert exc.context == {}
+def test_construction_with_context_none_raises_type_error(cls: type) -> None:
+    """``context=None`` raises ``TypeError`` (``context`` is typed as ``dict``)."""
+    with pytest.raises(TypeError, match="context must be dict"):
+        cls("oops", context=None)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize("cls", ALL_18)

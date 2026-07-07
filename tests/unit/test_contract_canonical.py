@@ -386,6 +386,22 @@ def test_canonical_field_string_default_none_allowed() -> None:
     assert f.default is None
 
 
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_canonical_field_date_default_wrong_type_raises() -> None:
+    """DATE field with non-str default raises ValueError (issue #103)."""
+    with pytest.raises(ValueError, match=r"DATE field.*default must be str"):
+        _field("x", type_=FieldType.DATE, default=42)
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_canonical_field_date_default_iso_string_accepted() -> None:
+    """DATE field with an ISO-8601 str default is accepted (issue #103)."""
+    f = _field("x", type_=FieldType.DATE, default="2026-07-07")
+    assert f.default == "2026-07-07"
+
+
 # --- CanonicalField: id / path / name validation ----------------------------
 
 

@@ -377,6 +377,13 @@ class CanonicalField:
                     f"ENUM field {self.name!r} default must be a valid enum value, "
                     f"got {self.default!r}"
                 )
+        # Issue #103: DATE default must be an ISO-8601 string (consistent with
+        # the ``default`` annotation, which does not include ``datetime.date``).
+        if self.type is FieldType.DATE and not isinstance(self.default, str):
+            raise ValueError(
+                f"DATE field {self.name!r} default must be str (ISO-8601), "
+                f"got {type(self.default).__name__}"
+            )
 
 
 # ---------------------------------------------------------------------------

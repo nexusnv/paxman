@@ -164,7 +164,7 @@ def _result_for_field(
     # Step 8: threshold check.
     if confidence < field.confidence_threshold or merged_value is None:
         diags = list(validation_diagnostics)
-        if has_conflict and conflict is not None:
+        if conflict is not None:
             diags.append(
                 Diagnostic(
                     code=DiagnosticCode.CAPABILITY_OK,

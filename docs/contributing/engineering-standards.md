@@ -65,12 +65,11 @@ The following pyright rules are intentionally silenced in
 
 | Rule | Count | Justification | Audit Status |
 |---|---:|---|---|
-| `reportUnnecessaryIsInstance` | 251 | Deliberate runtime safety nets over `Any`-typed adapter inputs. Runtime correctness beats static elegance. | Audited in PR-1 of [#26](https://github.com/nexusnv/paxman/issues/26) — confirmed as deliberate runtime safety nets; no removals |
-| `reportUnknownParameterType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | Not audited |
-| `reportUnknownArgumentType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | Not audited |
-| `reportUnknownLambdaType` | — | Carried forward from basic config. | Not audited |
-| `reportUnknownVariableType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | Not audited |
-| `reportUnknownMemberType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | Not audited |
+| `reportUnknownParameterType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | V2 deferred (real adapter-layer Any-leakage) |
+| `reportUnknownArgumentType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | V2 deferred (real adapter-layer Any-leakage) |
+| `reportUnknownLambdaType` | — | Carried forward from basic config. | V2 deferred (real adapter-layer Any-leakage) |
+| `reportUnknownVariableType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | V2 deferred (real adapter-layer Any-leakage) |
+| `reportUnknownMemberType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | V2 deferred (real adapter-layer Any-leakage) |
 | `reportMissingTypeStubs` | — | Third-party libraries (e.g. `openapi-spec-validator`, `jsonschema`) don't ship type stubs. Adapter layer relies on these. | Not audited |
 | `reportUnusedImport` | — | Carried forward from basic config. Pyright false-positives on attrs `@define` re-exports. | Not audited |
 | `reportUnusedVariable` | — | Carried forward from basic config. Pyright false-positives on Protocol-bound locals. | Not audited |
@@ -86,16 +85,52 @@ The following pyright rules are intentionally silenced in
 3. A one-line justification
 4. The audit status (To be audited / Audited and justified / Audited and removed)
 
-**Audit process:** PR-1 of [#26](https://github.com/nexusnv/paxman/issues/26)
-will audit the `reportUnnecessaryIsInstance` cluster. Each guard will be
+**Audit process:** The `reportUnnecessaryIsInstance` audit was completed in
+PR-1.5 of [#26](https://github.com/nexusnv/paxman/issues/26). Each guard was
 classified as:
-- **Deliberate runtime safety net** — keep, document in this table
-- **Dead code** — remove
-- **Type-system workaround** — tighten the Protocol to eliminate the need
+- **Deliberate runtime safety net** — kept, documented in §4 below
+- **Dead code** — removed (9 sites in reconciler modules)
+- **Type-system workaround** — none identified; 2 Protocols tightened instead
 
 ---
 
-## 4. Adapter-Layer Protocol Investment
+## 4. PR-1.5 Audit Results (Pyright Strict Mode Initiative #26)
+
+PR-1.5 performed a full audit of the `isinstance()` call sites in `src/paxman/` to classify them as:
+- **Deliberate runtime safety net** — keep, document
+- **Dead code** — remove
+- **Type-system workaround** — tighten the Protocol to eliminate the need
+
+### Summary
+
+| Category | Count | Action |
+|---|---:|---|
+| Deliberate runtime safety nets | 230 | Kept (documented in this table) |
+| Dead code (homogeneous tuple comprehension filters) | 9 | Removed |
+| Type-system workarounds | 0 | None identified |
+
+The 9 dead guards were in `reconciler/evidence_compare.py` (4), `reconciler/reconciler.py` (2), `reconciler/merge.py` (2), and `reconciler/conflict.py` (1). They were `isinstance(c, Candidate)` and `isinstance(r, EvidenceRef)` filters inside comprehensions over `tuple[Candidate, ...]` or `tuple[EvidenceRef, ...]` — the type system already guarantees homogeneity.
+
+The 230 deliberate runtime safety nets remain. They are concentrated in:
+- `__attrs_post_init__` constructor validation guards (~133 instances)
+- Function/method parameter validation guards (~28 instances)
+- Type dispatch/branching for serialization, JSON tree walking, adapter input routing (~55 instances)
+- `_validate_default` type-vs-fieldtype dispatch (~11 instances)
+- `bytes` input guards (~5 instances)
+
+### Protocol Tightening
+
+| Protocol | Before | After | ADR Required? |
+|---|---|---|---|
+| `CanonicalField.default` | `typing.Any` | `str \| int \| bool \| float \| decimal.Decimal \| MoneyValue \| dict[str, object] \| list[object] \| tuple[object, ...] \| None` | No (annotation accuracy) |
+| `EvidenceRef.context` | `dict[str, typing.Any]` | `dict[str, str \| bool \| int \| list[str] \| dict[str, str \| int]]` | No (annotation accuracy) |
+| `CanonicalContract` | (no Any) | (no change needed) | N/A |
+| `MoneyValue` | (no Any) | (no change needed) | N/A |
+| `CapabilitySpec` | (no Any) | (no change needed) | N/A |
+
+---
+
+## 5. Adapter-Layer Protocol Investment
 
 The adapter layer (`contract/adapters/*`, `contract/canonical.py`,
 `artifact/artifact.py`, `planner/field_plan.py`) carries the bulk of the
@@ -121,7 +156,7 @@ with the residual diagnostics concentrated in documented silenced rules.
 
 ---
 
-## 5. Adding a New Checker
+## 6. Adding a New Checker
 
 When adding a new static analysis tool to the Paxman CI pipeline:
 
@@ -141,7 +176,7 @@ When adding a new static analysis tool to the Paxman CI pipeline:
 
 ---
 
-## 6. References
+## 7. References
 
 - [Contributing](./index.md) — contribution workflow
 - [Development](./development.md) — development setup

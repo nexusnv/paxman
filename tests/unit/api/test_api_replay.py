@@ -42,7 +42,7 @@ class TestDetectAndAdapt:
             ),
         )
         with (
-            patch("paxman.api.replay._detect_format", return_value="pydantic"),
+            patch("paxman.api.replay.detect_format", return_value="pydantic"),
             patch("paxman.api.replay._adapt_contract", return_value=expected),
         ):
             result = _detect_and_adapt({"dummy": "contract"})
@@ -50,9 +50,9 @@ class TestDetectAndAdapt:
             assert result.id == "test"
 
     def test_detect_and_adapt_detection_failure_propagates(self) -> None:
-        """When ``_detect_format`` raises, the error propagates as ``InvalidContractError``."""
+        """When ``detect_format`` raises, the error propagates as ``InvalidContractError``."""
         with patch(
-            "paxman.api.replay._detect_format",
+            "paxman.api.replay.detect_format",
             side_effect=InvalidContractError("unknown format"),
         ):
             with pytest.raises(InvalidContractError, match="unknown format"):
@@ -61,7 +61,7 @@ class TestDetectAndAdapt:
     def test_detect_and_adapt_adaptation_failure_propagates(self) -> None:
         """When ``_adapt_contract`` raises, the error propagates."""
         with (
-            patch("paxman.api.replay._detect_format", return_value="pydantic"),
+            patch("paxman.api.replay.detect_format", return_value="pydantic"),
             patch(
                 "paxman.api.replay._adapt_contract",
                 side_effect=InvalidContractError("adapt failed"),

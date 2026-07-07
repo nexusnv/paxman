@@ -26,6 +26,13 @@ copyright: >-
 
 docs_dir: docs
 
+# Exclude internal development artifacts (gitignored superpowers/ plan + spec
+# workspace). These are not part of the published documentation and contain
+# broken cross-references to other internal resources; mkdocs --strict would
+# otherwise abort on them.
+exclude_docs: |
+  superpowers/
+
 theme:
   name: material
   language: en

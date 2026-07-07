@@ -83,7 +83,7 @@ The following pyright rules are intentionally silenced in
 1. The rule name
 2. The diagnostic count (run `pyright --strict` and count)
 3. A one-line justification
-4. The audit status (To be audited / Audited and justified / Audited and removed)
+4. The audit status (To be audited / Audited and justified / Audited and removed / V2 deferred)
 
 **Audit process:** The `reportUnnecessaryIsInstance` audit was completed in
 PR-1.5 of [#26](https://github.com/nexusnv/paxman/issues/26). Each guard was

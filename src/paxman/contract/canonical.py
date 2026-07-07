@@ -231,7 +231,7 @@ class CanonicalField:
     semantic_tags: tuple[str, ...] = ()
     fallback_policy: ResolutionPolicy = attrs.field(default=attrs.Factory(ResolutionPolicy))
     enum_values: EnumValueSet | None = None
-    default: typing.Any = None
+    default: str | int | bool | float | decimal.Decimal | MoneyValue | dict[str, object] | list[object] | tuple[object, ...] | None = None
     constraints: tuple[Constraint, ...] = ()
     format_hints: tuple[FormatHint, ...] = ()
 

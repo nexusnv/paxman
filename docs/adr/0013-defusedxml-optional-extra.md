@@ -57,7 +57,7 @@ the cost of an optional extra is one line in `pyproject.toml`.
   extras) must not pull in `defusedxml`. The current user base that
   does not use `xpath_extraction` must not be affected.
 - **Core dependency policy** — the 3-package core limit
-  (`docs/reference/dependencies.md` §1) and `AGENTS.md` forbid
+  (`docs/reference/dependencies.md` §1) and the project's [AGENTS.md](https://github.com/nexusnv/paxman/blob/main/AGENTS.md) forbid
   adding `defusedxml` to core. Optional extras are the documented
   escape hatch.
 - **Determinism** — Paxman's V1 determinism guarantee (PRD §4.5,
@@ -95,7 +95,7 @@ is a re-export of the stdlib `ParseError` (verified by `is` check).
 
 Add `xml-secure` to the `all` meta-extra so CI exercises the hardened
 path automatically. Remove the `S314` per-file-ignore in
-`pyproject.toml:145-150` (the hardened path is not flagged); the
+`pyproject.toml` lines around `145-150` (the hardened path is not flagged); the
 stdlib fallback retains an inline `# nosec B314` because that path
 *is* the unhardened one.
 
@@ -355,9 +355,9 @@ The implementation:
   stdlib parser and the documented suppression.
 - [`docs/reference/dependencies.md`](./../reference/dependencies.md) §1
   (core dependency policy) and §5.2 (optional extra policy).
-- [`AGENTS.md`](./../../AGENTS.md) — anti-patterns and core-dep
+- [`AGENTS.md`](https://github.com/nexusnv/paxman/blob/main/AGENTS.md) — anti-patterns and core-dep
   limit.
-- [`pyproject.toml`](./../../pyproject.toml) `[project.optional-dependencies]`
+- [`pyproject.toml`](https://github.com/nexusnv/paxman/blob/main/pyproject.toml) `[project.optional-dependencies]`
   — the existing extras (`pydantic`, `json-schema`, `openapi`, `all`).
 - Pillow's `src/PIL/Image.py:60-64, 1580-1617` — the
   `try: from defusedxml / except ImportError: None` pattern with

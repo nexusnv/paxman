@@ -148,8 +148,8 @@ test-data-verify: ## Verify vendored data is present (CI use)
 # --- Documentation build (Sprint 8) ------------------------------------------
 
 .PHONY: docs
-docs: ## Build documentation
-	@echo "TODO(Sprint 8): build docs"
+docs: ## Build documentation (mkdocs build --strict, mirrors Read the Docs)
+	$(UV) run mkdocs build --strict
 
 # --- Build --------------------------------------------------------------------
 

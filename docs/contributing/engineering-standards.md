@@ -65,6 +65,7 @@ The following pyright rules are intentionally silenced in
 
 | Rule | Count | Justification | Audit Status |
 |---|---:|---|---|
+| `reportUnnecessaryIsInstance` | 239 | Deliberate runtime safety nets (constructor validation, parameter validation, type dispatch). 9 dead guards removed in PR-1.5; 230 kept as deliberate safety nets. | Audited in PR-1.5 of [#26](https://github.com/nexusnv/paxman/issues/26) — re-silenced to avoid ~239 false positives in CI |
 | `reportUnknownParameterType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | V2 deferred (real adapter-layer Any-leakage) |
 | `reportUnknownArgumentType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | V2 deferred (real adapter-layer Any-leakage) |
 | `reportUnknownLambdaType` | — | Carried forward from basic config. | V2 deferred (real adapter-layer Any-leakage) |

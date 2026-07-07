@@ -41,9 +41,9 @@ with the residual diagnostics concentrated in documented silenced rules.
 
 **Status (post PR-1.5):** The primary deliverable is complete. The 2 target
 Protocols with `Any` have been tightened, 9 dead `isinstance` guards removed,
-and `reportUnnecessaryIsInstance` re-enabled (239 remaining diagnostics are
-all legitimate runtime safety nets). V2 inference providers and recursive
-contracts will have the tighter Protocols to build on.
+and `reportUnnecessaryIsInstance` remains silenced (239 diagnostics — all
+legitimate runtime safety nets, fully audited in PR-1.5). V2 inference
+providers and recursive contracts will have the tighter Protocols to build on.
 
 ## 3. What This Initiative Is NOT
 
@@ -61,7 +61,7 @@ contracts will have the tighter Protocols to build on.
 
 - ✅ **Tightened the 2 target Protocols with `Any`** (`CanonicalField.default`, `EvidenceRef.context`) — the primary deliverable, completed in PR-1.5
 - ✅ **Removed 9 dead `isinstance` guards** in reconciler modules — completed in PR-1.5
-- ✅ **Re-enabled `reportUnnecessaryIsInstance` rule** — the 239 remaining diagnostics are all legitimate runtime safety nets, now visible
+- ✅ **`reportUnnecessaryIsInstance` audited and remains silenced** — 239 legitimate runtime safety nets, fully documented in [Engineering Standards §4](../contributing/engineering-standards.md#4-pr-15-audit-results-pyright-strict-mode-initiative-26)
 - 🔄 **`reportUnknown*` rules remain silenced** — 225 real adapter-layer diagnostics deferred to V2 work (real inference providers, recursive contracts)
 
 ## 4. Implementation Plan
@@ -113,7 +113,7 @@ contracts will have the tighter Protocols to build on.
 
 **Acceptance:**
 - mypy `--strict`: 0 issues
-- pyright strict: 239 diagnostics (all `reportUnnecessaryIsInstance` — deliberate runtime safety nets)
+- pyright strict: 0 errors (reportUnnecessaryIsInstance remains silenced — 239 legitimate runtime safety nets)
 - 2469 unit tests pass
 
 ### PR-2 (optional): Follow-up Protocol Work
@@ -129,8 +129,10 @@ contracts will have the tighter Protocols to build on.
 
 ## 5. CI Impact
 
-**Current pyright-strict diagnostic count:** 239 (all `reportUnnecessaryIsInstance` — deliberate runtime safety nets, documented in [Engineering Standards](../contributing/engineering-standards.md))
-**Target:** 239 (achieved — down from 490 at start of Initiative)
+**Current pyright-strict diagnostic count:** 0 (all rules either pass or are silenced)
+**Target:** 0 errors (achieved)
+**Silenced rule count:** 239 `reportUnnecessaryIsInstance` + 5 `reportUnknown*` + 8 `reportUnused*` + 1 `reportMissingTypeStubs` = 15 total silenced rules
+**Historical:** Started with 490 raw diagnostics; PR-0 silenced 14 rules; PR-1.5 audited `reportUnnecessaryIsInstance` and removed 9 dead guards, 230 kept as deliberate runtime safety nets.
 
 **CI delta:** ~13s added to the CI pipeline (measured locally). Well within
 the 30s budget from the original issue DoD.
@@ -145,15 +147,12 @@ The following pyright rules are intentionally silenced in `pyrightconfig-strict.
 
 | Rule | Count | Justification | Audit Status |
 |---|---:|---|---|
+| `reportUnnecessaryIsInstance` | 239 | Deliberate runtime safety nets (constructor validation, parameter validation, type dispatch). 9 dead guards removed in PR-1.5; 230 kept as deliberate safety nets. | Audited in PR-1.5 of [#26](https://github.com/nexusnv/paxman/issues/26) — re-silenced to avoid ~239 false positives in CI |
 | `reportUnknownParameterType` | — | Carried forward from basic config | Not audited |
 | `reportUnknownArgumentType` | — | Carried forward from basic config | Not audited |
 | `reportUnknownLambdaType` | — | Carried forward from basic config | Not audited |
 | `reportUnknownVariableType` | — | Carried forward from basic config | Not audited |
 | `reportUnknownMemberType` | — | Carried forward from basic config | Not audited |
-
-**Note:** `reportUnnecessaryIsInstance` is **not** listed here because it was
-re-enabled in PR-1.5. The 239 visible diagnostics are all deliberate runtime
-safety nets (documented in [Engineering Standards §4](../contributing/engineering-standards.md#4-pr-15-audit-results-pyright-strict-mode-initiative-26)).
 
 **Policy:** Each silenced rule must have a one-line justification logged in
 [Engineering Standards](../contributing/engineering-standards.md). The justification
@@ -178,7 +177,7 @@ The Initiative's primary deliverable is complete:
 
 - ✅ `CanonicalField.default` and `EvidenceRef.context` are now properly typed
 - ✅ Dead `isinstance` guards removed (9 sites)
-- ✅ Diagnostic count reduced from 490 to 239 (visible), with 0 real type errors
+- ✅ `reportUnnecessaryIsInstance` audited — 230 kept as deliberate runtime safety nets, 9 dead removed, 0 real type errors
 - ✅ mypy `--strict` still passes
 - ✅ All 2469 unit tests pass
 

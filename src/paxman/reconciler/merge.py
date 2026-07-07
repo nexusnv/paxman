@@ -92,7 +92,7 @@ def _union_evidence(refs: tuple[EvidenceRef, ...]) -> tuple[EvidenceRef, ...]:
 
 def _all_agree(candidates: tuple[Candidate, ...]) -> bool:
     """Return True if all candidates agree on value (non-None values only)."""
-    concrete = [c for c in candidates if isinstance(c, Candidate) and c.value is not None]
+    concrete = [c for c in candidates if c.value is not None]
     if len(concrete) < 2:
         return True
     first = concrete[0].value
@@ -231,7 +231,7 @@ def merge_candidates(
         raise ValueError("merge_candidates requires at least one candidate")
 
     # Filter to Candidates only (defensive; tuple of Candidate is the contract).
-    valid: list[Candidate] = [c for c in candidates if isinstance(c, Candidate)]
+    valid: list[Candidate] = list(candidates)
     if not valid:
         return None, (), "NO_CANDIDATES"
 

@@ -95,7 +95,7 @@ def evidence_has_span(refs: tuple[EvidenceRef, ...]) -> bool:
     """
     if not isinstance(refs, tuple):
         raise TypeError(f"refs must be a tuple, got {type(refs).__name__}")
-    return any(r.span is not None for r in refs if isinstance(r, EvidenceRef))
+    return any(r.span is not None for r in refs)
 
 
 def compare_evidence_quality(
@@ -157,22 +157,22 @@ def compare_evidence_quality(
         return -1 if a_has_span else 1
 
     # Criterion 3: deterministic beats non-deterministic.
-    a_det = any(_is_deterministic(r) for r in a_refs if isinstance(r, EvidenceRef))
-    b_det = any(_is_deterministic(r) for r in b_refs if isinstance(r, EvidenceRef))
+    a_det = any(_is_deterministic(r) for r in a_refs)
+    b_det = any(_is_deterministic(r) for r in b_refs)
     if a_det != b_det:
         return -1 if a_det else 1
 
     # Criterion 4: lower tier rank is better.
-    a_tiers = [_tier_rank(r) for r in a_refs if isinstance(r, EvidenceRef)]
-    b_tiers = [_tier_rank(r) for r in b_refs if isinstance(r, EvidenceRef)]
+    a_tiers = [_tier_rank(r) for r in a_refs]
+    b_tiers = [_tier_rank(r) for r in b_refs]
     a_min_tier = min(a_tiers, default=_UNKNOWN_TIER_RANK)
     b_min_tier = min(b_tiers, default=_UNKNOWN_TIER_RANK)
     if a_min_tier != b_min_tier:
         return -1 if a_min_tier < b_min_tier else 1
 
     # Criterion 5: lexicographic tiebreak on capability_id.
-    a_ids = sorted(r.capability_id for r in a_refs if isinstance(r, EvidenceRef))
-    b_ids = sorted(r.capability_id for r in b_refs if isinstance(r, EvidenceRef))
+    a_ids = sorted(r.capability_id for r in a_refs)
+    b_ids = sorted(r.capability_id for r in b_refs)
     if a_ids < b_ids:
         return -1
     if a_ids > b_ids:

@@ -256,7 +256,7 @@ This runs `import-linter` with the contract defined in `pyproject.toml`. New imp
 
 ---
 
-## 8. Engineering standards
+## 8. Engineering Standards
 
 The [Engineering Standards](./engineering-standards.md) doc defines our static analysis policies, suppression rules, and checker configuration. Consult it when adding new tools or configuring existing ones.
 
@@ -366,7 +366,7 @@ Paxman follows [semver](https://semver.org/) post-1.0. Pre-1.0, MINOR versions m
 - Security fix.
 ```
 
-### 11.3 Release checklist
+### 11.3 Release Checklist
 
 1. Update `CHANGELOG.md` with the new version.
 2. Update `pyproject.toml` `version`.
@@ -407,7 +407,7 @@ plan = planner.plan(canonical_contract, profile(input_data), budget, policy, reg
 print(json.dumps(plan.to_dict(), indent=2))
 ```
 
-### 13.2 Inspect a Reconciler output
+### 13.2 Inspect a Reconciler Output
 
 ```python
 from paxman import reconciler
@@ -417,7 +417,7 @@ resolved = reconciler.reconcile(candidates, canonical_contract)
 print(json.dumps([r.to_dict() for r in resolved], indent=2))
 ```
 
-### 13.3 Inspect an artifact
+### 13.3 Inspect an Artifact
 
 ```python
 from paxman import ExecutionArtifact
@@ -427,7 +427,7 @@ print(json.dumps(artifact.to_dict(), indent=2))
 print("replay_hash:", artifact.replay_hash)
 ```
 
-### 13.4 Verify determinism
+### 13.4 Verify Determinism
 
 ```python
 import subprocess
@@ -464,7 +464,7 @@ This runs (in order):
 
 ---
 
-## 15. See also
+## 15. See Also
 
 - [docs/TEST_DATA.md](./test-data.md) — test data policy, dataset catalog, licensing rules
 - [tests/fixtures/DATASET_LICENSES.md](https://github.com/nexusnv/paxman/blob/main/tests/fixtures/DATASET_LICENSES.md) — attribution for every vendored dataset

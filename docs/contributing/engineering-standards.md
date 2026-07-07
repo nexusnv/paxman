@@ -71,6 +71,14 @@ The following pyright rules are intentionally silenced in
 | `reportUnknownLambdaType` | — | Carried forward from basic config. | Not audited |
 | `reportUnknownVariableType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | Not audited |
 | `reportUnknownMemberType` | — | Carried forward from basic config. Adapter layer uses `dict[str, Any]`-shaped inputs. | Not audited |
+| `reportMissingTypeStubs` | — | Third-party libraries (e.g. `openapi-spec-validator`, `jsonschema`) don't ship type stubs. Adapter layer relies on these. | Not audited |
+| `reportUnusedImport` | — | Carried forward from basic config. Pyright false-positives on attrs `@define` re-exports. | Not audited |
+| `reportUnusedVariable` | — | Carried forward from basic config. Pyright false-positives on Protocol-bound locals. | Not audited |
+| `reportUnusedFunction` | — | Carried forward from basic config. Pyright false-positives on `__all__` exports. | Not audited |
+| `reportUnusedClass` | — | Carried forward from basic config. Pyright false-positives on `attrs` validators. | Not audited |
+| `reportUnusedExpression` | — | Carried forward from basic config. Pyright false-positives on result-less calls in capability specs. | Not audited |
+| `reportPrivateImportUsage` | — | Carried forward from basic config. Internal modules cross-reference private helpers by design. | Not audited |
+| `reportConstantRedefinition` | — | Carried forward from basic config. Pyright false-positives on conditional constants. | Not audited |
 
 **Policy:** When adding a new silenced rule, document it here with:
 1. The rule name

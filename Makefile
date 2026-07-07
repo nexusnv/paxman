@@ -224,7 +224,7 @@ test-examples: ## Run all reference example test suites (smoke-tests persona cov
 
 # --- Local CI simulation (the canonical "is this green?" command) -----------
 
-# 10 checks (per Sprint 10 / V1_ACCEPTANCE_CRITERIA.md §3.2):
+# 11 checks (per Sprint 10 / V1_ACCEPTANCE_CRITERIA.md §3.2):
 #   1. install-frozen     — exact lockfile install
 #   2. lint               — ruff check
 #   3. format-check       — ruff format --check

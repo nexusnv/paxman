@@ -67,9 +67,6 @@ class PaxmanError(Exception):
         """Validate invariants after attrs construction."""
         if not self.message:
             raise ValueError("PaxmanError message must be non-empty")
-        # Convert None → {} for ergonomic call-sites.
-        if self.context is None:
-            object.__setattr__(self, "context", {})
         if not self.error_code:
             raise ValueError("error_code must be a non-empty string")
         if not isinstance(self.context, dict):

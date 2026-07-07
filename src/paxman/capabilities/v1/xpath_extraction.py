@@ -342,7 +342,7 @@ class XPathExtractionCapability:
             relative_xpath = xpath
             root_tag = root.tag
             root_matched = False
-            if root_tag is not None and xpath.startswith("/"):
+            if xpath.startswith("/"):
                 first_segment = xpath.split("/", 2)[1]
                 if first_segment:
                     root_local = root_tag.split("}", 1)[-1] if "}" in root_tag else root_tag

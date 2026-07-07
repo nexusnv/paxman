@@ -21,7 +21,7 @@ from paxman.contract.registry import adapt as _adapt_contract
 from paxman.errors import InvalidContractError
 from paxman.protocols import Capability
 
-from .normalize import _detect_format
+from .normalize import detect_format
 
 __all__ = [
     "replay",
@@ -43,7 +43,7 @@ def _detect_and_adapt(contract: object) -> CanonicalContract:
     Raises:
         InvalidContractError: If detection or adaptation fails.
     """
-    format_id = _detect_format(contract)
+    format_id = detect_format(contract)
     return _adapt_contract(contract, format_id=format_id)
 
 

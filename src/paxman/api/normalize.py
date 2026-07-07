@@ -47,6 +47,7 @@ from paxman.reconciler.truth import ResolvedResult
 from paxman.types import Status
 
 __all__ = [
+    "detect_format",
     "normalize",
 ]
 
@@ -116,7 +117,7 @@ def _looks_like_json_schema_dict(contract: dict[str, typing.Any]) -> bool:
     return any(key in contract for key in _JSON_SCHEMA_DICT_MARKERS)
 
 
-def _detect_format(contract: object) -> str:
+def detect_format(contract: object) -> str:
     """Auto-detect the contract adapter ``format_id`` for *contract*.
 
     Detection order:
@@ -180,7 +181,7 @@ def _detect_and_adapt(contract: object) -> CanonicalContract:
     Raises:
         InvalidContractError: If detection or adaptation fails.
     """
-    format_id = _detect_format(contract)
+    format_id = detect_format(contract)
     return _adapt_contract(contract, format_id=format_id)
 
 

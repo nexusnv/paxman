@@ -92,6 +92,7 @@ include = [
   "/docs/contributing",
   "/docs/security",
   "/docs/operations",
+  "/docs/initiatives",
   "/docs/index.md",
   # Build config for the RTD site
   "/mkdocs.yml",
@@ -100,6 +101,10 @@ include = [
   "/README.md",
   "/CHANGELOG.md",
   "/LICENSE",
+  # Reference example packages (downstream mini-projects;
+  # each is its own pyproject.toml; SOP P7 / P9 require
+  # these ship in the sdist so PyPI downloaders get them).
+  "/examples",
   # Jupyter Lab playground in Docker Container (issue #90)
   "/playground",
 ]

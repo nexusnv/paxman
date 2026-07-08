@@ -178,9 +178,16 @@ def test_diagnostic_preserved_on_format_aware_miss() -> None:
         "FieldRunner must preserve the capability's Diagnostic; "
         "got empty diagnostics (result collapsed to generic UNRESOLVED)"
     )
-    # The diagnostic code is PATTERN_NO_MATCH (the csv_extraction
-    # miss code), not CAPABILITY_INVOKE_FAILED (which would mean
-    # a generic "invoke failed" collapse).
+    # The diagnostic code is emitted by csv_extraction per its own
+    # documented contract (``src/paxman/capabilities/v1/csv_extraction.py``
+    # module docstring): a column not present in the header is
+    # ``CAPABILITY_INVOKE_FAILED`` (ERROR); a column with all empty cells
+    # is ``PATTERN_NO_MATCH`` (INFO). Either is acceptable here because
+    # the test input is a CSV whose header is ``["not", "a", "csv", "at", "all"]``
+    # with no column matching ``field.name = "supplier"`` — the test
+    # guards against a generic "invoke failed" collapse (e.g. an empty
+    # diagnostics tuple on a partial-success result), not the specific
+    # diagnostic code.
     codes = {d.code for d in diagnostics}
     assert (
         DiagnosticCode.PATTERN_NO_MATCH in codes or DiagnosticCode.CAPABILITY_INVOKE_FAILED in codes

@@ -238,7 +238,7 @@ The implementation:
 
    # --- XML backend feature-detect (ADR-0013) ---
    try:
-       from defusedxml.ElementTree import fromstring as _defused_fromstring  # type: ignore[import-untyped]
+       from defusedxml.ElementTree import fromstring as _defused_fromstring
    except ImportError:
        _defused_fromstring = None  # type: ignore[assignment]
 

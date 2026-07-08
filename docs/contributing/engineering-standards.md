@@ -25,7 +25,7 @@ Paxman uses multiple static analysis tools. Each has a defined role:
 | **ruff** | Linting + formatting | **Yes** | `pyproject.toml` `[tool.ruff]` |
 | **bandit** | Security linting | No (advisory) | CLI flags in Makefile |
 | **interrogate** | Docstring coverage | **Yes** | `pyproject.toml` `[tool.interrogate]` |
-| **import-linter** | Import layer contracts | **Yes** | `.importlinter` |
+| **import-linter** | Import layer contracts | **Yes** | `pyproject.toml` `[tool.importlinter]` |
 
 **Policy:** mypy defines correctness. Pyright provides additional validation.
 Two independent type systems should not both be capable of blocking every PR.
@@ -40,7 +40,7 @@ Paxman enforces a **suppression-free policy** on `src/paxman/`:
 
 - **No `# type: ignore`** in `src/paxman/`. CI rejects.
 - **No `# pyright: ignore`** in `src/paxman/`. CI rejects.
-- **No `# noqa`** in `src/paxman/`. CI rejects. (Test code may use `# noqa: S101` for asserts.)
+- **No `# noqa`** in `src/paxman/`. CI rejects. (`S101` for asserts in tests is already permitted via the `tests/**/*.py` per-file-ignore in `pyproject.toml`, not via inline `# noqa`.)
 - **No `as any`** or equivalent type-erasure in `src/paxman/`. CI rejects.
 
 **Rationale:** Suppressions hide type-system weaknesses. If a type is `Any`,

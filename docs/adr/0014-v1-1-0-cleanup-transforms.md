@@ -120,7 +120,7 @@ The V1.1.0 capability set grows from **8** to **10** built-in capabilities:
 - **Cost:** `CostHint(tokens=0, ms=1, usd=0.0)`
 - **Config (read from `ctx.config`):**
   - `"value"` (required, `str`) — the pre-resolved string to trim.
-  - `"chars"` (optional, `str`) — literal characters to strip. Defaults to a fixed, documented set: ASCII whitespace (` \t\n\r\v\f`), zero-width spaces (`\u200b\u200c\u200d`), BOM (`\ufeff`), and the common-punctuation set (`:;.,-_/\|()[]{}`).
+  - `"chars"` (optional, `str`) — literal characters to strip. Defaults to a fixed, documented set: ASCII whitespace (`\x20\t\n\r\v\f`), zero-width spaces (`\u200b\u200c\u200d`), BOM (`\ufeff`), and the common-punctuation set (`:;.,-_/\|()[]{}`).
 - **Evidence:** `EvidenceRef.context = {"original_value": ..., "trimmed_chars": [...], "stripped_count": N}`.
 - **Failure modes (each → `CAPABILITY_INVOKE_FAILED`):**
   - `config["value"]` missing or not a `str`.

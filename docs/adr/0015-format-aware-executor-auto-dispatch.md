@@ -56,7 +56,7 @@ The four contract adapters (Dict DSL, Pydantic, JSON Schema, OpenAPI) parse the 
 - Pure function — determinism is trivial and property-testable.
 - Diagnostic preservation is achieved without code: the planner emits a normal `FieldPlanStep`, and the existing `FieldRunner` already preserves `Diagnostic` records (per `executor/field_runner.py:88-115`).
 - All four adapters share a single resolver (`resolve_format_hint`). No duplication.
-- Public surface growth is exactly one symbol: `paxman.FormatHint`.
+- Public surface growth is exactly one top-level symbol: `paxman.FormatHint` (the other public types added this release — `FormatHintValidationError`, `parse_format_hints`, `resolve_format_hint` — live on `paxman.api.types`, not the top-level `paxman` namespace).
 
 **Cons:**
 

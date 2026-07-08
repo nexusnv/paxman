@@ -32,11 +32,11 @@ Failure modes (each surfaces as a structured :class:`Diagnostic`):
   (Per-row empty cells are silently skipped to keep the result set
   honest.)
 
-Per V1 capability convention (mirroring :mod:`regex_extraction`),
-this module does **not** self-register. Callers must register it
-explicitly via :func:`paxman.capabilities.registry.register` or
-:func:`paxman.register_capability`. The :mod:`paxman.capabilities.v1`
-package imports it for type resolution / importability only.
+Per ADR-0012, this module self-registers on import (see
+``_register_on_import`` below), matching the other V1.1.0
+format-aware extractors. Third-party capabilities that are not
+part of the V1 built-ins should use :func:`paxman.register_capability`
+instead (see ``docs/reference/extending.md`` §2.3).
 
 Examples:
     >>> cap = CsvExtractionCapability()

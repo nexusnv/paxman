@@ -230,10 +230,10 @@ def merge_candidates(
     if not candidates:
         raise ValueError("merge_candidates requires at least one candidate")
 
-    # Filter to Candidates only (defensive; tuple of Candidate is the contract).
+    # Convert to a list for downstream iteration. The empty-candidates
+    # invariant is enforced by the guard above, so no defensive
+    # `NO_CANDIDATES` branch is needed here.
     valid: list[Candidate] = list(candidates)
-    if not valid:
-        return None, (), "NO_CANDIDATES"
 
     # MONEY fast path: delegate to the money module.
     if field.type is FieldType.MONEY:

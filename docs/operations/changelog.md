@@ -91,9 +91,11 @@ optional security extra, and the Pyright Strict Mode initiative.
 
 - **Two new post-extraction cleanup transforms** ([ADR-0014](../adr/0014-v1-1-0-cleanup-transforms.md)):
   - `case_normalization@1.0` — normalizes the case of an extracted
-    string to a target scheme (`LOWER`, `UPPER`, `TITLE`,
-    `SENTENCE`). Used to reconcile `ACME Corp` / `acme corp` /
-    `Acme Corp` style drift across documents.
+    string to a target scheme (`lower`, `upper`, `title`,
+    `preserve`). Used to reconcile `ACME Corp` / `acme corp` /
+    `Acme Corp` style drift across documents. (Callers needing
+    name-aware casing should pass `mode="preserve"` and apply
+    their own transform — `str.title()` is **not** name-aware.)
   - `trim_extraction@1.0` — strips leading/trailing whitespace, BOMs,
     zero-width spaces, and trailing punctuation. Used to turn
     `"ACME Corp\n"` into `"ACME Corp"` for constraint matching.

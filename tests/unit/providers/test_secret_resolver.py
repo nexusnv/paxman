@@ -7,6 +7,7 @@ reads ``os.environ["NAME"]``. Anything else raises
 ``INFERENCE_PROVIDER_KEY_REFERENCE``; a missing env var raises
 ``INFERENCE_PROVIDER_KEY_MISSING``.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -68,9 +69,7 @@ class TestEnvSecretResolver:
             resolver.resolve("env:DOES_NOT_EXIST")
         assert exc_info.value.context.get("env_var") == "DOES_NOT_EXIST"
 
-    def test_empty_value_returned_as_is(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_empty_value_returned_as_is(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """An empty env var is returned as-is. The caller decides whether
         an empty string is a valid secret."""
         monkeypatch.setenv("EMPTY_KEY", "")

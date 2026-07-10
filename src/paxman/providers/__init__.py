@@ -20,20 +20,25 @@ plan 1/4; subsequent plans amend the maps to add their entries.
 Design spec: issue #50 (``.sisyphus/specs/2026-07-09-v120-inference-providers-design.md``).
 Implementation plan: issues #51, #119, #120, #121.
 """
+
 from __future__ import annotations
 
 import importlib
 import typing
+
+if typing.TYPE_CHECKING:
+    from paxman.providers._model import ProviderRegistry
+    from paxman.providers._provider import Provider
 
 # The default global registry is a process-wide singleton. It is
 # created on first access via get_default_registry(). Callers who
 # need a separate registry (multi-tenant, tests, dual-environment)
 # instantiate ProviderRegistry() directly and pass it explicitly
 # to register_provider() / set_default_registry().
-_DEFAULT_REGISTRY: typing.Any = None
+_DEFAULT_REGISTRY: object = None
 
 
-def get_default_registry() -> typing.Any:
+def get_default_registry() -> ProviderRegistry:
     """Return the process-wide default :class:`ProviderRegistry`.
 
     The registry is lazily initialized on first call. Multi-tenant
@@ -48,11 +53,12 @@ def get_default_registry() -> typing.Any:
     if _DEFAULT_REGISTRY is None:
         # Lazy import to keep cold-start fast.
         from paxman.providers._model import ProviderRegistry
+
         _DEFAULT_REGISTRY = ProviderRegistry()
-    return _DEFAULT_REGISTRY
+    return _DEFAULT_REGISTRY  # type: ignore[no-any-return]
 
 
-def set_default_registry(registry: typing.Any) -> None:
+def set_default_registry(registry: ProviderRegistry) -> None:
     """Replace the process-wide default :class:`ProviderRegistry`.
 
     Useful for tests and for callers that want a custom default
@@ -71,10 +77,10 @@ def set_default_registry(registry: typing.Any) -> None:
 
 def register_provider(
     name: str,
-    provider: typing.Any,
+    provider: Provider,
     *,
     replace: bool = False,
-    registry: typing.Any = None,
+    registry: ProviderRegistry | None = None,
 ) -> None:
     """Register a provider in a :class:`ProviderRegistry`.
 
@@ -105,10 +111,10 @@ def register_provider(
 
 
 def register(
-    provider: typing.Any,
+    provider: Provider,
     *,
     replace: bool = False,
-    registry: typing.Any = None,
+    registry: ProviderRegistry | None = None,
 ) -> None:
     """Sugar over :func:`register_provider` that reads ``provider.name``.
 
@@ -153,12 +159,15 @@ _LAZY_EXPORTS: typing.Final[dict[str, tuple[str, str]]] = {
 }
 
 
-def __getattr__(name: str) -> typing.Any:
+def __getattr__(name: str) -> typing.Any:  # noqa: ANN401
     """PEP 562 lazy attribute resolution.
 
     Resolves the public SPI classes from ``_LAZY_EXPORTS`` on first
     access. The class is then cached in ``globals()`` for subsequent
     access (per PEP 562).
+
+    The return type is ``typing.Any`` per PEP 562 (the protocol
+    requires it; the resolved object may be any class).
     """
     if name in _LAZY_EXPORTS:
         module_path, attr_name = _LAZY_EXPORTS[name]
@@ -175,17 +184,17 @@ def __dir__() -> list[str]:
 
 
 __all__ = [
-    "register_provider",
-    "register",
-    "get_default_registry",
-    "set_default_registry",
     # Lazy exports (also listed in __dir__):
-    "ModelRef",
-    "ProviderRegistry",
-    "Provider",
-    "SecretResolver",
     "EnvSecretResolver",
+    "ModelRef",
     "PricingResolver",
     "PricingTuple",
+    "Provider",
+    "ProviderRegistry",
+    "SecretResolver",
     "StaticPricingResolver",
+    "get_default_registry",
+    "register",
+    "register_provider",
+    "set_default_registry",
 ]

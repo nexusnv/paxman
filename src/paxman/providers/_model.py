@@ -4,6 +4,7 @@ This module is internal (the underscore prefix is the convention). The
 public re-exports live in :mod:`paxman.providers` (PEP 562 lazy) and
 :mod:`paxman.api.types` (the snapshot-test-gated public surface).
 """
+
 from __future__ import annotations
 
 import threading
@@ -62,13 +63,9 @@ class ModelRef:
     def __attrs_post_init__(self) -> None:
         """Validate both fields are non-empty strings."""
         if not isinstance(self.provider, str) or not self.provider:
-            raise ValueError(
-                f"provider must be a non-empty str, got {self.provider!r}"
-            )
+            raise ValueError(f"provider must be a non-empty str, got {self.provider!r}")
         if not isinstance(self.model, str) or not self.model:
-            raise ValueError(
-                f"model must be a non-empty str, got {self.model!r}"
-            )
+            raise ValueError(f"model must be a non-empty str, got {self.model!r}")
 
     def __str__(self) -> str:
         """Return ``"{provider}:{model}"`` — a round-trippable representation.
@@ -137,8 +134,7 @@ class ProviderRegistry:
         with self._lock:
             if name in self._providers and not replace:
                 raise ConfigurationError(
-                    f"Provider {name!r} is already registered; "
-                    "pass replace=True to override",
+                    f"Provider {name!r} is already registered; pass replace=True to override",
                     error_code="PROVIDER_ALREADY_REGISTERED",
                     context={"name": name, "replace": replace},
                 )
@@ -212,18 +208,10 @@ class ProviderRegistry:
         which ``typing.Protocol`` does not provide by default).
         """
         if not hasattr(provider, "name"):
-            raise TypeError(
-                "provider must have a 'name' attribute (Provider Protocol)"
-            )
-        if not isinstance(getattr(provider, "name"), str):
-            raise TypeError(
-                f"provider.name must be a str, got {type(provider.name).__name__}"
-            )
+            raise TypeError("provider must have a 'name' attribute (Provider Protocol)")
+        if not isinstance(provider.name, str):
+            raise TypeError(f"provider.name must be a str, got {type(provider.name).__name__}")
         if not hasattr(provider, "capabilities"):
-            raise TypeError(
-                "provider must have a 'capabilities' attribute (Provider Protocol)"
-            )
+            raise TypeError("provider must have a 'capabilities' attribute (Provider Protocol)")
         if not hasattr(provider, "complete") or not callable(provider.complete):
-            raise TypeError(
-                "provider must implement complete(request) (Provider Protocol)"
-            )
+            raise TypeError("provider must implement complete(request) (Provider Protocol)")

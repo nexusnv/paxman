@@ -10,6 +10,7 @@ Per ADR-0004: money is Decimal-only. The ``compute_cost_usd``
 helper returns ``Decimal``; no ``float`` math anywhere in this
 module.
 """
+
 from __future__ import annotations
 
 from decimal import Decimal

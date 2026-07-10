@@ -5,6 +5,7 @@ modules so that callers can import them from a single location::
 
     from paxman import Budget, CanonicalContract, Status, FormatHint
 """
+
 from __future__ import annotations
 
 from paxman.artifact.artifact import ExecutionArtifact

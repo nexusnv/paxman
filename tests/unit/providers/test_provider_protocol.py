@@ -15,6 +15,7 @@ This test module asserts:
 3. A class that structurally conforms to the Protocol is accepted by
    :meth:`ProviderRegistry.register` without raising.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -67,9 +68,7 @@ class TestProviderProtocol:
         """D18: the Protocol's docstring must document the thread-safety
         contract. This is the single source of truth."""
         doc = Provider.__doc__ or ""
-        assert "thread" in doc.lower(), (
-            "Provider Protocol docstring must document thread-safety"
-        )
+        assert "thread" in doc.lower(), "Provider Protocol docstring must document thread-safety"
 
     def test_protocol_docstring_states_name_field(self) -> None:
         doc = Provider.__doc__ or ""

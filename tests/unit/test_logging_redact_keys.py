@@ -26,10 +26,8 @@ The test asserts:
    ``structlog.types.Processor`` (callable taking ``logger``,
    ``method_name``, ``event_dict``).
 """
-from __future__ import annotations
 
-from collections.abc import Callable
-from typing import Any
+from __future__ import annotations
 
 import pytest
 

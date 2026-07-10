@@ -19,6 +19,7 @@ vendor modules ship in plan 2/4 and plan 3/4 respectively; this
 ``_LAZY_EXPORTS`` and ``_VENDOR_MODULES`` without breaking the
 plan 1/4 contract.
 """
+
 from __future__ import annotations
 
 import pytest
@@ -86,9 +87,10 @@ class TestLazyAttributeResolution:
         assert paxman.providers.PricingResolver is _Canonical
 
     def test_pricing_tuple(self) -> None:
+        from decimal import Decimal
+
         import paxman.providers
         from paxman.providers._pricing import PricingTuple as _Canonical
-        from decimal import Decimal
 
         t = paxman.providers.PricingTuple(
             prompt_usd_per_token=Decimal("0.0000025"),
@@ -125,7 +127,12 @@ class TestPublicSurface:
         import paxman.providers
 
         # Public functions
-        for name in ("register_provider", "register", "get_default_registry", "set_default_registry"):
+        for name in (
+            "register_provider",
+            "register",
+            "get_default_registry",
+            "set_default_registry",
+        ):
             assert name in paxman.providers.__all__, f"{name} missing from __all__"
         # Lazy exports
         for name in (
@@ -223,9 +230,7 @@ class TestRegisterAndDefaultRegistry:
         try:
             default_reg = paxman.providers.get_default_registry()
             custom_reg = paxman.providers.ProviderRegistry()
-            paxman.providers.register_provider(
-                "stub", _Stub(), registry=custom_reg
-            )
+            paxman.providers.register_provider("stub", _Stub(), registry=custom_reg)
             assert "stub" in custom_reg
             assert "stub" not in default_reg
         finally:

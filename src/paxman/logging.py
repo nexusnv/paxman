@@ -142,7 +142,7 @@ def redact_value(
             return tuple(_walk(v) for v in obj)
         return obj
 
-    return _walk(event_dict)
+    return _walk(event_dict)  # type: ignore[no-any-return]
 
 
 def make_redact_processor(
@@ -166,7 +166,7 @@ def make_redact_processor(
     """
 
     def _processor(
-        logger: object,
+        logger: typing.Any,  # noqa: ANN401
         method_name: str,
         event_dict: dict[str, typing.Any],
     ) -> dict[str, typing.Any]:
@@ -183,7 +183,7 @@ def make_redact_processor(
         event_dict.update(redacted)
         return event_dict
 
-    return _processor
+    return _processor  # type: ignore[return-value]
 
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:

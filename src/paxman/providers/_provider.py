@@ -14,6 +14,7 @@ two additions:
 The Protocol is structural. Conformance is enforced at registration
 time by :meth:`paxman.providers._model.ProviderRegistry._validate_provider`.
 """
+
 from __future__ import annotations
 
 import typing

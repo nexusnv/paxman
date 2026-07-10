@@ -120,7 +120,17 @@ def redact_value(
     # is O(1) so this is the fast path for the common case.
     lowered: frozenset[str] = frozenset(_normalize(k) for k in keys)
 
-    def _walk(obj: typing.Any) -> typing.Any:
+    def _walk(
+        obj: typing.Any,  # noqa: ANN401
+    ) -> typing.Any:  # noqa: ANN401
+        """Recursively walk a (possibly nested) event value.
+
+        ``typing.Any`` is used here because the value type is
+        genuinely unknown at this level — the function dispatches
+        by runtime type via ``isinstance``, and the union of
+        ``dict``/``list``/``tuple``/scalar would require a complex
+        TypeVar. ANN401 is suppressed for this nested helper.
+        """
         if isinstance(obj, dict):
             return {
                 k: (REDACT_SENTINEL if _normalize(k) in lowered else _walk(v))
@@ -156,10 +166,16 @@ def make_redact_processor(
     """
 
     def _processor(
-        logger: typing.Any,
+        logger: object,
         method_name: str,
         event_dict: dict[str, typing.Any],
     ) -> dict[str, typing.Any]:
+        """The structlog processor entry point. The ``logger``
+        parameter is unused (the redact filter does not need a
+        logger reference); we accept it for protocol conformance.
+        """
+        del logger  # explicitly unused; satisfies the contract
+        del method_name  # explicitly unused; satisfies the contract
         redacted = redact_value(event_dict, keys)
         # Mutate in place to satisfy the structlog contract (the
         # pipeline reuses the dict across processors).

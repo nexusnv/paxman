@@ -10,6 +10,7 @@ Per ADR-0004: money is Decimal-only. The :func:`compute_cost_usd`
 helper returns ``Decimal``; no ``float`` math anywhere in this
 module.
 """
+
 from __future__ import annotations
 
 import typing
@@ -52,9 +53,7 @@ class PricingTuple:
     def __attrs_post_init__(self) -> None:
         for f in (self.prompt_usd_per_token, self.completion_usd_per_token):
             if not isinstance(f, Decimal):
-                raise TypeError(
-                    f"pricing must be a Decimal, got {type(f).__name__}: {f!r}"
-                )
+                raise TypeError(f"pricing must be a Decimal, got {type(f).__name__}: {f!r}")
             if f < 0:
                 raise ValueError(f"pricing must be non-negative, got {f}")
 

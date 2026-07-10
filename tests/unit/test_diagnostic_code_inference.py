@@ -1,4 +1,5 @@
 """Tests for the new V1.2.0 inference DiagnosticCode members (spec #50 §6)."""
+
 from __future__ import annotations
 
 import pytest
@@ -23,9 +24,7 @@ class TestInferenceDiagnosticCodes:
     )
     def test_member_exists(self, member_name: str) -> None:
         """Each new code must exist on the DiagnosticCode enum."""
-        assert hasattr(DiagnosticCode, member_name), (
-            f"DiagnosticCode.{member_name} is missing"
-        )
+        assert hasattr(DiagnosticCode, member_name), f"DiagnosticCode.{member_name} is missing"
 
     def test_members_are_distinct(self) -> None:
         """Each new code must have a distinct value (no alias collisions)."""

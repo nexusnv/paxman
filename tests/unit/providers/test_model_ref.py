@@ -7,6 +7,7 @@ provider instance, not in the name. The dataclass does not validate
 the string shape beyond "non-empty str" — the openai-compatible:
 URL form documented in the spec is permitted but not enforced.
 """
+
 from __future__ import annotations
 
 import attrs
@@ -60,7 +61,10 @@ class TestModelRefBasics:
             model="meta-llama/llama-3.1-70b-instruct",
         )
         assert ref.provider == "openai-compatible:https://api.openrouter.ai/v1"
-        assert str(ref) == "openai-compatible:https://api.openrouter.ai/v1:meta-llama/llama-3.1-70b-instruct"
+        assert (
+            str(ref)
+            == "openai-compatible:https://api.openrouter.ai/v1:meta-llama/llama-3.1-70b-instruct"
+        )
 
     def test_rejects_empty_provider(self) -> None:
         with pytest.raises(ValueError, match="provider"):

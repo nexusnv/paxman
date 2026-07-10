@@ -5,6 +5,7 @@ global singleton. The class supports ``register``, ``resolve``,
 ``get``, ``clear``, ``__contains__``, and ``__len__``; all mutating
 and read methods are guarded by a re-entrant lock (D18).
 """
+
 from __future__ import annotations
 
 import pytest
@@ -107,10 +108,19 @@ class TestProviderRegistryBasics:
             reg.register("x", object())
         # name missing
         with pytest.raises(TypeError):
-            reg.register("x", type("NoName", (), {"capabilities": frozenset(), "complete": lambda r: None})())
+            reg.register(
+                "x", type("NoName", (), {"capabilities": frozenset(), "complete": lambda r: None})()
+            )
         # name not a str
         with pytest.raises(TypeError):
-            reg.register("x", type("BadName", (), {"name": 42, "capabilities": frozenset(), "complete": lambda r: None})())
+            reg.register(
+                "x",
+                type(
+                    "BadName",
+                    (),
+                    {"name": 42, "capabilities": frozenset(), "complete": lambda r: None},
+                )(),
+            )
         # capabilities missing
         with pytest.raises(TypeError):
             reg.register("x", type("NoCaps", (), {"name": "y", "complete": lambda r: None})())

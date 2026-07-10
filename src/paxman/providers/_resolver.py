@@ -7,6 +7,7 @@ and MUST NOT read ``os.environ`` directly. The default
 resolvers (``VaultSecretResolver``, ``AWSSecretsManagerSecretResolver``,
 ``K8sSecretResolver``) are follow-up packages, not in V1.2.0.
 """
+
 from __future__ import annotations
 
 import os
@@ -95,7 +96,7 @@ class EnvSecretResolver:
                 error_code="INFERENCE_PROVIDER_KEY_REFERENCE",
                 context={"ref": ref, "expected_scheme": "env:NAME"},
             )
-        name = ref[len(self._PREFIX):]
+        name = ref[len(self._PREFIX) :]
         try:
             value = os.environ[name]
         except KeyError as e:

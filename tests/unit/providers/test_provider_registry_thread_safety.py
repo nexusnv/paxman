@@ -5,6 +5,7 @@ registry must be safe to call from multiple threads concurrently;
 concurrent ``register`` + ``resolve`` + ``get`` must complete
 without exception and leave the registry in a consistent state.
 """
+
 from __future__ import annotations
 
 import threading
@@ -49,7 +50,7 @@ def test_concurrent_register_resolve_get(worker_count: int) -> None:
             assert resolved.name == name
             assert reg.get(name) is resolved
             assert name in reg
-        except BaseException as e:  # noqa: BLE001
+        except BaseException as e:
             errors.append(e)
 
     threads = [threading.Thread(target=worker, args=(i,)) for i in range(worker_count)]
@@ -79,7 +80,7 @@ def test_concurrent_register_with_replace() -> None:
             barrier.wait()
             provider = _StubProvider(name=f"winner-{i}")
             reg.register("contested", provider, replace=True)
-        except BaseException as e:  # noqa: BLE001
+        except BaseException as e:
             errors.append(e)
 
     threads = [threading.Thread(target=worker, args=(i,)) for i in range(2)]
@@ -108,7 +109,7 @@ def test_resolve_unknown_during_register_race() -> None:
         try:
             barrier.wait()
             reg.register("racy", _StubProvider(name="racy"))
-        except BaseException as e:  # noqa: BLE001
+        except BaseException as e:
             errors.append(e)
 
     def resolver() -> None:
@@ -116,10 +117,13 @@ def test_resolve_unknown_during_register_race() -> None:
             barrier.wait()
             try:
                 reg.resolve(ModelRef(provider="racy", model="x"))
-            except Exception:  # noqa: BLE001
-                # INFERENCE_PROVIDER_NOT_REGISTERED is acceptable here.
+            except Exception:  # noqa: S110
+                # INFERENCE_PROVIDER_NOT_REGISTERED is acceptable
+                # here — the race may resolve the new provider or
+                # miss it. The test asserts the FINAL state is
+                # consistent, not the intermediate outcome.
                 pass
-        except BaseException as e:  # noqa: BLE001
+        except BaseException as e:
             errors.append(e)
 
     threads = [threading.Thread(target=registerer), threading.Thread(target=resolver)]
@@ -150,7 +154,7 @@ def test_concurrent_contains_and_len() -> None:
             for _ in range(1000):
                 _ = "seed" in reg
                 _ = len(reg)
-        except BaseException as e:  # noqa: BLE001
+        except BaseException as e:
             errors.append(e)
 
     def writer(i: int) -> None:
@@ -162,12 +166,12 @@ def test_concurrent_contains_and_len() -> None:
                     _StubProvider(name=f"writer-{i}-{j}"),
                     replace=True,
                 )
-        except BaseException as e:  # noqa: BLE001
+        except BaseException as e:
             errors.append(e)
 
-    threads = [
-        threading.Thread(target=reader, args=(i,)) for i in range(4)
-    ] + [threading.Thread(target=writer, args=(i,)) for i in range(4)]
+    threads = [threading.Thread(target=reader, args=(i,)) for i in range(4)] + [
+        threading.Thread(target=writer, args=(i,)) for i in range(4)
+    ]
     for t in threads:
         t.start()
     for t in threads:

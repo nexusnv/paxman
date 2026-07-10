@@ -209,13 +209,19 @@ class ProviderRegistry:
         """
         if not hasattr(provider, "name"):
             raise TypeError("provider must have a 'name' attribute (Provider Protocol)")
-        name_attr = getattr(provider, "name")
+        # Use getattr() with a constant attribute (B009 requires the
+        # default form) to keep pyright happy with the 'object' type
+        # for ``provider``. The ``hasattr`` check above guarantees
+        # the attribute exists; the read is safe.
+        name_attr = getattr(provider, "name")  # noqa: B009
         if not isinstance(name_attr, str):
-            raise TypeError(
-                f"provider.name must be a str, got {type(name_attr).__name__}"
-            )
+            raise TypeError(f"provider.name must be a str, got {type(name_attr).__name__}")
         if not hasattr(provider, "capabilities"):
             raise TypeError("provider must have a 'capabilities' attribute (Provider Protocol)")
+        # ``getattr(..., default)`` is the only form ruff permits
+        # here (B009: get-with-constant-attribute). The Protocol
+        # check is still structural: ``hasattr`` first, then a
+        # callable check.
         complete_attr = getattr(provider, "complete", None)
         if not callable(complete_attr):
             raise TypeError("provider must implement complete(request) (Provider Protocol)")

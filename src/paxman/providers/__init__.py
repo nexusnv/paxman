@@ -55,7 +55,7 @@ def get_default_registry() -> ProviderRegistry:
         from paxman.providers._model import ProviderRegistry
 
         _DEFAULT_REGISTRY = ProviderRegistry()
-    return _DEFAULT_REGISTRY  # type: ignore[no-any-return]
+    return typing.cast("ProviderRegistry", _DEFAULT_REGISTRY)
 
 
 def set_default_registry(registry: ProviderRegistry) -> None:

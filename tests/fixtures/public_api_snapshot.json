@@ -4,6 +4,7 @@
     "CapabilityError",
     "CapabilityNotFoundError",
     "ConfigurationError",
+    "EnvSecretResolver",
     "ExecutionError",
     "HashMismatchError",
     "InferenceProviderError",
@@ -11,6 +12,7 @@
     "PaxmanError",
     "ReconciliationError",
     "ReplayError",
+    "SecretResolver",
     "VersionMismatchError"
   ],
   "api_protocols_all": [
@@ -23,12 +25,16 @@
     "CanonicalField",
     "ConfidenceBand",
     "CurrencyPolicy",
+    "EnvSecretResolver",
     "ExecutionArtifact",
     "FieldType",
     "FormatHint",
     "FormatHintValidationError",
+    "ModelRef",
     "Policy",
+    "ProviderRegistry",
     "ResolutionPolicy",
+    "SecretResolver",
     "Status",
     "parse_format_hints",
     "resolve_format_hint"

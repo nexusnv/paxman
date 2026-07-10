@@ -37,6 +37,7 @@ from paxman.errors import (
     UnsupportedFieldTypeError,
     VersionMismatchError,
 )
+from paxman.providers._resolver import EnvSecretResolver, SecretResolver
 
 # --- 18-class inventory -----------------------------------------------------
 
@@ -61,7 +62,7 @@ ALL_18 = [
     CapabilityNotFoundError,
 ]
 ALL_18_NAMES = [c.__name__ for c in ALL_18]
-PUBLIC_12 = [
+PUBLIC_14 = [
     PaxmanError,
     InvalidContractError,
     ExecutionError,
@@ -74,6 +75,13 @@ PUBLIC_12 = [
     HashMismatchError,
     ConfigurationError,
     CapabilityNotFoundError,
+    # V1.2.0 (real inference providers, design spec #50 §3, plan 1/4 #51).
+    # Re-exported as part of paxman.api.errors for the inference SPI
+    # (per ADR-0016 in plan 4/4). They live in paxman.providers but the
+    # canonical import path for downstream consumers is paxman.api.errors
+    # to match the rest of the public surface.
+    SecretResolver,
+    EnvSecretResolver,
 ]
 
 
@@ -246,27 +254,30 @@ def test_frozen_no_attribute_assignment(cls: type) -> None:
 # --- Public-surface contract ------------------------------------------------
 
 
-def test_public_12_are_reexported() -> None:
-    """The public error re-export is exactly the 12-name set.
+def test_public_14_are_reexported() -> None:
+    """The public error re-export is exactly the 14-name set.
 
     This pins the **public re-export contract** in
     :mod:`paxman.api.errors`, not the internal :mod:`paxman.errors`
     module. ``paxman.errors`` is allowed to expose more symbols (the 6
     internal contract/configuration errors); what matters for
-    downstream consumers is the 12-name set surfaced via
+    downstream consumers is the 14-name set surfaced via
     :mod:`paxman.api.errors`.
 
     The comparison is **exact equality** (not ``issubset``), so:
 
-    - removing any of the 12 public exports fails;
+    - removing any of the 14 public exports fails;
     - adding an undocumented public export fails (an ADR is required
       to widen the public surface — see the
       ``tests/public_api/test_public_api.py`` snapshot for the
       matching guard at the function-level).
+
+    The V1.2.0 additions (``SecretResolver``, ``EnvSecretResolver``)
+    are gated by ADR-0016 (real inference providers, plan 4/4 #121).
     """
     from paxman.api import errors as api_errors
 
-    public_names = {c.__name__ for c in PUBLIC_12}
+    public_names = {c.__name__ for c in PUBLIC_14}
     listed = set(getattr(api_errors, "__all__", []))
     assert listed == public_names, (
         f"paxman.api.errors.__all__ drift. "

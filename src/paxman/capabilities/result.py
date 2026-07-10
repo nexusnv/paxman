@@ -59,7 +59,7 @@ class DiagnosticSeverity(enum.Enum):
 
 @enum.unique
 class DiagnosticCode(enum.Enum):
-    """The closed set of V1 diagnostic codes.
+    """The closed set of diagnostic codes for capability results.
 
     Adding a new code requires an ADR (per ``PACKAGE_STRUCTURE.md``
     §5.4 invariant #5). V1 codes are minimal:
@@ -81,6 +81,28 @@ class DiagnosticCode(enum.Enum):
       this call.
     - ``POLICY_EXCLUDES`` — the policy excludes this capability tier
       for this call.
+    - ``INFERENCE_PROVIDER_KEY_MISSING`` — caller-provided API key
+      reference is recognised but the secret is not present (e.g.
+      ``env:OPENAI_API_KEY`` with the env var unset). Maps to
+      ``Status.INVALID_CONTRACT`` at the Reconciler.
+    - ``INFERENCE_PROVIDER_KEY_REFERENCE`` — key reference scheme is
+      not recognised (e.g. ``vault:secret/foo`` without a vendor
+      resolver). Maps to ``Status.INVALID_CONTRACT``.
+    - ``INFERENCE_PROVIDER_RATE_LIMITED`` — provider returned an
+      HTTP 429 (rate limit). Maps to ``Status.PARTIAL_SUCCESS``
+      (transient).
+    - ``INFERENCE_PROVIDER_TIMEOUT`` — provider request timed out
+      after retries. Maps to ``Status.PARTIAL_SUCCESS`` (transient).
+    - ``INFERENCE_PROVIDER_INVALID_RESPONSE`` — provider returned
+      an unparseable response (malformed JSON, missing fields).
+      Maps to ``Status.EXECUTION_FAILED`` (likely vendor breakage).
+    - ``INFERENCE_PROVIDER_MODEL_NOT_FOUND`` — requested model id
+      is not served by the registered provider (HTTP 404). Maps to
+      ``Status.INVALID_CONTRACT``.
+    - ``INFERENCE_PROVIDER_CAPABILITY_UNSUPPORTED`` — provider cannot
+      satisfy the requested capability (e.g. vision not advertised).
+      Maps to ``Status.PARTIAL_SUCCESS`` (defence-in-depth; the
+      router should have caught this).
     """
 
     CAPABILITY_OK = "CAPABILITY_OK"

@@ -27,8 +27,14 @@ import importlib
 import typing
 
 if typing.TYPE_CHECKING:
-    from paxman.providers._model import ProviderRegistry
+    from paxman.providers._model import ModelRef, ProviderRegistry
     from paxman.providers._provider import Provider
+    from paxman.providers._pricing import (
+        PricingResolver,
+        PricingTuple,
+        StaticPricingResolver,
+    )
+    from paxman.providers._resolver import EnvSecretResolver, SecretResolver
 
 # The default global registry is a process-wide singleton. It is
 # created on first access via get_default_registry(). Callers who

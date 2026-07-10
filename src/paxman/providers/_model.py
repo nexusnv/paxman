@@ -209,9 +209,13 @@ class ProviderRegistry:
         """
         if not hasattr(provider, "name"):
             raise TypeError("provider must have a 'name' attribute (Provider Protocol)")
-        if not isinstance(provider.name, str):
-            raise TypeError(f"provider.name must be a str, got {type(provider.name).__name__}")
+        name_attr = getattr(provider, "name")
+        if not isinstance(name_attr, str):
+            raise TypeError(
+                f"provider.name must be a str, got {type(name_attr).__name__}"
+            )
         if not hasattr(provider, "capabilities"):
             raise TypeError("provider must have a 'capabilities' attribute (Provider Protocol)")
-        if not hasattr(provider, "complete") or not callable(provider.complete):
+        complete_attr = getattr(provider, "complete", None)
+        if not callable(complete_attr):
             raise TypeError("provider must implement complete(request) (Provider Protocol)")

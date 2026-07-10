@@ -154,11 +154,9 @@ class TestMergeCandidatesTypeErrors:
 
 class TestMergeNoValidCandidates:
     def test_all_invalid(self) -> None:
-        """When all candidates are not Candidate instances, return NO_CANDIDATES."""
-        value, evidence, strategy = merge_candidates((object(),), field=_make_field())
-        assert value is None
-        assert evidence == ()
-        assert strategy == "NO_CANDIDATES"
+        """When all candidates are not Candidate instances, raise TypeError."""
+        with pytest.raises(TypeError, match="all candidates must be Candidate"):
+            merge_candidates((object(),), field=_make_field())
 
 
 # ---------------------------------------------------------------------------
@@ -297,14 +295,11 @@ class TestMergePreferByEvidence:
         assert strategy == "PREFER_BY_EVIDENCE"
 
     def test_no_valid_candidates_passes_none(self) -> None:
-        """When all candidates are filtered out, returns (None, (), 'NO_CANDIDATES')."""
-        # Pass candidates that are not Candidate instances - filtered to empty.
-        value, evidence, strategy = merge_candidates(
-            (object(), object()), field=_make_field(), strategy=MergeStrategy.PREFER_BY_EVIDENCE
-        )
-        assert value is None
-        assert evidence == ()
-        assert strategy == "NO_CANDIDATES"
+        """When all candidates are not Candidate instances, raise TypeError."""
+        with pytest.raises(TypeError, match="all candidates must be Candidate"):
+            merge_candidates(
+                (object(), object()), field=_make_field(), strategy=MergeStrategy.PREFER_BY_EVIDENCE
+            )
 
 
 # ---------------------------------------------------------------------------
@@ -388,11 +383,10 @@ class TestMergeEdgeCases:
 
     def test_mixed_valid_and_invalid_candidates(self) -> None:
         c1 = Candidate(value="valid")
-        value, _evidence, strategy = merge_candidates(
-            (c1, object()), field=_make_field(), strategy=MergeStrategy.PREFER_BY_EVIDENCE
-        )
-        assert value == "valid"
-        assert strategy == "PREFER_BY_EVIDENCE"
+        with pytest.raises(TypeError, match="all candidates must be Candidate"):
+            merge_candidates(
+                (c1, object()), field=_make_field(), strategy=MergeStrategy.PREFER_BY_EVIDENCE
+            )
 
     def test_evidence_refs_are_deduplicated(self) -> None:
         ref = _evref(capability_id="a", span=(0, 5))

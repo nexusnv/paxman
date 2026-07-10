@@ -256,21 +256,27 @@ This runs `import-linter` with the contract defined in `pyproject.toml`. New imp
 
 ---
 
-## 8. Documentation
+## 8. Engineering Standards
 
-### 8.1 Docstrings
+The [Engineering Standards](./engineering-standards.md) doc defines our static analysis policies, suppression rules, and checker configuration. Consult it when adding new tools or configuring existing ones.
+
+---
+
+## 9. Documentation
+
+### 9.1 Docstrings
 
 - Every public symbol has a Google-style docstring.
 - Every public module has a module docstring.
 - Type hints are mandatory.
 
-### 8.2 Markdown docs
+### 9.2 Markdown docs
 
 - `PRD.md`, `ARCHITECTURE.md`, `PACKAGE_STRUCTURE.md`, `GLOSSARY.md` are the source of truth.
 - `docs/adr/` contains Architecture Decision Records.
 - When you change behavior, update the relevant docs in the same PR.
 
-### 8.3 Docstring coverage
+### 9.3 Docstring coverage
 
 ```bash
 uv run interrogate src/paxman
@@ -280,9 +286,9 @@ Must report 100% on the public surface.
 
 ---
 
-## 9. Building the Package
+## 10. Building the Package
 
-### 9.1 Build wheel and sdist
+### 10.1 Build wheel and sdist
 
 ```bash
 make build
@@ -290,7 +296,7 @@ make build
 
 This runs `hatchling build` and writes artifacts to `dist/`.
 
-### 9.2 Inspect the wheel
+### 10.2 Inspect the wheel
 
 ```bash
 unzip -l dist/paxman-*.whl
@@ -302,13 +308,13 @@ Verify:
 - `paxman/py.typed` is present (PEP 561 marker).
 - No `*.pyc` or `__pycache__` directories.
 
-### 9.3 Publish to TestPyPI
+### 10.3 Publish to TestPyPI
 
 ```bash
 make publish-test
 ```
 
-### 9.4 Publish to PyPI
+### 10.4 Publish to PyPI
 
 ```bash
 make publish
@@ -318,9 +324,9 @@ This uses [trusted publishing](https://docs.pypi.org/trusted-publishers/) — no
 
 ---
 
-## 10. Release Process
+## 11. Release Process
 
-### 10.1 Versioning
+### 11.1 Versioning
 
 Paxman follows [semver](https://semver.org/) post-1.0. Pre-1.0, MINOR versions may contain breaking changes.
 
@@ -328,7 +334,7 @@ Paxman follows [semver](https://semver.org/) post-1.0. Pre-1.0, MINOR versions m
 - **MINOR** — new feature, backward compatible. Update `CHANGELOG.md`, tag.
 - **PATCH** — bug fix. Update `CHANGELOG.md`, tag.
 
-### 10.2 Changelog
+### 11.2 Changelog
 
 `CHANGELOG.md` follows [Keep a Changelog](https://keepachangelog.com/) format:
 
@@ -360,7 +366,7 @@ Paxman follows [semver](https://semver.org/) post-1.0. Pre-1.0, MINOR versions m
 - Security fix.
 ```
 
-### 10.3 Release checklist
+### 11.3 Release Checklist
 
 1. Update `CHANGELOG.md` with the new version.
 2. Update `pyproject.toml` `version`.
@@ -373,7 +379,7 @@ Paxman follows [semver](https://semver.org/) post-1.0. Pre-1.0, MINOR versions m
 
 ---
 
-## 11. Contributing
+## 12. Contributing
 
 See `CONTRIBUTING.md` (when it exists — placeholder for now) for the contribution process. The short version:
 
@@ -389,9 +395,9 @@ For significant changes, open an issue first to discuss. For ADRs (architectural
 
 ---
 
-## 12. Debugging Tips
+## 13. Debugging Tips
 
-### 12.1 Inspect a Planner output
+### 13.1 Inspect a Planner output
 
 ```python
 from paxman import planner, profile
@@ -401,7 +407,7 @@ plan = planner.plan(canonical_contract, profile(input_data), budget, policy, reg
 print(json.dumps(plan.to_dict(), indent=2))
 ```
 
-### 12.2 Inspect a Reconciler output
+### 13.2 Inspect a Reconciler Output
 
 ```python
 from paxman import reconciler
@@ -411,7 +417,7 @@ resolved = reconciler.reconcile(candidates, canonical_contract)
 print(json.dumps([r.to_dict() for r in resolved], indent=2))
 ```
 
-### 12.3 Inspect an artifact
+### 13.3 Inspect an Artifact
 
 ```python
 from paxman import ExecutionArtifact
@@ -421,7 +427,7 @@ print(json.dumps(artifact.to_dict(), indent=2))
 print("replay_hash:", artifact.replay_hash)
 ```
 
-### 12.4 Verify determinism
+### 13.4 Verify Determinism
 
 ```python
 import subprocess
@@ -438,7 +444,7 @@ assert a == b, "Determinism violated!"
 
 ---
 
-## 13. Local CI Simulation
+## 14. Local CI Simulation
 
 To simulate what CI does:
 
@@ -458,7 +464,7 @@ This runs (in order):
 
 ---
 
-## 14. See also
+## 15. See Also
 
 - [docs/TEST_DATA.md](./test-data.md) — test data policy, dataset catalog, licensing rules
 - [tests/fixtures/DATASET_LICENSES.md](https://github.com/nexusnv/paxman/blob/main/tests/fixtures/DATASET_LICENSES.md) — attribution for every vendored dataset

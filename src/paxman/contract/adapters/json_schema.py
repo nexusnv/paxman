@@ -86,6 +86,11 @@ import typing
 
 import attrs
 
+from paxman.contract import (
+    FormatHint,
+    FormatHintValidationError,
+    parse_format_hints,
+)
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -146,7 +151,12 @@ class JsonSchemaAdapter:
 
     # ----- adapt ---------------------------------------------------------
 
-    def adapt(self, external: typing.Any) -> CanonicalContract:
+    def adapt(
+        self,
+        external: typing.Any,
+        *,
+        schema_dialect: str | None = None,
+    ) -> CanonicalContract:
         """Translate a JSON Schema dict into a :class:`CanonicalContract`.
 
         The schema's top level should be an ``object`` with ``properties``
@@ -156,6 +166,19 @@ class JsonSchemaAdapter:
 
         Args:
             external: A JSON Schema dict (Python literal).
+            schema_dialect: Optional JSON Schema dialect (e.g. from
+                OpenAPI 3.1 ``jsonSchemaDialect``). **Validation only
+                in V1.1.0:** when provided, the value is validated
+                against ``_SUPPORTED_DRAFTS`` and an
+                ``InvalidContractError(INVALID_VERSION)`` is raised
+                if the dialect is not supported. The value is
+                **not** persisted on the resulting
+                :class:`CanonicalContract` and is **not** round-tripped
+                by ``export()`` — it is a fail-fast guard, not a
+                semantic signal. A future V1.2 release may thread the
+                dialect through the canonical model; until then, the
+                adapter parses the schema the same way regardless of
+                the declared dialect.
 
         Returns:
             The :class:`CanonicalContract` representation.
@@ -163,6 +186,20 @@ class JsonSchemaAdapter:
         Raises:
             InvalidContractError: If the schema is malformed.
         """
+        # 3.1 OpenAPI documents can declare a custom ``jsonSchemaDialect``.
+        # The V1.1.0 JSON Schema adapter does not dispatch on the value
+        # (it already targets draft 2020-12) and does not persist it.
+        # Validation here is a fail-fast guard: a 3.1 document with a
+        # bogus dialect is rejected with INVALID_VERSION rather than
+        # silently parsed under a different dialect. Persistence and
+        # round-trip are out of scope for V1.1.0; see the docstring.
+        if schema_dialect is not None:
+            if schema_dialect not in _SUPPORTED_DRAFTS:
+                raise InvalidContractError(
+                    f"unsupported JSON Schema dialect: {schema_dialect!r}",
+                    error_code="INVALID_VERSION",
+                    context={"$schema": schema_dialect},
+                )
         if not isinstance(external, dict):
             # Accept JSON Schema as a string (e.g., loaded from a file).
             # Parse it as JSON before continuing.
@@ -444,6 +481,7 @@ class JsonSchemaAdapter:
             description=schema.get("description") or schema.get("title"),
             default=default,
             constraints=tuple(constraints),
+            format_hints=self._extract_format_hints(name, schema, contract_id),
         )
 
     def _adapt_enum_property(
@@ -478,6 +516,7 @@ class JsonSchemaAdapter:
                 Constraint(kind=ConstraintKind.ENUM, params={"values": list(enum_values)}),
             ),
             enum_values=enum_values,
+            format_hints=self._extract_format_hints(name, schema, contract_id),
         )
 
     def _adapt_date_property(
@@ -498,6 +537,7 @@ class JsonSchemaAdapter:
             description=schema.get("description") or schema.get("title"),
             default=schema.get("default"),
             constraints=(),
+            format_hints=self._extract_format_hints(name, schema, contract_id),
         )
 
     def _adapt_money_property(
@@ -560,7 +600,30 @@ class JsonSchemaAdapter:
             description=schema.get("description") or schema.get("title"),
             default=default,
             constraints=(Constraint(kind=ConstraintKind.ISO_4217, params={}),),
+            format_hints=self._extract_format_hints(name, schema, contract_id),
         )
+
+    @staticmethod
+    def _extract_format_hints(
+        name: str,
+        schema: dict[str, typing.Any],
+        contract_id: str,
+    ) -> tuple[FormatHint, ...]:
+        """Extract ``format_hints`` from a JSON Schema property.
+
+        The extension lives at ``x-paxman-format-hints``. Delegates
+        to :func:`parse_format_hints` and wraps its
+        :class:`FormatHintValidationError` in the adapter's
+        standard :class:`InvalidContractError`.
+        """
+        try:
+            return parse_format_hints(schema.get("x-paxman-format-hints"), field_name=name)
+        except FormatHintValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"contract_id": contract_id, "property": name, **exc.context},
+            ) from exc
 
     def _extract_constraints(
         self,
@@ -695,11 +758,13 @@ class JsonSchemaAdapter:
             }
             if f.description is not None:
                 out["description"] = f.description
+            self._write_format_hints(f, out)
             return out
         if f.type is FieldType.DATE:
             out = {"type": "string", "format": "date"}
             if f.description is not None:
                 out["description"] = f.description
+            self._write_format_hints(f, out)
             return out
         out = {"type": _FIELD_TYPE_TO_JSON_TYPE[f.type]}
         if f.nullable:
@@ -711,6 +776,7 @@ class JsonSchemaAdapter:
             out["default"] = f.default
         for c in f.constraints:
             self._export_constraint(c, out)
+        self._write_format_hints(f, out)
         return out
 
     def _export_money_property(self, f: CanonicalField) -> dict[str, typing.Any]:
@@ -730,7 +796,14 @@ class JsonSchemaAdapter:
                 "amount": str(f.default.amount),
                 "currency": f.default.currency,
             }
+        self._write_format_hints(f, out)
         return out
+
+    @staticmethod
+    def _write_format_hints(f: CanonicalField, out: dict[str, typing.Any]) -> None:
+        """Write the ``x-paxman-format-hints`` extension onto *out* if *f* carries any hints."""
+        if f.format_hints:
+            out["x-paxman-format-hints"] = [h.value for h in f.format_hints]
 
     @staticmethod
     def _export_constraint(c: Constraint, schema: dict[str, typing.Any]) -> None:

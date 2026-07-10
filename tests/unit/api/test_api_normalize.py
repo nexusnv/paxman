@@ -1,7 +1,7 @@
 """Unit tests for the private helpers in ``paxman.api.normalize``.
 
 Tests the four internal functions that the ``normalize`` entry point
-delegates to: ``_detect_format``, ``_detect_and_adapt``,
+delegates to: ``detect_format``, ``_detect_and_adapt``,
 ``_resolved_to_field_result``, and ``_compute_overall_status``.
 
 Note: ``normalize()`` itself is NOT called here — that is the domain
@@ -18,8 +18,8 @@ import pytest
 from paxman.api.normalize import (
     _compute_overall_status,
     _detect_and_adapt,
-    _detect_format,
     _resolved_to_field_result,
+    detect_format,
 )
 from paxman.budget import Policy
 from paxman.contract.canonical import CanonicalContract, CanonicalField
@@ -31,7 +31,7 @@ pytestmark = pytest.mark.deterministic
 
 
 # ---------------------------------------------------------------------------
-# _detect_format
+# detect_format
 # ---------------------------------------------------------------------------
 
 
@@ -46,16 +46,16 @@ class TestDetectFormat:
 
     def test_pydantic_model_detected(self) -> None:
         """An object with ``model_fields`` is detected as ``"pydantic"``."""
-        assert _detect_format(FakePydanticModel()) == "pydantic"
+        assert detect_format(FakePydanticModel()) == "pydantic"
 
     def test_pydantic_model_class_detected(self) -> None:
         """A class (not instance) with ``model_fields`` is also detected."""
-        assert _detect_format(FakePydanticModel) == "pydantic"
+        assert detect_format(FakePydanticModel) == "pydantic"
 
     def test_dict_dsl_detected(self) -> None:
         """A ``dict`` with Dict DSL markers (``id`` and ``fields``) is detected as ``"dict_dsl"``."""
         assert (
-            _detect_format(
+            detect_format(
                 {
                     "id": "demo",
                     "fields": [{"name": "x", "type": "STRING", "required": True}],
@@ -66,19 +66,19 @@ class TestDetectFormat:
 
     def test_empty_dict_detected(self) -> None:
         """An empty dict is detected as ``"dict_dsl"``."""
-        assert _detect_format({}) == "dict_dsl"
+        assert detect_format({}) == "dict_dsl"
 
     def test_dict_with_json_schema_type_and_properties_is_json_schema(self) -> None:
         """A dict with ``type: "object"`` and ``properties`` is JSON Schema (ADR-0011)."""
         assert (
-            _detect_format({"type": "object", "properties": {"x": {"type": "string"}}})
+            detect_format({"type": "object", "properties": {"x": {"type": "string"}}})
             == "json_schema:draft-2020-12"
         )
 
     def test_dict_with_dollar_schema_keyword_is_json_schema(self) -> None:
         """A dict with the JSON Schema ``$schema`` keyword is JSON Schema (ADR-0011)."""
         assert (
-            _detect_format(
+            detect_format(
                 {
                     "$schema": "https://json-schema.org/draft/2020-12/schema",
                     "type": "object",
@@ -89,21 +89,21 @@ class TestDetectFormat:
 
     def test_dict_with_openapi_keyword_is_openapi(self) -> None:
         """A dict with the OpenAPI ``openapi`` keyword is OpenAPI (ADR-0011)."""
-        assert _detect_format({"openapi": "3.1.0", "info": {}}) == "openapi:3.0"
+        assert detect_format({"openapi": "3.1.0", "info": {}}) == "openapi:3.x"
 
     def test_dict_with_combinator_keyword_is_json_schema(self) -> None:
         """A dict with any JSON Schema combinator keyword is JSON Schema (ADR-0011)."""
         for keyword in ("allOf", "anyOf", "oneOf", "not", "$ref"):
-            assert _detect_format({keyword: []}) == "json_schema:draft-2020-12", keyword
+            assert detect_format({keyword: []}) == "json_schema:draft-2020-12", keyword
 
     def test_dict_with_constraint_keyword_is_json_schema(self) -> None:
         """A dict with any JSON Schema constraint keyword is JSON Schema (ADR-0011)."""
         for keyword in ("pattern", "const", "enum", "minLength", "maxLength", "format"):
-            assert _detect_format({keyword: "x"}) == "json_schema:draft-2020-12", keyword
+            assert detect_format({keyword: "x"}) == "json_schema:draft-2020-12", keyword
 
     def test_dict_with_dollar_defs_is_json_schema(self) -> None:
         """A dict with ``$defs`` (JSON Schema 2020-12 definitions) is JSON Schema (ADR-0011)."""
-        assert _detect_format({"$defs": {}, "type": "object"}) == "json_schema:draft-2020-12"
+        assert detect_format({"$defs": {}, "type": "object"}) == "json_schema:draft-2020-12"
 
     def test_str_with_json_schema_adapter(self) -> None:
         """A ``str`` that matches the JSON Schema adapter returns the adapter format_id.
@@ -113,7 +113,7 @@ class TestDetectFormat:
         """
         with patch("paxman.api.normalize.get_adapter") as mock_get:
             mock_get.side_effect = [object(), None]  # first call succeeds
-            result = _detect_format('{"type": "object"}')
+            result = detect_format('{"type": "object"}')
             assert result == "json_schema:draft-2020-12"
             mock_get.assert_any_call("json_schema:draft-2020-12")
 
@@ -124,10 +124,10 @@ class TestDetectFormat:
                 InvalidContractError("no json schema adapter"),
                 object(),  # OpenAPI adapter found
             ]
-            result = _detect_format('{"openapi": "3.0"}')
-            assert result == "openapi:3.0"
+            result = detect_format('{"openapi": "3.0"}')
+            assert result == "openapi:3.x"
             mock_get.assert_any_call("json_schema:draft-2020-12")
-            mock_get.assert_any_call("openapi:3.0")
+            mock_get.assert_any_call("openapi:3.x")
 
     def test_str_raises_when_no_str_adapter(self) -> None:
         """A ``str`` raises ``InvalidContractError`` when no string adapter is registered."""
@@ -136,27 +136,27 @@ class TestDetectFormat:
             with pytest.raises(
                 InvalidContractError, match="Cannot determine format for str contract"
             ):
-                _detect_format('{"type": "object"}')
+                detect_format('{"type": "object"}')
 
     def test_unknown_type_raises(self) -> None:
         """An unsupported type raises ``InvalidContractError``."""
         with pytest.raises(InvalidContractError, match="Cannot determine contract format"):
-            _detect_format(42)
+            detect_format(42)
 
     def test_none_raises(self) -> None:
         """``None`` raises ``InvalidContractError``."""
         with pytest.raises(InvalidContractError, match="Cannot determine contract format"):
-            _detect_format(None)  # type: ignore[arg-type]
+            detect_format(None)  # type: ignore[arg-type]
 
     def test_bytes_raises(self) -> None:
         """``bytes`` raises ``InvalidContractError`` (input != contract)."""
         with pytest.raises(InvalidContractError, match="Cannot determine contract format"):
-            _detect_format(b"some bytes")
+            detect_format(b"some bytes")
 
     def test_float_raises(self) -> None:
         """A ``float`` raises ``InvalidContractError``."""
         with pytest.raises(InvalidContractError, match="Cannot determine contract format"):
-            _detect_format(3.14)
+            detect_format(3.14)
 
 
 # ---------------------------------------------------------------------------
@@ -178,7 +178,7 @@ class TestDetectAndAdapt:
             ),
         )
         with (
-            patch("paxman.api.normalize._detect_format", return_value="pydantic"),
+            patch("paxman.api.normalize.detect_format", return_value="pydantic"),
             patch("paxman.api.normalize._adapt_contract", return_value=canonical),
         ):
             result = _detect_and_adapt(FakePydanticModel())
@@ -187,14 +187,14 @@ class TestDetectAndAdapt:
 
     def test_detect_and_adapt_detection_failure(self) -> None:
         """When detection fails, ``InvalidContractError`` propagates."""
-        with patch("paxman.api.normalize._detect_format", side_effect=InvalidContractError("bad")):
+        with patch("paxman.api.normalize.detect_format", side_effect=InvalidContractError("bad")):
             with pytest.raises(InvalidContractError, match="bad"):
                 _detect_and_adapt(42)
 
     def test_detect_and_adapt_adaptation_failure(self) -> None:
         """When adaptation fails, ``InvalidContractError`` propagates."""
         with (
-            patch("paxman.api.normalize._detect_format", return_value="pydantic"),
+            patch("paxman.api.normalize.detect_format", return_value="pydantic"),
             patch(
                 "paxman.api.normalize._adapt_contract",
                 side_effect=InvalidContractError("adapt failed"),

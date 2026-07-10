@@ -153,11 +153,29 @@ A per-contract override of the call-site `Policy`. Example: "this contract's `ta
 
 **Related:** [Policy](#policy), [Contract](#contract)
 
+### Contract Truth
+
+One of Paxman's three truth layers. The contract itself, treated as authoritative. A field value is consistent with Contract Truth if it satisfies the contract's constraints (type, range, regex, enum, ISO-4217, MONEY policy).
+
+**Related:** [Candidate Truth](#candidate-truth), [Resolved Truth](#resolved-truth)
+
 ### Contract Validator
 
 The component of the `contract/` subsystem that rejects invalid contracts with `InvalidContractError`. Validation is mandatory; the Executor never receives an invalid contract.
 
 **Related:** [Contract](#contract), [Contract Adapter System](#contract-adapter-system)
+
+### Canonical Field
+
+A single field on a `CanonicalContract`. Same shape as `Field` but with the additional internal attributes (such as `format_hints` and a tightened `default` annotation) used by the Executor and Reconciler. Adapters produce `CanonicalField`; downstream subsystems operate on `CanonicalField`.
+
+**Related:** [Field](#field), [Canonical Contract](#canonical-contract)
+
+### Critical Field
+
+A field marked `critical: True` on a `CanonicalContract` or contract. Critical fields are not eligible for the `UNRESOLVED` fallback by default — they must be resolved explicitly or the artifact's overall status escalates. Use sparingly: every critical field is one more field that can drive the artifact to `UNRESOLVED`.
+
+**Related:** [Required Field](#required-field), [Field](#field)
 
 ### Currency Policy
 
@@ -191,7 +209,7 @@ A structured note attached to a candidate or to the artifact (e.g., "skipped rem
 
 A property of the Executor: when a `FieldPlan` has produced a candidate that meets the field's `confidence_threshold`, the Executor stops invoking further capabilities for that field. The Executor never retries structurally; it only short-circuits within a `FieldPlan`'s `capability_chain`.
 
-**Related:** [Executor](#executor), [Field Plan](#field-plan)
+**Related:** [Executor](#executor), [Field Plan](#field-plan-fieldplan)
 
 ### Evidence
 
@@ -215,13 +233,13 @@ The concrete Python type of an artifact. Public, re-exported as `paxman.Executio
 
 The planner's output: an ordered list of `FieldPlan`s. Internal, not re-exported.
 
-**Related:** [Field Plan](#field-plan), [Planner](#planner)
+**Related:** [Field Plan](#field-plan-fieldplan), [Planner](#planner)
 
 ### Executor
 
 The `paxman.executor` subsystem. Runs the plan exactly as the Planner defined it. Stops early when a field meets its confidence threshold. Never assigns final confidence.
 
-**Related:** [Field Plan](#field-plan), [Early Stop](#early-stop), [Reconciler](#reconciler)
+**Related:** [Field Plan](#field-plan-fieldplan), [Early Stop](#early-stop), [Reconciler](#reconciler)
 
 ### Extension Point
 
@@ -247,7 +265,7 @@ The planner's per-field plan. Specifies an ordered `capability_chain` and an `ea
 
 One of the nine V1 types: `STRING`, `INTEGER`, `DECIMAL`, `BOOLEAN`, `DATE`, `ENUM`, `OBJECT`, `ARRAY`, `MONEY`.
 
-**Related:** [Type](#type)
+**Related:** [Type](#field-type)
 
 ### Frozen
 
@@ -269,7 +287,7 @@ A replay-time error: the `replay_hash` of the supplied artifact does not match t
 
 A planner rule that ranks capabilities for a field. V1 ships a single heuristic chain (explicit evidence → local deterministic → ... → `UNRESOLVED`). Custom heuristics are post-V1.
 
-**Related:** [Planner](#planner), [Field Plan](#field-plan)
+**Related:** [Planner](#planner), [Field Plan](#field-plan-fieldplan)
 
 ---
 
@@ -347,7 +365,7 @@ The portion of the artifact that conforms to the contract shape. `ExecutionArtif
 
 The set of hooks and metrics Paxman emits. See [ARCHITECTURE.md §12](./architecture.md) for the full model.
 
-**Related:** [Structured Logging](#structured-logging), [Metrics](#metrics)
+**Related:** [Structured Logging](#structured-logging), [Metrics](#observability)
 
 ### OpenAPI Adapter
 
@@ -365,7 +383,7 @@ A dotted JSON-Path-like identifier of a field within the contract (e.g., `line_i
 
 The `paxman.planner` subsystem. The deterministic, rule-based brain. Produces `ExecutionPlan` from `CanonicalContract` + `InputProfile` + `Budget` + `Policy` + capability registry.
 
-**Related:** [Field Plan](#field-plan), [Heuristic](#heuristic)
+**Related:** [Field Plan](#field-plan-fieldplan), [Heuristic](#heuristic)
 
 ### Policy
 
@@ -411,6 +429,12 @@ One of Paxman's three truth layers. The output of the Reconciler — the final v
 
 **Related:** [Contract Truth](#contract-truth), [Candidate Truth](#candidate-truth)
 
+### Reconciliation
+
+The act of merging candidates from one or more capabilities into a single per-field result. Reconciliation is performed by the `paxman.reconciler` subsystem and produces a `FieldResult` (with `status`, `value`, `confidence`, and `evidence_refs`) for every required field. See [Reconciler](#reconciler) for the subsystem; see [Merging](#merging) for the merge rule; see [Conflict](#conflict) for the conflict-detection path.
+
+**Related:** [Reconciler](#reconciler), [Merging](#merging), [Conflict](#conflict)
+
 ### Reconciler
 
 The `paxman.reconciler` subsystem. Merges candidates, detects conflicts, assigns final confidence, and resolves truth. The only place that mutates Candidate Truth into Resolved Truth.
@@ -427,7 +451,7 @@ A per-field fallback policy that tells the planner what to do when the heuristic
 
 The Reconciler's per-field output: `FieldResult` with `status`, `value`, `confidence`, and `evidence_refs`. Distinct from `Candidate`.
 
-**Related:** [Candidate](#candidate), [FieldResult](#fieldresult)
+**Related:** [Candidate](#candidate), [FieldResult](#result-types-field)
 
 ### Rehydration
 
@@ -523,7 +547,7 @@ The V1 capability of verifying a candidate value against a constraint. Determini
 
 Paxman's multi-dimensional versioning model: library semver, planner version, capability versions, and contract schema versions. See [ARCHITECTURE.md §9](./architecture.md) for the full strategy.
 
-**Related:** [Library Version](#library-version), [Capability Version](#capability-version), [Contract Schema Version](#contract-schema-version)
+**Related:** [Library Version](#versioning), [Capability Version](#versioning), [Contract Schema Version](#versioning)
 
 ### Version Mismatch
 

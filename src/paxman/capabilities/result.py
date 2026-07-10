@@ -193,7 +193,9 @@ class EvidenceRef:
     field_path: str = attrs.field()
     span: tuple[int, int] | None = None
     model_id: str | None = None
-    context: dict[str, typing.Any] = attrs.field(factory=dict)
+    context: dict[str, str | bool | int | list[str] | dict[str, str | int]] = attrs.field(
+        factory=dict
+    )
 
     def __attrs_post_init__(self) -> None:
         """Validate evidence invariants.

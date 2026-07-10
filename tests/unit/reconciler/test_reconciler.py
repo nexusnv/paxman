@@ -604,11 +604,10 @@ class TestResultForField:
         fallback reason is ``"below_threshold"`` (that check runs first).
         """
         field = _field("f1", "name")
-        # A non-Candidate entry in the tuple gets filtered by merge, yielding
-        # no valid candidates → merged_value is None → UNRESOLVED.
+        # All candidates have None values, so merged_value is None → UNRESOLVED.
         result = _result_for_field(
             field=field,
-            candidates=(object(),),  # type: ignore[arg-type]
+            candidates=(Candidate(value=None),),  # type: ignore[arg-type]
             strategy=MergeStrategy.PREFER_BY_EVIDENCE,
             currency_policy=CurrencyPolicy.STRICT_MATCH,
         )
@@ -620,7 +619,7 @@ class TestResultForField:
         field = _field("f1", "name", threshold=0.0)
         result = _result_for_field(
             field=field,
-            candidates=(object(),),  # type: ignore[arg-type]
+            candidates=(Candidate(value=None),),  # type: ignore[arg-type]
             strategy=MergeStrategy.PREFER_BY_EVIDENCE,
             currency_policy=CurrencyPolicy.STRICT_MATCH,
         )

@@ -3,7 +3,7 @@
 > **Status:** Accepted
 > **Date:** 2026-06-22
 > **Deciders:** Paxman core team
-> **Related docs:** [ARCHITECTURE.md §4.3](../reference/architecture.md#43-capabilities--atomic-operations), [ARCHITECTURE.md §7](../reference/architecture.md#7-configuration-model), [EXTENDING.md §2](../reference/extending.md#2-adding-a-new-capability), [ADR-0002](../adr/0002-rule-based-planner-v1.md), [ADR-0005](../adr/0005-confidence-ownership.md), [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md)
+> **Related docs:** [ARCHITECTURE.md §4.3](../reference/architecture.md#43-capabilities-atomic-operations), [ARCHITECTURE.md §7](../reference/architecture.md#7-configuration-model), [EXTENDING.md §2](../reference/extending.md#2-adding-a-new-capability), [ADR-0002](../adr/0002-rule-based-planner-v1.md), [ADR-0005](../adr/0005-confidence-ownership.md), [REPLAY_AND_DETERMINISM.md](../reference/replay-and-determinism.md)
 
 This document specifies the `CostHint` type, the V1 baseline cost values for all five capabilities, the scoring rubric the planner uses to rank capabilities, and the interaction between cost estimates and budget enforcement.
 
@@ -11,11 +11,11 @@ This document specifies the `CostHint` type, the V1 baseline cost values for all
 
 ## 1. Overview
 
-Every V1 capability exposes a `CostHint` as part of its `CapabilitySpec` (see [ARCHITECTURE.md §4.3](../reference/architecture.md#43-capabilities--atomic-operations)). The `CostHint` is a three-tuple of approximate token count, wall-clock latency in milliseconds, and USD cost for a single invocation.
+Every V1 capability exposes a `CostHint` as part of its `CapabilitySpec` (see [ARCHITECTURE.md §4.3](../reference/architecture.md#43-capabilities-atomic-operations)). The `CostHint` is a three-tuple of approximate token count, wall-clock latency in milliseconds, and USD cost for a single invocation.
 
 The planner uses `CostHint` for two purposes:
 
-1. **Heuristic ordering** — when multiple capabilities can satisfy a field, the planner ranks them by ascending cost, following the heuristic chain in [ARCHITECTURE.md §4.2](../reference/architecture.md#42-planner--field-centric-plan-synthesis): explicit evidence, local deterministic, structured lookup, derived computation, local inference, remote inference, `UNRESOLVED`.
+1. **Heuristic ordering** — when multiple capabilities can satisfy a field, the planner ranks them by ascending cost, following the heuristic chain in [ARCHITECTURE.md §4.2](../reference/architecture.md#42-planner-field-centric-plan-synthesis): explicit evidence, local deterministic, structured lookup, derived computation, local inference, remote inference, `UNRESOLVED`.
 2. **Budget enforcement** — the planner estimates total cost by summing `CostHint.usd` over the planned capability chain and compares against `Budget.max_total_cost_usd` ([ARCHITECTURE.md §7.1](../reference/architecture.md#71-budget-hard-limits)).
 
 **Critical: the values documented here are heuristics, not measurements.** They are round numbers chosen for planner scoring fidelity. They do not reflect actual runtime cost, which depends on input size, provider pricing, and network conditions. The cost model is intentionally coarse-grained; V1 does not perform per-call cost measurement.
@@ -65,7 +65,9 @@ Violation of any rule raises `InvalidCapabilitySpec` with `error_code="INVALID_C
 
 ## 3. V1 Capability Cost Table
 
-The following table defines the baseline `CostHint` values for the five V1 capabilities.
+The following tables define the baseline `CostHint` values for the **ten** V1 capabilities (5 V1.0.0 originals + 3 V1.1.0 format-aware extractors + 2 V1.1.0 post-extraction cleanup transforms). The V1.0.0 baseline is preserved verbatim for historical reference; the V1.1.0 additions are sourced directly from each capability's `CapabilitySpec` (see `src/paxman/capabilities/v1/*`).
+
+### 3.0 V1.0.0 baseline (5 capabilities)
 
 | Capability | `tokens` | `ms` | `usd` | `deterministic` | Notes |
 |---|---|---|---|---|---|
@@ -75,7 +77,19 @@ The following table defines the baseline `CostHint` values for the five V1 capab
 | `inference` | 500 | 1500 | 0.001 | No | V1 stub provider. Values represent a typical small LLM call: ~1k-token prompt, ~1.5 s p50 latency, ~$0.001 per invocation. |
 | `validation` | 0 | 1 | 0.0 | Yes | Pure-Python constraint check. Deterministic. Microsecond-scale actual latency; 1 ms is a conservative floor. |
 
-### 3.1 Rationale for individual values
+### 3.1 V1.1.0 additions (5 capabilities)
+
+V1.1.0 added 3 format-aware extractors (per [ADR-0015](../adr/0015-format-aware-executor-auto-dispatch.md) and PR #71) and 2 post-extraction cleanup transforms (per [ADR-0014](../adr/0014-v1-1-0-cleanup-transforms.md) and PR #86). The values below are the `CostHint(...)` literals declared in each module's `_SPEC` constant.
+
+| Capability | `tokens` | `ms` | `usd` | `deterministic` | Notes |
+|---|---|---|---|---|---|
+| `json_path_extraction` | 0 | 1 | 0.0 | Yes | Pure-Python JSON-Pointer / JSONPath subset against pre-parsed JSON bytes. Microsecond-scale actual latency; 1 ms is a conservative floor. `format_hint=FormatHint.JSON` drives auto-dispatch. |
+| `csv_extraction` | 0 | 1 | 0.0 | Yes | Pure-Python CSV row scan for a named or indexed column. Microsecond-scale actual latency; 1 ms is a conservative floor. `format_hint=FormatHint.CSV` drives auto-dispatch. |
+| `xpath_extraction` | 0 | 1 | 0.0 | Yes | Stdlib `xml.etree.ElementTree` against a documented XPath subset. 1 ms conservative floor; the stdlib backend is used by default; `defusedxml` is an optional extra (ADR-0013). `format_hint=FormatHint.XML` drives auto-dispatch. |
+| `case_normalization` | 0 | 1 | 0.0 | Yes | Pure-Python `str.lower` / `str.upper` / `str.title` against `ctx.config["value"]` (post-resolution input pattern). Never reads `ctx.raw_input`. Microsecond-scale actual latency. |
+| `trim_extraction` | 0 | 1 | 0.0 | Yes | Pure-Python whitespace + common punctuation trim against `ctx.config["value"]`. Never reads `ctx.raw_input`. Microsecond-scale actual latency. |
+
+### 3.2 Rationale for individual values
 
 **`text_extraction` (0, 5, 0.0):** V1 handles `text/plain` and `text/html` only (no OCR). Local decode is cheap. The 5 ms accounts for HTML parsing overhead. Remote OCR providers (V2) will carry non-zero `tokens` and `usd`.
 
@@ -95,7 +109,7 @@ The planner ranks capabilities by **ascending cost** within each tier of the heu
 
 ### 4.1 Heuristic tiers
 
-Per [ARCHITECTURE.md §4.2](../reference/architecture.md#42-planner--field-centric-plan-synthesis), the planner assigns each capability to a tier:
+Per [ARCHITECTURE.md §4.2](../reference/architecture.md#42-planner-field-centric-plan-synthesis), the planner assigns each capability to a tier:
 
 | Tier rank | Tier name | Example capabilities |
 |---|---|---|
@@ -299,7 +313,7 @@ The following cost-model features are explicitly deferred to V2:
 
 ## 10. See also
 
-- [ARCHITECTURE.md §4.3](../reference/architecture.md#43-capabilities--atomic-operations) — `CapabilitySpec` shape and V1 capability table.
+- [ARCHITECTURE.md §4.3](../reference/architecture.md#43-capabilities-atomic-operations) — `CapabilitySpec` shape and V1 capability table.
 - [ARCHITECTURE.md §7](../reference/architecture.md#7-configuration-model) — `Budget` and `Policy` definitions.
 - [EXTENDING.md §2](../reference/extending.md#2-adding-a-new-capability) — how to register a custom capability with `CostHint`.
 - [ADR-0002](../adr/0002-rule-based-planner-v1.md) — rule-based planner; determinism requirement.

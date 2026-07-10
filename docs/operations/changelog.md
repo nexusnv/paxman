@@ -16,14 +16,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the example directory on GitHub and tags the persona it is
   designed for (backend developer / AI engineer / SaaS team). Closes
   the "3 reference examples linked as hero cards on homepage" item
-  in the V1.0.x static-site adoption DoD.
+  in the V1.0.x static-site adoption DoD. *(Retroactively noted — the
+  change was already live on the v1.0.2 wheel.)*
 
 ### Changed — Sprint 11 (Post-v1 Repo Springclean)
 
 Repo restructured to separate the library from the marketing site, internal
 development notes, and tool-specific artifacts. The wheel artifact
 (`paxman-1.0.0-py3-none-any.whl`) is **unchanged** — this is a repo-layout-only
-change. No code, no public API, no tests.
+change. No code, no public API, no tests. *(Retroactively noted — the
+wheel was unaffected; the change is documentation + repo layout only.)*
 
 - **Documentation site moved to Read the Docs.** Added `.readthedocs.yaml` and
   `mkdocs.yml`; user-facing and contributor-facing docs are now served from
@@ -56,12 +58,280 @@ change. No code, no public API, no tests.
   history; they remain in the repo so forks ship with the architectural
   context.
 
+## [1.1.0] - 2026-07-08
+
+Minor release delivering the **V1.1.0 capability set, format-aware executor
+auto-dispatch, OpenAPI 3.1 full coverage, and a security-hardened XML
+extractor**. No breaking changes to the public API for callers who did not
+use the (renamed) private `_detect_format` or who do not pass
+`paxman.normalize()` an OpenAPI contract. The release covers 14 merged
+PRs across 4 work streams: format-aware extractors, format-aware dispatch,
+optional security extra, and the Pyright Strict Mode initiative.
+
+### Added — V1.1.0 format-aware extractors (PRs #71, #89, closes #67/#68/#69)
+
+- **Three new format-aware extraction capabilities** are now first-class
+  members of the V1 surface — they self-register on import
+  ([ADR-0012](../adr/0012-v1-capabilities-self-register-on-import.md)) and
+  are eligible for the executor's format-aware auto-dispatch
+  ([ADR-0015](../adr/0015-format-aware-executor-auto-dispatch.md)):
+  - `json_path_extraction@1.0` — JSONPath extraction against JSON byte
+    input. Accepts pointer syntax (`/foo/bar`) and bracket syntax
+    (`$.foo[0].bar`); root pointer; rejects non-canonical array indices
+    and `//` descendant axis ambiguity. Strips UTF-8 BOM at the input
+    boundary.
+  - `csv_extraction@1.0` — CSV column extraction against CSV byte
+    input. Strips UTF-8 BOM; deduplicates `Diagnostic` construction
+    across multiple candidate rows.
+  - `xpath_extraction@1.0` — XPath extraction against XML/HTML byte
+    input. Uses `defusedxml` when the new `xml-secure` extra is
+    installed (see Security below); falls back to stdlib
+    `xml.etree.ElementTree` otherwise (with a one-shot
+    `structlog.info` log). Rejects `//` descendant axis ambiguity.
+
+- **Two new post-extraction cleanup transforms** ([ADR-0014](../adr/0014-v1-1-0-cleanup-transforms.md)):
+  - `case_normalization@1.0` — normalizes the case of an extracted
+    string to a target scheme (`lower`, `upper`, `title`,
+    `preserve`). Used to reconcile `ACME Corp` / `acme corp` /
+    `Acme Corp` style drift across documents. (Callers needing
+    name-aware casing should pass `mode="preserve"` and apply
+    their own transform — `str.title()` is **not** name-aware.)
+  - `trim_extraction@1.0` — strips leading/trailing whitespace, BOMs,
+    zero-width spaces, and trailing punctuation. Used to turn
+    `"ACME Corp\n"` into `"ACME Corp"` for constraint matching.
+
+- **V1 surface is now 10 capabilities** (5 V1.0.0 originals + 3 V1.1.0
+  format-aware extractors + 2 V1.1.0 cleanup transforms). All 10
+  self-register on import — no manual `register_capability()` call
+  required. The total `paxman.__all__` symbol count is 30 (was 29;
+  one new top-level symbol — `FormatHint`).
+
+### Added — Public API surface for format-aware dispatch (PR #89, closes #73)
+
+- **`FormatHint` enum** — new public type (`paxman.FormatHint`,
+  `paxman.api.types.FormatHint`). Members: `FormatHint.CSV`,
+  `FormatHint.JSON`, `FormatHint.XML`. Tells the executor which
+  format-aware extractor to prefer for a field.
+- **`CanonicalField.format_hints: tuple[FormatHint, ...] = ()`** —
+  new public attribute. Adapters parse a field's `format`/`x-paxman-format`/
+  `x-paxman-type` JSON-Schema-extension into this tuple at adaptation
+  time. Empty tuple means "no format hint" — the executor's default
+  tier-1 chain runs.
+- **`parse_format_hints(raw, *, field_name) -> tuple[FormatHint, ...]`**
+  and **`resolve_format_hint(value) -> FormatHint`** — new public
+  helper functions. Available via `paxman.api.types`.
+- **`FormatHintValidationError`** — new public exception, subclasses
+  `ValueError`, carries `error_code="INVALID_FORMAT_HINT"`. Raised
+  by `parse_format_hints` on unparseable input. Available via
+  `paxman.api.types`.
+- **`paxman.api.normalize.detect_format(contract) -> str`** — promoted
+  from private `_detect_format` to public. Returns the resolved
+  `format_id` of a contract (e.g. `json_schema:draft-2020-12`,
+  `openapi:3.x`, `dict_dsl`). Useful for callers who want to inspect
+  the detected format before calling `normalize()`.
+
+### Added — OpenAPI 3.1 full coverage (PR #45, closes #22)
+
+- **OpenAPI 3.1 is now fully supported** in the OpenAPI adapter
+  (`paxman.contract.adapters.openapi`). The adapter's `format_id` was
+  renamed from `openapi:3.0` to **`openapi:3.x`** to reflect that it
+  now covers both 3.0.x and 3.1.x (PR #95, fix). Specifically:
+  - **`$defs` resolution** — schema-internal `$defs` are recursively
+    inlined with cycle detection. The previous implementation only
+    resolved top-level `#/components/schemas/...` `$ref`s.
+  - **`jsonSchemaDialect` validation** — OpenAPI 3.1's top-level
+    `jsonSchemaDialect` field is validated against the JSON-Schema
+    draft spec; an unsupported dialect raises
+    `INVALID_JSON_SCHEMA_DIALECT`.
+  - **3.1 path-parameter merge semantics** — 3.1's path parameters
+    that are also defined under the operation are properly merged
+    (3.1 dropped the parameter uniqueness requirement).
+  - **Self-registration** — the OpenAPI adapter continues to
+    self-register on import (unchanged behavior).
+
+- **No breaking change for OpenAPI 3.0.x callers.** The `format_id`
+  rename from `openapi:3.0` to `openapi:3.x` is internal: existing
+  Pydantic / JSON-Schema / Dict-DSL callers do not see it. Callers
+  who hardcoded `format_id="openapi:3.0"` in a custom adapter
+  registration should update to `"openapi:3.x"`.
+
+### Added — Jupyter Lab playground in Docker container (PRs #91, #92, #94, closes #90)
+
+- **Containerized Jupyter Lab playground.** `make playground-build && make playground-up`
+  starts a Jupyter Lab on `http://127.0.0.1:8888` with Paxman installed
+  from source. **11 interactive notebooks** (`playground/notebooks/00..10`)
+  exercise contracts, all 10 V1 capabilities, replay, money handling,
+  full pipeline, and budget/policy. The Docker image is reproducible
+  via the `playground/uv.lock` lockfile.
+
+- **A separate `playground/pyproject.toml`** with its own dependency
+  group keeps the playground's host-fallback install (no Docker)
+  isolated from the library's dev deps. The playground is included
+  in the sdist for distribution.
+
+- **Note for v1.1.x follow-up:** dedicated notebooks for the 5 new
+  V1.1.0 capabilities (`json_path_extraction`, `csv_extraction`,
+  `xpath_extraction`, `case_normalization`, `trim_extraction`) are
+  a planned follow-up; the current 11 notebooks cover the 5 V1.0.0
+  originals + replay + money + full pipeline + budget.
+
+### Security — Issue #72, ADR-0013 (PRs covering ADR-0013 itself, the `xml-secure` extra, and the `xpath_extraction` hardening)
+
+- **`xpath_extraction` capability is now hardened against XML
+  entity-expansion attacks** (billion laughs, DTD retrieval). The
+  capability uses `defusedxml.ElementTree.fromstring` when the
+  `xml-secure` optional extra is installed
+  (`pip install paxman[xml-secure]`). When `defusedxml` is not
+  installed, the capability falls back to stdlib
+  `xml.etree.ElementTree.fromstring` and emits a one-shot
+  `structlog.info` log at module import time. The fallback is
+  observable so callers who care about XML security can detect
+  the unhardened mode at startup and install the extra. See
+  [ADR-0013](../adr/0013-defusedxml-optional-extra.md) for the full
+  rationale and considered options (Pillow's `Image.py:60-64` is
+  the in-ecosystem reference pattern).
+
+- **`xml-secure` optional extra** — `pip install paxman[xml-secure]`
+  installs `defusedxml>=0.7.1` to harden XML parsing. The extra is
+  included in `paxman[all]` so CI exercises the hardened path
+  automatically.
+
+- **[ADR-0013](../adr/0013-defusedxml-optional-extra.md)** — documents
+  the optional-extra-with-feature-detect-and-fallback pattern. The
+  `xpath_extraction` capability's `_select_xml_backend()` helper
+  (PR #96) cleanly separates the backend-selection concern from
+  the XPath execution concern, and `_block_defusedxml` (PR
+  addressing CodeRabbit review) is a unit-test fixture for
+  simulating the missing-extra case.
+
+- **Bandit S314 suppressions reviewed.** The stdlib-XML-parser
+  fallback path is the only remaining `bandit B314`/`ruff S314`
+  hit; it is properly marked with an inline `# nosec B314`. The
+  hardened path is not flagged.
+
+### Added — CI hardening (PRs #45, #49, #95, #99, #100, #102)
+
+- **CI runs on the `v1.1.0` branch** in addition to `main`
+  (PR #49). PRs targeting `v1.1.0` are checked by the same matrix
+  as `main`.
+
+- **OpenAPI 3.1 CI coverage** (PR #45) — `tests/unit/test_contract_openapi.py`
+  grew from 22 to 43 tests covering 3.1-specific features. Property
+  tests (Hypothesis, `derandomize=True`) added in
+  `tests/property/test_contract_openapi_property.py`.
+
+### Changed — Pyright Strict Mode Initiative (PRs #99, #100, #102, closes #26, #101)
+
+- **Pyright in strict mode** for `src/paxman` ([Pyright Strict Mode Initiative](../initiatives/pyright-strict-mode.md),
+  [Engineering Standards](../contributing/engineering-standards.md)).
+  - **PR-0** (#99) — Initiative bootstrap: `pyrightconfig-strict.json`,
+    `contributing/engineering-standards.md`, CI advisory job.
+  - **PR-1** (#100) — 5 remaining strict errors fixed in
+    `src/paxman` modules.
+  - **PR-1.5** (#102) — Protocol tightening + 9 dead `isinstance` guards
+    removed from reconciler modules; `CanonicalField.default` and
+    `EvidenceRef.context` annotations tightened from `typing.Any` to
+    concrete unions.
+
+### Fixed
+
+- **Issue #93 — OpenAPI adapter `format_id` mismatch.**
+  `_detect_format()` returned `"openapi:3.0"` but the OpenAPI
+  adapter self-registered as `"openapi:3.x"`, causing
+  `register_adapter()` to raise on the same format_id
+  (PR #95).
+
+- **Issue #103 — `CanonicalField._validate_default()` missing DATE
+  branch** (PR #105). `DATE` field defaults were not validated for
+  type-correctness (`str` only); other types passed through
+  unchecked. The DATE branch was added; `BOOLEAN`, `INTEGER`,
+  `DECIMAL`, `MONEY`, `ENUM` validation already existed.
+
+- **Capability-versions sync** (commit `5a2452f`,
+  `fix(reconciler): preserve evidence_refs through fallback`).
+  When the same `capability_id` appears with different versions
+  across fields (e.g. one field resolves via `text_extraction@1.0`,
+  another via `text_extraction@1.1`), the artifact's
+  `capability_versions` set now reflects the reconciled evidence
+  (single source of truth). A `structlog` WARNING is emitted
+  (`event: capability_version_conflict`) and last-encountered
+  version wins (preserves pre-fix behavior).
+
+- **Bootstrap self-registration regression** (commit `6fbd77a`).
+  After the v1.0.2 boundary-rule fix removed the
+  `paxman.capabilities.v1.*` import from the reconciler
+  (issue #64), the v1 module was no longer loaded by default,
+  leaving `lookup` unregistered. `_bootstrap_v1_capabilities`
+  now actively calls
+  `importlib.import_module("paxman.capabilities.v1.lookup")`,
+  restoring implicit availability without reintroducing the
+  layer violation. All 8 golden artifacts are stable.
+
+- **Playground Docker build failures** (PRs #92, #94) — missing
+  `README.md` in the install set, broken venv path on
+  `uv sync`, and 11 notebook execution errors all fixed.
+
+- **`xpath_extraction` `_select_xml_backend()` extracted** (PR #96)
+  — addresses CodeRabbit review feedback; the helper is unit-
+  tested with the stdlib-fallback and defusedxml-available
+  variants.
+
+- **`json_path_extraction` strips UTF-8 BOM, rejects non-canonical
+  array indices, removes `type: ignore`** (commit `09f9159`).
+
+- **`csv_extraction` strips UTF-8 BOM and dedupes `Diagnostic`
+  construction** (commit `a657b28`).
+
+- **3 dead comparison checks removed** (commit `abfa3c7`) from
+  `errors.py`, `reconciler.py`, and `xpath_extraction.py`.
+
+- **9 dead `isinstance` guards removed** from reconciler modules
+  (commit `6ce3e8b`) — part of PR-1.5.
+
 ### Notes
 
-- No new public API surface. No tests added or removed. No core dependencies
-  changed. The MkDocs toolchain (`mkdocs`, `mkdocs-material`, `mkdocs-autorefs`)
-  is in `[dependency-groups] dev` and does not affect the wheel.
-- PyPI release `paxman==1.0.0` is unchanged.
+- **No breaking change to the public API** for callers that did not
+  use the (renamed) private `_detect_format`. The new public
+  symbol `FormatHint` (1 addition to `paxman.__all__`) and 4 new
+  exports in `paxman.api.types.__all__` are additive. The
+  `openapi:3.0` → `openapi:3.x` `format_id` rename is internal to
+  Paxman — only callers that hardcoded the string in custom
+  adapter registration need to update.
+
+- **No new core dependencies.** The `xml-secure` extra adds
+  `defusedxml>=0.7.1` (a new optional dependency). The 4-package
+  core cap is respected: `attrs`, `typing-extensions`, `structlog`,
+  `packaging`. `defusedxml` is `import-untyped` in mypy overrides
+  per `pyproject.toml [tool.mypy.overrides] module = ["defusedxml",
+  "defusedxml.*"]`.
+
+- **Pyright strict mode is in a new `pyrightconfig-strict.json`**
+  (not the project-default `pyrightconfig.json`). The advisory CI
+  job pins its cache key to `pyproject.toml` to keep results
+  stable (commit `0197ac9`).
+
+- **Re-bootstrap of all 8 golden artifacts** was performed
+  during the v1.1.0 release pre-flight to refresh the
+  `paxman_version` field from `1.0.2` to `1.1.0`. All 8
+  artifacts now record `paxman_version: "1.1.0"`. The
+  `REPLAY_VERSION`, `CONTRACT_FORMAT_VERSION`, and
+  `PLANNER_VERSION` constants are unchanged at `"1"` — no
+  format-version bump, no ADR required.
+
+- **13 new tests** added in `tests/integration/test_replay_integrity.py`
+  (the v1.0.2 capability_versions fix, refreshed for v1.1.0
+  baseline). **Total: 2651 tests passing, 94.78% line coverage.**
+
+- **Documentation build is now strict-clean** (`make docs` runs
+  `mkdocs build --strict`; 0 warnings). 10 broken cross-reference
+  anchors in `docs/reference/glossary.md` and
+  `docs/specs/capability-cost-model.md` (em-dash slug collision
+  with MkDocs' default slugify) were fixed; 4 missing glossary
+  entries (`Contract Truth`, `Canonical Field`, `Critical Field`,
+  `Reconciliation`) were added; `docs/superpowers/` is excluded
+  from the build (internal development workspace).
+
+- PyPI release `paxman==1.1.0`.
 
 ## [1.0.2] - 2026-07-03
 
@@ -295,7 +565,7 @@ API surface change. No core dependencies changed. The wheel artifact
 
 - **`docs/concepts/`** — 5 concept documents covering the V1 mental model:
   - [`contracts.md`](../concepts/contracts.md) — the contract-driven design, the 4 V1 formats, the `CanonicalContract` internal model, MONEY as a first-class type, contract policies, common pitfalls.
-  - [`capabilities.md`](../concepts/capabilities.md) — the 5 V1 capabilities (`text_extraction`, `regex_extraction`, `lookup`, `inference`, `validation`), the `Capability` SPI, `CapabilitySpec` metadata, the cost model, the capability registry, boundary rules.
+  - [`capabilities.md`](../concepts/capabilities.md) — the **10** V1 capabilities (5 V1.0.0 originals — `text_extraction`, `regex_extraction`, `lookup`, `inference`, `validation` — plus 3 V1.1.0 format-aware extractors — `json_path_extraction`, `csv_extraction`, `xpath_extraction` — plus 2 V1.1.0 post-extraction cleanup transforms — `case_normalization`, `trim_extraction`; see [ADR-0014](../adr/0014-v1-1-0-cleanup-transforms.md) and [ADR-0015](../adr/0015-format-aware-executor-auto-dispatch.md)), the `Capability` SPI, `CapabilitySpec` metadata, the cost model, the capability registry, boundary rules.
   - [`planning.md`](../concepts/planning.md) — the field-centric planner, the 7-step heuristic chain, scoring (per `docs/specs/capability-cost-model.md` §4), budget and policy gates, the effective-policy model, determinism.
   - [`reconciliation.md`](../concepts/reconciliation.md) — the three truth layers (`Contract` / `Candidate` / `Resolved`), the merge and conflict logic, confidence assignment (V1 rubric, fixed), MONEY reconciliation with `CurrencyPolicy`, the `UNRESOLVED` case, boundary rules.
   - [`replay.md`](../concepts/replay.md) — the replay hash, the replay protocol, version compatibility, determinism guarantees, the replay API, golden artifacts.

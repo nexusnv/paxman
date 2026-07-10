@@ -90,6 +90,10 @@ typecheck: ## Run mypy --strict
 typecheck-pyright: ## Run pyright for cross-validation
 	$(UV) run pyright src/paxman
 
+.PHONY: typecheck-pyright-strict
+typecheck-pyright-strict: ## Run pyright in strict mode (advisory)
+	$(UV) run pyright --project pyrightconfig-strict.json src/paxman
+
 # --- Import-linter ------------------------------------------------------------
 
 .PHONY: imports
@@ -144,8 +148,8 @@ test-data-verify: ## Verify vendored data is present (CI use)
 # --- Documentation build (Sprint 8) ------------------------------------------
 
 .PHONY: docs
-docs: ## Build documentation
-	@echo "TODO(Sprint 8): build docs"
+docs: ## Build documentation (mkdocs build --strict, mirrors Read the Docs)
+	$(UV) run mkdocs build --strict
 
 # --- Build --------------------------------------------------------------------
 
@@ -183,6 +187,24 @@ publish-test: ## Publish to TestPyPI
 publish: ## Publish to PyPI
 	@echo "TODO(Sprint 10): publish to PyPI via trusted publishing"
 
+# --- Jupyter Lab playground (issue #90) --------------------------------------
+
+.PHONY: playground-build
+playground-build: ## Build the playground Docker image
+	docker compose -f playground/docker-compose.yml build
+
+.PHONY: playground-up
+playground-up: ## Start the playground (http://127.0.0.1:8888)
+	docker compose -f playground/docker-compose.yml up -d
+
+.PHONY: playground-down
+playground-down: ## Stop the playground
+	docker compose -f playground/docker-compose.yml down
+
+.PHONY: playground-logs
+playground-logs: ## Tail playground logs
+	docker compose -f playground/docker-compose.yml logs -f
+
 # --- Reference example smoke tests (Sprint 10) ------------------------------
 
 .PHONY: test-examples
@@ -202,12 +224,13 @@ test-examples: ## Run all reference example test suites (smoke-tests persona cov
 
 # --- Local CI simulation (the canonical "is this green?" command) -----------
 
-# 10 checks (per Sprint 10 / V1_ACCEPTANCE_CRITERIA.md §3.2):
+# 11 checks (per Sprint 10 / V1_ACCEPTANCE_CRITERIA.md §3.2):
 #   1. install-frozen     — exact lockfile install
 #   2. lint               — ruff check
 #   3. format-check       — ruff format --check
 #   4. typecheck          — mypy --strict
 #   5. typecheck-pyright  — pyright (advisory in CI)
+#   5b. typecheck-pyright-strict — pyright strict (advisory in CI)
 #   6. imports            — import-linter
 #   7. docs-check         — interrogate (100% docstring coverage on public surface)
 #   8. security           — bandit (advisory in CI)
@@ -215,8 +238,8 @@ test-examples: ## Run all reference example test suites (smoke-tests persona cov
 #  10. test-cov           — pytest with coverage + per-subsystem threshold check
 
 .PHONY: ci
-ci: install-frozen lint format-check typecheck typecheck-pyright imports docs-check security test-examples test-cov ## Run the full local-CI pipeline (10 checks: install → lint → format → typecheck → pyright → imports → docs → security → test-examples → test-cov)
+ci: install-frozen lint format-check typecheck typecheck-pyright typecheck-pyright-strict imports docs-check security test-examples test-cov ## Run the full local-CI pipeline (11 checks: install → lint → format → typecheck → pyright → pyright-strict → imports → docs → security → test-examples → test-cov)
 	@echo ""
 	@echo "=========================================="
-	@echo "  CI GREEN ✓ (10 checks)"
+	@echo "  CI GREEN ✓ (11 checks)"
 	@echo "=========================================="

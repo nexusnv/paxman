@@ -147,11 +147,9 @@ def _result_for_field(
             if isinstance(cap_id, str) and cap_id not in seen_ids:
                 seen_ids.add(cap_id)
                 unique_capability_ids.append(cap_id)
-    total_evidence = sum(len(c.evidence_refs) for c in candidates if isinstance(c, Candidate))
+    total_evidence = sum(len(c.evidence_refs) for c in candidates)
     confidence = assign_confidence(
-        candidate_count=sum(
-            1 for c in candidates if isinstance(c, Candidate) and c.value is not None
-        ),
+        candidate_count=sum(1 for c in candidates if c.value is not None),
         evidence_count=total_evidence,
         capability_ids=tuple(unique_capability_ids),
         has_validation_pass=has_validation_pass,
@@ -164,7 +162,7 @@ def _result_for_field(
     # Step 8: threshold check.
     if confidence < field.confidence_threshold or merged_value is None:
         diags = list(validation_diagnostics)
-        if has_conflict and conflict is not None:
+        if conflict is not None:
             diags.append(
                 Diagnostic(
                     code=DiagnosticCode.CAPABILITY_OK,
@@ -189,6 +187,7 @@ def _result_for_field(
                 else "no_mergeable_value"
             ),
             diagnostics=tuple(diags),
+            evidence_refs=merged_evidence,
         )
 
     # Step 10: produce the ResolvedResult.

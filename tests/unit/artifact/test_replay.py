@@ -125,7 +125,7 @@ def test_replay_artifact_raises_on_major_mismatch() -> None:
 @pytest.mark.deterministic
 def test_replay_artifact_raises_on_artifact_from_future() -> None:
     """Artifact from a newer minor/patch raises VersionMismatchError."""
-    art = _make_artifact(paxman_version="1.1.0")  # newer minor than current 1.0.1
+    art = _make_artifact(paxman_version="1.2.0")  # newer minor than current 1.1.0
     contract = _make_contract()
     registry = _MockRegistry()
     with pytest.raises(VersionMismatchError, match="artifact is from a newer version"):

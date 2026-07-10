@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, v1.1.0]
   pull_request:
-    branches: [main]
+    branches: [main, v1.1.0]
 
 # Cancel in-progress runs for the same PR when a new commit is pushed.
 concurrency:
@@ -70,6 +70,8 @@ jobs:
         uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3 # v8.3.0
         with:
           enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
 
       - name: Set up Python 3.12
         run: uv python install 3.12
@@ -79,6 +81,35 @@ jobs:
 
       - name: Type check (pyright cross-validation)
         run: uv run pyright src/paxman
+
+  # ---------------------------------------------------------------------------
+  # pyright-strict (strict-mode boundary quality; advisory)
+  # ---------------------------------------------------------------------------
+  pyright-strict:
+    name: pyright strict (py3.12) — advisory
+    runs-on: ubuntu-latest
+    continue-on-error: true  # D8.23: pyright-strict is advisory; mypy --strict is the gate
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            pyproject.toml
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (frozen lockfile)
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Type check (pyright strict — boundary quality)
+        run: uv run pyright --project pyrightconfig-strict.json src/paxman
 
   # ---------------------------------------------------------------------------
   # interrogate (100% docstring coverage on the public surface; required)

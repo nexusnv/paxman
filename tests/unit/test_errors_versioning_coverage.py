@@ -27,10 +27,10 @@ class TestErrorsCoverage:
         with pytest.raises(TypeError, match="context must be dict"):
             PaxmanError("test", error_code="ERR", context="not a dict")  # type: ignore[arg-type]
 
-    def test_context_default_to_empty_dict(self) -> None:
-        """A ``None`` context defaults to ``{}``."""
-        exc = PaxmanError("test", error_code="ERR", context=None)
-        assert exc.context == {}
+    def test_context_none_raises_type_error(self) -> None:
+        """A ``None`` context raises ``TypeError``."""
+        with pytest.raises(TypeError, match="context must be dict"):
+            PaxmanError("test", error_code="ERR", context=None)  # type: ignore[arg-type]
 
 
 class TestVersioningCoverage:

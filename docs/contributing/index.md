@@ -284,6 +284,10 @@ The full ADR list and template is in
 - **Test markers** — `deterministic`, `replay`, `property`, `slow`,
   `integration`, `unit`. Use them.
 
+### 8.5 Engineering Standards
+
+For detailed engineering standards (static analysis policies, suppression rules, checker configuration), see [Engineering Standards](./engineering-standards.md).
+
 ---
 
 ## 9. The Makefile

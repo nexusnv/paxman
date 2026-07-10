@@ -30,13 +30,12 @@ shared across processes; this is intentional.
 
 from __future__ import annotations
 
-import importlib
+import sys
 import types
 
 from paxman.capabilities.base import Capability
 from paxman.capabilities.spec import CapabilitySpec
 from paxman.errors import InvalidContractError
-from paxman.logging import get_logger
 
 __all__ = [
     "all_capabilities",
@@ -216,12 +215,15 @@ def all_capabilities() -> types.MappingProxyType[tuple[str, str], Capability]:
     view of :data:`_capabilities` (read-only but reflecting
     future mutations), defeating the "snapshot" contract.
 
-    Self-healing: if the registry is empty, the V1 ``lookup``
-    capability (the only V1 capability that self-registers on
-    import) is re-registered. This protects against test-only
-    :func:`reset` calls that wipe the registry mid-test-suite
-    and would otherwise leave the planner with no capabilities
-    at all.
+    Self-healing: if the registry is empty, all eight V1
+    capabilities (the five V1.0.0 originals — ``text_extraction``,
+    ``regex_extraction``, ``lookup``, ``inference``, ``validation`` —
+    plus the three V1.1.0 format-aware extraction additions —
+    ``json_path_extraction``, ``csv_extraction``, ``xpath_extraction``)
+    are re-registered (per ADR-0012). This protects against
+    test-only :func:`reset` calls that wipe the registry
+    mid-test-suite and would otherwise leave the planner with
+    no capabilities at all.
 
     Returns:
         A read-only mapping of ``(id, version)`` → :class:`Capability`,
@@ -244,65 +246,51 @@ def _bootstrap_v1_capabilities() -> None:
     :func:`reset` to clear the registry do not break subsequent
     :func:`paxman.normalize` calls.
 
-    Only the V1 capabilities that **self-register on import** are
-    re-registered here. The rest (text_extraction,
-    regex_extraction, inference, validation) are not part of the
-    default registry; they must be registered explicitly by the
-    user. This matches the original behaviour: importing
-    ``paxman.capabilities.v1`` only registers ``lookup``.
+    Per ADR-0012, all ten V1 capabilities (``text_extraction``,
+    ``regex_extraction``, ``lookup``, ``inference``,
+    ``validation``, plus the three V1.1.0 format-aware extraction
+    additions ``json_path_extraction``, ``csv_extraction``,
+    ``xpath_extraction``, plus the two V1.1.0 post-extraction
+    cleanup transforms ``case_normalization``,
+    ``trim_extraction``) self-register on import via
+    ``_register_on_import()`` at the bottom of each module. This
+    helper re-registers them uniformly after a :func:`reset` call
+    so the planner always has the V1 surface available.
 
-    The V1 lookup module is actively imported via
-    :func:`importlib.import_module` (regardless of whether the
-    v1 package was previously imported) so the bootstrap is
-    self-sufficient. If the import fails (e.g. the v1 package is
-    not installed, or has a missing dependency that causes a real
-    ImportError), the failure is logged at WARNING level and the
-    bootstrap is a no-op — the caller is responsible for
-    diagnosing a missing v1 module via the WARNING log.
-
-    .. note::
-        **v1.0.2 fix for #64 regression:** the previous implementation
-        used ``sys.modules.get("paxman.capabilities.v1.lookup")`` to
-        short-circuit, which meant the bootstrap only ran if some
-        OTHER code had already imported the v1 module. Before #64
-        the reconciler imported ``paxman.capabilities.v1.validation``
-        (the layer violation that #64 fixed), which transitively
-        loaded the v1 package and triggered ``lookup``'s
-        ``_register_on_import`` hook. After #64, no subsystem imports
-        from ``paxman.capabilities.v1.*``, so the v1 module is never
-        loaded by default — leaving ``lookup`` unregistered and the
-        planner producing empty field plans for the goldens.
-
-        The fix: actively import the v1 lookup module via
-        :func:`importlib.import_module` so the bootstrap is
-        self-sufficient. This restores the implicit-availability
-        behavior the bootstrap was designed for, without re-
-        introducing the layer violation.
+    The bootstrap is a no-op if the V1 module has not been
+    imported yet (in which case the user has explicitly opted
+    out of V1 capabilities).
     """
-    # Defer the import to call time so we don't trigger the v1
-    # import at static analysis time. After #64 (extract
-    # _check_constraint), the v1 package is no longer loaded
-    # transitively, so we must actively import the lookup module
-    # to trigger its self-registration.
-    try:
-        lookup_module = importlib.import_module("paxman.capabilities.v1.lookup")
-    except ImportError as exc:
-        # The v1 module is not available. This is expected when the
-        # user has not installed the v1 capabilities. Log at WARNING
-        # so a real ImportError (e.g. a missing dependency inside
-        # the v1 module) is observable, rather than silently leaving
-        # the registry empty.
-        _log = get_logger("paxman.capabilities.registry")
-        _log.warning(
-            "v1_lookup_bootstrap_skipped",
-            reason="import_error",
-            error=str(exc),
-        )
+    # Defer the import to call time. Using ``sys.modules`` first lets
+    # us short-circuit when the V1 module is not yet imported (avoids
+    # triggering the import cycle at static analysis time, which
+    # pyright reports as an error).
+    v1_module = sys.modules.get("paxman.capabilities.v1")
+    if v1_module is None:
+        # V1 module not available; nothing to bootstrap.
         return
-    # Re-register the V1 capabilities that self-register on import.
-    # The lookup capability's ``_register_on_import`` hook only runs
-    # once at module load, so we re-do it here after a ``reset()``.
-    register(lookup_module.LookupCapability(), replace=True)
+    # Re-register every V1 capability uniformly. The
+    # ``_register_on_import`` hook only runs once at module load,
+    # so we re-do it here after a ``reset()`` (ADR-0012).
+    register(v1_module.text_extraction.TextExtractionCapability(), replace=True)
+    register(v1_module.regex_extraction.RegexExtractionCapability(), replace=True)
+    register(v1_module.lookup.LookupCapability(), replace=True)
+    register(v1_module.inference.InferenceCapability(), replace=True)
+    register(v1_module.validation.ValidationCapability(), replace=True)
+    # V1.1.0 format-aware extraction capabilities (PR #71; sub-issue
+    # of #67). Re-registered here so a ``reset()`` followed by any
+    # ``all_capabilities()`` call (or any code path that consults the
+    # registry, including ``paxman.normalize``) restores the full V1
+    # surface. Regression for #79.
+    register(v1_module.json_path_extraction.JsonPathExtractionCapability(), replace=True)
+    register(v1_module.csv_extraction.CsvExtractionCapability(), replace=True)
+    register(v1_module.xpath_extraction.XPathExtractionCapability(), replace=True)
+    # V1.1.0 post-extraction cleanup transforms (PR for #69; sub-issue
+    # of #67). Re-registered here for the same reason as the format
+    # extractors above: the bootstrap is the post-``reset()`` recovery
+    # path that restores the full V1 surface uniformly.
+    register(v1_module.case_normalization.CaseNormalizationCapability(), replace=True)
+    register(v1_module.trim_extraction.TrimExtractionCapability(), replace=True)
 
 
 def reset() -> None:

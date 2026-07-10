@@ -278,3 +278,16 @@ _TEXT_EXTRACTION_SPEC: typing.Final[CapabilitySpec] = CapabilitySpec(
     deterministic=True,
     required_providers=(),
 )
+
+
+# Self-register. See ADR-0012: all V1 capabilities self-register on
+# import for symmetry with the contract adapter side. Third-party
+# capabilities use ``paxman.register_capability()`` (see
+# ``docs/reference/extending.md`` §2.3).
+def _register_on_import() -> None:
+    from paxman.capabilities import registry
+
+    registry.register(TextExtractionCapability(), replace=True)
+
+
+_register_on_import()

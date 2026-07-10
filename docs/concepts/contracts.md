@@ -82,6 +82,13 @@ A `CanonicalField` carries:
   regex, enum, ISO-4217, …).
 - `confidence_threshold` — read-only threshold used by the planner to
   set `target_confidence` on the `FieldPlan`.
+- `format_hints` — wire-format hints for input-format-aware
+  tier-1 extractors. Tuple of `FormatHint` members
+  (`CSV` / `JSON` / `XML` in V1.1.0; future members are
+  additive). Empty tuple means "no format preference" — the
+  planner falls back to the existing tier-1 selection logic.
+  See [ADR-0015](../adr/0015-format-aware-executor-auto-dispatch.md)
+  and [issue #73](https://github.com/nexusnv/paxman/issues/73).
 
 > **The MONEY type is first-class** ([ADR-0004](../adr/0004-money-first-class-type.md)):
 > it is a structured type with currency + precision, **not** a
@@ -109,7 +116,7 @@ Per [ADR-0007](../adr/0007-contract-adapter-set-v1.md), Paxman V1 ships
 | **Pydantic v2** | `pydantic` | Required | Python apps that already use Pydantic. |
 | **JSON Schema** | `json_schema:draft-2020-12` | Required | API specs, cross-language systems. |
 | **Dict DSL** | `dict_dsl` | Required | Internal tests, escape hatch, no external dependency. |
-| **OpenAPI 3.x** | `openapi:3.0` / `openapi:3.1` | Best-effort | OpenAPI service specs (V1 subset only). |
+| **OpenAPI 3.x** | `openapi:3.x` | Best-effort | OpenAPI service specs (V1 subset only). |
 
 ### 3.1 Pydantic v2
 
@@ -208,7 +215,7 @@ format. The detection order is:
 
 1. **Pydantic** — duck-typed via `hasattr(contract, "model_fields")`.
 2. **Dict DSL** — `isinstance(contract, dict)`.
-3. **String** — try `json_schema:draft-2020-12`, then `openapi:3.0`.
+3. **String** — try `json_schema:draft-2020-12`, then `openapi:3.x`.
 
 If detection fails, the call returns an artifact with
 `status=Status.INVALID_CONTRACT` and an `ADAPTER_NOT_FOUND` error in

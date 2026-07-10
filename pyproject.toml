@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "paxman"
-version = "1.0.2"
+version = "1.1.0"
 description = "Contract-driven deterministic normalization engine for Python."
 readme = "README.md"
 license = { text = "MIT" }
@@ -48,9 +48,16 @@ dependencies = [
 pydantic = ["pydantic>=2.5"]
 json-schema = ["jsonschema>=4.20"]
 openapi = ["openapi-spec-validator>=0.6"]
+# Security extra (ADR-0013): hardened XML parsing for xpath_extraction.
+# When installed, the capability uses defusedxml.ElementTree.fromstring
+# instead of xml.etree.ElementTree.fromstring, which is flagged by
+# bandit B314 / ruff S314 because the stdlib parser is vulnerable to
+# entity-expansion attacks (billion laughs, DTD retrieval).
+xml-secure = ["defusedxml>=0.7.1"]
 # Inference extras are V2; V1 ships a stub provider.
-# Convenience meta-extra.
-all = ["paxman[pydantic,json-schema,openapi]"]
+# Convenience meta-extra. ``--all-extras`` (used by ``make install-frozen``)
+# installs every extra, so CI exercises the hardened XML path automatically.
+all = ["paxman[pydantic,json-schema,openapi,xml-secure]"]
 
 # Test extras (Sprint 2+ will start using hypothesis).
 test = ["hypothesis>=6.0"]
@@ -85,6 +92,7 @@ include = [
   "/docs/contributing",
   "/docs/security",
   "/docs/operations",
+  "/docs/initiatives",
   "/docs/index.md",
   # Build config for the RTD site
   "/mkdocs.yml",
@@ -93,6 +101,12 @@ include = [
   "/README.md",
   "/CHANGELOG.md",
   "/LICENSE",
+  # Reference example packages (downstream mini-projects;
+  # each is its own pyproject.toml; SOP P7 / P9 require
+  # these ship in the sdist so PyPI downloaders get them).
+  "/examples",
+  # Jupyter Lab playground in Docker Container (issue #90)
+  "/playground",
 ]
 
 # --- Ruff (lint + format) ----------------------------------------------------
@@ -147,6 +161,11 @@ ignore = [
 # Adapters legitimately deal with `Any` (external contract types are arbitrary);
 # suppress ANN401 so the adapter signatures are not noisier than they need to be.
 "src/paxman/contract/adapters/*.py" = ["ANN401"]
+# xpath_extraction uses defusedxml.ElementTree.fromstring when the
+# ``xml-secure`` extra is installed (per ADR-0013). The stdlib fallback
+# path retains an inline ``# nosec B314``; the hardened path is not
+# flagged by S314/B314, so no per-file ignore is required.
+# See: docs/adr/0013-defusedxml-optional-extra.md
 
 [tool.ruff.format]
 quote-style = "double"
@@ -184,6 +203,15 @@ disallow_untyped_defs = false
 # false positive. Disable the check for this module.
 module = ["paxman.testing", "paxman.testing.__init__"]
 disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+# ``defusedxml`` is the optional-extra security dep used by
+# ``xpath_extraction`` (ADR-0013, issue #72). The upstream package does
+# not ship type stubs, so we suppress the ``import-untyped`` diagnostic
+# here rather than via an inline ``# type: ignore`` at the call site
+# (per ``AGENTS.md``: no inline suppressions in ``src/paxman/``).
+module = ["defusedxml", "defusedxml.*"]
+ignore_missing_imports = true
 
 # --- Pytest ------------------------------------------------------------------
 
@@ -357,11 +385,16 @@ source_modules = [
     "paxman.capabilities.result",
     "paxman.capabilities.spec",
     "paxman.capabilities.v1",
+    "paxman.capabilities.v1.case_normalization",
+    "paxman.capabilities.v1.csv_extraction",
     "paxman.capabilities.v1.inference",
+    "paxman.capabilities.v1.json_path_extraction",
     "paxman.capabilities.v1.lookup",
     "paxman.capabilities.v1.regex_extraction",
     "paxman.capabilities.v1.text_extraction",
+    "paxman.capabilities.v1.trim_extraction",
     "paxman.capabilities.v1.validation",
+    "paxman.capabilities.v1.xpath_extraction",
 ]
 forbidden_modules = [
     "paxman.planner",

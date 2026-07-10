@@ -73,12 +73,18 @@ class _Cap:
 
 @pytest.fixture(autouse=True)
 def _reset_registry() -> None:
-    """Reset the global registry between tests; default registrations."""
+    """Reset the global registry between tests.
+
+    Per ADR-0012, all ten V1 capabilities self-register on import
+    (5 V1.0.0 originals + 3 V1.1.0 format-aware extractors per
+    ADR-0015 + 2 V1.1.0 post-extraction cleanup transforms per
+    ADR-0014). The fixture only needs to call :func:`reset` to
+    clear any third-party registrations left behind by prior tests;
+    the V1 capabilities are re-registered automatically on the next
+    :func:`all_capabilities` call via
+    :func:`_bootstrap_v1_capabilities`.
+    """
     reset()
-    register(RegexExtractionCapability())
-    register(ValidationCapability())
-    register(TextExtractionCapability())
-    register(InferenceCapability())
     yield
     reset()
 

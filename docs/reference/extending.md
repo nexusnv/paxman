@@ -26,6 +26,24 @@ Do **not** add a new adapter when:
 - The format is already supported (Pydantic, JSON Schema, Dict DSL, OpenAPI).
 - You can convert your input to a supported format with a small wrapper (e.g., convert ERP → JSON Schema once, then use the JSON Schema adapter).
 
+> **V1.1.0 OpenAPI coverage** — The OpenAPI adapter now accepts both 3.0.x and 3.1.x documents. V1.1.0 support matrix:
+>
+> | OpenAPI 3.x feature | V1.1.0 support |
+> |---|---|
+> | `openapi: 3.0.x` | yes |
+> | `openapi: 3.1.x` | yes |
+> | `info.title` (contract id) | yes |
+> | `components.schemas` (object) | yes |
+> | `jsonSchemaDialect` (3.1) | yes — validated, forwarded to JSON Schema adapter |
+> | `$defs` (3.1) | yes — sibling namespace for `$ref` resolution |
+> | `components.schemas`-based `$ref` | yes |
+> | `type: [string, null]` (3.1 nullable) | yes |
+> | `webhooks` (3.1) | accepted, **ignored** (full path parsing is V2) |
+> | path-item `parameters` (3.1 merge) | accepted, **ignored** (3.1 merge semantics locked in helper, see `OpenApiAdapter._merge_path_parameters`) |
+> | `paths.*` (operations) | ignored |
+> | `oneOf` / `anyOf` / `allOf` | rejected (V2 territory) |
+> | external `$ref` (URL) | rejected (V2 territory) |
+
 ### 1.2 The `ContractAdapter` SPI
 
 ```python
@@ -239,11 +257,37 @@ class Capability(Protocol):
 
 4. **Register the capability:**
 
+   If your capability is a **V1 built-in** (one of
+   `text_extraction`, `regex_extraction`, `json_path_extraction`,
+   `csv_extraction`, `xpath_extraction`, `case_normalization`,
+   `trim_extraction`, `lookup`, `inference`, or `validation`), it is
+   **already registered** by the time you `import paxman` — all **ten**
+   V1 capabilities self-register on import (see
+   [ADR-0012](../adr/0012-v1-capabilities-self-register-on-import.md)
+   for the V1.0.0 originals,
+   [ADR-0014](../adr/0014-v1-1-0-cleanup-transforms.md) for the
+   V1.1.0 post-extraction cleanup transforms, and
+   [ADR-0015](../adr/0015-format-aware-executor-auto-dispatch.md) for
+   the V1.1.0 format-aware extractors; the `_register_on_import()`
+   hook sits at the bottom of each `paxman.capabilities.v1.*` module).
+   You do not need to call `register_capability()` for a V1 built-in.
+
+   For **third-party capabilities** (anything outside the V1
+   built-in set, including the example below), register the
+   instance explicitly:
+
    ```python
    import paxman
 
    paxman.register_capability(DateParserCapability())
    ```
+
+   `register_capability()` is the public SPI for third-party
+   capability registration. Re-registering a V1 built-in with
+   the same instance is a no-op; re-registering a V1 built-in
+   with a different instance requires `replace=True` (or
+   re-importing the V1 module, which already calls
+   `replace=True`).
 
 5. **Write tests:**
 
@@ -344,6 +388,13 @@ class InferenceProvider(Protocol):
    ```
 
 3. **Register the provider with the `inference` capability:**
+
+   The `inference` capability itself is already registered (all V1
+   built-ins self-register on import; see
+   [ADR-0012](../adr/0012-v1-capabilities-self-register-on-import.md)).
+   You are registering a **new instance** of the `inference`
+   capability that wraps your provider; this overrides the default
+   stub provider:
 
    ```python
    import paxman

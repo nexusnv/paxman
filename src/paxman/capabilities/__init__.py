@@ -1,6 +1,6 @@
 """Capabilities subsystem — atomic, reusable operations.
 
-This subsystem provides the **5 V1 capabilities** plus the runtime
+This subsystem provides the **8 V1 capabilities** plus the runtime
 machinery that makes them first-class:
 
 - :mod:`paxman.capabilities.base` — :class:`Capability` Protocol
@@ -11,8 +11,10 @@ machinery that makes them first-class:
   :class:`Candidate`, :class:`EvidenceRef`, :class:`Diagnostic`.
 - :mod:`paxman.capabilities.registry` — versioned capability registry.
 - :mod:`paxman.capabilities.v1` — concrete V1 capability implementations:
-  ``text_extraction``, ``regex_extraction``, ``validation``, ``lookup``,
-  and ``inference`` (SPI + stub + cycling stub).
+  the five V1.0.0 originals (``text_extraction``, ``regex_extraction``,
+  ``validation``, ``lookup``, ``inference``) plus the three V1.1.0
+  format-aware extraction additions (``json_path_extraction``,
+  ``csv_extraction``, ``xpath_extraction``).
 
 Boundary rules (per ``PACKAGE_STRUCTURE.md`` §5.4):
 

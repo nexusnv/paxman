@@ -8,6 +8,7 @@ without exception and leave the registry in a consistent state.
 
 from __future__ import annotations
 
+import contextlib
 import threading
 
 import pytest
@@ -115,14 +116,8 @@ def test_resolve_unknown_during_register_race() -> None:
     def resolver() -> None:
         try:
             barrier.wait()
-            try:
+            with contextlib.suppress(Exception):
                 reg.resolve(ModelRef(provider="racy", model="x"))
-            except Exception:  # noqa: S110
-                # INFERENCE_PROVIDER_NOT_REGISTERED is acceptable
-                # here — the race may resolve the new provider or
-                # miss it. The test asserts the FINAL state is
-                # consistent, not the intermediate outcome.
-                pass
         except BaseException as e:
             errors.append(e)
 

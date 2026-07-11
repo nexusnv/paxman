@@ -54,6 +54,8 @@ class PricingTuple:
         for f in (self.prompt_usd_per_token, self.completion_usd_per_token):
             if not isinstance(f, Decimal):
                 raise TypeError(f"pricing must be a Decimal, got {type(f).__name__}: {f!r}")
+            if not f.is_finite():
+                raise ValueError(f"pricing must be finite (no NaN/Infinity), got {f}")
             if f < 0:
                 raise ValueError(f"pricing must be non-negative, got {f}")
 

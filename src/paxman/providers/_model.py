@@ -143,16 +143,16 @@ class ProviderRegistry:
     def resolve(self, ref: ModelRef) -> Provider:
         """Resolve a :class:`ModelRef` to its registered provider.
 
-        The provider's ``name`` attribute is the lookup key (not
-        ``ref.provider``). This decouples the registry's internal key
-        from the external ``ModelRef`` contract.
+        Provider lookup uses ``ref.provider`` as the key, matching
+        :meth:`register`'s storage key. This couples the registry's
+        internal key to the external :class:`ModelRef` contract.
 
         Args:
             ref: The :class:`ModelRef` to resolve.
 
         Returns:
-            The registered :class:`Provider` whose ``name`` equals
-            ``ref.provider``.
+            The registered :class:`Provider` whose registration name
+            equals ``ref.provider``.
 
         Raises:
             ConfigurationError: If no provider with that name is
@@ -209,19 +209,11 @@ class ProviderRegistry:
         """
         if not hasattr(provider, "name"):
             raise TypeError("provider must have a 'name' attribute (Provider Protocol)")
-        # Use getattr() with a constant attribute (B009 requires the
-        # default form) to keep pyright happy with the 'object' type
-        # for ``provider``. The ``hasattr`` check above guarantees
-        # the attribute exists; the read is safe.
-        name_attr = getattr(provider, "name")  # noqa: B009
+        name_attr = getattr(provider, "name", None)
         if not isinstance(name_attr, str):
             raise TypeError(f"provider.name must be a str, got {type(name_attr).__name__}")
         if not hasattr(provider, "capabilities"):
             raise TypeError("provider must have a 'capabilities' attribute (Provider Protocol)")
-        # ``getattr(..., default)`` is the only form ruff permits
-        # here (B009: get-with-constant-attribute). The Protocol
-        # check is still structural: ``hasattr`` first, then a
-        # callable check.
         complete_attr = getattr(provider, "complete", None)
         if not callable(complete_attr):
             raise TypeError("provider must implement complete(request) (Provider Protocol)")

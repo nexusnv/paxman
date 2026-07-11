@@ -22,6 +22,8 @@ plan 1/4 contract.
 
 from __future__ import annotations
 
+import importlib
+
 import pytest
 
 
@@ -288,7 +290,7 @@ class TestColdStartImpact:
         ):
             sys.modules.pop(mod_name, None)
 
-        import paxman.providers  # noqa: F401
+        importlib.import_module("paxman.providers")
 
         # The subpackage module is loaded; the SPI modules are NOT.
         assert "paxman.providers" in sys.modules

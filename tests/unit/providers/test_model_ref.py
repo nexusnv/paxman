@@ -10,10 +10,17 @@ URL form documented in the spec is permitted but not enforced.
 
 from __future__ import annotations
 
+import typing
+
 import attrs
 import pytest
 
 from paxman.providers._model import ModelRef
+
+
+def _unsafe_model_ref(**kwargs: typing.Any) -> ModelRef:
+    """Construct a ModelRef bypassing type checking for invalid-type testing."""
+    return ModelRef(**kwargs)
 
 
 class TestModelRefBasics:
@@ -23,7 +30,7 @@ class TestModelRefBasics:
         """Mutating a ModelRef raises FrozenInstanceError."""
         ref = ModelRef(provider="openai", model="gpt-4o-2024-08-06")
         with pytest.raises(attrs.exceptions.FrozenInstanceError):
-            ref.provider = "anthropic"  # type: ignore[misc]
+            setattr(ref, "provider", "anthropic")  # noqa: B010
 
     def test_str_round_trip(self) -> None:
         """``str(ref)`` returns the ``"provider:model"`` form."""
@@ -76,8 +83,8 @@ class TestModelRefBasics:
 
     def test_rejects_non_string_provider(self) -> None:
         with pytest.raises(ValueError):
-            ModelRef(provider=123, model="x")  # type: ignore[arg-type]
+            _unsafe_model_ref(provider=123, model="x")
 
     def test_rejects_non_string_model(self) -> None:
         with pytest.raises(ValueError):
-            ModelRef(provider="openai", model=42)  # type: ignore[arg-type]
+            _unsafe_model_ref(provider="openai", model=42)

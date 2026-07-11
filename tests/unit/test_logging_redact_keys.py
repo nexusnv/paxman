@@ -116,12 +116,12 @@ class TestMakeRedactProcessor:
     def test_processor_redacts_event_dict(self) -> None:
         proc = make_redact_processor(REDACT_KEYS)
         event_dict = {"x-api-key": "sk-secret", "model": "gpt-4o"}
-        out = proc(None, "info", event_dict)  # type: ignore[arg-type]
+        out = proc(None, "info", event_dict)
         assert out["x-api-key"] == "***"
         assert out["model"] == "gpt-4o"
 
     def test_processor_returns_event_dict(self) -> None:
         proc = make_redact_processor(REDACT_KEYS)
         event_dict = {"foo": "bar"}
-        out = proc(None, "info", event_dict)  # type: ignore[arg-type]
+        out = proc(None, "info", event_dict)
         assert out == {"foo": "bar"}

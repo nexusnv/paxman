@@ -158,6 +158,11 @@ ignore = [
 # suppress ANN401 so the example signatures are not noisier than they need to be.
 "examples/**/*.py" = ["ANN401"]
 "src/paxman/__init__.py" = ["F401"]  # re-exports may appear unused until populated in Sprint 6
+# logging.py uses typing.Any for recursive value walking and structlog protocol conformance;
+# suppress ANN401 so the signatures are not noisier than they need to be.
+"src/paxman/logging.py" = ["ANN401"]
+# providers/__init__.py PEP 562 __getattr__ MUST return typing.Any per the protocol.
+"src/paxman/providers/__init__.py" = ["ANN401"]
 # Adapters legitimately deal with `Any` (external contract types are arbitrary);
 # suppress ANN401 so the adapter signatures are not noisier than they need to be.
 "src/paxman/contract/adapters/*.py" = ["ANN401"]

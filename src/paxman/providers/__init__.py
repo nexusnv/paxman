@@ -165,7 +165,7 @@ _LAZY_EXPORTS: typing.Final[dict[str, tuple[str, str]]] = {
 }
 
 
-def __getattr__(name: str) -> typing.Any:  # noqa: ANN401
+def __getattr__(name: str) -> typing.Any:
     """PEP 562 lazy attribute resolution.
 
     Resolves the public SPI classes from ``_LAZY_EXPORTS`` on first

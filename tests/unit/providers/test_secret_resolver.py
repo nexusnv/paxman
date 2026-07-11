@@ -10,10 +10,17 @@ reads ``os.environ["NAME"]``. Anything else raises
 
 from __future__ import annotations
 
+import typing
+
 import pytest
 
 from paxman.errors import InferenceProviderError
 from paxman.providers._resolver import EnvSecretResolver, SecretResolver
+
+
+def _unsafe_resolve(resolver: typing.Any, ref: typing.Any) -> typing.Any:
+    """Call resolve bypassing type checking for invalid-type testing."""
+    return resolver.resolve(ref)
 
 
 class TestEnvSecretResolver:
@@ -48,7 +55,7 @@ class TestEnvSecretResolver:
     def test_resolve_non_string_raises(self) -> None:
         resolver = EnvSecretResolver()
         with pytest.raises(InferenceProviderError) as exc_info:
-            resolver.resolve(None)  # type: ignore[arg-type]
+            _unsafe_resolve(resolver, None)
         assert exc_info.value.error_code == "INFERENCE_PROVIDER_KEY_REFERENCE"
 
     def test_context_includes_ref(self, monkeypatch: pytest.MonkeyPatch) -> None:

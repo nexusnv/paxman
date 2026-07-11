@@ -121,15 +121,15 @@ def redact_value(
     lowered: frozenset[str] = frozenset(_normalize(k) for k in keys)
 
     def _walk(
-        obj: typing.Any,  # noqa: ANN401
-    ) -> typing.Any:  # noqa: ANN401
+        obj: typing.Any,
+    ) -> typing.Any:
         """Recursively walk a (possibly nested) event value.
 
         ``typing.Any`` is used here because the value type is
         genuinely unknown at this level — the function dispatches
         by runtime type via ``isinstance``, and the union of
         ``dict``/``list``/``tuple``/scalar would require a complex
-        TypeVar. ANN401 is suppressed for this nested helper.
+        TypeVar.
         """
         if isinstance(obj, dict):
             return {
@@ -142,7 +142,7 @@ def redact_value(
             return tuple(_walk(v) for v in obj)
         return obj
 
-    return _walk(event_dict)  # type: ignore[no-any-return]
+    return typing.cast("dict[str, typing.Any]", _walk(event_dict))
 
 
 def make_redact_processor(
@@ -166,7 +166,7 @@ def make_redact_processor(
     """
 
     def _processor(
-        logger: typing.Any,  # noqa: ANN401
+        logger: typing.Any,
         method_name: str,
         event_dict: dict[str, typing.Any],
     ) -> dict[str, typing.Any]:
@@ -183,7 +183,7 @@ def make_redact_processor(
         event_dict.update(redacted)
         return event_dict
 
-    return _processor  # type: ignore[return-value]
+    return typing.cast("structlog.types.Processor", _processor)
 
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
@@ -226,12 +226,13 @@ def configure_logging(
         replay_mode: If ``True``, timestamps are **excluded** from log
             output so that replay runs are fully deterministic
             (``ARCHITECTURE.md`` §12.3).  Defaults to ``False``.
-        redact_keys: Optional iterable of additional key names to
-            mask in event payloads, beyond the V1.2.0 default
-            :data:`REDACT_KEYS`. The match is case-insensitive on the
-            key. Pass an empty iterable to disable redaction entirely
-            (not recommended in production). Defaults to ``None``
-            (use the default :data:`REDACT_KEYS`).
+        redact_keys: Optional iterable of key names to mask in event
+            payloads. When ``None`` (the default), the V1.2.0 default
+            :data:`REDACT_KEYS` is used. When any iterable is provided
+            — including an empty iterable — it becomes the complete
+            effective key set (no union with defaults). Pass an empty
+            iterable to disable redaction entirely (not recommended
+            in production).
 
     Raises:
         ValueError: If *level* is not a recognised log-level name.
@@ -247,14 +248,15 @@ def configure_logging(
     numeric_level = _LEVELS[level]
     logging.basicConfig(level=numeric_level, force=True)
 
-    # Build the redact key set: defaults + caller overrides. The
-    # caller may extend (default + extras) by passing extras, or
-    # disable redaction entirely by passing an empty iterable. The
-    # default behaviour is to redact all five V1.2.0 keys.
+    # Build the redact key set. ``None`` preserves the V1.2.0
+    # defaults; any explicitly provided iterable — including an empty
+    # iterable — becomes the complete effective key set (no union
+    # with defaults). This lets callers opt out of redaction entirely
+    # by passing ``redact_keys=[]``.
     if redact_keys is None:
         effective_keys: frozenset[str] = REDACT_KEYS
     else:
-        effective_keys = frozenset(REDACT_KEYS) | frozenset(redact_keys)
+        effective_keys = frozenset(redact_keys)
     redact_processor: structlog.types.Processor = make_redact_processor(effective_keys)
 
     processors: list[structlog.types.Processor] = [

@@ -37,6 +37,7 @@ import typing
 
 import attrs
 
+from paxman.contract._cleanup import CleanupStep
 from paxman.contract._format_hint import FormatHint
 from paxman.contract._types import Constraint, ContractPolicy, EnumValueSet, ResolutionPolicy
 from paxman.types import FieldType
@@ -197,6 +198,8 @@ class CanonicalField:
             <../adr/0015-format-aware-executor-auto-dispatch.md>`_
             and `issue #73
             <https://github.com/nexusnv/paxman/issues/73>`_.
+        cleanup_steps: Explicit post-extraction cleanup operations. The planner
+            only schedules these after selecting a format-aware extractor.
 
     Raises:
         TypeError: If any field has the wrong type.
@@ -245,6 +248,7 @@ class CanonicalField:
     ) = None
     constraints: tuple[Constraint, ...] = ()
     format_hints: tuple[FormatHint, ...] = ()
+    cleanup_steps: tuple[CleanupStep, ...] = ()
 
     def __attrs_post_init__(self) -> None:
         """Validate all field invariants.
@@ -320,6 +324,20 @@ class CanonicalField:
         if bad:
             raise TypeError(
                 f"format_hints must be a tuple of FormatHint, got non-FormatHint values: {bad!r}"
+            )
+        # --- cleanup_steps ---
+        if not isinstance(self.cleanup_steps, tuple):
+            raise TypeError(
+                f"cleanup_steps must be a tuple of CleanupStep, "
+                f"got {type(self.cleanup_steps).__name__}"
+            )
+        bad_cleanup_steps = [
+            step for step in self.cleanup_steps if not isinstance(step, CleanupStep)
+        ]
+        if bad_cleanup_steps:
+            raise TypeError(
+                "cleanup_steps must be a tuple of CleanupStep, got non-CleanupStep values: "
+                f"{bad_cleanup_steps!r}"
             )
         # --- default / type coupling (best-effort) ---
         self._validate_default()

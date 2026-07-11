@@ -7,9 +7,13 @@ not evidence that it is the value of every string field in a contract.
 
 from __future__ import annotations
 
+import pytest
+
 import paxman
 import paxman.capabilities.v1  # Register built-in capabilities for this public-path test.
 import paxman.contract.adapters.dict_dsl  # Register the Dict DSL adapter.
+
+pytestmark = pytest.mark.integration
 
 
 def test_plain_text_does_not_resolve_a_field_to_the_entire_document() -> None:

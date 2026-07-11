@@ -405,32 +405,32 @@ def build_capability_chain(
     budget: Budget | None,
     registry: typing.Mapping[tuple[str, str], object] | None = None,
 ) -> tuple[FieldPlanStep, ...]:
-    """Build the capability chain for *field* under the heuristic chain.
+    """Build the currently eligible capability chain for *field*.
 
-    Implements the 7-step ordering from `ARCHITECTURE.md` §4.2:
+    V1 selects only field-specific, format-aware extractors whose
+    :attr:`~paxman.capabilities.spec.CapabilitySpec.format_hint`
+    matches ``field.format_hints``. The steps are produced by
+    :func:`select_format_aware`; when no matching extractor is
+    configured, this function returns an empty tuple and the field is
+    unresolved.
 
-    1. Explicit evidence (planner rule on the :class:`InputProfile`).
-    2. Local deterministic extraction.
-    3. Structured lookup.
-    4. Derived computation (skipped in V1).
-    5. Local inference (skipped if ``policy.allow_local_inference=False``).
-    6. Remote inference (skipped if ``policy.allow_remote_inference=False``
-       or if the budget is below the inference cost floor).
-    7. ``UNRESOLVED`` (terminal; no chain).
+    ``profile``, ``policy``, and ``budget`` are retained in this
+    signature for the planned heuristic chain but are currently unused.
+    The safety boundary is documented in
+    ``docs/concepts/planning.md`` §3 and the format-aware dispatch is
+    defined by ADR-0015.
 
     Args:
         field: The :class:`CanonicalField`.
-        profile: The :class:`InputProfile`.
-        policy: The call-site :class:`Policy`.
-        budget: The :class:`Budget` (optional).
+        profile: Retained :class:`InputProfile` for future heuristic selection.
+        policy: Retained call-site :class:`Policy` for future heuristic selection.
+        budget: Retained optional :class:`Budget` for future heuristic selection.
         registry: Optional capability registry (defaults to global).
 
     Returns:
         A tuple of :class:`FieldPlanStep` records. May be empty
         (``UNRESOLVED`` terminal).
     """
-    chain: list[FieldPlanStep] = []
-
     # Only an extractor with field-specific configuration can create a
     # field candidate. A non-empty raw document is evidence about the
     # document, not evidence that it is the value of an arbitrary field.
@@ -450,10 +450,7 @@ def build_capability_chain(
     # is member-agnostic: any new ``FormatHint`` member added in
     # a follow-up minor release is matched automatically without
     # changes to this function or the four contract adapters.
-    format_aware_steps = select_format_aware(field, registry)
-    if format_aware_steps:
-        chain = list(format_aware_steps) + chain
-
+    chain = select_format_aware(field, registry)
     return tuple(chain)
 
 

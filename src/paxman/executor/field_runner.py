@@ -45,7 +45,7 @@ import typing
 
 import attrs
 
-from paxman.capabilities.base import Capability
+from paxman.capabilities.base import Capability, CapabilityContext
 from paxman.capabilities.result import (
     Candidate,
     CapabilityResult,
@@ -320,130 +320,139 @@ class FieldRunner:
                 step_index += 1
                 continue
 
-            # Budget gate: if the would-be invocation exceeds a
-            # cap, short-circuit. The tracker's
-            # ``would_exceed_reason`` does NOT mutate the counters,
-            # so we ask first and book later. Asking for the
-            # reason (not just the bool) lets us record the
-            # specific cap in the diagnostic.
             is_remote = tier is CapabilityTier.REMOTE_INFERENCE
-            would_exceed_reason: str | None = None
-            if budget_tracker is not None:
-                would_exceed_reason = budget_tracker.would_exceed_reason(
-                    cost_usd=spec.cost_estimate.usd,
-                    latency_ms=spec.cost_estimate.ms,
-                    is_remote_inference=is_remote,
-                )
-            if would_exceed_reason is not None:
-                # ``budget_tracker`` is non-None because
-                # ``would_exceed_reason`` is non-None; the
-                # ``if budget_tracker is not None`` guard
-                # above established that.
-                if budget_tracker is None:  # pragma: no cover - defensive
-                    raise RuntimeError("budget_tracker is None but would_exceed_reason is not None")
-                state.mark_budget_exceeded(would_exceed_reason)
-                # Also mark the tracker as exhausted so the
-                # Executor's pre-loop gate (which calls
-                # ``budget_tracker.is_exceeded()``) sees it.
-                # The exact counter value does not matter; we
-                # record a zero-cost invocation to flip the
-                # ``exceeded`` flag.
-                budget_tracker.mark_exhausted()
+            # A hand-off step is opt-in: it receives each current candidate's
+            # value and replaces that active candidate set with its outputs.
+            # Ordinary steps retain the V1 append-only collection behavior.
+            upstream_candidates = (
+                tuple(candidates) if step.config.get("input_from_candidate") is True else (None,)
+            )
+            if not upstream_candidates:
                 diagnostics_list.append(
                     Diagnostic(
-                        code=DiagnosticCode.BUDGET_EXCLUDES,
+                        code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
                         severity=DiagnosticSeverity.WARNING,
                         message=(
-                            f"budget exceeded before invoking "
+                            f"no candidates available for hand-off to "
                             f"{step.capability_id}@{step.capability_version}"
                         ),
-                        context={
-                            "field_id": field_plan.field_id,
-                            "field_path": field_path,
-                            "capability_id": step.capability_id,
-                            "capability_version": step.capability_version,
-                            "reason": would_exceed_reason,
-                            "spent_usd": budget_tracker.total_cost_usd,
-                            "limit_usd": (
-                                budget_tracker.budget.max_total_cost_usd
-                                if budget_tracker.budget is not None
-                                else None
+                        context={"field_id": field_plan.field_id, "field_path": field_path},
+                    )
+                )
+                step_index += 1
+                continue
+
+            transformed_candidates: list[Candidate] = []
+            budget_exceeded = False
+            for upstream in upstream_candidates:
+                invocation_context: CapabilityContext = ctx
+                if upstream is not None:
+                    invocation_context = attrs.evolve(
+                        ctx, config={**ctx.config, "value": upstream.value}
+                    )
+
+                would_exceed_reason: str | None = None
+                if budget_tracker is not None:
+                    would_exceed_reason = budget_tracker.would_exceed_reason(
+                        cost_usd=spec.cost_estimate.usd,
+                        latency_ms=spec.cost_estimate.ms,
+                        is_remote_inference=is_remote,
+                    )
+                if would_exceed_reason is not None:
+                    if budget_tracker is None:  # pragma: no cover - defensive
+                        raise RuntimeError(
+                            "budget_tracker is None but would_exceed_reason is not None"
+                        )
+                    state.mark_budget_exceeded(would_exceed_reason)
+                    budget_tracker.mark_exhausted()
+                    diagnostics_list.append(
+                        Diagnostic(
+                            code=DiagnosticCode.BUDGET_EXCLUDES,
+                            severity=DiagnosticSeverity.WARNING,
+                            message=(
+                                f"budget exceeded before invoking "
+                                f"{step.capability_id}@{step.capability_version}"
                             ),
-                        },
+                            context={
+                                "field_id": field_plan.field_id,
+                                "field_path": field_path,
+                                "capability_id": step.capability_id,
+                                "capability_version": step.capability_version,
+                                "reason": would_exceed_reason,
+                                "spent_usd": budget_tracker.total_cost_usd,
+                                "limit_usd": (
+                                    budget_tracker.budget.max_total_cost_usd
+                                    if budget_tracker.budget is not None
+                                    else None
+                                ),
+                            },
+                        )
                     )
-                )
-                break
+                    budget_exceeded = True
+                    break
 
-            # Invoke the capability.
-            try:
-                result: CapabilityResult = capability.invoke(ctx)
-            except CapabilityError as e:
-                # The capability raised a structured error.
-                # Encode as a diagnostic; do not propagate.
-                diagnostics_list.append(
-                    Diagnostic(
-                        code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                        severity=DiagnosticSeverity.ERROR,
-                        message=str(e),
-                        context=e.context,
+                try:
+                    result: CapabilityResult = capability.invoke(invocation_context)
+                except CapabilityError as e:
+                    diagnostics_list.append(
+                        Diagnostic(
+                            code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
+                            severity=DiagnosticSeverity.ERROR,
+                            message=str(e),
+                            context=e.context,
+                        )
                     )
-                )
-                step_index += 1
-                continue
-            except Exception as e:
-                # Defensive: a capability raised an unexpected
-                # (non-CapabilityError) exception. Encode as a
-                # diagnostic and continue. The Executor never
-                # crashes on a capability bug.
-                diagnostics_list.append(
-                    Diagnostic(
-                        code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
-                        severity=DiagnosticSeverity.ERROR,
-                        message=(f"{step.capability_id} raised {type(e).__name__}: {e}"),
-                        context={
-                            "field_id": field_plan.field_id,
-                            "capability_id": step.capability_id,
-                            "exception_type": type(e).__name__,
-                        },
+                    continue
+                except Exception as e:
+                    diagnostics_list.append(
+                        Diagnostic(
+                            code=DiagnosticCode.CAPABILITY_INVOKE_FAILED,
+                            severity=DiagnosticSeverity.ERROR,
+                            message=(f"{step.capability_id} raised {type(e).__name__}: {e}"),
+                            context={
+                                "field_id": field_plan.field_id,
+                                "capability_id": step.capability_id,
+                                "exception_type": type(e).__name__,
+                            },
+                        )
                     )
-                )
-                step_index += 1
-                continue
+                    continue
 
-            # Book the cost. ``is_remote_inference`` is gated by
-            # the spec's tier (not by a tag on the result).
-            if budget_tracker is not None:
-                budget_tracker.record(
+                if budget_tracker is not None:
+                    budget_tracker.record(
+                        cost_usd=spec.cost_estimate.usd,
+                        latency_ms=spec.cost_estimate.ms,
+                        is_remote_inference=is_remote,
+                    )
+                state.record_invocation(
                     cost_usd=spec.cost_estimate.usd,
                     latency_ms=spec.cost_estimate.ms,
                     is_remote_inference=is_remote,
                 )
-            state.record_invocation(
-                cost_usd=spec.cost_estimate.usd,
-                latency_ms=spec.cost_estimate.ms,
-                is_remote_inference=is_remote,
-            )
-            steps_executed += 1
+                steps_executed += 1
 
-            # Collect candidates and evidence.
-            for c in result.candidates:
-                if isinstance(c, Candidate):
-                    candidates.append(c)
-            for ev in result.evidence:
-                evidence_list.append(ev)
-            for c in result.candidates:
-                for ev in c.evidence_refs:
-                    evidence_list.append(ev)
+                for c in result.candidates:
+                    if not isinstance(c, Candidate):
+                        continue
+                    if upstream is not None:
+                        c = attrs.evolve(
+                            c,
+                            evidence_refs=upstream.evidence_refs + c.evidence_refs,
+                            diagnostics=upstream.diagnostics + c.diagnostics,
+                        )
+                        transformed_candidates.append(c)
+                    else:
+                        candidates.append(c)
+                evidence_list.extend(result.evidence)
+                for c in result.candidates:
+                    evidence_list.extend(c.evidence_refs)
+                diagnostics_list.extend(d for d in result.diagnostics if isinstance(d, Diagnostic))
+                self._evidence_collector.collect(result, state=state)
 
-            # Per-invocation diagnostics: keep at the field level
-            # (so the Reconciler can correlate with the candidate).
-            for d in result.diagnostics:
-                if isinstance(d, Diagnostic):
-                    diagnostics_list.append(d)
-
-            # Run-level collection (the evidence collector decides
-            # what to promote to the run level).
-            self._evidence_collector.collect(result, state=state)
+            if upstream_candidates[0] is not None:
+                candidates = transformed_candidates
+            if budget_exceeded:
+                break
 
             step_index += 1
 

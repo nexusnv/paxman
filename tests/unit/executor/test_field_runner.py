@@ -191,6 +191,144 @@ def test_chain_with_three_capabilities() -> None:
     assert [cand.value for cand in result.candidates] == ["B"]
 
 
+def test_handoff_step_replaces_upstream_value_and_preserves_evidence() -> None:
+    """An opt-in handoff step receives each prior value and retains its evidence."""
+    source_evidence = EvidenceRef(
+        capability_id="source",
+        capability_version="1.0",
+        field_path="f1",
+    )
+    source = _mock_capability(
+        capability_id="source",
+        result=CapabilityResult(
+            candidates=(Candidate(value="  ACME Corp  ", evidence_refs=(source_evidence,)),),
+        ),
+    )
+
+    class _TrimCapability:
+        spec = CapabilitySpec(
+            id="trim",
+            version="1.0",
+            input_types=("STRING",),
+            output_type="STRING",
+            cost_estimate=CostHint(),
+            tier=CapabilityTier.LOCAL_DETERMINISTIC,
+        )
+
+        def invoke(self, ctx: CapabilityContext) -> CapabilityResult:
+            value = ctx.config["value"]
+            assert isinstance(value, str)
+            evidence = EvidenceRef("trim", "1.0", ctx.field_path)
+            return CapabilityResult(
+                candidates=(Candidate(value=value.strip(), evidence_refs=(evidence,)),)
+            )
+
+    trim = _TrimCapability()
+    result = FieldRunner().run(
+        field_plan=_field_plan(
+            "f1",
+            _step("source"),
+            _step("trim", config={"input_from_candidate": True}),
+        ),
+        raw_input=b"ignored",
+        input_profile=None,
+        registry={
+            (source.spec.id, source.spec.version): source,
+            (trim.spec.id, trim.spec.version): trim,
+        },
+        state=ExecutionState(),
+    )
+
+    assert [candidate.value for candidate in result.candidates] == ["ACME Corp"]
+    assert [ref.capability_id for ref in result.candidates[0].evidence_refs] == ["source", "trim"]
+
+
+def test_handoff_step_runs_once_per_candidate_in_order() -> None:
+    """A hand-off transform preserves the source candidate ordering."""
+    source = _mock_capability(
+        capability_id="source",
+        result=CapabilityResult(candidates=(Candidate(value=" B "), Candidate(value=" A "))),
+    )
+
+    @attrs.define(slots=True)
+    class _StripCapability:
+        spec: CapabilitySpec = attrs.field(
+            factory=lambda: CapabilitySpec(
+                id="strip",
+                version="1.0",
+                input_types=("STRING",),
+                output_type="STRING",
+                cost_estimate=CostHint(),
+                tier=CapabilityTier.LOCAL_DETERMINISTIC,
+            )
+        )
+        values: list[str] = attrs.field(factory=list)
+
+        def invoke(self, ctx: CapabilityContext) -> CapabilityResult:
+            value = ctx.config["value"]
+            assert isinstance(value, str)
+            self.values.append(value)
+            return CapabilityResult(candidates=(Candidate(value=value.strip()),))
+
+    strip = _StripCapability()
+    result = FieldRunner().run(
+        field_plan=_field_plan(
+            "f1", _step("source"), _step("strip", config={"input_from_candidate": True})
+        ),
+        raw_input=b"ignored",
+        input_profile=None,
+        registry={
+            (source.spec.id, source.spec.version): source,
+            (strip.spec.id, strip.spec.version): strip,
+        },
+        state=ExecutionState(),
+    )
+
+    assert strip.values == [" B ", " A "]
+    assert [candidate.value for candidate in result.candidates] == ["B", "A"]
+    assert result.steps_executed == 3
+
+
+def test_handoff_failure_drops_only_the_affected_candidate() -> None:
+    """A failed transform does not discard independent hand-off candidates."""
+    source = _mock_capability(
+        capability_id="source",
+        result=CapabilityResult(candidates=(Candidate(value="bad"), Candidate(value="good"))),
+    )
+
+    class _SelectiveCapability:
+        spec = CapabilitySpec(
+            id="selective",
+            version="1.0",
+            input_types=("STRING",),
+            output_type="STRING",
+            cost_estimate=CostHint(),
+            tier=CapabilityTier.LOCAL_DETERMINISTIC,
+        )
+
+        def invoke(self, ctx: CapabilityContext) -> CapabilityResult:
+            if ctx.config["value"] == "bad":
+                raise CapabilityError("cannot transform")
+            return CapabilityResult(candidates=(Candidate(value="good"),))
+
+    selective = _SelectiveCapability()
+    result = FieldRunner().run(
+        field_plan=_field_plan(
+            "f1", _step("source"), _step("selective", config={"input_from_candidate": True})
+        ),
+        raw_input=b"ignored",
+        input_profile=None,
+        registry={
+            (source.spec.id, source.spec.version): source,
+            (selective.spec.id, selective.spec.version): selective,
+        },
+        state=ExecutionState(),
+    )
+
+    assert [candidate.value for candidate in result.candidates] == ["good"]
+    assert any(d.code is DiagnosticCode.CAPABILITY_INVOKE_FAILED for d in result.diagnostics)
+
+
 def test_chain_with_no_candidates_returns_unresolved() -> None:
     cap = _mock_capability(result=CapabilityResult(candidates=(), diagnostics=()))
     runner = FieldRunner()

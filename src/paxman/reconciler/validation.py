@@ -36,8 +36,8 @@ The :class:`ValidationResult` data class carries the outcome of
 both checks. The Reconciler uses the result to:
 
 - Filter out candidates that match prompt-injection patterns.
-- Record a constraint-pass / constraint-fail diagnostic on the
-  :class:`~paxman.reconciler.truth.ResolvedResult`.
+- Reject candidates with an incompatible field type or failed constraint
+  before they reach merge and confidence assignment.
 - Set the ``has_validation_pass`` flag for the confidence assignment.
 """
 
@@ -50,7 +50,8 @@ import attrs
 
 from paxman.capabilities.result import Candidate
 from paxman.contract._types import ConstraintKind
-from paxman.contract.canonical import CanonicalField
+from paxman.contract.canonical import CanonicalField, MoneyValue
+from paxman.types import FieldType
 from paxman.validation.constraints import check_constraint as _check_constraint
 
 __all__ = [
@@ -156,6 +157,34 @@ def _is_constraint_like(obj: object) -> bool:
     return hasattr(obj, "kind") and hasattr(obj, "params")
 
 
+def _matches_field_type(value: object, field_type: FieldType) -> bool:
+    """Return whether *value* is compatible with a canonical field type.
+
+    This is an internal eligibility gate, not coercion. Sprint 1 rejects
+    values that require interpretation; typed conversion belongs to a later
+    recovery sprint.
+    """
+    if field_type is FieldType.STRING:
+        return isinstance(value, str)
+    if field_type is FieldType.INTEGER:
+        return type(value) is int
+    if field_type is FieldType.DECIMAL:
+        return (isinstance(value, (int, float)) and not isinstance(value, bool)) or (
+            type(value).__module__ == "decimal" and type(value).__name__ == "Decimal"
+        )
+    if field_type is FieldType.BOOLEAN:
+        return isinstance(value, bool)
+    if field_type in (FieldType.DATE, FieldType.ENUM):
+        return isinstance(value, str)
+    if field_type is FieldType.OBJECT:
+        return isinstance(value, dict)
+    if field_type is FieldType.ARRAY:
+        return isinstance(value, (list, tuple))
+    if field_type is FieldType.MONEY:
+        return isinstance(value, MoneyValue)
+    return False
+
+
 def validate_candidate(
     candidate: Candidate,
     *,
@@ -188,6 +217,17 @@ def validate_candidate(
     injection = is_prompt_injection(candidate.value)
 
     failures: list[dict[str, typing.Any]] = []
+    if not _matches_field_type(candidate.value, field.type):
+        failures.append(
+            {
+                "kind": "field_type",
+                "params": {"expected": field.type.name},
+                "reason": (
+                    f"value is incompatible with {field.type.name} "
+                    f"(got {type(candidate.value).__name__})"
+                ),
+            }
+        )
     for c in field.constraints:
         if not _is_constraint_like(c):
             failures.append(
@@ -234,10 +274,9 @@ def validate_inference_candidates(
     - **Prompt-injection candidates are dropped** (the Reconciler
       never accepts them). The caller is expected to record a
       diagnostic noting the rejection.
-    - **Candidates that fail constraints are kept** but flagged —
-      the Reconciler still considers them, but records the
-      constraint-fail diagnostic and downgrades confidence.
-    - **Candidates that pass both checks are kept unchanged.**
+    - **Candidates that fail field-type or constraint validation are
+      dropped.** They are not eligible to influence merge or confidence.
+    - **Candidates that pass all checks are kept unchanged.**
 
     This function does not modify the input candidates; it returns
     a new tuple.
@@ -261,7 +300,8 @@ def validate_inference_candidates(
     for c in candidates:
         if not isinstance(c, Candidate):
             raise TypeError(f"all candidates must be Candidate, got {type(c).__name__}")
-        if is_prompt_injection(c.value):
+        result = validate_candidate(c, field=field)
+        if result.is_prompt_injection or not result.passed:
             continue
         kept.append(c)
     return tuple(kept)

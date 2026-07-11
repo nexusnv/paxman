@@ -15,9 +15,11 @@ contract, the :func:`reconcile` function executes the following steps:
 
 1. **Look up the field's** ``CandidateResult`` (by ``field_id``).
 2. **No candidates?** → :func:`~paxman.reconciler.unresolved.apply_fallback`.
-3. **Filter prompt-injection candidates** via
+3. **Filter ineligible candidates** via
    :func:`~paxman.reconciler.validation.validate_inference_candidates`.
-   If all candidates are filtered, fall back to
+   Candidates with a mismatched field type, failed constraint, or
+   prompt-injection signal cannot influence merge or confidence. If all
+   candidates are filtered, fall back to
    :func:`~paxman.reconciler.unresolved.apply_fallback`.
 4. **Detect conflicts** via
    :func:`~paxman.reconciler.conflict.detect_conflicts`.
@@ -63,7 +65,11 @@ from paxman.reconciler.conflict import (
 from paxman.reconciler.merge import MergeStrategy, merge_candidates
 from paxman.reconciler.truth import ResolvedResult
 from paxman.reconciler.unresolved import apply_fallback
-from paxman.reconciler.validation import validate_candidate, validate_inference_candidates
+from paxman.reconciler.validation import (
+    is_prompt_injection,
+    validate_candidate,
+    validate_inference_candidates,
+)
 
 __all__ = ["reconcile"]
 
@@ -74,6 +80,7 @@ def _result_for_field(
     *,
     strategy: MergeStrategy,
     currency_policy: CurrencyPolicy,
+    eligibility_diagnostics: tuple[Diagnostic, ...] = (),
 ) -> ResolvedResult:
     """Produce a :class:`ResolvedResult` for one field with candidates.
 
@@ -100,7 +107,7 @@ def _result_for_field(
 
     # Step 9: validate constraints (if the field has any) before assigning confidence.
     has_validation_pass = True
-    validation_diagnostics: list[Diagnostic] = []
+    validation_diagnostics: list[Diagnostic] = list(eligibility_diagnostics)
     if field.constraints and merged_value is not None:
         # Find the first candidate whose value matches the merged value and
         # validate it. If the merged value was produced by a non-Candidate
@@ -160,7 +167,11 @@ def _result_for_field(
     band = float_to_band(confidence)
 
     # Step 8: threshold check.
-    if confidence < field.confidence_threshold or merged_value is None:
+    if (
+        confidence < field.confidence_threshold
+        or merged_value is None
+        or (field.evidence_required and not merged_evidence)
+    ):
         diags = list(validation_diagnostics)
         if conflict is not None:
             diags.append(
@@ -185,6 +196,8 @@ def _result_for_field(
                 "below_threshold"
                 if confidence < field.confidence_threshold
                 else "no_mergeable_value"
+                if merged_value is None
+                else "evidence_required"
             ),
             diagnostics=tuple(diags),
             evidence_refs=merged_evidence,
@@ -308,11 +321,36 @@ def reconcile(
             out.append(apply_fallback(field=field, reason="no_candidates"))
             continue
 
-        # Step 3: filter prompt-injection candidates.
+        # Step 3: retain only candidates that meet the field's eligibility
+        # contract (type, constraints, and prompt-injection screening).
         filtered = validate_inference_candidates(cr.candidates, field=field)
+        rejected_count = len(cr.candidates) - len(filtered)
+        eligibility_diagnostics: tuple[Diagnostic, ...] = ()
+        if rejected_count:
+            eligibility_diagnostics = (
+                Diagnostic(
+                    code=DiagnosticCode.VALIDATION_FAILED,
+                    severity=DiagnosticSeverity.WARNING,
+                    message=f"validation: rejected {rejected_count} ineligible candidate(s)",
+                    context={
+                        "field_path": field.path,
+                        "rejected_candidates": rejected_count,
+                    },
+                ),
+            )
         if not filtered:
-            # All candidates were prompt-injection: explicit UNRESOLVED.
-            out.append(apply_fallback(field=field, reason="prompt_injection"))
+            # No eligible candidates remain after validation.
+            out.append(
+                apply_fallback(
+                    field=field,
+                    reason=(
+                        "prompt_injection"
+                        if all(is_prompt_injection(candidate.value) for candidate in cr.candidates)
+                        else "no_eligible_candidates"
+                    ),
+                    diagnostics=eligibility_diagnostics,
+                )
+            )
             continue
 
         out.append(
@@ -321,6 +359,7 @@ def reconcile(
                 filtered,
                 strategy=strategy,
                 currency_policy=currency_policy,
+                eligibility_diagnostics=eligibility_diagnostics,
             )
         )
 

@@ -354,6 +354,21 @@ class TestValidateCandidateInjection:
 
 
 # ---------------------------------------------------------------------------
+# validate_candidate — field-type eligibility
+# ---------------------------------------------------------------------------
+
+
+class TestValidateCandidateFieldType:
+    def test_rejects_value_with_wrong_field_type(self) -> None:
+        """A candidate must match the canonical field type before merge."""
+        result = validate_candidate(Candidate(value="12"), field=_int_field())
+
+        assert result.passed is False
+        assert result.failures[0]["kind"] == "field_type"
+        assert "INTEGER" in result.failures[0]["reason"]
+
+
+# ---------------------------------------------------------------------------
 # validate_candidate — non-Constraint-like objects
 # ---------------------------------------------------------------------------
 
@@ -465,6 +480,20 @@ class TestValidateInferenceCandidates:
         )
         result = validate_inference_candidates(cands, field=_str_field())
         assert result == cands
+
+    def test_filters_constraint_and_type_failures(self) -> None:
+        """Only candidates eligible for the field reach reconciliation."""
+        field = _int_field(
+            constraints=(Constraint(kind=ConstraintKind.MIN_VALUE, params={"min": 1}),),
+        )
+        valid = Candidate(value=2)
+
+        result = validate_inference_candidates(
+            (Candidate(value="2"), Candidate(value=0), valid),
+            field=field,
+        )
+
+        assert result == (valid,)
 
     def test_empty_candidates(self) -> None:
         result = validate_inference_candidates((), field=_str_field())

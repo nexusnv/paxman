@@ -1542,3 +1542,37 @@ def test_format_hints_error_context() -> None:
         "index": 1,
         "raw_item": "pdf",
     }
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_cleanup_round_trip() -> None:
+    """Explicit cleanup is canonicalized and retained on Dict DSL export."""
+    adapter = _adapter()
+    canonical = adapter.adapt(
+        {
+            "id": "c1",
+            "fields": [
+                {
+                    "name": "supplier",
+                    "type": "STRING",
+                    "required": True,
+                    "cleanup": [
+                        {"capability": "trim_extraction"},
+                        {"capability": "case_normalization", "config": {"mode": "lower"}},
+                    ],
+                }
+            ],
+        }
+    )
+
+    supplier = canonical.fields[0]
+    assert [step.capability_id for step in supplier.cleanup_steps] == [
+        "trim_extraction",
+        "case_normalization",
+    ]
+    assert supplier.cleanup_steps[1].config == {"mode": "lower"}
+    assert adapter.export(canonical)["fields"][0]["cleanup"] == [
+        {"capability": "trim_extraction"},
+        {"capability": "case_normalization", "config": {"mode": "lower"}},
+    ]

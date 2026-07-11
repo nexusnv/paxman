@@ -91,6 +91,7 @@ from paxman.contract import (
     FormatHintValidationError,
     parse_format_hints,
 )
+from paxman.contract._cleanup import CleanupStep, CleanupValidationError, parse_cleanup
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -482,6 +483,7 @@ class JsonSchemaAdapter:
             default=default,
             constraints=tuple(constraints),
             format_hints=self._extract_format_hints(name, schema, contract_id),
+            cleanup_steps=self._extract_cleanup(name, schema, contract_id),
         )
 
     def _adapt_enum_property(
@@ -517,6 +519,7 @@ class JsonSchemaAdapter:
             ),
             enum_values=enum_values,
             format_hints=self._extract_format_hints(name, schema, contract_id),
+            cleanup_steps=self._extract_cleanup(name, schema, contract_id),
         )
 
     def _adapt_date_property(
@@ -538,6 +541,7 @@ class JsonSchemaAdapter:
             default=schema.get("default"),
             constraints=(),
             format_hints=self._extract_format_hints(name, schema, contract_id),
+            cleanup_steps=self._extract_cleanup(name, schema, contract_id),
         )
 
     def _adapt_money_property(
@@ -601,6 +605,7 @@ class JsonSchemaAdapter:
             default=default,
             constraints=(Constraint(kind=ConstraintKind.ISO_4217, params={}),),
             format_hints=self._extract_format_hints(name, schema, contract_id),
+            cleanup_steps=self._extract_cleanup(name, schema, contract_id),
         )
 
     @staticmethod
@@ -619,6 +624,20 @@ class JsonSchemaAdapter:
         try:
             return parse_format_hints(schema.get("x-paxman-format-hints"), field_name=name)
         except FormatHintValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"contract_id": contract_id, "property": name, **exc.context},
+            ) from exc
+
+    @staticmethod
+    def _extract_cleanup(
+        name: str, schema: dict[str, typing.Any], contract_id: str
+    ) -> tuple[CleanupStep, ...]:
+        """Extract x-paxman-cleanup from a JSON Schema property."""
+        try:
+            return parse_cleanup(schema.get("x-paxman-cleanup"), field_name=name)
+        except CleanupValidationError as exc:
             raise InvalidContractError(
                 str(exc),
                 error_code=exc.error_code,
@@ -804,6 +823,8 @@ class JsonSchemaAdapter:
         """Write the ``x-paxman-format-hints`` extension onto *out* if *f* carries any hints."""
         if f.format_hints:
             out["x-paxman-format-hints"] = [h.value for h in f.format_hints]
+        if f.cleanup_steps:
+            out["x-paxman-cleanup"] = [step.to_wire() for step in f.cleanup_steps]
 
     @staticmethod
     def _export_constraint(c: Constraint, schema: dict[str, typing.Any]) -> None:

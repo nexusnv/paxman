@@ -1474,3 +1474,35 @@ def test_format_hints_export_round_trip() -> None:
     # amount has no format_hints; the export must not include the
     # extension key for it.
     assert "x-paxman-format-hints" not in exported_props.get("amount", {})
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_cleanup_extension_export_round_trip() -> None:
+    """x-paxman-cleanup is canonicalized and exported unchanged."""
+    from paxman.contract.adapters.json_schema import JsonSchemaAdapter
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "supplier": {
+                "type": "string",
+                "x-paxman-cleanup": [
+                    {"capability": "case_normalization", "config": {"mode": "lower"}},
+                    {"capability": "trim_extraction"},
+                ],
+            },
+        },
+        "required": ["supplier"],
+    }
+    adapter = JsonSchemaAdapter()
+    canonical = adapter.adapt(schema)
+
+    assert [step.capability_id for step in canonical.fields[0].cleanup_steps] == [
+        "case_normalization",
+        "trim_extraction",
+    ]
+    assert (
+        adapter.export(canonical)["properties"]["supplier"]["x-paxman-cleanup"]
+        == schema["properties"]["supplier"]["x-paxman-cleanup"]
+    )

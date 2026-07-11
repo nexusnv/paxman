@@ -756,3 +756,18 @@ def test_format_hints_must_be_list() -> None:
     with pytest.raises(InvalidContractError) as exc_info:
         adapter.adapt(M)
     assert exc_info.value.error_code == "INVALID_FORMAT_HINT"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_cleanup_from_json_schema_extra() -> None:
+    """Pydantic carries x-paxman-cleanup through json_schema_extra."""
+    from pydantic import BaseModel, Field
+
+    class M(BaseModel):
+        supplier: str = Field(
+            json_schema_extra={"x-paxman-cleanup": [{"capability": "trim_extraction"}]}
+        )
+
+    canonical = PydanticAdapter().adapt(M)
+    assert canonical.fields[0].cleanup_steps[0].capability_id == "trim_extraction"

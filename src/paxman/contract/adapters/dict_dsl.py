@@ -63,6 +63,7 @@ from paxman.contract import (
     FormatHintValidationError,
     parse_format_hints,
 )
+from paxman.contract._cleanup import CleanupStep, CleanupValidationError, parse_cleanup
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -480,6 +481,7 @@ class DictDSLAdapter:
             default=default_value,
             enum_values=enum_values,
             format_hints=self._parse_format_hints(raw, contract_id=contract_id, name=name),
+            cleanup_steps=self._parse_cleanup(raw, contract_id=contract_id, name=name),
         )
 
     # =====================================================================
@@ -510,6 +512,20 @@ class DictDSLAdapter:
         try:
             return parse_format_hints(raw.get("format_hints"), field_name=name)
         except FormatHintValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"contract_id": contract_id, **exc.context},
+            ) from exc
+
+    @staticmethod
+    def _parse_cleanup(
+        raw: typing.Mapping[str, typing.Any], *, contract_id: str, name: str
+    ) -> tuple[CleanupStep, ...]:
+        """Parse explicit field cleanup declarations."""
+        try:
+            return parse_cleanup(raw.get("cleanup"), field_name=name)
+        except CleanupValidationError as exc:
             raise InvalidContractError(
                 str(exc),
                 error_code=exc.error_code,
@@ -842,6 +858,8 @@ class DictDSLAdapter:
             out["constraints"] = [DictDSLAdapter._export_constraint(c) for c in f.constraints]
         if f.format_hints:
             out["format_hints"] = [h.value for h in f.format_hints]
+        if f.cleanup_steps:
+            out["cleanup"] = [step.to_wire() for step in f.cleanup_steps]
         if f.default is not None:
             out["default"] = DictDSLAdapter._export_default(f.default, f.type)
         if f.enum_values is not None:

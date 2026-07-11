@@ -97,6 +97,7 @@ from paxman.contract import (
     FormatHintValidationError,
     parse_format_hints,
 )
+from paxman.contract._cleanup import CleanupStep, CleanupValidationError, parse_cleanup
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -394,6 +395,7 @@ class PydanticAdapter:
         constraints.extend(self._constraints_from_field(name, field_info, field_type, model_cls))
         # Extract format_hints from json_schema_extra (x-paxman-format-hints).
         format_hints = self._extract_format_hints(name, field_info, model_cls)
+        cleanup_steps = self._extract_cleanup(name, field_info, model_cls)
         # Stable field id.
         fid = f"field_{model_cls.__name__}_{name}"
         return CanonicalField(
@@ -408,6 +410,7 @@ class PydanticAdapter:
             constraints=tuple(constraints),
             enum_values=enum_values,
             format_hints=format_hints,
+            cleanup_steps=cleanup_steps,
         )
 
     @staticmethod
@@ -452,6 +455,25 @@ class PydanticAdapter:
         try:
             return parse_format_hints(extra.get("x-paxman-format-hints"), field_name=name)
         except FormatHintValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"model": model_cls.__name__, **exc.context},
+            ) from exc
+
+    @staticmethod
+    def _extract_cleanup(
+        name: str,
+        field_info: pydantic.fields.FieldInfo,
+        model_cls: type,
+    ) -> tuple[CleanupStep, ...]:
+        """Extract x-paxman-cleanup from Pydantic json_schema_extra."""
+        extra = field_info.json_schema_extra
+        if extra is None or not isinstance(extra, dict):
+            return ()
+        try:
+            return parse_cleanup(extra.get("x-paxman-cleanup"), field_name=name)
+        except CleanupValidationError as exc:
             raise InvalidContractError(
                 str(exc),
                 error_code=exc.error_code,
@@ -588,6 +610,12 @@ class PydanticAdapter:
             if not isinstance(extra, dict):
                 extra = {}
             extra["x-paxman-format-hints"] = [h.value for h in f.format_hints]
+            field_kwargs["json_schema_extra"] = extra
+        if f.cleanup_steps:
+            extra = field_kwargs.get("json_schema_extra", {})
+            if not isinstance(extra, dict):
+                extra = {}
+            extra["x-paxman-cleanup"] = [step.to_wire() for step in f.cleanup_steps]
             field_kwargs["json_schema_extra"] = extra
         if f.enum_values is not None:
             # Override annotation with a Literal of the allowed values.

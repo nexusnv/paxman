@@ -104,44 +104,26 @@ not in dict-iteration order. The plan encodes order explicitly.
 
 ---
 
-## 3. The 7-step heuristic chain
+## 3. Resolution-safe planning
 
-For each required field, the planner walks this chain in order (per
-[ARCHITECTURE.md §4.2](../reference/architecture.md) and the Oracle M7
-clarification):
+The planner must not treat the presence of a value-shaped document as
+evidence that it belongs to a particular field. In Sprint 0, an
+automatic plan contains a step only when the contract supplies
+field-specific extraction configuration through a matching
+`format_hints` value:
 
-1. **Explicit evidence.** A planner rule on the `InputProfile` that
-   decides whether the input already contains the field's value
-   (e.g. a `KEY: VALUE` line in a `text/plain` payload for a `STRING`
-   field tagged `header`).
-2. **Local deterministic extraction.** `regex_extraction`,
-   `validation` (and any other `LOCAL_DETERMINISTIC`-tier
-   capabilities registered for this `output_type`).
-3. **Structured lookup.** `lookup` (V1: in-memory dict backend).
-4. **Derived computation.** Formula over resolved fields (V2).
-5. **Local inference.** `inference` with a local model.
-6. **Remote inference.** `inference` with a remote provider.
-7. **`UNRESOLVED`.** Terminal; no chain. The field's
-   `CandidateResult.status` is `UNRESOLVED`.
+1. A field declares `format_hints` such as `csv`, `json`, or `xml`.
+2. A registered raw-input extractor declares the same format hint.
+3. The planner emits that extractor with deterministic field-specific
+   configuration (`column`, JSON Pointer, or XPath).
+4. If no such configuration exists, the chain is empty and the field
+   is explicitly `UNRESOLVED`.
 
-Each step picks **the highest-scoring capability** for the field's
-`output_type` from the available registry, subject to:
-
-- **Policy gates.** `Policy.allow_remote_inference=False` drops step 6.
-  `Policy.allow_local_inference=False` drops step 5.
-- **Budget gates.** A `Budget.max_total_cost_usd < Decimal("0.001")`
-  drops both 5 and 6 (inference's minimum USD cost is `0.001`).
-- **Capability availability.** A step with no registered capability
-  for the field's `output_type` is dropped.
-- **Step config.** For `regex_extraction`, the planner must have a
-  pattern (read from the field's `constraints` or a
-  `regex` semantic tag). If no pattern is available, the step is
-  skipped.
-
-The chain stops at the first step that produces a non-empty
-candidate set. If all steps are exhausted without producing a
-candidate, the plan emits an `UNRESOLVED` `CandidateResult` for the
-field.
+`text_extraction` returns a document payload, not a field value.
+`regex_extraction` requires a pattern; cleanup and validation require
+a prior candidate; lookup requires a table; and the built-in inference
+provider is a stub. None is eligible for automatic field resolution
+until the planned typed candidate hand-off model exists.
 
 ---
 

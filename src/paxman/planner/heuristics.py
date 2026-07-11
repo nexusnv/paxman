@@ -431,44 +431,18 @@ def build_capability_chain(
     """
     chain: list[FieldPlanStep] = []
 
-    # Step 1: explicit evidence — short-circuit with text_extraction.
-    if has_explicit_evidence(field, profile):
-        # The planner emits a text_extraction step (V1's "source")
-        # IF text_extraction is registered. If not, the chain is
-        # still empty (no text_extraction available).
-        # Pick the highest-version ``text_extraction`` from the
-        # supplied registry (or the global one when ``registry`` is
-        # None). This avoids hard-pinning to ``"1.0"`` so future
-        # versions are picked up automatically.
-        if registry is None:
-            registry = all_capabilities()
-        spec: object = None
-        chosen_key: tuple[str, str] | None = None
-        # Compare versions numerically (semver-aware) so that
-        # "1.10" beats "1.9". A naive tuple comparison would do
-        # lexicographic ordering, which gets semver wrong.
-        for key, _cap in registry.items():
-            if key[0] != "text_extraction":
-                continue
-            if chosen_key is None or _version_gte(key[1], chosen_key[1]):
-                chosen_key = key
-        if chosen_key is not None:
-            spec = getattr(registry[chosen_key], "spec", None)
-        if (
-            isinstance(spec, CapabilitySpec)
-            and _accepts_field_type(spec, field)
-            and chosen_key is not None
-        ):
-            chain.append(
-                FieldPlanStep(
-                    capability_id="text_extraction",
-                    capability_version=chosen_key[1],
-                    config={"content_type": profile.input_type},
-                    note="explicit-evidence step 1 (planner rule on InputProfile)",
-                )
-            )
+    # Only an extractor with field-specific configuration can create a
+    # field candidate. A non-empty raw document is evidence about the
+    # document, not evidence that it is the value of an arbitrary field.
+    #
+    # The remaining V1 built-ins require configuration or a prior candidate:
+    # text_extraction returns document text, regex_extraction needs a pattern,
+    # cleanup and validation need ``config["value"]``, lookup needs a table,
+    # and inference's bundled provider is a stub. They are therefore not
+    # eligible for automatic field resolution. Sprint 2 will introduce typed
+    # candidate hand-off for configured multi-step chains.
 
-    # Step 1.5: format-aware tier-1 dispatch. If the field declares
+    # Format-aware tier-1 dispatch. If the field declares
     # ``format_hints`` and a registered capability declares a
     # matching ``format_hint``, prepend that capability at the
     # head of the chain. This is the V1.1.0+ format-aware
@@ -479,22 +453,6 @@ def build_capability_chain(
     format_aware_steps = select_format_aware(field, registry)
     if format_aware_steps:
         chain = list(format_aware_steps) + chain
-
-    # Step 2: local deterministic.
-    chain.extend(select_local_deterministic(field, registry))
-
-    # Step 3: structured lookup.
-    chain.extend(select_structured_lookup(field, registry))
-
-    # Step 4: derived computation — V2 feature, skipped in V1.
-
-    # Step 5: local inference (gated by policy + budget).
-    if policy.allow_local_inference and not _budget_excludes_inference(budget):
-        chain.extend(select_local_inference(field, registry))
-
-    # Step 6: remote inference (gated by policy + budget).
-    if policy.allow_remote_inference and not _budget_excludes_inference(budget):
-        chain.extend(select_remote_inference(field, registry))
 
     return tuple(chain)
 

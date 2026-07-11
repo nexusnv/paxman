@@ -244,6 +244,22 @@ class TestReconcileEmptyPaths:
         results = reconcile((), contract=contract)
         assert results[0].field_type_name == "DECIMAL"
 
+    def test_evidence_required_field_rejects_candidate_without_evidence(self) -> None:
+        """Evidence-required fields cannot resolve from an unsupported candidate."""
+        field = _field(
+            "f1",
+            "name",
+            threshold=0.5,
+            evidence_required=True,
+        )
+        results = reconcile(
+            (_candidate_result(field_id="f1", candidates=(_candidate("ACME"),)),),
+            contract=_contract(field),
+        )
+
+        assert results[0].status == "UNRESOLVED"
+        assert results[0].value is None
+
     def test_missing_candidate_result_entry(self) -> None:
         """A field with no CandidateResult entry at all → UNRESOLVED."""
         f1 = _field("f1", "a")

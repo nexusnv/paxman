@@ -35,6 +35,24 @@ The Reconciler is the **only** subsystem that:
 - Detects conflicts and produces a `CONFLICT` diagnostic.
 - Handles MONEY currency matching and FX.
 
+### Resolution eligibility
+
+Before merge or confidence assignment, a candidate must be eligible for
+its target field. In the current recovery contract, eligibility requires
+all of the following:
+
+- Its Python value matches the canonical field type.
+- It passes every field constraint.
+- It is not flagged as prompt-injection content.
+
+Rejected candidates do not affect conflict detection, merge selection, or
+confidence. The resolved result records a `VALIDATION_FAILED` diagnostic
+when candidates were rejected. If a field sets `evidence_required=True`,
+the merged result must also retain evidence; otherwise it is unresolved.
+
+Exact evidence-path matching and a public proof model remain deferred until
+after the six-sprint recovery.
+
 The Reconciler is **declarative**: it does not invoke capabilities,
 does not read the raw input, and does not see external schemas. It
 takes `CandidateResult[]` and a `CanonicalContract` and produces

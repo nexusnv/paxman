@@ -11,11 +11,7 @@ import pytest
 
 from paxman.budget import Budget, Policy
 from paxman.capabilities.registry import register, reset
-from paxman.capabilities.spec import (
-    CapabilitySpec,
-    CapabilityTier,
-    CostHint,
-)
+from paxman.capabilities.spec import CapabilitySpec
 from paxman.capabilities.v1.inference import InferenceCapability
 from paxman.capabilities.v1.regex_extraction import RegexExtractionCapability
 from paxman.capabilities.v1.text_extraction import TextExtractionCapability
@@ -129,14 +125,12 @@ def test_explicit_evidence_for_non_string_field_requires_html() -> None:
 # --- build_capability_chain ----------------------------------------------
 
 
-def test_chain_for_text_field_includes_text_extraction_first() -> None:
-    """A STRING field with text input gets text_extraction (step 1) + others."""
+def test_chain_for_unconfigured_text_field_is_empty() -> None:
+    """A raw text payload is not field-specific extraction evidence."""
     field = _field("supplier_name", FieldType.STRING)
     profile = make_profile(b"ACME Corp")
     chain = build_capability_chain(field, profile, Policy(), None)
-    assert len(chain) > 0
-    # Step 1: text_extraction.
-    assert chain[0].capability_id == "text_extraction"
+    assert chain == ()
 
 
 def test_chain_excludes_remote_inference_when_policy_disallows() -> None:
@@ -201,26 +195,20 @@ def test_field_plan_carries_threshold() -> None:
     assert fp.field_id == "f1"
 
 
-def test_field_plan_for_empty_input_skips_explicit_evidence() -> None:
-    """An empty input skips step 1 (text_extraction) but steps 2-6
-    still run, so the chain is non-empty."""
+def test_field_plan_for_empty_input_has_no_eligible_extractor() -> None:
+    """An empty input without a configured extractor is unresolved."""
     field = _field("supplier_name", FieldType.STRING)
     profile = make_profile(b"")
     fp = build_field_plan(field, profile, Policy(), None)
-    # The chain still has steps 2-6 (regex_extraction, validation, ...).
-    # Step 1 is omitted because ``has_explicit_evidence`` is False.
-    assert len(fp.capability_chain) > 0
-    # text_extraction is NOT the first step (no explicit evidence).
-    assert fp.capability_chain[0].capability_id != "text_extraction"
+    assert fp.capability_chain == ()
 
 
-def test_field_plan_for_non_empty_input_emits_chain() -> None:
-    """A non-empty input emits at least one step (text_extraction first)."""
+def test_field_plan_for_nonempty_unconfigured_text_has_no_eligible_extractor() -> None:
+    """A non-empty raw document is not a field-specific candidate."""
     field = _field("supplier_name", FieldType.STRING)
     profile = make_profile(b"ACME Corp")
     fp = build_field_plan(field, profile, Policy(), None)
-    assert len(fp.capability_chain) > 0
-    assert fp.capability_chain[0].capability_id == "text_extraction"
+    assert fp.capability_chain == ()
 
 
 # --- plan (top-level) ----------------------------------------------------
@@ -310,18 +298,15 @@ def test_plan_propagates_contract_id() -> None:
     assert p.contract_id == "my-contract"
 
 
-def test_plan_invoice_use_case_picks_regex_extraction_first() -> None:
-    """Per Sprint 3 risk register: for the canonical invoice use case
-    (supplier_name, STRING, text input), the planner should prefer
-    regex_extraction over more expensive options."""
+def test_plan_invoice_without_extraction_configuration_is_empty() -> None:
+    """The planner refuses to guess an invoice field from raw text."""
     contract = CanonicalContract(
         id="invoice",
         fields=(_field("supplier_name", FieldType.STRING, required=True),),
     )
     profile = make_profile(b"ACME Corp\nInvoice #1234\nTotal: $1,234.56")
     p = plan(contract, profile)
-    # Step 1 (text_extraction) is the planner's first emission.
-    assert p.field_plans[0].capability_chain[0].capability_id == "text_extraction"
+    assert p.field_plans[0].capability_chain == ()
 
 
 def test_plan_uses_effective_policy_including_contract_overrides() -> None:
@@ -411,69 +396,3 @@ def test_version_gte_basic() -> None:
     assert _version_gte("2.0", "2.0")
     assert not _version_gte("1.9", "1.10")
     assert _version_gte("1.0", "1.0-rc")  # non-numeric parts become 0
-
-
-def test_build_capability_chain_picks_highest_semver_text_extraction() -> None:
-    """The heuristic picks the semver-highest text_extraction, not the lex-highest.
-
-    Regression test: a naive ``key > chosen_key`` would rank
-    ``"1.10"`` below ``"1.9"`` because ``"1.10" < "1.9"`` as strings.
-    The semver-aware helper must pick ``"1.10"``.
-    """
-    from paxman.capabilities.base import CapabilityContext
-    from paxman.capabilities.result import CapabilityResult
-
-    class _SpecCap:
-        """Minimal capability wrapper that exposes a custom spec."""
-
-        def __init__(self, spec: CapabilitySpec) -> None:
-            self._spec = spec
-
-        @property
-        def spec(self) -> CapabilitySpec:
-            return self._spec
-
-        def invoke(self, ctx: CapabilityContext) -> CapabilityResult:  # pragma: no cover
-            return CapabilityResult()
-
-    reset()
-    register(
-        _SpecCap(
-            CapabilitySpec(
-                id="text_extraction",
-                version="1.9",
-                cost_estimate=CostHint(0, 5, 0.0),
-                tier=CapabilityTier.LOCAL_DETERMINISTIC,
-            )
-        )
-    )
-    register(
-        _SpecCap(
-            CapabilitySpec(
-                id="text_extraction",
-                version="1.10",
-                cost_estimate=CostHint(0, 5, 0.0),
-                tier=CapabilityTier.LOCAL_DETERMINISTIC,
-            )
-        )
-    )
-    field = CanonicalField(
-        id="f1",
-        path="f1",
-        name="f1",
-        type=FieldType.STRING,
-        required=True,
-    )
-    profile = make_profile(b"ACME Corp")
-    chain = build_capability_chain(field, profile, Policy(), None)
-    # Find the text_extraction step in the chain.
-    text_steps = [s for s in chain if s.capability_id == "text_extraction"]
-    assert text_steps, "expected a text_extraction step"
-    # The semver-highest "1.10" must win over "1.9".
-    assert text_steps[0].capability_version == "1.10"
-    reset()
-    # Re-register the real V1 capability so other tests are unaffected.
-    register(RegexExtractionCapability())
-    register(ValidationCapability())
-    register(TextExtractionCapability())
-    register(InferenceCapability())

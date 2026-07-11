@@ -16,6 +16,16 @@ more **candidates** for a field. Capabilities do not assign
 confidence (per [ADR-0005](../adr/0005-confidence-ownership.md));
 they are tool calls; the Reconciler grades their output.
 
+> **Resolution safety (Sprint 0).** A capability is not automatically
+> eligible to resolve a field merely because it can read the input or
+> returns a string. `paxman.normalize()` automatically dispatches only
+> field-specific format extractors configured by a matching
+> `format_hints` value. Plain text, an unconfigured regex, lookup,
+> inference stub, validation, and cleanup transforms cannot resolve a
+> field on their own; the field is reported as `UNRESOLVED`. This is a
+> deliberate safety boundary: document text is not proof that it is the
+> value of every contract field.
+
 This document explains the V1 capability surface, the capability
 metadata model, the cost model, and the boundary rules that
 capabilities must respect.
@@ -68,8 +78,9 @@ The V1.1.0 format extractors (`json_path_extraction`, `csv_extraction`,
 `xpath_extraction`) understand structured input bytes. The planner
 auto-dispatches to them when the field declares a matching
 `format_hints` value and a registered capability carries a matching
-`format_hint`. The default is unchanged: a field with no
-`format_hints` is dispatched exactly as on V1.0.0.
+`format_hint`. A field with no `format_hints` has no automatically
+eligible raw-input extractor and is reported as unresolved unless a
+future configured extraction path is available.
 
 **The opt-in contract.** A field declares
 `format_hints: tuple[FormatHint, ...]` on the `CanonicalField`. A

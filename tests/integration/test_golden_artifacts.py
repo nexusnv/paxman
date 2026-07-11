@@ -238,21 +238,9 @@ def test_goldens_have_replay_hashes() -> None:
     "name",
     GOLDEN_FIXTURES_LIST,
 )
-def test_golden_capability_versions_includes_validation(name: str) -> None:
-    """Every golden includes ``validation`` in ``capability_versions``.
-
-    Regression test for the fix: previously, validation evidence was
-    dropped by ``apply_fallback()`` when ``merged_value is None``,
-    causing ``validation`` to be absent from ``capability_versions``.
-    This made the ``replay_hash`` identical whether or not capabilities
-    were registered, defeating the replay-isolation test.
-    """
+def test_golden_capability_versions_is_empty_without_an_extraction_plan(name: str) -> None:
+    """An unresolved field records no capability that the plan did not invoke."""
     golden = _load_golden(name)
     cv = golden.get("capability_versions", {})
     assert isinstance(cv, dict)
-    assert "validation" in cv, (
-        f"Golden {name} is missing 'validation' in capability_versions. Got: {cv}"
-    )
-    assert cv["validation"] == "1.0", (
-        f"Golden {name} has wrong validation version: {cv['validation']}"
-    )
+    assert cv == {}, f"Golden {name} has unexpected capability versions: {cv}"

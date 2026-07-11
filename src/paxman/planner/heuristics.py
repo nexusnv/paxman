@@ -439,8 +439,8 @@ def build_capability_chain(
     # text_extraction returns document text, regex_extraction needs a pattern,
     # cleanup and validation need ``config["value"]``, lookup needs a table,
     # and inference's bundled provider is a stub. They are therefore not
-    # eligible for automatic field resolution. Sprint 2 will introduce typed
-    # candidate hand-off for configured multi-step chains.
+    # eligible for automatic field resolution. Sprint 2 introduced candidate
+    # hand-off for the configured multi-step chains appended below.
 
     # Format-aware tier-1 dispatch. If the field declares
     # ``format_hints`` and a registered capability declares a
@@ -451,6 +451,17 @@ def build_capability_chain(
     # a follow-up minor release is matched automatically without
     # changes to this function or the four contract adapters.
     chain = select_format_aware(field, registry)
+    if not chain:
+        return ()
+    for cleanup_step in field.cleanup_steps:
+        chain.append(
+            FieldPlanStep(
+                capability_id=cleanup_step.capability_id,
+                capability_version="1.0",
+                config={**cleanup_step.config, "input_from_candidate": True},
+                note="configured post-extraction cleanup",
+            )
+        )
     return tuple(chain)
 
 

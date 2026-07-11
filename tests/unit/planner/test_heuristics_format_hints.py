@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import pytest
 
+from paxman.budget import Policy
 from paxman.capabilities.registry import register, reset
 from paxman.capabilities.v1.csv_extraction import CsvExtractionCapability
 from paxman.capabilities.v1.json_path_extraction import JsonPathExtractionCapability
 from paxman.capabilities.v1.regex_extraction import RegexExtractionCapability
 from paxman.capabilities.v1.xpath_extraction import XPathExtractionCapability
+from paxman.contract._cleanup import CleanupStep
 from paxman.contract._format_hint import FormatHint
 from paxman.contract.canonical import CanonicalField
-from paxman.planner.heuristics import select_format_aware
+from paxman.planner.heuristics import build_capability_chain, select_format_aware
+from paxman.planner.input_profile import make_profile
 from paxman.types import FieldType
 
 
@@ -92,6 +95,35 @@ def test_returns_steps_for_all_matching_hints() -> None:
     steps = select_format_aware(field)
     ids = [s.capability_id for s in steps]
     assert ids == ["json_path_extraction", "xpath_extraction"]
+
+
+def test_build_chain_appends_configured_cleanup_after_matching_extractor() -> None:
+    """Cleanup is a candidate hand-off only after CSV extraction is selected."""
+    _register_default_format_extractors()
+    field = _field(
+        format_hints=(FormatHint.CSV,),
+        cleanup_steps=(
+            CleanupStep("case_normalization", {"mode": "lower"}),
+            CleanupStep("trim_extraction"),
+        ),
+    )
+
+    steps = build_capability_chain(field, make_profile(b"a,b"), Policy(), None)
+
+    assert [step.capability_id for step in steps] == [
+        "csv_extraction",
+        "case_normalization",
+        "trim_extraction",
+    ]
+    assert dict(steps[1].config) == {"mode": "lower", "input_from_candidate": True}
+    assert dict(steps[2].config) == {"input_from_candidate": True}
+
+
+def test_build_chain_does_not_plan_cleanup_without_matching_extractor() -> None:
+    """Cleanup metadata cannot create a candidate on its own."""
+    field = _field(cleanup_steps=(CleanupStep("trim_extraction"),))
+
+    assert build_capability_chain(field, make_profile(b"supplier"), Policy(), None) == ()
 
 
 def test_member_agnostic_dispatch() -> None:

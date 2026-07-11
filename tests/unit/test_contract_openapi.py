@@ -736,3 +736,33 @@ def test_format_hints_from_extension() -> None:
     canonical = adapter.adapt(spec)
     supplier = next(f for f in canonical.fields if f.name == "supplier")
     assert supplier.format_hints == (FormatHint.CSV,)
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_cleanup_from_extension() -> None:
+    """OpenAPI delegates x-paxman-cleanup handling to JsonSchemaAdapter."""
+    from paxman.contract.adapters.openapi import OpenApiAdapter
+
+    spec = {
+        "openapi": "3.0.0",
+        "info": {"title": "t", "version": "1.0"},
+        "paths": {},
+        "components": {
+            "schemas": {
+                "Invoice": {
+                    "type": "object",
+                    "properties": {
+                        "supplier": {
+                            "type": "string",
+                            "x-paxman-cleanup": [{"capability": "trim_extraction"}],
+                        },
+                    },
+                    "required": ["supplier"],
+                }
+            }
+        },
+    }
+
+    canonical = OpenApiAdapter().adapt(spec)
+    assert canonical.fields[0].cleanup_steps[0].capability_id == "trim_extraction"

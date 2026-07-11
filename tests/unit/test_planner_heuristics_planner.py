@@ -11,7 +11,7 @@ import pytest
 
 from paxman.budget import Budget, Policy
 from paxman.capabilities.registry import register, reset
-from paxman.capabilities.spec import CapabilitySpec
+from paxman.capabilities.spec import CapabilitySpec, CapabilityTier
 from paxman.capabilities.v1.inference import InferenceCapability
 from paxman.capabilities.v1.regex_extraction import RegexExtractionCapability
 from paxman.capabilities.v1.text_extraction import TextExtractionCapability
@@ -25,6 +25,11 @@ from paxman.planner.heuristics import (
     build_capability_chain,
     build_field_plan,
     has_explicit_evidence,
+    select_format_aware,
+    select_local_deterministic,
+    select_local_inference,
+    select_remote_inference,
+    select_structured_lookup,
 )
 from paxman.planner.input_profile import make_profile
 from paxman.planner.planner import plan
@@ -173,6 +178,105 @@ def test_chain_is_sorted_by_score_within_tier() -> None:
     # Tie-break by id (lex asc) → regex_extraction < validation.
     if len(local_steps) >= 2:
         assert local_steps[0].capability_id <= local_steps[1].capability_id
+
+
+@pytest.mark.parametrize(
+    ("selector", "tier"),
+    [
+        (select_local_deterministic, CapabilityTier.LOCAL_DETERMINISTIC),
+        (select_structured_lookup, CapabilityTier.STRUCTURED_LOOKUP),
+        (select_local_inference, CapabilityTier.LOCAL_INFERENCE),
+        (select_remote_inference, CapabilityTier.REMOTE_INFERENCE),
+    ],
+)
+def test_tier_selectors_emit_only_matching_field_type(
+    selector: object,
+    tier: CapabilityTier,
+) -> None:
+    """Each selector filters its tier to capabilities accepting the field type."""
+    field = _field("supplier_name", FieldType.STRING)
+    matching = _Cap(
+        CapabilitySpec(
+            id=f"matching_{tier.name.lower()}",
+            version="1.0",
+            input_types=("STRING",),
+            tier=tier,
+        )
+    )
+    mismatched = _Cap(
+        CapabilitySpec(
+            id=f"mismatched_{tier.name.lower()}",
+            version="1.0",
+            input_types=("INTEGER",),
+            tier=tier,
+        )
+    )
+    registry = {
+        (matching.spec.id, matching.spec.version): matching,
+        (mismatched.spec.id, mismatched.spec.version): mismatched,
+    }
+
+    if not callable(selector):  # pragma: no cover - parametrization invariant
+        raise TypeError("selector must be callable")
+    steps = selector(field, registry)
+
+    assert [step.capability_id for step in steps] == [matching.spec.id]
+    assert dict(steps[0].config) == {}
+
+
+def test_local_selector_excludes_format_aware_capabilities() -> None:
+    """Format-aware extractors are reserved for explicit format dispatch."""
+    from paxman.contract._format_hint import FormatHint
+
+    field = _field("supplier_name", FieldType.STRING)
+    format_aware = _Cap(
+        CapabilitySpec(
+            id="csv_extraction",
+            version="1.0",
+            input_types=("STRING",),
+            tier=CapabilityTier.LOCAL_DETERMINISTIC,
+            format_hint=FormatHint.CSV,
+        )
+    )
+
+    assert (
+        select_local_deterministic(
+            field,
+            {(format_aware.spec.id, format_aware.spec.version): format_aware},
+        )
+        == []
+    )
+
+
+def test_format_selector_uses_default_config_for_unknown_format_capability() -> None:
+    """A future format extractor receives the documented column-style fallback."""
+    from paxman.contract._format_hint import FormatHint
+
+    field = CanonicalField(
+        id="field_supplier_name",
+        path="supplier_name",
+        name="supplier_name",
+        type=FieldType.STRING,
+        required=True,
+        format_hints=(FormatHint.CSV,),
+    )
+    extractor = _Cap(
+        CapabilitySpec(
+            id="future_csv_extractor",
+            version="1.0",
+            input_types=("STRING",),
+            tier=CapabilityTier.LOCAL_DETERMINISTIC,
+            format_hint=FormatHint.CSV,
+        )
+    )
+
+    steps = select_format_aware(
+        field,
+        {(extractor.spec.id, extractor.spec.version): extractor},
+    )
+
+    assert len(steps) == 1
+    assert dict(steps[0].config) == {"column": "supplier_name"}
 
 
 # --- build_field_plan ---------------------------------------------------

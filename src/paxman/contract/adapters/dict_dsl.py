@@ -65,6 +65,7 @@ from paxman.contract import (
 )
 from paxman.contract._cleanup import CleanupStep, CleanupValidationError, parse_cleanup
 from paxman.contract._extraction import ExtractionStep, ExtractionValidationError, parse_extraction
+from paxman.contract._parse import ParseSpec, ParseValidationError, parse_spec
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -478,6 +479,13 @@ class DictDSLAdapter:
                 error_code="AMBIGUOUS_EXTRACTION",
                 context={"contract_id": contract_id, "field_name": name},
             )
+        parse_spec = self._parse_parse(raw, contract_id=contract_id, name=name, field_type=field_type)
+        if parse_spec is not None and extraction_step is None:
+            raise InvalidContractError(
+                f"field {name!r}: parse requires an extraction_step",
+                error_code="INVALID_PARSE",
+                context={"contract_id": contract_id, "field_name": name},
+            )
         return CanonicalField(
             id=fid,
             path=name,
@@ -492,6 +500,7 @@ class DictDSLAdapter:
             format_hints=format_hints,
             cleanup_steps=self._parse_cleanup(raw, contract_id=contract_id, name=name),
             extraction_step=extraction_step,
+            parse_spec=parse_spec,
         )
 
     # =====================================================================
@@ -550,6 +559,20 @@ class DictDSLAdapter:
         try:
             return parse_extraction(raw.get("extract"), field_name=name)
         except ExtractionValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"contract_id": contract_id, **exc.context},
+            ) from exc
+
+    @staticmethod
+    def _parse_parse(
+        raw: typing.Mapping[str, typing.Any], *, contract_id: str, name: str, field_type: FieldType
+    ) -> ParseSpec | None:
+        """Parse an optional ``parse`` declaration on a field."""
+        try:
+            return parse_spec(raw.get("parse"), field_name=name, field_type=field_type)
+        except ParseValidationError as exc:
             raise InvalidContractError(
                 str(exc),
                 error_code=exc.error_code,
@@ -886,6 +909,8 @@ class DictDSLAdapter:
             out["cleanup"] = [step.to_wire() for step in f.cleanup_steps]
         if f.extraction_step is not None:
             out["extract"] = f.extraction_step.to_wire()
+        if f.parse_spec is not None:
+            out["parse"] = f.parse_spec.to_wire()
         if f.default is not None:
             out["default"] = DictDSLAdapter._export_default(f.default, f.type)
         if f.enum_values is not None:

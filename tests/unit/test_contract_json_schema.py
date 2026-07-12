@@ -1561,3 +1561,72 @@ def test_extract_and_format_hints_are_rejected_as_ambiguous() -> None:
         )
 
     assert exc_info.value.error_code == "AMBIGUOUS_EXTRACTION"
+
+
+# ---------------------------------------------------------------------------
+# Parse round-trip tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_parse_extension_export_round_trip() -> None:
+    """x-paxman-parse is canonicalized and exported unchanged."""
+    from paxman.contract.adapters.json_schema import JsonSchemaAdapter
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "total": {
+                "type": "number",
+                "x-paxman-extract": {
+                    "capability": "regex_extraction",
+                    "config": {"pattern": r"Total:\s*(?P<value>\d+\.\d{2})"},
+                },
+                "x-paxman-parse": {"kind": "decimal"},
+            }
+        },
+        "required": ["total"],
+    }
+    adapter = JsonSchemaAdapter()
+    canonical = adapter.adapt(schema)
+
+    assert canonical.fields[0].parse_spec is not None
+    assert canonical.fields[0].parse_spec.kind == "decimal"
+    exported = adapter.export(canonical)
+    assert exported["properties"]["total"]["x-paxman-parse"] == {"kind": "decimal"}
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_boolean_parse_extension_round_trip() -> None:
+    """Boolean x-paxman-parse with true/false values round-trips."""
+    from paxman.contract.adapters.json_schema import JsonSchemaAdapter
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "active": {
+                "type": "boolean",
+                "x-paxman-extract": {
+                    "capability": "regex_extraction",
+                    "config": {"pattern": r"Active:\s*(?P<value>\S+)"},
+                },
+                "x-paxman-parse": {
+                    "kind": "boolean",
+                    "true_values": ["yes", "y"],
+                    "false_values": ["no", "n"],
+                },
+            }
+        },
+        "required": ["active"],
+    }
+    canonical = JsonSchemaAdapter().adapt(schema)
+
+    assert canonical.fields[0].parse_spec is not None
+    assert canonical.fields[0].parse_spec.kind == "boolean"
+    exported = JsonSchemaAdapter().export(canonical)
+    parse_out = exported["properties"]["active"]["x-paxman-parse"]
+    assert parse_out["kind"] == "boolean"
+    assert parse_out["true_values"] == ["yes", "y"]
+    assert parse_out["false_values"] == ["no", "n"]

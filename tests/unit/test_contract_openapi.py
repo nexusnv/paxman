@@ -799,3 +799,43 @@ def test_extract_from_extension() -> None:
 
     canonical = OpenApiAdapter().adapt(spec)
     assert canonical.fields[0].extraction_step is not None
+
+
+# ---------------------------------------------------------------------------
+# Parse round-trip tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_parse_from_extension() -> None:
+    """OpenAPI delegates x-paxman-parse handling to JsonSchemaAdapter."""
+    from paxman.contract.adapters.openapi import OpenApiAdapter
+
+    spec = {
+        "openapi": "3.0.0",
+        "info": {"title": "t", "version": "1.0"},
+        "paths": {},
+        "components": {
+            "schemas": {
+                "Invoice": {
+                    "type": "object",
+                    "properties": {
+                        "total": {
+                            "type": "number",
+                            "x-paxman-extract": {
+                                "capability": "regex_extraction",
+                                "config": {"pattern": r"Total:\s*(?P<value>\d+\.\d{2})"},
+                            },
+                            "x-paxman-parse": {"kind": "decimal"},
+                        }
+                    },
+                    "required": ["total"],
+                }
+            }
+        },
+    }
+
+    canonical = OpenApiAdapter().adapt(spec)
+    assert canonical.fields[0].parse_spec is not None
+    assert canonical.fields[0].parse_spec.kind == "decimal"

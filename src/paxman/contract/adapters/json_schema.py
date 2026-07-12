@@ -93,6 +93,7 @@ from paxman.contract import (
 )
 from paxman.contract._cleanup import CleanupStep, CleanupValidationError, parse_cleanup
 from paxman.contract._extraction import ExtractionStep, ExtractionValidationError, parse_extraction
+from paxman.contract._parse import ParseSpec, ParseValidationError, parse_spec
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -486,6 +487,7 @@ class JsonSchemaAdapter:
             format_hints=self._extract_format_hints(name, schema, contract_id),
             cleanup_steps=self._extract_cleanup(name, schema, contract_id),
             extraction_step=self._extract_extraction(name, schema, contract_id),
+            parse_spec=self._extract_parse(name, schema, contract_id, field_type=field_type),
         )
 
     def _adapt_enum_property(
@@ -523,6 +525,7 @@ class JsonSchemaAdapter:
             format_hints=self._extract_format_hints(name, schema, contract_id),
             cleanup_steps=self._extract_cleanup(name, schema, contract_id),
             extraction_step=self._extract_extraction(name, schema, contract_id),
+            parse_spec=self._extract_parse(name, schema, contract_id, field_type=FieldType.ENUM),
         )
 
     def _adapt_date_property(
@@ -546,6 +549,7 @@ class JsonSchemaAdapter:
             format_hints=self._extract_format_hints(name, schema, contract_id),
             cleanup_steps=self._extract_cleanup(name, schema, contract_id),
             extraction_step=self._extract_extraction(name, schema, contract_id),
+            parse_spec=self._extract_parse(name, schema, contract_id, field_type=FieldType.DATE),
         )
 
     def _adapt_money_property(
@@ -611,6 +615,7 @@ class JsonSchemaAdapter:
             format_hints=self._extract_format_hints(name, schema, contract_id),
             cleanup_steps=self._extract_cleanup(name, schema, contract_id),
             extraction_step=self._extract_extraction(name, schema, contract_id),
+            parse_spec=self._extract_parse(name, schema, contract_id, field_type=FieldType.MONEY),
         )
 
     @staticmethod
@@ -669,6 +674,20 @@ class JsonSchemaAdapter:
                 context={"contract_id": contract_id, "property": name},
             )
         return step
+
+    @staticmethod
+    def _extract_parse(
+        name: str, schema: dict[str, typing.Any], contract_id: str, field_type: FieldType
+    ) -> ParseSpec | None:
+        """Extract ``x-paxman-parse`` from a JSON Schema property."""
+        try:
+            return parse_spec(schema.get("x-paxman-parse"), field_name=name, field_type=field_type)
+        except ParseValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"contract_id": contract_id, "property": name, **exc.context},
+            ) from exc
 
     def _extract_constraints(
         self,
@@ -853,6 +872,8 @@ class JsonSchemaAdapter:
             out["x-paxman-cleanup"] = [step.to_wire() for step in f.cleanup_steps]
         if f.extraction_step is not None:
             out["x-paxman-extract"] = f.extraction_step.to_wire()
+        if f.parse_spec is not None:
+            out["x-paxman-parse"] = f.parse_spec.to_wire()
 
     @staticmethod
     def _export_constraint(c: Constraint, schema: dict[str, typing.Any]) -> None:

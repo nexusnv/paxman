@@ -105,7 +105,7 @@ def parse_spec(
     raw: object,
     *,
     field_name: str,
-    field_type: typing.Any,
+    field_type: typing.Any,  # noqa: ANN401
 ) -> ParseSpec | None:
     """Parse a field's explicit parse declaration.
 

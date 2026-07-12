@@ -7,7 +7,6 @@ parsing scenarios.
 
 from __future__ import annotations
 
-import typing
 from decimal import Decimal
 
 import pytest

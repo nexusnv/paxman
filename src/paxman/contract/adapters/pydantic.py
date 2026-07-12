@@ -523,16 +523,14 @@ class PydanticAdapter:
         name: str,
         field_info: pydantic.fields.FieldInfo,
         model_cls: type,
-        field_type: "typing.Any",
+        field_type: typing.Any,
     ) -> ParseSpec | None:
         """Extract x-paxman-parse from Pydantic json_schema_extra."""
         extra = field_info.json_schema_extra
         if extra is None or not isinstance(extra, dict):
             return None
         try:
-            return parse_spec(
-                extra.get("x-paxman-parse"), field_name=name, field_type=field_type
-            )
+            return parse_spec(extra.get("x-paxman-parse"), field_name=name, field_type=field_type)
         except ParseValidationError as exc:
             raise InvalidContractError(
                 str(exc),

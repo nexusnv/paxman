@@ -479,7 +479,9 @@ class DictDSLAdapter:
                 error_code="AMBIGUOUS_EXTRACTION",
                 context={"contract_id": contract_id, "field_name": name},
             )
-        parse_spec = self._parse_parse(raw, contract_id=contract_id, name=name, field_type=field_type)
+        parse_spec = self._parse_parse(
+            raw, contract_id=contract_id, name=name, field_type=field_type
+        )
         if parse_spec is not None and extraction_step is None:
             raise InvalidContractError(
                 f"field {name!r}: parse requires an extraction_step",

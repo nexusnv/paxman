@@ -97,7 +97,7 @@ def prepare_candidates(
 _SENTINEL: typing.Final[object] = object()
 
 
-def _parse_value(text: str, spec: ParseSpec) -> typing.Any:
+def _parse_value(text: str, spec: ParseSpec) -> typing.Any:  # noqa: ANN401
     """Parse a text value according to a ParseSpec.
 
     Returns ``_SENTINEL`` on failure (so the caller can drop the candidate).
@@ -117,7 +117,7 @@ def _parse_value(text: str, spec: ParseSpec) -> typing.Any:
     return _SENTINEL
 
 
-def _parse_integer(text: str) -> typing.Any:
+def _parse_integer(text: str) -> typing.Any:  # noqa: ANN401
     """Parse an integer string."""
     try:
         return int(text)
@@ -125,7 +125,7 @@ def _parse_integer(text: str) -> typing.Any:
         return _SENTINEL
 
 
-def _parse_decimal(text: str) -> typing.Any:
+def _parse_decimal(text: str) -> typing.Any:  # noqa: ANN401
     """Parse a decimal string via the reconciler's money module."""
     try:
         return parse_decimal(text)
@@ -133,19 +133,23 @@ def _parse_decimal(text: str) -> typing.Any:
         return _SENTINEL
 
 
-def _parse_boolean(text: str, config: typing.Mapping[str, object]) -> typing.Any:
+def _parse_boolean(text: str, config: typing.Mapping[str, object]) -> typing.Any:  # noqa: ANN401
     """Parse a boolean string using configured true/false values."""
     true_values = config.get("true_values", [])
     false_values = config.get("false_values", [])
     text_lower = text.lower()
-    if isinstance(true_values, list) and text_lower in {v.lower() for v in true_values if isinstance(v, str)}:
+    if isinstance(true_values, list) and text_lower in {
+        v.lower() for v in true_values if isinstance(v, str)
+    }:
         return True
-    if isinstance(false_values, list) and text_lower in {v.lower() for v in false_values if isinstance(v, str)}:
+    if isinstance(false_values, list) and text_lower in {
+        v.lower() for v in false_values if isinstance(v, str)
+    }:
         return False
     return _SENTINEL
 
 
-def _parse_date(text: str, config: typing.Mapping[str, object]) -> typing.Any:
+def _parse_date(text: str, config: typing.Mapping[str, object]) -> typing.Any:  # noqa: ANN401
     """Parse a date string using the configured strptime format."""
     fmt = config.get("format")
     if not isinstance(fmt, str):

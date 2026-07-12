@@ -442,15 +442,24 @@ def build_capability_chain(
     # eligible for automatic field resolution. Sprint 2 introduced candidate
     # hand-off for the configured multi-step chains appended below.
 
-    # Format-aware tier-1 dispatch. If the field declares
-    # ``format_hints`` and a registered capability declares a
-    # matching ``format_hint``, prepend that capability at the
-    # head of the chain. This is the V1.1.0+ format-aware
-    # executor auto-dispatch (issue #73, ADR-0015). The dispatch
-    # is member-agnostic: any new ``FormatHint`` member added in
-    # a follow-up minor release is matched automatically without
-    # changes to this function or the four contract adapters.
-    chain = select_format_aware(field, registry)
+    # A contract-declared extractor carries field-specific configuration and
+    # is therefore safe to schedule for plain-text input. Otherwise retain
+    # the existing format-aware dispatch.
+    if field.extraction_step is not None:
+        chain = [
+            FieldPlanStep(
+                capability_id=field.extraction_step.capability_id,
+                capability_version="1.0",
+                config=field.extraction_step.config,
+                note="contract-configured extraction",
+            )
+        ]
+    else:
+        # If the field declares ``format_hints`` and a registered capability
+        # declares a matching ``format_hint``, select that extractor. The
+        # dispatch is member-agnostic, so a new FormatHint member remains
+        # compatible without adapter changes.
+        chain = select_format_aware(field, registry)
     if not chain:
         return ()
     for cleanup_step in field.cleanup_steps:

@@ -257,17 +257,13 @@ def _bootstrap_v1_capabilities() -> None:
     helper re-registers them uniformly after a :func:`reset` call
     so the planner always has the V1 surface available.
 
-    The bootstrap is a no-op if the V1 module has not been
-    imported yet (in which case the user has explicitly opted
-    out of V1 capabilities).
+    The bootstrap is a no-op if the V1 module cannot be imported
+    (in which case the user has explicitly opted out of V1
+    capabilities by removing the optional dependencies).
     """
-    # Defer the import to call time. Using ``sys.modules`` first lets
-    # us short-circuit when the V1 module is not yet imported (avoids
-    # triggering the import cycle at static analysis time, which
-    # pyright reports as an error).
-    v1_module = sys.modules.get("paxman.capabilities.v1")
-    if v1_module is None:
-        # V1 module not available; nothing to bootstrap.
+    try:
+        import paxman.capabilities.v1 as v1_module  # noqa: F401
+    except ImportError:
         return
     # Re-register every V1 capability uniformly. The
     # ``_register_on_import`` hook only runs once at module load,

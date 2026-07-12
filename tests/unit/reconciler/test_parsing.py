@@ -2,18 +2,16 @@
 
 from __future__ import annotations
 
-import datetime
 import typing
 from decimal import Decimal
 
 import pytest
 
-from paxman.capabilities.result import Candidate, Diagnostic, DiagnosticCode
+from paxman.capabilities.result import Candidate
 from paxman.contract._parse import ParseSpec
 from paxman.contract.canonical import CanonicalField
 from paxman.reconciler.parsing import prepare_candidates
 from paxman.types import FieldType
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -83,7 +81,17 @@ def _field(
             "2026-07-12",
         ),
     ],
-    ids=["int-pos", "int-neg", "int-zero", "dec-pos", "dec-small", "dec-neg", "bool-true", "bool-false", "date-ymd"],
+    ids=[
+        "int-pos",
+        "int-neg",
+        "int-zero",
+        "dec-pos",
+        "dec-small",
+        "dec-neg",
+        "bool-true",
+        "bool-false",
+        "date-ymd",
+    ],
 )
 @pytest.mark.deterministic
 @pytest.mark.unit
@@ -111,7 +119,11 @@ def test_prepare_candidate_returns_typed_candidate(
     [
         ("twelve", ParseSpec(kind="integer", config={}), FieldType.INTEGER),
         ("abc", ParseSpec(kind="decimal", config={}), FieldType.DECIMAL),
-        ("maybe", ParseSpec(kind="boolean", config={"true_values": ["yes"], "false_values": ["no"]}), FieldType.BOOLEAN),
+        (
+            "maybe",
+            ParseSpec(kind="boolean", config={"true_values": ["yes"], "false_values": ["no"]}),
+            FieldType.BOOLEAN,
+        ),
         ("not-a-date", ParseSpec(kind="date", config={"format": "%Y-%m-%d"}), FieldType.DATE),
     ],
     ids=["bad-int", "bad-dec", "bad-bool", "bad-date"],
@@ -174,7 +186,9 @@ def test_prepare_candidate_preserves_evidence() -> None:
     from paxman.capabilities.result import EvidenceRef
 
     field = _field(parse_spec=ParseSpec(kind="integer", config={}), field_type=FieldType.INTEGER)
-    refs = (EvidenceRef(capability_id="regex_extraction", capability_version="1.0", field_path="total"),)
+    refs = (
+        EvidenceRef(capability_id="regex_extraction", capability_version="1.0", field_path="total"),
+    )
     candidate = Candidate(value="42", evidence_refs=refs)
     prepared = prepare_candidates((candidate,), field)
     assert len(prepared) == 1

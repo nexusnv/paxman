@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-import hypothesis
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
@@ -62,7 +61,9 @@ def test_prepare_candidates_deterministic(data: tuple[str, ParseSpec, FieldType]
         type=field_type,
         required=True,
         parse_spec=spec,
-        extraction_step=ExtractionStep(capability_id="regex_extraction", config={"pattern": r"\S+"}),
+        extraction_step=ExtractionStep(
+            capability_id="regex_extraction", config={"pattern": r"\S+"}
+        ),
     )
     candidate = Candidate(value=value)
     r1 = prepare_candidates((candidate,), field)

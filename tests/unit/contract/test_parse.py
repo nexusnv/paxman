@@ -5,7 +5,7 @@ from __future__ import annotations
 import attrs
 import pytest
 
-from paxman.contract._parse import ParseSpec, ParseValidationError, parse_spec
+from paxman.contract._parse import ParseValidationError, parse_spec
 from paxman.types import FieldType
 
 pytestmark = pytest.mark.unit

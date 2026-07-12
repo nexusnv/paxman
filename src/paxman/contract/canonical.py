@@ -363,13 +363,10 @@ class CanonicalField:
         # --- parse_spec ---
         if self.parse_spec is not None and not isinstance(self.parse_spec, ParseSpec):
             raise TypeError(
-                "parse_spec must be a ParseSpec or None, "
-                f"got {type(self.parse_spec).__name__}"
+                f"parse_spec must be a ParseSpec or None, got {type(self.parse_spec).__name__}"
             )
         if self.parse_spec is not None and self.extraction_step is None:
-            raise ValueError(
-                f"field {self.name!r}: parse_spec requires an extraction_step"
-            )
+            raise ValueError(f"field {self.name!r}: parse_spec requires an extraction_step")
         # --- default / type coupling (best-effort) ---
         self._validate_default()
 

@@ -23,7 +23,7 @@ Module layout
   resolver (the V1.1.0+ format-aware dispatch contract; see ADR-0015 and
   `issue #73 <https://github.com/nexusnv/paxman/issues/73>`_).
 - :mod:`paxman.contract._parse` — :class:`ParseSpec` and typed parse
-  declaration validation (Sprint 5–6).
+  declaration validation (Sprint 5-6).
 
 Boundary rules (per ``PACKAGE_STRUCTURE.md`` §2):
 

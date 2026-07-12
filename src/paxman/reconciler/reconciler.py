@@ -63,6 +63,7 @@ from paxman.reconciler.conflict import (
     detect_conflicts,
 )
 from paxman.reconciler.merge import MergeStrategy, merge_candidates
+from paxman.reconciler.parsing import prepare_candidates
 from paxman.reconciler.truth import ResolvedResult
 from paxman.reconciler.unresolved import apply_fallback
 from paxman.reconciler.validation import (
@@ -70,7 +71,6 @@ from paxman.reconciler.validation import (
     validate_candidate,
     validate_inference_candidates,
 )
-from paxman.reconciler.parsing import prepare_candidates
 
 __all__ = ["reconcile"]
 

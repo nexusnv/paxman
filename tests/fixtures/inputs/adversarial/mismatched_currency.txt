@@ -1,4 +1,0 @@
-DUMMY INVOICE
-Invoice #: 999
-Total: 1000 USD
-Currency: USD

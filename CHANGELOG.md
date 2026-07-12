@@ -1,8 +1,0 @@
-# Changelog
-
-The full changelog is published on the Paxman documentation site:
-
-**[Changelog →](https://paxman.readthedocs.io/en/latest/operations/changelog/)**
-
-The changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0/).

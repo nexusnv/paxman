@@ -70,6 +70,7 @@ from paxman.reconciler.validation import (
     validate_candidate,
     validate_inference_candidates,
 )
+from paxman.reconciler.parsing import prepare_candidates
 
 __all__ = ["reconcile"]
 
@@ -321,9 +322,18 @@ def reconcile(
             out.append(apply_fallback(field=field, reason="no_candidates"))
             continue
 
+        # Step 2.5: prepare candidates (typed parsing) before eligibility.
+        # This converts string values to their declared types according to
+        # the field's ParseSpec. Failed parses drop candidates silently.
+        prepared = prepare_candidates(cr.candidates, field)
+        if not prepared:
+            # All candidates failed parsing — treat as no eligible candidates.
+            out.append(apply_fallback(field=field, reason="parse_failed"))
+            continue
+
         # Step 3: retain only candidates that meet the field's eligibility
         # contract (type, constraints, and prompt-injection screening).
-        filtered = validate_inference_candidates(cr.candidates, field=field)
+        filtered = validate_inference_candidates(prepared, field=field)
         rejected_count = len(cr.candidates) - len(filtered)
         eligibility_diagnostics: tuple[Diagnostic, ...] = ()
         if rejected_count:

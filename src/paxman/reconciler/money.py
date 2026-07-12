@@ -142,6 +142,25 @@ class InvalidFxRateError(ReconciliationError):
 # ---------------------------------------------------------------------------
 
 
+def parse_decimal(text: str) -> decimal.Decimal:
+    """Parse a text string into a Decimal.
+
+    This is a thin wrapper around ``decimal.Decimal(text)`` that is
+    the **only** Decimal construction from text in the reconciler.
+    It exists to keep the ``import decimal`` boundary in this module.
+
+    Args:
+        text: A string representation of a decimal number.
+
+    Returns:
+        The parsed Decimal.
+
+    Raises:
+        decimal.DecimalException: If the text is not a valid decimal.
+    """
+    return decimal.Decimal(text)
+
+
 @typing.overload
 def _validate_fx_rate(
     fx_rate: object,

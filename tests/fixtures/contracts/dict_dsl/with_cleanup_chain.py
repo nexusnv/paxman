@@ -41,6 +41,11 @@ DICT_DSL_WITH_CLEANUP_CHAIN: dict[str, object] = {
                 {"kind": "min_length", "params": {"min": 1}},
                 {"kind": "max_length", "params": {"max": 200}},
             ],
+            "format_hints": ["csv"],
+            "cleanup": [
+                {"capability": "case_normalization", "config": {"mode": "lower"}},
+                {"capability": "trim_extraction"},
+            ],
         },
         {
             "name": "amount",

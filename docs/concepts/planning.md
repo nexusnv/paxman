@@ -119,11 +119,19 @@ field-specific extraction configuration through a matching
 4. If no such configuration exists, the chain is empty and the field
    is explicitly `UNRESOLVED`.
 
+An extractor may be followed by an explicit field `cleanup` chain. The
+contract declares each `trim_extraction` or `case_normalization` step and its
+configuration in order; the planner marks those steps as candidate hand-offs.
+Cleanup is never inferred from the field type, name, or input content. A field
+without a selected format-aware extractor cannot schedule cleanup and remains
+`UNRESOLVED`.
+
 `text_extraction` returns a document payload, not a field value.
-`regex_extraction` requires a pattern; cleanup and validation require
-a prior candidate; lookup requires a table; and the built-in inference
-provider is a stub. None is eligible for automatic field resolution
-until the planned typed candidate hand-off model exists.
+`regex_extraction` requires a pattern; validation requires a prior candidate;
+lookup requires a table; and the built-in inference provider is a stub. None
+is eligible for automatic field resolution. Explicit cleanup is the narrow
+exception: it can only transform a candidate produced by a selected
+format-aware extractor.
 
 ---
 

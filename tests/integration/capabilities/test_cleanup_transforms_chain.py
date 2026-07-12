@@ -236,13 +236,39 @@ def test_chain_is_byte_equal_on_replay() -> None:
 # --- end-to-end paxman.normalize stability -------------------------------
 
 
+def test_normalize_applies_configured_csv_cleanup_chain() -> None:
+    """Configured cleanup follows CSV extraction through the public API."""
+    contract: dict[str, object] = {
+        "id": "csv-cleanup",
+        "fields": [
+            {
+                "name": "supplier",
+                "type": "STRING",
+                "required": True,
+                "format_hints": ["csv"],
+                "cleanup": [
+                    {"capability": "case_normalization", "config": {"mode": "lower"}},
+                    {"capability": "trim_extraction"},
+                ],
+            }
+        ],
+    }
+
+    artifact = paxman.normalize(input_data=_load_csv(), contract=contract)
+
+    assert artifact.normalized_data["supplier"] == "acme corp"
+    assert [ref.capability_id for ref in artifact.field_results["supplier"].evidence_refs] == [
+        "csv_extraction",
+        "case_normalization",
+        "trim_extraction",
+    ]
+
+
 def test_normalize_artifact_has_stable_replay_hash() -> None:
     """``normalize()`` on the CSV input produces a stable ``replay_hash``.
 
     The artifact's ``replay_hash`` is byte-equal across two runs of
-    the same input, even though the slice does not yet wire the
-    cleanup transforms into the executor (the fields stay
-    unresolved, but the artifact is still deterministic).
+    the same input and explicitly configured cleanup chain.
     """
     csv_bytes = _load_csv()
 

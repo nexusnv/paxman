@@ -1,453 +1,55 @@
 # Paxman
 
-> **Contract-driven deterministic normalization engine for Python.**
+> Paxman is a deterministic canonicalization engine. It transforms equivalent representations of known information into a single canonical form. When the input does not contain enough information to determine a unique result, Paxman reports that fact rather than guessing.
 
-[![CI](https://github.com/nexusnv/paxman/actions/workflows/ci.yml/badge.svg)](https://github.com/nexusnv/paxman/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
-[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](./pyproject.toml)
-[![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://docs.astral.sh/ruff/)
-[![Type checked: mypy --strict](https://img.shields.io/badge/type%20checked-mypy%20--strict-blue)](https://mypy.readthedocs.io/)
-[![py.typed](https://img.shields.io/badge/py--typed-yes-success)](https://peps.python.org/pep-0561/)
+Paxman is not deterministic-first. Paxman is deterministic, full stop.
 
-Paxman transforms arbitrary input (PDFs, scans, emails, spreadsheets, APIs, free text) into **evidence-backed, replayable** normalized artifacts conforming to caller-supplied contracts (Pydantic, JSON Schema, OpenAPI, or a built-in Dict DSL).
+## What Paxman does
+
+Paxman takes input that has many valid representations (free text, structured records, etc.) and produces a single canonical output. If the input admits more than one canonical form, Paxman does not pick one. It tells you the input is ambiguous and stops.
+
+## What Paxman does not do
+
+- It does not guess. If the canonical form is not determined by the input and the contract, Paxman does not produce an output.
+- It does not call external services. There is no LLM path, no remote inference, no network I/O. Determinism is a property of the library, not a default you can opt out of.
+- It does not run in parallel. Capability invocation is sequential.
+- It does not improvise. A field the contract does not describe is left alone. A field the input cannot populate is reported as unresolvable.
+
+## Public API
 
 ```python
-from decimal import Decimal
-from pydantic import BaseModel
-
 import paxman
 
-# IMPORTANT: import the adapter(s) you need so they self-register.
-# Pydantic is an optional extra; the core package ships the registry
-# but not the adapters themselves.
-import paxman.contract.adapters.pydantic  # noqa: F401  (triggers self-registration)
-import paxman.contract.adapters.dict_dsl  # noqa: F401
-
-
-# Caller-owned contract (Pydantic example)
-class Invoice(BaseModel):
-    supplier_name: str
-    total_amount: float
-    currency_code: str
-    line_items: list[LineItem]
-
-
-# Normalize raw input against the contract
 result = paxman.normalize(
-    input_data=raw_invoice_bytes,
-    contract=Invoice,
-    budget=paxman.Budget(max_total_cost_usd=Decimal("0.10")),  # Decimal per ADR-0004
-    policy=paxman.Policy(allow_remote_inference=True),
+    input_data=raw_input,
+    contract=MyContract,
 )
 
-# Inspect or consume
-print(result.normalized_data)        # matches the Invoice shape
-print(result.unresolved_fields)      # any fields Paxman could not resolve
-print(result.replay_hash)            # deterministic signature for replay
-
-# Replay later from the artifact alone
-rehydrated = paxman.replay(result, contract=Invoice)
+rehydrated = paxman.replay(result, contract=MyContract)
 assert rehydrated == result  # byte-equal
 ```
 
-## Why Paxman?
+- `normalize(input_data, contract) -> ExecutionArtifact` — produce a canonical artifact.
+- `replay(artifact, contract) -> ExecutionArtifact` — rehydrate the artifact from the stored form, without re-execution.
 
-- **Contract-driven.** You bring the contract. Paxman doesn't own your schema.
-- **Field-centric, deterministic planning.** Each required field gets its own plan.
-- **Evidence-backed.** Every resolved value carries provenance and confidence.
-- **Replayable.** Rehydrate the artifact without recomputation.
-- **Honest.** Unresolved fields are explicit, never silent.
-
-## What Paxman is NOT
-
-- Not a workflow engine.
-- Not a general-purpose agent framework.
-- Not a RAG framework.
-- Not a persistence layer.
-- Not a schema registry.
-- Not a standard library.
-- Not a domain ontology.
-
-If you need any of these, **wrap Paxman from the outside** (see
-[§When to use Paxman vs When to wrap Paxman](#when-to-use-paxman-vs-when-to-wrap-paxman)
-below).
-
-## When to use Paxman vs When to wrap Paxman
-
-Paxman is a **library** that produces an evidence-backed, replayable
-normalized artifact. Use Paxman directly when your problem is one of
-the following:
-
-- You have **arbitrary input** (text, PDF, JSON, HTML) that needs to
-  be normalized against a **caller-owned contract** (Pydantic / JSON
-  Schema / OpenAPI / Dict DSL).
-- You need **evidence-backed** normalization — every resolved value
-  carries provenance, and every step is auditable.
-- You need **replay** — the ability to rehydrate a stored artifact
-  without re-running the pipeline.
-- You need **field-centric confidence** — different fields can have
-  different confidence, and the Reconciler grades the candidates
-  with a single, fixed rubric.
-- You are integrating into a **service** (or a SaaS) that needs
-  auditable normalization without owning a normalization engine.
-
-**Wrap Paxman from the outside** when your problem is one of the
-following:
-
-- You need a **workflow engine** (DAG of long-running tasks, retries,
-  human-in-the-loop, …). Wrap Paxman in a workflow engine.
-- You need a **general-purpose agent framework** (multi-turn
-  reasoning, tool use, planning across many turns). Wrap Paxman
-  behind an agent's tool call.
-- You need a **RAG framework** (vector search, retrieval, ranking).
-  Wrap Paxman behind a RAG pipeline; the contract becomes the
-  structured extraction step.
-- You need a **persistence layer** (database, ORM, migration
-  tooling). Wrap Paxman in a service that stores the artifact.
-- You need a **schema registry** (catalog of contracts, versioning
-  of contracts, governance). Wrap Paxman in a registry.
-- You need a **standard library** (general-purpose data
-  transformation). Paxman is opinionated about evidence, replay,
-  and confidence; it is not a general-purpose library.
-- You need a **domain ontology** (taxonomy, classification,
-  knowledge graph). Wrap Paxman behind an ontology lookup.
-
-In short: **Paxman is the normalization step in a larger system.** It
-is not the larger system. If you find yourself wanting to add
-workflow, persistence, or agentic features to Paxman itself, that
-is a signal to wrap Paxman from the outside.
-
-## Install
-
-```bash
-pip install paxman                          # core (no adapters)
-pip install paxman[pydantic]                # + Pydantic adapter
-pip install paxman[all]                     # + all V1 adapters
-```
-
-Paxman 1.0.0 is the current stable release. The public API follows [Semantic Versioning](https://semver.org/spec/v2.0.0/): breaking changes only happen in major-version bumps (1.x → 2.x).
-
-## Documentation
-
-The full documentation site is published on **Read the Docs**:
-[paxman.readthedocs.io](https://paxman.readthedocs.io/).
-
-| Section | What's there |
-|---|---|
-| **[Concepts](https://paxman.readthedocs.io/en/latest/concepts/)** | Mental model: contracts, capabilities, planning, reconciliation, replay, migration guide, v1.0.0 release notes. |
-| **[How-to guides](https://paxman.readthedocs.io/en/latest/howto/)** | 5-minute task recipes: add a contract adapter, add a capability, add an inference provider, replay an artifact. |
-| **[Reference](https://paxman.readthedocs.io/en/latest/reference/)** | Architecture, package structure, glossary, replay & determinism, extending Paxman, dependencies. |
-| **[Decision records (ADRs)](https://paxman.readthedocs.io/en/latest/adr/)** | Accepted architectural decisions (immutable). |
-| **[Design specifications](https://paxman.readthedocs.io/en/latest/specs/)** | Implementation-level specs (developer-reference): Dict DSL, input profile, capability cost model. |
-| **[Contributing](https://paxman.readthedocs.io/en/latest/contributing/)** | Contribution workflow, development setup, testing strategy, test data policy, code of conduct. |
-| **[Security](https://paxman.readthedocs.io/en/latest/security/)** | Threat model, PII handling, secrets-by-reference, vulnerability reporting. |
-
-In-repo files (`CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`,
-`CHANGELOG.md`) are short stubs that link to the full content on Read
-the Docs. GitHub's issue and PR UIs auto-discover these files.
-
-## Quickstart (5 minutes)
-
-> **Note:** Paxman V1 is in pre-release. The quickstart below is
-> verified end-to-end in CI (see `.github/workflows/ci.yml`). For a
-> full migration walkthrough (e.g. from LlamaIndex, LangChain, or a
-> hand-rolled pipeline), see the
-> [migration guide on Read the Docs](https://paxman.readthedocs.io/en/latest/concepts/MIGRATION-GUIDE/).
-
-### 1. Install
-
-```bash
-pip install paxman[pydantic]
-```
-
-### 2. Define a contract (Pydantic)
-
-```python
-from pydantic import BaseModel, Field
-
-
-class LineItem(BaseModel):
-    description: str
-    quantity: int
-    unit_price: float
-
-
-class Invoice(BaseModel):
-    supplier_name: str = Field(..., description="The supplier's name.")
-    total_amount: float = Field(..., description="Total invoice amount.")
-    currency_code: str = Field(..., description="ISO-4217 currency code.")
-    line_items: list[LineItem] = Field(default_factory=list)
-```
-
-### 3. Normalize raw input
-
-```python
-import paxman
-
-# IMPORTANT: import the adapter(s) you need so they self-register.
-# Pydantic is an optional extra; the core package ships the registry
-# but not the adapters themselves.
-import paxman.contract.adapters.pydantic  # noqa: F401
-import paxman.contract.adapters.dict_dsl  # noqa: F401
-
-raw_invoice = """
-ACME Corp
-Invoice #1234
-Total: $1,234.56 USD
-- Widget: 2 @ $500.00
-- Gadget: 1 @ $234.56
-"""
-
-artifact = paxman.normalize(
-    input_data=raw_invoice,
-    contract=Invoice,
-)
-
-print(artifact.status)               # Status.SUCCESS or Status.PARTIAL_SUCCESS
-print(artifact.normalized_data)      # {"supplier_name": "ACME Corp", ...}
-print(artifact.unresolved_fields)    # []  (or list of fields Paxman could not resolve)
-print(artifact.replay_hash)          # "a3f8..."
-```
-
-### 4. Replay
-
-```python
-# Later, with just the artifact and the contract
-rehydrated = paxman.replay(artifact, contract=Invoice)
-assert rehydrated == artifact  # byte-equal
-```
-
-### Jupyter Lab Playground in Docker Container (v1.1.0+)
-
-A containerized Jupyter Lab playground that builds Paxman from source.
-Open a browser and explore all 5 V1 capabilities interactively.
-
-```bash
-make playground-build && make playground-up
-```
-
-See [`playground/README.md`](./playground/README.md).
-
-## Examples
-
-Paxman ships with 3 reference examples covering the 3 target personas.
-Each is a standalone mini-package. Clone the repo, `cd` into the
-example, and run it.
-
-### Backend service (Persona A: backend developer)
-
-A minimal FastAPI service exposing `POST /normalize` for contract-driven
-normalization. Accepts raw text input, returns structured
-evidence-backed JSON with a deterministic replay hash.
-
-- **Path:** [`examples/backend_service/`](./examples/backend_service/)
-- **What it demonstrates:** Pydantic contract, REST endpoint, replay hash, unresolved fields
-
-```bash
-cd examples/backend_service
-uv pip install -e "../../[pydantic]" -e ".[dev]"
-uvicorn backend_service.app:app --reload --port 8000
-```
-
-### AI agent ingest (Persona B: AI engineer)
-
-A stdlib-only agent tool-calling loop that invokes `paxman.normalize()`
-as a tool. Zero framework dependencies. Port the `NormalizeTool` to
-LangChain, LlamaIndex, or any custom agent.
-
-- **Path:** [`examples/ai_agent_ingest/`](./examples/ai_agent_ingest/)
-- **What it demonstrates:** Agent tool loop, framework-agnostic design, evidence-backed extraction
-
-```bash
-cd examples/ai_agent_ingest
-uv pip install -e ".[dev]"
-uv run python -m ai_agent_ingest
-```
-
-### SaaS procurement pipeline (Persona C: SaaS team)
-
-A CSV-batch invoice/quotation pipeline. Reads a manifest of raw input
-files, normalizes each against a Pydantic contract, writes artifacts to
-disk, and verifies cross-run replay-hash reproducibility.
-
-- **Path:** [`examples/saas_procurement/`](./examples/saas_procurement/)
-- **What it demonstrates:** Batch normalization, on-disk artifact storage, replay-hash determinism (D10.7 fixture)
-
-```bash
-cd examples/saas_procurement
-uv pip install -e ".[dev]"
-uv run python -m saas_procurement data/manifest.csv output/
-```
-
-## Use cases
-
-Paxman is designed for:
-
-- **Invoice/quotation/procurement normalization** — compare offers across suppliers and currencies.
-- **Agentic ingestion flows** — auditable, evidence-backed extraction for RAG or agent pipelines.
-- **Document understanding services** — wrap Paxman inside a SaaS without giving up replay or evidence.
-- **Multi-source data pipelines** — normalize email, OCR, CSV, and API inputs into one canonical schema.
-
-See the [PRD §7 Primary Use Cases](https://paxman.readthedocs.io/en/latest/) (linked from the docs site) for detailed examples. The PRD is a historical planning artifact kept on the project wiki.
+The `replay_hash` on the artifact is the deterministic signature that proves the artifact can be rehydrated byte-for-byte.
 
 ## Status
 
-- **1.0.0 (Sprint 10) — Shipped:** Production-ready V1 — all V1 acceptance criteria met. Full pipeline (contract adaptation, planning, execution, reconciliation, artifact, replay), 4 contract adapters, 5 capabilities, 7 subsystems, deterministic replay via SHA-256, 9-check CI.
-- **Post-v1 (Sprint 11) — In progress:** Repo springclean — Diátaxis-style `docs/` reorg, Read the Docs integration, agent-artifact untracking, marketing site split out to the NexusNV website repo.
+v2 is in active development. The previous v1.x releases were retracted on 2026-07-12; see [`RETRACTION.md`](./RETRACTION.md) and the audit postmortem in [`.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md`](./.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md).
 
-## Install (developer setup, Sprint 1)
+This branch is a fresh start. The working tree does not contain the v1.x implementation; that history is preserved in the git log on the `recovery/sprint-1-6` branch.
 
-Paxman uses [`uv`](https://docs.astral.sh/uv/) for package management. The first preview is not published to PyPI yet; developers install the project from a working tree.
+## Install
+
+There is no `pip install paxman` path yet. To work with the v2 source, install from this working tree:
 
 ```bash
-# Clone the repository
 git clone https://github.com/nexusnv/paxman.git
 cd paxman
-
-# Install uv (if not already installed)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Install the package + all dev dependencies (editable)
-uv sync --all-extras --dev
-
-# Verify the install
-uv run python -c "import paxman; print(f'paxman {paxman.__version__}')"
+uv sync
 ```
-
-Expected output: `paxman 1.0.0`.
-
-## Local CI
-
-Run the full local-CI pipeline (the same checks run on GitHub Actions):
-
-```bash
-make ci
-```
-
-This runs, in order: `install-frozen → lint → format-check → typecheck → typecheck-pyright → imports → docs-check → security → test-cov`. **All 9 checks** must pass before opening a PR. Each check is also runnable individually (e.g. `make lint`, `make typecheck`, `make docs-check`, `make security`).
-
-## Project structure
-
-```text
-paxman/
-├── src/paxman/              # the package (src-layout)
-│   ├── __init__.py          # exposes __version__ + public API
-│   ├── py.typed             # PEP 561 marker
-│   ├── errors.py            # PaxmanError hierarchy
-│   ├── types.py             # Status, ConfidenceBand, FieldType enums
-│   ├── protocols.py         # internal Protocol definitions
-│   ├── versioning.py        # version constants and helpers
-│   ├── logging.py           # structlog factory (no timestamps in replay)
-│   ├── budget.py            # Budget, Policy, CurrencyPolicy
-│   ├── clock.py             # injectable Clock + FakeClock
-│   ├── ids.py               # prefixed ID helpers
-│   ├── serialization.py     # stable JSON encoder (RFC 8785-style)
-│   ├── contract/            # adapter + validation (4 formats → CanonicalContract)
-│   ├── planner/             # rule-based field-centric planning
-│   ├── capabilities/        # 5 V1 capabilities (text/regex/lookup/inference/validation)
-│   ├── executor/            # sequential execution + budget tracking
-│   ├── reconciler/          # truth resolution + confidence + MONEY
-│   ├── artifact/            # ExecutionArtifact + replay hash + diagnostics
-│   ├── api/                 # public API (normalize, replay, register_*)
-│   └── testing/             # public Hypothesis strategies (paxman.testing)
-├── tests/                   # pytest test suite (unit / property / integration / public_api)
-├── examples/                # 3 reference mini-packages (backend_service, ai_agent_ingest, saas_procurement)
-├── docs/                    # user-facing + contributor docs (served by Read the Docs)
-│   ├── index.md             # RTD landing page
-│   ├── adr/                 # Architecture Decision Records (immutable)
-│   ├── concepts/            # Mental model: contracts, capabilities, planning, reconciliation, replay
-│   ├── howto/               # 5-minute task recipes
-│   ├── reference/           # Architecture, package structure, glossary, replay, extending, dependencies
-│   ├── specs/               # Implementation-level specs (developer-reference)
-│   ├── guides/              # Forward-growth slot for domain-specific tutorials
-│   ├── contributing/        # CONTRIBUTING, DEVELOPMENT, TESTING_STRATEGY, TEST_DATA, CODE_OF_CONDUCT
-│   ├── security/            # Security policy
-│   └── operations/          # CHANGELOG
-├── mkdocs.yml               # MkDocs config for the RTD site
-├── .readthedocs.yaml        # Read the Docs build config
-├── pyproject.toml           # PEP 621 metadata + tooling config
-├── Makefile                 # `make ci`, `make test`, `make build`, …
-├── .pre-commit-config.yaml
-├── .github/                 # workflows + issue/PR templates
-├── LICENSE                  # MIT (per ADR-0008)
-├── CONTRIBUTING.md          # stub → docs/contributing/
-├── CODE_OF_CONDUCT.md       # full text (GitHub-recognized) — mirror at docs/contributing/code-of-conduct/
-├── SECURITY.md              # stub → docs/security/
-└── CHANGELOG.md             # stub → docs/operations/changelog.md
-```
-
-
-See the [documentation site](https://paxman.readthedocs.io/) for the full user and contributor reference.
-
-## Contributing
-
-We welcome contributions of all sizes — from typo fixes to new
-subsystems. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the
-contribution workflow and the ADR-driven process.
-
-For local development setup, see the [Development setup guide](https://paxman.readthedocs.io/en/latest/contributing/development/).
-For extension guides (adding a new contract adapter, capability, or
-inference provider), see [Extending Paxman](https://paxman.readthedocs.io/en/latest/reference/extending/).
-
-Significant architectural changes require an ADR; see the
-[ADR index](https://paxman.readthedocs.io/en/latest/adr/). Community standards
-are in [CODE_OF_CONDUCT.md](./CODE_OF_CONDUCT.md).
 
 ## License
 
-MIT. See [LICENSE](./LICENSE). Per [ADR-0008](https://paxman.readthedocs.io/en/latest/adr/0008-license-decision/),
-MIT is the chosen license for V1. Apache-2.0 is the documented
-alternative if patent concerns emerge (the trade-off analysis is kept
-on the project wiki).
-
-## Performance
-
-V1 aspirational targets and measured numbers from the **Sprint 9 production-hardening baseline** (commit [`71941f5`](https://github.com/nexusnv/paxman/commit/71941f5), branch `sprint-9-production-hardening`). Hardware: `Linux x86_64`, `Python 3.12`, `pytest-benchmark`, 10 rounds. Targets are **aspirational, not SLOs** — see [`ARCHITECTURE.md` §14](https://paxman.readthedocs.io/en/latest/reference/architecture/).
-
-> **Note:** The numbers below are the *historical* Sprint 9 snapshot, not a current-machine expectation. Modern dev boxes typically measure 1.5×–17× faster across the same benchmarks. Run `make benchmark` and `make profile` on your hardware for up-to-date numbers.
-
-| Operation | p50 | p99 | Target (p50 / p99) | Status |
-|---|---|---|---|---|
-| `normalize()` (20-field contract, 100 KB input) | **24.30 ms** | 24.73 ms | ≤ 200 ms / ≤ 2 s | met |
-| `replay()` (standard 5 KB artifact) | **1.17 ms** | 1.81 ms | ≤ 50 ms / ≤ 500 ms | met |
-| `replay()` (inflated 100 KB artifact) | **0.90 ms** | 1.24 ms | ≤ 50 ms / ≤ 500 ms | met |
-| Cold import (`import paxman`) | **37 ms** | 60 ms | ≤ 100 ms | met (D9.5) |
-
-**Headline speedups from the D9.5 optimization pass** (before → after, same Sprint 9 hardware):
-
-- **4.1× faster** `normalize()` on 100 KB input (9.14 ms → 2.23 ms) — C-level `bytes.count()` replaces a Python-level generator loop in `planner/input_profile.compute_density`.
-- **3.4× faster** cold import (127 ms → 37 ms) — PEP 562 `__getattr__` lazy loading cuts modules loaded eagerly from 65 → 14.
-- **6.4–7.1× faster** `replay()` (379–418 µs → 59 µs) — single-entry weakref-guarded hash cache skips re-serialization on the common `normalize()` → `replay()` path.
-
-**Run on your own hardware:**
-
-- `make benchmark` — `pytest-benchmark` over `tests/benchmark/` (sort by mean, ≥ 10 rounds, 3 warmup iterations).
-- `make benchmark-quick` — same, fewer rounds (faster feedback during dev).
-- `make profile` — wraps `scripts/benchmark_import_time.py` with 20 iterations for cold-import time.
-
-Full profiling details (cumulative-time breakdowns for `normalize`, `replay`, and cold import, plus per-optimization before/after tables) are in the Sprint 9 baseline report committed as `docs/sprints/performance-baseline.md` on the `sprint-9-production-hardening` branch.
-
-## Community & discussions
-
-Have an idea, want to show what you built, or just want to ask something?
-Join the conversation on GitHub Discussions:
-
-- [💡 Ideas](https://github.com/nexusnv/paxman/discussions/categories/ideas) — propose features and shape the **next version of Paxman**. Roadmaps, RFCs, design proposals.
-- [🎉 Show and tell](https://github.com/nexusnv/paxman/discussions/categories/show-and-tell) — built something with Paxman? Show it off, share patterns, post a demo.
-- [🙏 Q&A](https://github.com/nexusnv/paxman/discussions/categories/q-a) — got stuck? Ask the community. Usage questions, integration help, "how do I…".
-- [📣 Announcements](https://github.com/nexusnv/paxman/discussions/categories/announcements) — release notes, security advisories, breaking-change previews. Read-only for the community.
-- [🗳️ Polls](https://github.com/nexusnv/paxman/discussions/categories/polls) — quick community votes on naming, defaults, and design tradeoffs.
-- [💬 General](https://github.com/nexusnv/paxman/discussions/categories/general) — anything else Paxman-related that doesn't fit a category above.
-
-Bug reports and well-defined feature requests go to
-[GitHub Issues](https://github.com/nexusnv/paxman/issues) — Discussions is
-for the open-ended conversation.
-
-## See also
-
-- [Glossary](https://paxman.readthedocs.io/en/latest/reference/glossary/) — vocabulary
-- [Replay & determinism](https://paxman.readthedocs.io/en/latest/reference/replay-and-determinism/) — replay model
-- [Security policy](https://paxman.readthedocs.io/en/latest/security/) — threat model
-- [Architecture](https://paxman.readthedocs.io/en/latest/reference/architecture/) — subsystem design
-- [Paxman Website](https://paxman.nexusnv.net) — the official project site
-- [NexusNV Website](https://nexusnv.net) — the people behind Paxman
+MIT. See [`LICENSE`](./LICENSE).

@@ -59,6 +59,8 @@ A single field in the contract. Every field has a name, a type, and a required f
 | `required` | `bool` | yes | — | If `True`, unresolved status prevents `SUCCESS`. |
 | `description` | `str` | no | `None` | Human-readable description. Carried into the `CanonicalField`. |
 | `tags` | `list[str]` | no | `[]` | Semantic tags for planner heuristic hints (see §3.3). |
+| `format_hints` | `list[str]` | no | `[]` | Input formats eligible for deterministic field-specific extraction (`csv`, `json`, or `xml`). |
+| `cleanup` | `list[CleanupStep]` | no | `[]` | Explicit post-extraction transforms. Runs only after a matching `format_hints` extractor is selected. |
 | `default` | typed value | no | `None` | Fallback value when the field is unresolved. Type must match `type`. |
 | `constraints` | `list[Constraint]` | no | `[]` | Field-level constraints (see §3.2). |
 
@@ -157,8 +159,15 @@ The grammar describes the **structure** of a valid Dict DSL contract. Angle brac
                        "required": <bool>,
                        "description"?: <string>,
                        "tags"?: [<string>, ...],
+                       "format_hints"?: ["csv" | "json" | "xml", ...],
+                       "cleanup"?: [<cleanup_step>, ...],
                        "default"?: <default_value>,
                        "constraints"?: [<constraint>, ...] }
+
+<cleanup_step>   ::= { "capability": "trim_extraction",
+                       "config"?: { "chars"?: <string> } }
+                   | { "capability": "case_normalization",
+                       "config": { "mode": "lower" | "upper" | "title" | "preserve" } }
 
 <v1_type>        ::= "STRING"
                    | "INTEGER"

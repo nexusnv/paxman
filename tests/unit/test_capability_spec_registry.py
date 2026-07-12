@@ -8,6 +8,7 @@ import pytest
 
 from paxman.capabilities.base import CapabilityContext
 from paxman.capabilities.registry import (
+    _capabilities,
     all_capabilities,
     get,
     get_latest,
@@ -589,3 +590,36 @@ def test_v1_1_cleanup_transforms_have_import_time_registration_hook() -> None:
             f"{mod.__name__}._register_on_import() should register only "
             f"{expected_id!r}; got: {sorted(registered_ids)}"
         )
+
+
+# --- ADR-0012: normalize() auto-registers V1 capabilities -----------------
+
+
+def test_normalize_triggers_v1_capability_registration() -> None:
+    """Calling normalize() should auto-register V1 capabilities.
+
+    Per ADR-0012, V1 capabilities self-register on import. The
+    normalize() function must import paxman.capabilities.v1 (or
+    trigger its import) so the planner has the full V1 capability
+    surface available.
+
+    This test verifies the fix for the gap where normalize() never
+    imported V1 capabilities, leaving the registry empty and all
+    fields UNRESOLVED.
+    """
+    reset()
+    assert not _capabilities, "registry should be empty before test"
+
+    from paxman.api.normalize import normalize
+
+    contract = {"fields": [{"name": "test_field", "type": "string", "required": True}]}
+
+    normalize(input_data=b"test input", contract=contract)
+
+    assert len(_capabilities) > 0, (
+        "normalize() should have triggered V1 capability registration; "
+        f"registry is empty: {list(_capabilities.keys())}"
+    )
+    assert ("text_extraction", "1.0") in _capabilities, (
+        "text_extraction@1.0 should be registered after normalize() call"
+    )

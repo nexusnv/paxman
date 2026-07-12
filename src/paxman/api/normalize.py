@@ -295,6 +295,15 @@ def normalize(
         >>> result.status  # doctest: +SKIP
         <Status.PARTIAL_SUCCESS: 'PARTIAL_SUCCESS'>
     """
+    # Ensure V1 capabilities are registered (ADR-0012).
+    # The import triggers _register_on_import() hooks on first call;
+    # for subsequent calls (module already cached), the bootstrap
+    # re-populates the registry after any reset() calls.
+    import paxman.capabilities.v1  # noqa: F401
+    from paxman.capabilities.registry import all_capabilities as _all_caps
+
+    _all_caps()  # triggers _bootstrap_v1_capabilities() if registry is empty
+
     # ------------------------------------------------------------------
     # Step 1: Adapt contract
     # ------------------------------------------------------------------

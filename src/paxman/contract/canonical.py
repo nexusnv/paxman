@@ -40,6 +40,7 @@ import attrs
 from paxman.contract._cleanup import CleanupStep
 from paxman.contract._extraction import ExtractionStep
 from paxman.contract._format_hint import FormatHint
+from paxman.contract._parse import ParseSpec
 from paxman.contract._types import Constraint, ContractPolicy, EnumValueSet, ResolutionPolicy
 from paxman.types import FieldType
 
@@ -204,6 +205,10 @@ class CanonicalField:
         extraction_step: Explicit field-specific extractor. Sprint 4 accepts
             only ``regex_extraction`` and it is mutually exclusive with
             :attr:`format_hints`.
+        parse_spec: Optional parse declaration for typed candidate
+            preparation. When present, the reconciler coerces string
+            candidates to the field's declared type before eligibility
+            filtering. Requires :attr:`extraction_step` to be set.
 
     Raises:
         TypeError: If any field has the wrong type.
@@ -254,6 +259,7 @@ class CanonicalField:
     format_hints: tuple[FormatHint, ...] = ()
     cleanup_steps: tuple[CleanupStep, ...] = ()
     extraction_step: ExtractionStep | None = None
+    parse_spec: ParseSpec | None = None
 
     def __attrs_post_init__(self) -> None:
         """Validate all field invariants.
@@ -354,6 +360,16 @@ class CanonicalField:
             )
         if self.extraction_step is not None and self.format_hints:
             raise ValueError("extraction_step and format_hints cannot both be configured")
+        # --- parse_spec ---
+        if self.parse_spec is not None and not isinstance(self.parse_spec, ParseSpec):
+            raise TypeError(
+                "parse_spec must be a ParseSpec or None, "
+                f"got {type(self.parse_spec).__name__}"
+            )
+        if self.parse_spec is not None and self.extraction_step is None:
+            raise ValueError(
+                f"field {self.name!r}: parse_spec requires an extraction_step"
+            )
         # --- default / type coupling (best-effort) ---
         self._validate_default()
 

@@ -119,6 +119,11 @@ field-specific extraction configuration through a matching
 4. If no such configuration exists, the chain is empty and the field
    is explicitly `UNRESOLVED`.
 
+For plain text, a field may instead declare an explicit `extract` step using
+`regex_extraction` and a field-specific pattern. `extract` and `format_hints`
+are mutually exclusive. The planner never derives a pattern from a field name,
+description, type, or input content.
+
 An extractor may be followed by an explicit field `cleanup` chain. The
 contract declares each `trim_extraction` or `case_normalization` step and its
 configuration in order; the planner marks those steps as candidate hand-offs.

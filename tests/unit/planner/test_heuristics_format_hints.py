@@ -11,6 +11,7 @@ from paxman.capabilities.v1.json_path_extraction import JsonPathExtractionCapabi
 from paxman.capabilities.v1.regex_extraction import RegexExtractionCapability
 from paxman.capabilities.v1.xpath_extraction import XPathExtractionCapability
 from paxman.contract._cleanup import CleanupStep
+from paxman.contract._extraction import ExtractionStep
 from paxman.contract._format_hint import FormatHint
 from paxman.contract.canonical import CanonicalField
 from paxman.planner.heuristics import build_capability_chain, select_format_aware
@@ -124,6 +125,20 @@ def test_build_chain_does_not_plan_cleanup_without_matching_extractor() -> None:
     field = _field(cleanup_steps=(CleanupStep("trim_extraction"),))
 
     assert build_capability_chain(field, make_profile(b"supplier"), Policy(), None) == ()
+
+
+def test_build_chain_uses_declared_regex_before_cleanup() -> None:
+    """A contract-declared regex is the only non-format extraction path."""
+    field = _field(
+        extraction_step=ExtractionStep("regex_extraction", {"pattern": r"ID:\s*(?P<value>\S+)"}),
+        cleanup_steps=(CleanupStep("trim_extraction"),),
+    )
+
+    steps = build_capability_chain(field, make_profile(b"ID: A-1"), Policy(), None)
+
+    assert [step.capability_id for step in steps] == ["regex_extraction", "trim_extraction"]
+    assert dict(steps[0].config) == {"pattern": r"ID:\s*(?P<value>\S+)"}
+    assert dict(steps[1].config) == {"input_from_candidate": True}
 
 
 def test_member_agnostic_dispatch() -> None:

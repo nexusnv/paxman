@@ -60,7 +60,8 @@ A single field in the contract. Every field has a name, a type, and a required f
 | `description` | `str` | no | `None` | Human-readable description. Carried into the `CanonicalField`. |
 | `tags` | `list[str]` | no | `[]` | Semantic tags for planner heuristic hints (see §3.3). |
 | `format_hints` | `list[str]` | no | `[]` | Input formats eligible for deterministic field-specific extraction (`csv`, `json`, or `xml`). |
-| `cleanup` | `list[CleanupStep]` | no | `[]` | Explicit post-extraction transforms. Runs only after a matching `format_hints` extractor is selected. |
+| `extract` | `ExtractionStep` | no | `None` | Explicit regex extraction for plain text. Mutually exclusive with `format_hints`. |
+| `cleanup` | `list[CleanupStep]` | no | `[]` | Explicit post-extraction transforms. Runs only after a configured extractor is selected. |
 | `default` | typed value | no | `None` | Fallback value when the field is unresolved. Type must match `type`. |
 | `constraints` | `list[Constraint]` | no | `[]` | Field-level constraints (see §3.2). |
 
@@ -160,6 +161,7 @@ The grammar describes the **structure** of a valid Dict DSL contract. Angle brac
                        "description"?: <string>,
                        "tags"?: [<string>, ...],
                        "format_hints"?: ["csv" | "json" | "xml", ...],
+                       "extract"?: <extraction_step>,
                        "cleanup"?: [<cleanup_step>, ...],
                        "default"?: <default_value>,
                        "constraints"?: [<constraint>, ...] }
@@ -168,6 +170,9 @@ The grammar describes the **structure** of a valid Dict DSL contract. Angle brac
                        "config"?: { "chars"?: <string> } }
                    | { "capability": "case_normalization",
                        "config": { "mode": "lower" | "upper" | "title" | "preserve" } }
+
+<extraction_step>::= { "capability": "regex_extraction",
+                       "config": { "pattern": <string> } }
 
 <v1_type>        ::= "STRING"
                    | "INTEGER"

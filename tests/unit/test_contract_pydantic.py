@@ -791,3 +791,56 @@ def test_extract_from_json_schema_extra() -> None:
 
     canonical = PydanticAdapter().adapt(M)
     assert canonical.fields[0].extraction_step is not None
+
+
+# ---------------------------------------------------------------------------
+# Parse round-trip tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_parse_from_json_schema_extra() -> None:
+    """Pydantic carries x-paxman-parse through json_schema_extra."""
+    from pydantic import BaseModel, Field
+
+    class M(BaseModel):
+        total: float = Field(
+            json_schema_extra={
+                "x-paxman-extract": {
+                    "capability": "regex_extraction",
+                    "config": {"pattern": r"Total:\s*(?P<value>\d+\.\d{2})"},
+                },
+                "x-paxman-parse": {"kind": "decimal"},
+            }
+        )
+
+    canonical = PydanticAdapter().adapt(M)
+    assert canonical.fields[0].parse_spec is not None
+    assert canonical.fields[0].parse_spec.kind == "decimal"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_boolean_parse_from_json_schema_extra() -> None:
+    """Boolean parse with true/false values from pydantic json_schema_extra."""
+    from pydantic import BaseModel, Field
+
+    class M(BaseModel):
+        active: bool = Field(
+            json_schema_extra={
+                "x-paxman-extract": {
+                    "capability": "regex_extraction",
+                    "config": {"pattern": r"Active:\s*(?P<value>\S+)"},
+                },
+                "x-paxman-parse": {
+                    "kind": "boolean",
+                    "true_values": ["yes", "y"],
+                    "false_values": ["no", "n"],
+                },
+            }
+        )
+
+    canonical = PydanticAdapter().adapt(M)
+    assert canonical.fields[0].parse_spec is not None
+    assert canonical.fields[0].parse_spec.kind == "boolean"

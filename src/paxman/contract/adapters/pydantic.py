@@ -99,6 +99,7 @@ from paxman.contract import (
 )
 from paxman.contract._cleanup import CleanupStep, CleanupValidationError, parse_cleanup
 from paxman.contract._extraction import ExtractionStep, ExtractionValidationError, parse_extraction
+from paxman.contract._parse import ParseSpec, ParseValidationError, parse_spec
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -398,6 +399,13 @@ class PydanticAdapter:
         format_hints = self._extract_format_hints(name, field_info, model_cls)
         cleanup_steps = self._extract_cleanup(name, field_info, model_cls)
         extraction_step = self._extract_extraction(name, field_info, model_cls)
+        parse_spec = self._extract_parse(name, field_info, model_cls, field_type=field_type)
+        if parse_spec is not None and extraction_step is None:
+            raise InvalidContractError(
+                f"field {name!r}: parse requires an extraction_step",
+                error_code="INVALID_PARSE",
+                context={"model": model_cls.__name__, "field_name": name},
+            )
         # Stable field id.
         fid = f"field_{model_cls.__name__}_{name}"
         return CanonicalField(
@@ -414,6 +422,7 @@ class PydanticAdapter:
             format_hints=format_hints,
             cleanup_steps=cleanup_steps,
             extraction_step=extraction_step,
+            parse_spec=parse_spec,
         )
 
     @staticmethod
@@ -508,6 +517,28 @@ class PydanticAdapter:
                 context={"model": model_cls.__name__, "field_name": name},
             )
         return step
+
+    def _extract_parse(
+        self,
+        name: str,
+        field_info: pydantic.fields.FieldInfo,
+        model_cls: type,
+        field_type: "typing.Any",
+    ) -> ParseSpec | None:
+        """Extract x-paxman-parse from Pydantic json_schema_extra."""
+        extra = field_info.json_schema_extra
+        if extra is None or not isinstance(extra, dict):
+            return None
+        try:
+            return parse_spec(
+                extra.get("x-paxman-parse"), field_name=name, field_type=field_type
+            )
+        except ParseValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"model": model_cls.__name__, **exc.context},
+            ) from exc
 
     def _constraints_from_field(
         self,
@@ -651,6 +682,12 @@ class PydanticAdapter:
             if not isinstance(extra, dict):
                 extra = {}
             extra["x-paxman-extract"] = f.extraction_step.to_wire()
+            field_kwargs["json_schema_extra"] = extra
+        if f.parse_spec is not None:
+            extra = field_kwargs.get("json_schema_extra", {})
+            if not isinstance(extra, dict):
+                extra = {}
+            extra["x-paxman-parse"] = f.parse_spec.to_wire()
             field_kwargs["json_schema_extra"] = extra
         if f.enum_values is not None:
             # Override annotation with a Literal of the allowed values.

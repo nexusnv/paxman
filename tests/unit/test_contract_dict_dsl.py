@@ -1632,3 +1632,124 @@ def test_extract_and_format_hints_are_rejected_as_ambiguous() -> None:
         )
 
     assert exc_info.value.error_code == "AMBIGUOUS_EXTRACTION"
+
+
+# ---------------------------------------------------------------------------
+# Parse round-trip tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_decimal_parse_round_trip() -> None:
+    """A Dict DSL parse declaration is canonicalized and exported."""
+    adapter = _adapter()
+    canonical = adapter.adapt(
+        {
+            "id": "c1",
+            "fields": [
+                {
+                    "name": "total",
+                    "type": "DECIMAL",
+                    "required": True,
+                    "extract": {
+                        "capability": "regex_extraction",
+                        "config": {"pattern": r"Total:\s*(?P<value>\d+\.\d{2})"},
+                    },
+                    "parse": {"kind": "decimal"},
+                }
+            ],
+        }
+    )
+
+    field = canonical.fields[0]
+    assert field.parse_spec is not None
+    assert field.parse_spec.kind == "decimal"
+    exported = adapter.export(canonical)
+    assert exported["fields"][0]["parse"] == {"kind": "decimal"}
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_boolean_parse_round_trip() -> None:
+    """Boolean parse with true/false values round-trips."""
+    adapter = _adapter()
+    canonical = adapter.adapt(
+        {
+            "id": "c1",
+            "fields": [
+                {
+                    "name": "active",
+                    "type": "BOOLEAN",
+                    "required": True,
+                    "extract": {
+                        "capability": "regex_extraction",
+                        "config": {"pattern": r"Active:\s*(?P<value>\S+)"},
+                    },
+                    "parse": {
+                        "kind": "boolean",
+                        "true_values": ["yes", "y"],
+                        "false_values": ["no", "n"],
+                    },
+                }
+            ],
+        }
+    )
+
+    field = canonical.fields[0]
+    assert field.parse_spec is not None
+    assert field.parse_spec.kind == "boolean"
+    exported = adapter.export(canonical)
+    assert exported["fields"][0]["parse"]["kind"] == "boolean"
+    assert exported["fields"][0]["parse"]["true_values"] == ["yes", "y"]
+    assert exported["fields"][0]["parse"]["false_values"] == ["no", "n"]
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_date_parse_round_trip() -> None:
+    """Date parse with strptime format round-trips."""
+    adapter = _adapter()
+    canonical = adapter.adapt(
+        {
+            "id": "c1",
+            "fields": [
+                {
+                    "name": "created_at",
+                    "type": "DATE",
+                    "required": True,
+                    "extract": {
+                        "capability": "regex_extraction",
+                        "config": {"pattern": r"Date:\s*(?P<value>\S+)"},
+                    },
+                    "parse": {"kind": "date", "format": "%Y-%m-%d"},
+                }
+            ],
+        }
+    )
+
+    field = canonical.fields[0]
+    assert field.parse_spec is not None
+    assert field.parse_spec.kind == "date"
+    exported = adapter.export(canonical)
+    assert exported["fields"][0]["parse"] == {"kind": "date", "format": "%Y-%m-%d"}
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_parse_without_extract_is_rejected() -> None:
+    """parse_spec requires an extraction_step."""
+    with pytest.raises(InvalidContractError):
+        _adapter().adapt(
+            {
+                "id": "c1",
+                "fields": [
+                    {
+                        "name": "total",
+                        "type": "DECIMAL",
+                        "required": True,
+                        "parse": {"kind": "decimal"},
+                    }
+                ],
+            }
+        )

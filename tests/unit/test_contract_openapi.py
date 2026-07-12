@@ -766,3 +766,36 @@ def test_cleanup_from_extension() -> None:
 
     canonical = OpenApiAdapter().adapt(spec)
     assert canonical.fields[0].cleanup_steps[0].capability_id == "trim_extraction"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_extract_from_extension() -> None:
+    """OpenAPI delegates x-paxman-extract handling to JsonSchemaAdapter."""
+    from paxman.contract.adapters.openapi import OpenApiAdapter
+
+    spec = {
+        "openapi": "3.0.0",
+        "info": {"title": "t", "version": "1.0"},
+        "paths": {},
+        "components": {
+            "schemas": {
+                "Invoice": {
+                    "type": "object",
+                    "properties": {
+                        "invoice_id": {
+                            "type": "string",
+                            "x-paxman-extract": {
+                                "capability": "regex_extraction",
+                                "config": {"pattern": r"ID:(?P<value>\S+)"},
+                            },
+                        }
+                    },
+                    "required": ["invoice_id"],
+                }
+            }
+        },
+    }
+
+    canonical = OpenApiAdapter().adapt(spec)
+    assert canonical.fields[0].extraction_step is not None

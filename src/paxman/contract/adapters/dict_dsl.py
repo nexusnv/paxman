@@ -64,6 +64,7 @@ from paxman.contract import (
     parse_format_hints,
 )
 from paxman.contract._cleanup import CleanupStep, CleanupValidationError, parse_cleanup
+from paxman.contract._extraction import ExtractionStep, ExtractionValidationError, parse_extraction
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -469,6 +470,14 @@ class DictDSLAdapter:
         # In V1 the field id is derived deterministically from the contract
         # id + field name. The canonical form's `id` is a stable string.
         fid = f"field_{contract_id}_{name}"
+        format_hints = self._parse_format_hints(raw, contract_id=contract_id, name=name)
+        extraction_step = self._parse_extraction(raw, contract_id=contract_id, name=name)
+        if format_hints and extraction_step is not None:
+            raise InvalidContractError(
+                f"field {name!r} cannot declare both format_hints and extract",
+                error_code="AMBIGUOUS_EXTRACTION",
+                context={"contract_id": contract_id, "field_name": name},
+            )
         return CanonicalField(
             id=fid,
             path=name,
@@ -480,8 +489,9 @@ class DictDSLAdapter:
             constraints=tuple(constraints),
             default=default_value,
             enum_values=enum_values,
-            format_hints=self._parse_format_hints(raw, contract_id=contract_id, name=name),
+            format_hints=format_hints,
             cleanup_steps=self._parse_cleanup(raw, contract_id=contract_id, name=name),
+            extraction_step=extraction_step,
         )
 
     # =====================================================================
@@ -526,6 +536,20 @@ class DictDSLAdapter:
         try:
             return parse_cleanup(raw.get("cleanup"), field_name=name)
         except CleanupValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"contract_id": contract_id, **exc.context},
+            ) from exc
+
+    @staticmethod
+    def _parse_extraction(
+        raw: typing.Mapping[str, typing.Any], *, contract_id: str, name: str
+    ) -> ExtractionStep | None:
+        """Parse an explicit field-specific extraction declaration."""
+        try:
+            return parse_extraction(raw.get("extract"), field_name=name)
+        except ExtractionValidationError as exc:
             raise InvalidContractError(
                 str(exc),
                 error_code=exc.error_code,
@@ -860,6 +884,8 @@ class DictDSLAdapter:
             out["format_hints"] = [h.value for h in f.format_hints]
         if f.cleanup_steps:
             out["cleanup"] = [step.to_wire() for step in f.cleanup_steps]
+        if f.extraction_step is not None:
+            out["extract"] = f.extraction_step.to_wire()
         if f.default is not None:
             out["default"] = DictDSLAdapter._export_default(f.default, f.type)
         if f.enum_values is not None:

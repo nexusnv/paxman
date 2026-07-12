@@ -285,7 +285,64 @@ that generates random `ExecutionPlan` instances with stable
 
 ---
 
-## 11. See also
+## 11. Typed parsing (parse step)
+
+After candidates are extracted by capabilities, the Reconciler applies
+**typed parsing** to convert string values to their declared types. This
+is an optional field-level declaration that sits between extraction and
+eligibility filtering.
+
+### Parse declaration form
+
+Fields declare parsing via the `parse` key (Dict DSL) or `x-paxman-parse`
+extension (JSON Schema / OpenAPI):
+
+```python
+{
+    "name": "total",
+    "type": "DECIMAL",
+    "extract": {"capability": "regex_extraction", "config": {"pattern": r"[\d.]+"}},
+    "parse": {"kind": "decimal"},  # ← typed parsing
+}
+```
+
+**Supported kinds in V1:**
+
+| Kind | Field type | Config |
+|------|-----------|--------|
+| `integer` | `INTEGER` | None required |
+| `decimal` | `DECIMAL` | None required |
+| `boolean` | `BOOLEAN` | `true_values` and `false_values` lists |
+| `date` | `DATE` | `format` (strptime format string) |
+
+### Prerequisite: extraction_step required
+
+A `parse` declaration requires an `extract` (extraction_step) on the same
+field. This is enforced at contract adaptation time — a field with
+`parse` but no `extract` raises `INVALID_PARSE`.
+
+### Parser failure semantics
+
+When a candidate's string value cannot be parsed according to the
+ParseSpec (e.g., `"twelve"` for an INTEGER field), the candidate is
+**dropped** (not included in the output). If all candidates for a field
+are dropped, the field becomes `UNRESOLVED`.
+
+Non-string values (e.g., an integer already typed by the capability)
+are passed through unchanged — the parser only acts on strings.
+
+### Status outcomes with typed parsing
+
+- **`SUCCESS`**: All required fields resolved. Typed parsing converted
+  string candidates to their declared types successfully.
+- **`PARTIAL_SUCCESS`**: Some required fields resolved; others are
+  `UNRESOLVED` (either no candidates, or all candidates failed parsing).
+- **`UNRESOLVED`**: No required fields resolved. All candidates failed
+  parsing or no candidates existed.
+
+---
+
+## 12. See also
 
 - [ARCHITECTURE.md §4 Planner Subsystem](../reference/architecture.md) —
   internal architecture of the planner subsystem.

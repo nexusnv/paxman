@@ -61,6 +61,7 @@ A single field in the contract. Every field has a name, a type, and a required f
 | `tags` | `list[str]` | no | `[]` | Semantic tags for planner heuristic hints (see §3.3). |
 | `format_hints` | `list[str]` | no | `[]` | Input formats eligible for deterministic field-specific extraction (`csv`, `json`, or `xml`). |
 | `extract` | `ExtractionStep` | no | `None` | Explicit regex extraction for plain text. Mutually exclusive with `format_hints`. |
+| `parse` | `ParseSpec` | no | `None` | Typed parsing declaration. Requires `extract`. Converts string candidates to declared type. |
 | `cleanup` | `list[CleanupStep]` | no | `[]` | Explicit post-extraction transforms. Runs only after a configured extractor is selected. |
 | `default` | typed value | no | `None` | Fallback value when the field is unresolved. Type must match `type`. |
 | `constraints` | `list[Constraint]` | no | `[]` | Field-level constraints (see §3.2). |
@@ -162,6 +163,7 @@ The grammar describes the **structure** of a valid Dict DSL contract. Angle brac
                        "tags"?: [<string>, ...],
                        "format_hints"?: ["csv" | "json" | "xml", ...],
                        "extract"?: <extraction_step>,
+                       "parse"?: <parse_spec>,
                        "cleanup"?: [<cleanup_step>, ...],
                        "default"?: <default_value>,
                        "constraints"?: [<constraint>, ...] }
@@ -173,6 +175,14 @@ The grammar describes the **structure** of a valid Dict DSL contract. Angle brac
 
 <extraction_step>::= { "capability": "regex_extraction",
                        "config": { "pattern": <string> } }
+
+<parse_spec>      ::= { "kind": "integer" }
+                    | { "kind": "decimal" }
+                    | { "kind": "boolean",
+                        "true_values": [<string>, ...],
+                        "false_values": [<string>, ...] }
+                    | { "kind": "date",
+                        "format": <string> }  ; strptime format
 
 <v1_type>        ::= "STRING"
                    | "INTEGER"
@@ -413,6 +423,18 @@ A field with `"type": "MONEY"` and `"default": {"amount": "10.00", "currency": "
 
 **Behavior:** Raise `InvalidContractError` with `error_code="INVALID_ISO_4217"`. Context: `{"field_name": <str>, "currency": <str>}`.
 
+### EC7: parse without extract
+
+A field with `"parse"` but no `"extract"`.
+
+**Behavior:** Raise `InvalidContractError` with `error_code="INVALID_PARSE"`. Context: `{"field_name": <str>}`.
+
+### EC8: parse kind mismatch with field type
+
+A field with `"type": "INTEGER"` and `"parse": {"kind": "decimal"}`.
+
+**Behavior:** Raise `ParseValidationError` with error message indicating the parse kind is not allowed for the field type.
+
 ---
 
 ## 7. Error Model
@@ -440,6 +462,7 @@ All errors raised by the Dict DSL adapter are `InvalidContractError` instances. 
 | `INVALID_REGEX_PATTERN` | `pattern` constraint has an invalid regex | `field_name`, `regex`, `parse_error` |
 | `MONEY_REQUIRES_CURRENCY` | MONEY default is missing `currency` key | `field_name` |
 | `INVALID_ISO_4217` | Currency code is not a valid ISO-4217 code | `field_name`, `currency` |
+| `INVALID_PARSE` | `parse` declared without `extract`, or parse kind mismatches field type | `field_name` |
 | `DEFAULT_TYPE_MISMATCH` | `default` value does not match `type` | `field_name`, `expected_type`, `actual_value` |
 | `INVALID_POLICY_KEY` | `policy` dict contains an unknown key | `key`, `valid_keys` |
 | `INVALID_CONFIDENCE_FLOOR` | `confidence_floor` is outside `[0.0, 1.0]` | `value` |

@@ -28,7 +28,7 @@ class CleanupValidationError(ValueError):
         message: str,
         *,
         error_code: str = "INVALID_CLEANUP",
-        context: dict[str, object] | None = None,
+        context: typing.Mapping[str, object] | None = None,
     ) -> None:
         super().__init__(message)
         self.error_code = error_code

@@ -38,6 +38,7 @@ import typing
 import attrs
 
 from paxman.contract._cleanup import CleanupStep
+from paxman.contract._extraction import ExtractionStep
 from paxman.contract._format_hint import FormatHint
 from paxman.contract._types import Constraint, ContractPolicy, EnumValueSet, ResolutionPolicy
 from paxman.types import FieldType
@@ -200,6 +201,9 @@ class CanonicalField:
             <https://github.com/nexusnv/paxman/issues/73>`_.
         cleanup_steps: Explicit post-extraction cleanup operations. The planner
             only schedules these after selecting a format-aware extractor.
+        extraction_step: Explicit field-specific extractor. Sprint 4 accepts
+            only ``regex_extraction`` and it is mutually exclusive with
+            :attr:`format_hints`.
 
     Raises:
         TypeError: If any field has the wrong type.
@@ -249,6 +253,7 @@ class CanonicalField:
     constraints: tuple[Constraint, ...] = ()
     format_hints: tuple[FormatHint, ...] = ()
     cleanup_steps: tuple[CleanupStep, ...] = ()
+    extraction_step: ExtractionStep | None = None
 
     def __attrs_post_init__(self) -> None:
         """Validate all field invariants.
@@ -339,6 +344,16 @@ class CanonicalField:
                 "cleanup_steps must be a tuple of CleanupStep, got non-CleanupStep values: "
                 f"{bad_cleanup_steps!r}"
             )
+        # --- extraction_step ---
+        if self.extraction_step is not None and not isinstance(
+            self.extraction_step, ExtractionStep
+        ):
+            raise TypeError(
+                "extraction_step must be an ExtractionStep or None, "
+                f"got {type(self.extraction_step).__name__}"
+            )
+        if self.extraction_step is not None and self.format_hints:
+            raise ValueError("extraction_step and format_hints cannot both be configured")
         # --- default / type coupling (best-effort) ---
         self._validate_default()
 

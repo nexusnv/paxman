@@ -1506,3 +1506,58 @@ def test_cleanup_extension_export_round_trip() -> None:
         adapter.export(canonical)["properties"]["supplier"]["x-paxman-cleanup"]
         == schema["properties"]["supplier"]["x-paxman-cleanup"]
     )
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_extract_extension_export_round_trip() -> None:
+    """x-paxman-extract is canonicalized and exported unchanged."""
+    from paxman.contract.adapters.json_schema import JsonSchemaAdapter
+
+    schema = {
+        "type": "object",
+        "properties": {
+            "invoice_id": {
+                "type": "string",
+                "x-paxman-extract": {
+                    "capability": "regex_extraction",
+                    "config": {"pattern": r"ID:(?P<value>\S+)"},
+                },
+            }
+        },
+        "required": ["invoice_id"],
+    }
+    adapter = JsonSchemaAdapter()
+    canonical = adapter.adapt(schema)
+
+    assert canonical.fields[0].extraction_step is not None
+    assert (
+        adapter.export(canonical)["properties"]["invoice_id"]["x-paxman-extract"]
+        == schema["properties"]["invoice_id"]["x-paxman-extract"]
+    )
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_extract_and_format_hints_are_rejected_as_ambiguous() -> None:
+    """JSON Schema fields must choose one extraction declaration."""
+    from paxman.contract.adapters.json_schema import JsonSchemaAdapter
+
+    with pytest.raises(InvalidContractError) as exc_info:
+        JsonSchemaAdapter().adapt(
+            {
+                "type": "object",
+                "properties": {
+                    "invoice_id": {
+                        "type": "string",
+                        "x-paxman-format-hints": ["csv"],
+                        "x-paxman-extract": {
+                            "capability": "regex_extraction",
+                            "config": {"pattern": "ID"},
+                        },
+                    }
+                },
+            }
+        )
+
+    assert exc_info.value.error_code == "AMBIGUOUS_EXTRACTION"

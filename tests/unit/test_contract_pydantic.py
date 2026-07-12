@@ -771,3 +771,23 @@ def test_cleanup_from_json_schema_extra() -> None:
 
     canonical = PydanticAdapter().adapt(M)
     assert canonical.fields[0].cleanup_steps[0].capability_id == "trim_extraction"
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_extract_from_json_schema_extra() -> None:
+    """Pydantic carries x-paxman-extract through json_schema_extra."""
+    from pydantic import BaseModel, Field
+
+    class M(BaseModel):
+        invoice_id: str = Field(
+            json_schema_extra={
+                "x-paxman-extract": {
+                    "capability": "regex_extraction",
+                    "config": {"pattern": r"ID:(?P<value>\S+)"},
+                }
+            }
+        )
+
+    canonical = PydanticAdapter().adapt(M)
+    assert canonical.fields[0].extraction_step is not None

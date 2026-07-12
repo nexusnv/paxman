@@ -98,6 +98,7 @@ from paxman.contract import (
     parse_format_hints,
 )
 from paxman.contract._cleanup import CleanupStep, CleanupValidationError, parse_cleanup
+from paxman.contract._extraction import ExtractionStep, ExtractionValidationError, parse_extraction
 from paxman.contract._types import (
     Constraint,
     ConstraintKind,
@@ -396,6 +397,7 @@ class PydanticAdapter:
         # Extract format_hints from json_schema_extra (x-paxman-format-hints).
         format_hints = self._extract_format_hints(name, field_info, model_cls)
         cleanup_steps = self._extract_cleanup(name, field_info, model_cls)
+        extraction_step = self._extract_extraction(name, field_info, model_cls)
         # Stable field id.
         fid = f"field_{model_cls.__name__}_{name}"
         return CanonicalField(
@@ -411,6 +413,7 @@ class PydanticAdapter:
             enum_values=enum_values,
             format_hints=format_hints,
             cleanup_steps=cleanup_steps,
+            extraction_step=extraction_step,
         )
 
     @staticmethod
@@ -479,6 +482,32 @@ class PydanticAdapter:
                 error_code=exc.error_code,
                 context={"model": model_cls.__name__, **exc.context},
             ) from exc
+
+    @staticmethod
+    def _extract_extraction(
+        name: str,
+        field_info: pydantic.fields.FieldInfo,
+        model_cls: type,
+    ) -> ExtractionStep | None:
+        """Extract x-paxman-extract from Pydantic json_schema_extra."""
+        extra = field_info.json_schema_extra
+        if extra is None or not isinstance(extra, dict):
+            return None
+        try:
+            step = parse_extraction(extra.get("x-paxman-extract"), field_name=name)
+        except ExtractionValidationError as exc:
+            raise InvalidContractError(
+                str(exc),
+                error_code=exc.error_code,
+                context={"model": model_cls.__name__, **exc.context},
+            ) from exc
+        if step is not None and extra.get("x-paxman-format-hints"):
+            raise InvalidContractError(
+                f"field {name!r} cannot declare both x-paxman-format-hints and x-paxman-extract",
+                error_code="AMBIGUOUS_EXTRACTION",
+                context={"model": model_cls.__name__, "field_name": name},
+            )
+        return step
 
     def _constraints_from_field(
         self,
@@ -616,6 +645,12 @@ class PydanticAdapter:
             if not isinstance(extra, dict):
                 extra = {}
             extra["x-paxman-cleanup"] = [step.to_wire() for step in f.cleanup_steps]
+            field_kwargs["json_schema_extra"] = extra
+        if f.extraction_step is not None:
+            extra = field_kwargs.get("json_schema_extra", {})
+            if not isinstance(extra, dict):
+                extra = {}
+            extra["x-paxman-extract"] = f.extraction_step.to_wire()
             field_kwargs["json_schema_extra"] = extra
         if f.enum_values is not None:
             # Override annotation with a Literal of the allowed values.

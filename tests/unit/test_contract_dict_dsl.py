@@ -1576,3 +1576,59 @@ def test_cleanup_round_trip() -> None:
         {"capability": "trim_extraction"},
         {"capability": "case_normalization", "config": {"mode": "lower"}},
     ]
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_extract_round_trip() -> None:
+    """A Dict DSL regex declaration is canonicalized and exported."""
+    adapter = _adapter()
+    canonical = adapter.adapt(
+        {
+            "id": "c1",
+            "fields": [
+                {
+                    "name": "invoice_id",
+                    "type": "STRING",
+                    "required": True,
+                    "extract": {
+                        "capability": "regex_extraction",
+                        "config": {"pattern": r"ID:\s*(?P<value>\S+)"},
+                    },
+                }
+            ],
+        }
+    )
+
+    field = canonical.fields[0]
+    assert field.extraction_step is not None
+    assert adapter.export(canonical)["fields"][0]["extract"] == {
+        "capability": "regex_extraction",
+        "config": {"pattern": r"ID:\s*(?P<value>\S+)"},
+    }
+
+
+@pytest.mark.deterministic
+@pytest.mark.unit
+def test_extract_and_format_hints_are_rejected_as_ambiguous() -> None:
+    """A field must choose explicit regex or format-aware extraction."""
+    with pytest.raises(InvalidContractError) as exc_info:
+        _adapter().adapt(
+            {
+                "id": "c1",
+                "fields": [
+                    {
+                        "name": "invoice_id",
+                        "type": "STRING",
+                        "required": True,
+                        "format_hints": ["csv"],
+                        "extract": {
+                            "capability": "regex_extraction",
+                            "config": {"pattern": "ID"},
+                        },
+                    }
+                ],
+            }
+        )
+
+    assert exc_info.value.error_code == "AMBIGUOUS_EXTRACTION"

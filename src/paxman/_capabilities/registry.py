@@ -17,6 +17,7 @@ canonicalize call, the default registry is frozen implicitly; further
 invariant is what makes the capability set part of the determinism
 invariant (mandate §1.2, Law 1) mechanically enforceable.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -37,18 +38,12 @@ class CapabilityRegistry:
         """Register a capability. Raises if the name is taken or the
         registry is frozen."""
         if self._frozen:
-            raise FrozenRegistryError(
-                "cannot register capability: registry is frozen"
-            )
+            raise FrozenRegistryError("cannot register capability: registry is frozen")
         if not isinstance(capability, Capability):
-            raise ConfigurationError(
-                f"object is not a Capability: {type(capability).__name__}"
-            )
+            raise ConfigurationError(f"object is not a Capability: {type(capability).__name__}")
         name = capability.name
         if name in self._capabilities:
-            raise ConfigurationError(
-                f"capability name already registered: {name!r}"
-            )
+            raise ConfigurationError(f"capability name already registered: {name!r}")
         self._capabilities[name] = capability
 
     def freeze(self) -> None:
@@ -66,11 +61,7 @@ class CapabilityRegistry:
         `Status.AMBIGUOUS` when the set has more than one entry
         (mandate §5.4). Callers MUST NOT silently pick a single entry.
         """
-        return [
-            cap
-            for cap in self._capabilities.values()
-            if cap.can_handle(contract, value)
-        ]
+        return [cap for cap in self._capabilities.values() if cap.can_handle(contract, value)]
 
     def capabilities_hash(self) -> str:
         """Deterministic hash of the registered capability set.

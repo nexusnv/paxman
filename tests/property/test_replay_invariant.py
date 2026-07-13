@@ -1,13 +1,14 @@
 """Mandate Law 12: replay(artifact) == artifact byte-for-byte."""
+
 from __future__ import annotations
 
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from paxman import _orchestrator_runtime
 from paxman._capabilities.builtins.email import EmailCapability
 from paxman._capabilities.registry import CapabilityRegistry
-from paxman import _orchestrator_runtime
 from paxman._core.orchestrator import canonicalize
 from paxman._core.replay import replay
 

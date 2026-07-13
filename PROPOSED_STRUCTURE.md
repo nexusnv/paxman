@@ -100,7 +100,7 @@ paxman/
 │
 ├── .github/                            # CI + issue templates + CODEOWNERS
 │   ├── workflows/
-│   │   └── ci.yml                      # v1.0.0 CI: unit tests (py3.11, 3.12, 3.13), property + integration (py3.12)
+│   │   └── ci.yml                      # v1.0.0 CI: 5 jobs (test-unit, lint, typecheck, test-property, test-integration)
 │   ├── ISSUE_TEMPLATE/
 │   │   └── bug_report.md
 │   ├── PULL_REQUEST_TEMPLATE.md

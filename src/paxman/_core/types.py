@@ -4,6 +4,7 @@ All types in this module are immutable. They are the smallest units of
 state paxman manipulates and the boundary at which mandate Laws 1, 2, 9,
 and 12 are enforced.
 """
+
 from __future__ import annotations
 
 import enum

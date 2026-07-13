@@ -5,6 +5,7 @@ orchestrator (which uses the registry) and `paxman/__init__.py` (which
 calls the orchestrator and exposes the user-facing
 `register_capability`).
 """
+
 from __future__ import annotations
 
 from paxman._capabilities.registry import CapabilityRegistry

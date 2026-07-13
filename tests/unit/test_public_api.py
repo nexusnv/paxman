@@ -1,4 +1,5 @@
 """Tests for the public API surface (mandate §1.3)."""
+
 from __future__ import annotations
 
 import pytest
@@ -56,23 +57,23 @@ class TestPublicAPI:
         assert actual == expected
 
     def test_canonicalize_end_to_end(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from paxman import _orchestrator_runtime
         from paxman._capabilities.builtins.email import EmailCapability
         from paxman._capabilities.registry import CapabilityRegistry
-        from paxman import _orchestrator_runtime
+
         r = CapabilityRegistry()
         r.register(EmailCapability())
         r.freeze()
         monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
-        art = paxman.canonicalize(
-            "  John.Doe@Example.COM  ", {"kind": "canonical_email"}
-        )
+        art = paxman.canonicalize("  John.Doe@Example.COM  ", {"kind": "canonical_email"})
         assert art.status.value == "canonicalized"
         assert art.value == "john.doe@example.com"
 
     def test_replay_end_to_end(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from paxman import _orchestrator_runtime
         from paxman._capabilities.builtins.email import EmailCapability
         from paxman._capabilities.registry import CapabilityRegistry
-        from paxman import _orchestrator_runtime
+
         r = CapabilityRegistry()
         r.register(EmailCapability())
         r.freeze()

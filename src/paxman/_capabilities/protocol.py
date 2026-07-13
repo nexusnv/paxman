@@ -7,6 +7,7 @@ Protocol deliberately omits control-flow verbs (`next`, `execute`,
 The Protocol is `@runtime_checkable` so the registry can validate
 duck-typing at register time.
 """
+
 from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable

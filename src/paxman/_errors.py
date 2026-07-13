@@ -6,6 +6,7 @@ all*. Status values (`Invalid`, `Missing`, `Ambiguous`, `Unsupported`,
 exceptions. The hierarchy below lists the cases where a call cannot
 proceed and an exception is the right response.
 """
+
 from __future__ import annotations
 
 

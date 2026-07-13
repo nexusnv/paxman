@@ -9,6 +9,7 @@ Any other kind raises `UnsupportedContractError` (defined in
 `paxman._errors`); the orchestrator catches that and produces
 `Status.UNSUPPORTED` instead of letting the call fail.
 """
+
 from __future__ import annotations
 
 from paxman._contracts.contract import CanonicalEmailContract

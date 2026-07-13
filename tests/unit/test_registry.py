@@ -4,6 +4,7 @@ Mandate §5.4: every supported (contract, value) pair must resolve to at
 most one capability. Multiple claimants at resolve time yield
 `Status.AMBIGUOUS` (handled by the orchestrator, not the registry).
 """
+
 from __future__ import annotations
 
 from typing import Any
@@ -22,9 +23,7 @@ class _AlwaysTrue:
     def can_handle(self, contract: CanonicalEmailContract, value: object) -> bool:
         return True
 
-    def canonicalize(
-        self, value: object, contract: CanonicalEmailContract
-    ) -> CapabilityResult:
+    def canonicalize(self, value: object, contract: CanonicalEmailContract) -> CapabilityResult:
         return CapabilityResult(status=Status.CANONICALIZED, value=str(value))
 
 
@@ -34,9 +33,7 @@ class _AlsoAlwaysTrue:
     def can_handle(self, contract: CanonicalEmailContract, value: object) -> bool:
         return True
 
-    def canonicalize(
-        self, value: object, contract: CanonicalEmailContract
-    ) -> CapabilityResult:
+    def canonicalize(self, value: object, contract: CanonicalEmailContract) -> CapabilityResult:
         return CapabilityResult(status=Status.CANONICALIZED, value=str(value))
 
 
@@ -53,6 +50,7 @@ class TestRegister:
         r = CapabilityRegistry()
         r.register(_AlwaysTrue())
         r.register(_AlsoAlwaysTrue())  # different name — no conflict
+
         # Now register a duplicate of "A"
         class _Dup:
             name: str = "A"
@@ -61,9 +59,7 @@ class TestRegister:
                 return True
 
             def canonicalize(self, value: Any, contract: Any) -> CapabilityResult:
-                return CapabilityResult(
-                    status=Status.CANONICALIZED, value=str(value)
-                )
+                return CapabilityResult(status=Status.CANONICALIZED, value=str(value))
 
         with pytest.raises(ConfigurationError):
             r.register(_Dup())

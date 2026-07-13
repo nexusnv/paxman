@@ -7,15 +7,14 @@ These tests assert the v1.0.0 default behaviour:
 - Idempotent (mandate Law 2).
 - Pure function (mandate Law 8a).
 """
+
 from __future__ import annotations
 
 from typing import Any, cast
 
-import pytest
-
 from paxman._capabilities.builtins.email import EmailCapability
 from paxman._contracts.contract import CanonicalEmailContract, Contract
-from paxman._core.types import CapabilityResult, Evidence, Status
+from paxman._core.types import Status
 
 
 def _cap() -> EmailCapability:
@@ -61,39 +60,29 @@ class TestEmailCapability:
 
     def test_gmail_alias_strips_plus_tag(self) -> None:
         c = _cap()
-        r = c.canonicalize(
-            "user+tag@gmail.com", _contract(provider_aliases="gmail")
-        )
+        r = c.canonicalize("user+tag@gmail.com", _contract(provider_aliases="gmail"))
         assert r.value == "user@gmail.com"
 
     def test_gmail_alias_strips_dots(self) -> None:
         c = _cap()
-        r = c.canonicalize(
-            "u.s.e.r@gmail.com", _contract(provider_aliases="gmail")
-        )
+        r = c.canonicalize("u.s.e.r@gmail.com", _contract(provider_aliases="gmail"))
         assert r.value == "user@gmail.com"
 
     def test_gmail_alias_normalizes_googlemail_to_gmail(self) -> None:
         c = _cap()
-        r = c.canonicalize(
-            "user@googlemail.com", _contract(provider_aliases="gmail")
-        )
+        r = c.canonicalize("user@googlemail.com", _contract(provider_aliases="gmail"))
         assert r.value == "user@gmail.com"
 
     def test_gmail_alias_case_insensitive_domain(self) -> None:
         # Mandate Law 1 + casefold: Gmail rule applies regardless of
         # domain casing, even when `lowercase=False`.
         c = _cap()
-        r = c.canonicalize(
-            "user@GMAIL.COM", _contract(provider_aliases="gmail", lowercase=False)
-        )
+        r = c.canonicalize("user@GMAIL.COM", _contract(provider_aliases="gmail", lowercase=False))
         assert r.value == "user@gmail.com"
 
     def test_gmail_alias_does_not_apply_to_non_gmail_domains(self) -> None:
         c = _cap()
-        r = c.canonicalize(
-            "u.s.e.r+tag@example.com", _contract(provider_aliases="gmail")
-        )
+        r = c.canonicalize("u.s.e.r+tag@example.com", _contract(provider_aliases="gmail"))
         # Provider rule is gmail-only; the policy does not authorize
         # rewriting for unknown domains.
         assert r.value == "u.s.e.r+tag@example.com"

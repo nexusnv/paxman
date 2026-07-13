@@ -1,10 +1,9 @@
 """Tests for the deterministic classifier (Status assignment)."""
+
 from __future__ import annotations
 
-import pytest
-
 from paxman._core.classification import ValidationResult, classify
-from paxman._core.types import CapabilityResult, Evidence, Status
+from paxman._core.types import CapabilityResult, Status
 
 
 class TestClassify:

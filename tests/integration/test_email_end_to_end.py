@@ -1,4 +1,5 @@
 """End-to-end integration test for email canonicalization."""
+
 from __future__ import annotations
 
 import attrs
@@ -13,6 +14,7 @@ from paxman._core.types import Status
 @pytest.fixture(autouse=True)
 def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     from paxman import _orchestrator_runtime
+
     r = CapabilityRegistry()
     r.register(EmailCapability())
     r.freeze()
@@ -69,7 +71,5 @@ class TestEndToEnd:
         assert "lowercased_domain" in rule_names
 
     def test_strict_mode_rejects_embedded_space(self) -> None:
-        art = paxman.canonicalize(
-            "a b@c.d", {"kind": "canonical_email", "strict": True}
-        )
+        art = paxman.canonicalize("a b@c.d", {"kind": "canonical_email", "strict": True})
         assert art.status is Status.INVALID

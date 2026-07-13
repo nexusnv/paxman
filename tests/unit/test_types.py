@@ -1,8 +1,8 @@
 """Tests for the leaf value types in paxman._core.types."""
+
 from __future__ import annotations
 
 import enum
-import hashlib
 
 import attrs
 
@@ -41,6 +41,7 @@ class TestEvidence:
         assert with_attrs[1].name == "detail"
         # FrozenInstanceError on assignment
         import pytest as _pt
+
         with _pt.raises(attrs.exceptions.FrozenInstanceError):
             e.rule = "x"  # type: ignore[misc]
 
@@ -57,6 +58,7 @@ class TestVersionStamp:
             configuration_version="0",
         )
         import pytest as _pt
+
         with _pt.raises(attrs.exceptions.FrozenInstanceError):
             v.contract_version = 2  # type: ignore[misc]
 
@@ -90,5 +92,6 @@ class TestCapabilityResult:
     def test_capability_result_is_frozen(self) -> None:
         r = CapabilityResult(status=Status.CANONICALIZED, value="x")
         import pytest as _pt
+
         with _pt.raises(attrs.exceptions.FrozenInstanceError):
             r.status = Status.INVALID  # type: ignore[misc]

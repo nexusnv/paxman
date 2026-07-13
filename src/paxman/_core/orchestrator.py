@@ -16,12 +16,12 @@ The orchestrator is pure: same input, contract, frozen registry, and
 Paxman version -> same artifact (mandate Law 1). It is the only
 place that produces ExecutionArtifacts.
 """
+
 from __future__ import annotations
 
 from typing import Any
 
 import paxman as _paxman_version  # used to read __version__
-
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman._contracts.contract import parse_contract
 from paxman._core.artifact import ExecutionArtifact, _ContractLike
@@ -35,16 +35,20 @@ class _StubContract:
     """Minimal contract stand-in for unparseable contract specs.
 
     Satisfies the `_ContractLike` Protocol structurally (provides
-    `as_dict()` and a `version` attribute). The orchestrator hands a
-    `_StubContract` to `_build_artifact` when the caller's contract
-    could not be parsed, so the resulting artifact still has a
-    serializable contract representation.
+    `as_dict()` and a read-only `version` property). The orchestrator
+    hands a `_StubContract` to `_build_artifact` when the caller's
+    contract could not be parsed, so the resulting artifact still has
+    a serializable contract representation.
     """
 
     def __init__(self, spec: object) -> None:
         self._spec = spec
         self.kind = "unknown"
-        self.version = 0
+        self._version = 0
+
+    @property
+    def version(self) -> int:
+        return self._version
 
     def as_dict(self) -> dict[str, object]:
         if isinstance(self._spec, dict):
@@ -100,7 +104,10 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
             evidence=(
                 Evidence(
                     rule="no_capability_claims",
-                    detail=f"contract kind {parsed_contract.kind!r}, value type {type(input_data).__name__}",
+                    detail=(
+                        f"contract kind {parsed_contract.kind!r}, "
+                        f"value type {type(input_data).__name__}"
+                    ),
                 ),
             ),
         )

@@ -10,13 +10,14 @@ Replay either returns the artifact (byte-equal) or raises
 `VersionMismatchError` / `CanonicalizationError`. There is no `Status`
 on the replay path — the input artifact is already complete.
 """
+
 from __future__ import annotations
 
 import hashlib
 from typing import Any
 
 import paxman as _paxman_version
-
+from paxman import _orchestrator_runtime
 from paxman._contracts.contract import parse_contract
 from paxman._core.artifact import ExecutionArtifact
 from paxman._errors import (
@@ -24,7 +25,6 @@ from paxman._errors import (
     ContractError,
     VersionMismatchError,
 )
-from paxman import _orchestrator_runtime
 
 
 def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
@@ -40,9 +40,7 @@ def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
         # effectively from different versions. Map to VersionMismatchError
         # per mandate Law 8 (fail informatively, totality-preserving on
         # rejection).
-        raise VersionMismatchError(
-            f"cannot replay: contract could not be parsed: {exc}"
-        ) from exc
+        raise VersionMismatchError(f"cannot replay: contract could not be parsed: {exc}") from exc
 
     # Verify the VersionStamp.
     expected_paxman = _paxman_version.__version__
@@ -60,7 +58,8 @@ def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
     current_hash = _orchestrator_runtime.default_registry.capabilities_hash()
     if artifact.version_stamp.capabilities_hash != current_hash:
         raise VersionMismatchError(
-            f"capabilities hash mismatch: artifact is {artifact.version_stamp.capabilities_hash!r}, "
+            f"capabilities hash mismatch: "
+            f"artifact is {artifact.version_stamp.capabilities_hash!r}, "
             f"current is {current_hash!r}"
         )
 

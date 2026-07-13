@@ -20,12 +20,12 @@ def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
 
 
-@settings(max_examples=50, deadline=None)
+@pytest.mark.property
+@settings(max_examples=50, deadline=None, derandomize=True)
 @given(value=st.text(min_size=0, max_size=64))
 def test_replay_byte_equal_invariant(value: str) -> None:
-    """Mandate Law 12."""
+    """Mandate Law 12: replay holds for every artifact, not only canonicalized ones."""
     art = canonicalize(value, {"kind": "canonical_email"})
-    if art.status.value in ("canonicalized",):
-        rehydrated = replay(art, {"kind": "canonical_email"})
-        assert rehydrated == art
-        assert rehydrated.canonical_bytes() == art.canonical_bytes()
+    rehydrated = replay(art, {"kind": "canonical_email"})
+    assert rehydrated == art
+    assert rehydrated.canonical_bytes() == art.canonical_bytes()

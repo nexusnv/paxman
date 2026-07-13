@@ -20,14 +20,13 @@ def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
 
 
-@settings(max_examples=50, deadline=None)
+@pytest.mark.property
+@settings(max_examples=50, deadline=None, derandomize=True)
 @given(value=st.text(min_size=0, max_size=64))
 def test_idempotence_invariant(value: str) -> None:
     """Mandate Law 2."""
     first = canonicalize(value, {"kind": "canonical_email"})
     if first.status is not Status.CANONICALIZED:
-        # Idempotence is defined for canonicalized inputs; non-canonical
-        # outcomes are not part of the law's scope.
         return
     second = canonicalize(first.value, {"kind": "canonical_email"})
     assert second.status is Status.CANONICALIZED

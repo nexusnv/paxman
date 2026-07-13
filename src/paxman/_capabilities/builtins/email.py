@@ -90,17 +90,18 @@ class EmailCapability:
             local = new_local
             domain = new_domain
 
-        # 3. Provider aliases (gmail).
-        if contract.provider_aliases == "gmail" and domain in _GMAIL_DOMAINS:
-            # Normalize googlemail.com -> gmail.com.
-            if domain == "googlemail.com":
+        # 3. Provider aliases (gmail). The casefold comparison makes the
+        # Gmail rule trigger regardless of `lowercase`; the domain is
+        # then normalized to its canonical-case form (`gmail.com`).
+        if contract.provider_aliases == "gmail" and domain.casefold() in _GMAIL_DOMAINS:
+            if domain != "gmail.com":
                 evidence.append(
                     Evidence(
                         rule="domain_synonym_gmail",
-                        detail="googlemail.com -> gmail.com",
+                        detail=f"{domain} -> gmail.com",
                     )
                 )
-                domain = "gmail.com"
+            domain = "gmail.com"
             # Strip dots in the local part.
             new_local = local.replace(".", "")
             if new_local != local:
@@ -110,6 +111,15 @@ class EmailCapability:
             if "+" in local:
                 evidence.append(Evidence(rule="stripped_plus_tag"))
                 local = local.split("+", 1)[0]
+
+        # Re-validate after rewrites: stripping dots or a +tag can empty
+        # the local part. Mandate Law 4: a malformed canonical form
+        # is INVALID, not silently emitted.
+        if not local or not domain:
+            return CapabilityResult(
+                status=Status.INVALID,
+                evidence=(Evidence(rule="empty_local_or_domain"),),
+            )
 
         canonical = f"{local}@{domain}"
         return CapabilityResult(

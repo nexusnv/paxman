@@ -22,7 +22,13 @@ classifiers = [
     "Typing :: Typed",
 ]
 
-dependencies = []
+# Runtime: attrs is the only third-party runtime dep. It is the
+# `frozen=True` dataclass backbone for every value type under
+# `src/paxman/` (mandate Laws 1, 12, 13). v1.0.0 ships no other
+# runtime dependencies.
+dependencies = [
+    "attrs>=23.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/nexusnv/paxman"
@@ -36,7 +42,6 @@ packages = ["src/paxman"]
 dev = [
     "pytest>=8.0",
     "hypothesis>=6.0",
-    "attrs>=23.0",
     "ruff>=0.4",
     "mypy>=1.10",
 ]

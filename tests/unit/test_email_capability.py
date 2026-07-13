@@ -9,10 +9,12 @@ These tests assert the v1.0.0 default behaviour:
 """
 from __future__ import annotations
 
+from typing import Any, cast
+
 import pytest
 
 from paxman._capabilities.builtins.email import EmailCapability
-from paxman._contracts.contract import CanonicalEmailContract
+from paxman._contracts.contract import CanonicalEmailContract, Contract
 from paxman._core.types import CapabilityResult, Evidence, Status
 
 
@@ -21,11 +23,11 @@ def _cap() -> EmailCapability:
 
 
 def _contract(**kw: object) -> CanonicalEmailContract:
-    base = dict(
+    base: dict[str, object] = dict(
         lowercase=True, strip_whitespace=True, provider_aliases="none", strict=False
     )
     base.update(kw)
-    return CanonicalEmailContract(**base)  # type: ignore[arg-type]
+    return CanonicalEmailContract(**cast(Any, base))
 
 
 class TestEmailCapability:
@@ -39,7 +41,7 @@ class TestEmailCapability:
 
     def test_can_handle_rejects_non_email_contract(self) -> None:
         c = _cap()
-        assert c.can_handle("not a contract", "a@b.c") is False  # type: ignore[arg-type]
+        assert c.can_handle(cast(Contract, "not a contract"), "a@b.c") is False
 
     def test_default_lowercases(self) -> None:
         c = _cap()
@@ -78,6 +80,15 @@ class TestEmailCapability:
         )
         assert r.value == "user@gmail.com"
 
+    def test_gmail_alias_case_insensitive_domain(self) -> None:
+        # Mandate Law 1 + casefold: Gmail rule applies regardless of
+        # domain casing, even when `lowercase=False`.
+        c = _cap()
+        r = c.canonicalize(
+            "user@GMAIL.COM", _contract(provider_aliases="gmail", lowercase=False)
+        )
+        assert r.value == "user@gmail.com"
+
     def test_gmail_alias_does_not_apply_to_non_gmail_domains(self) -> None:
         c = _cap()
         r = c.canonicalize(
@@ -86,6 +97,14 @@ class TestEmailCapability:
         # Provider rule is gmail-only; the policy does not authorize
         # rewriting for unknown domains.
         assert r.value == "u.s.e.r+tag@example.com"
+
+    def test_gmail_rewrite_yields_invalid_when_local_becomes_empty(self) -> None:
+        # Mandate Law 4: stripping dots or a +tag must not silently
+        # produce a value with an empty local part. e.g. "@gmail.com"
+        # after dot/plus stripping has no local part.
+        c = _cap()
+        r = c.canonicalize("+tag@gmail.com", _contract(provider_aliases="gmail"))
+        assert r.status is Status.INVALID
 
     def test_strict_mode_rejects_embedded_space(self) -> None:
         c = _cap()

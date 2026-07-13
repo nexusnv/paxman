@@ -7,7 +7,7 @@ parse time (the orchestrator catches that and yields `Status.UNSUPPORTED`).
 """
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, cast
 
 import attrs
 
@@ -42,14 +42,26 @@ class CanonicalEmailContract:
         }
 
 
-# The closed union of supported contracts. v1.0.0 has exactly one kind.
-Contract = Union[CanonicalEmailContract]
+# v1.0.0 has exactly one contract kind. New kinds bump the contract
+# version and are added here.
+Contract = CanonicalEmailContract
 
-_KIND_DISPATCH: dict[str, type[Contract]] = {  # type: ignore[valid-type]
+_KIND_DISPATCH: dict[str, type[Contract]] = {
     "canonical_email": CanonicalEmailContract,
 }
 
 _VALID_PROVIDER_ALIASES = {"none", "gmail"}
+
+
+def _require_bool(field: str, value: object) -> bool:
+    """Validate that a contract field is a real bool. Non-bool values
+    (including truthy strings) raise `ContractError` rather than being
+    silently coerced. Mandate Law 7 — explicit over clever."""
+    if not isinstance(value, bool):
+        raise ContractError(
+            f"contract field {field!r} must be a bool, got {type(value).__name__}"
+        )
+    return value
 
 
 def parse_contract(spec: Any) -> Contract:
@@ -58,7 +70,7 @@ def parse_contract(spec: Any) -> Contract:
     Raises `ContractError` on:
     - non-dict input
     - missing or unknown `kind`
-    - invalid field values (e.g. provider_aliases="outlook")
+    - invalid field values (wrong type, unknown provider_aliases)
     """
     if not isinstance(spec, dict):
         raise ContractError(f"contract must be a dict, got {type(spec).__name__}")
@@ -81,10 +93,12 @@ def parse_contract(spec: Any) -> Contract:
                 f"allowed: {sorted(_VALID_PROVIDER_ALIASES)}"
             )
         return CanonicalEmailContract(
-            lowercase=bool(spec.get("lowercase", True)),
-            strip_whitespace=bool(spec.get("strip_whitespace", True)),
-            provider_aliases=provider_aliases,  # type: ignore[arg-type]
-            strict=bool(spec.get("strict", False)),
+            lowercase=_require_bool("lowercase", spec.get("lowercase", True)),
+            strip_whitespace=_require_bool(
+                "strip_whitespace", spec.get("strip_whitespace", True)
+            ),
+            provider_aliases=cast(ProviderAliasesPolicy, provider_aliases),
+            strict=_require_bool("strict", spec.get("strict", False)),
         )
 
     # Unreachable: kind is guaranteed to be in _KIND_DISPATCH above.

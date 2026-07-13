@@ -1,10 +1,15 @@
 """CapabilityRegistry: the resolver / dispatcher.
 
 Mandate §6.1: this replaces the v1.x planner. The registry holds
-capabilities and answers `resolve(contract, value)` with the single
-capability (or set of claimants) that explicitly declares it
-canonicalizes the pair. There is no ranking, no scoring, no "best
-match" (mandate Law 3).
+capabilities and answers `resolve_all(contract, value)` with the set of
+capabilities that explicitly declare they canonicalize the pair. There
+is no ranking, no scoring, and no arbitrary selection among claimants
+(mandate Law 3).
+
+The orchestrator reads the full claimant set and classifies
+`Status.AMBIGUOUS` when more than one capability claims the same pair
+(mandate §5.4, Law 4). Callers must not silently pick a single
+claimant.
 
 `freeze()` makes the capability set immutable. After the first
 canonicalize call, the default registry is frozen implicitly; further
@@ -15,7 +20,6 @@ invariant (mandate §1.2, Law 1) mechanically enforceable.
 from __future__ import annotations
 
 import hashlib
-from typing import Any
 
 from paxman._capabilities.protocol import Capability
 from paxman._contracts.contract import Contract
@@ -55,21 +59,13 @@ class CapabilityRegistry:
     def is_frozen(self) -> bool:
         return self._frozen
 
-    def resolve(self, contract: Contract, value: Any) -> Capability | None:
-        """Return the single matching capability, or None.
+    def resolve_all(self, contract: Contract, value: object) -> list[Capability]:
+        """Return every capability that claims the (contract, value) pair.
 
-        If multiple capabilities claim the same pair, returns the first
-        (in registration order) but `resolve_all` returns the full set.
-        The orchestrator uses `resolve_all` so the per-call
-        determination is correct under any order.
+        Callers (the orchestrator) inspect the full set and classify
+        `Status.AMBIGUOUS` when the set has more than one entry
+        (mandate §5.4). Callers MUST NOT silently pick a single entry.
         """
-        claimants = self.resolve_all(contract, value)
-        if not claimants:
-            return None
-        return claimants[0]
-
-    def resolve_all(self, contract: Contract, value: Any) -> list[Capability]:
-        """Return every capability that claims the (contract, value) pair."""
         return [
             cap
             for cap in self._capabilities.values()

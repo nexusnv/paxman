@@ -13,26 +13,37 @@ from paxman._core.orchestrator import canonicalize
 
 class _A:
     name = "A"
-    def can_handle(self, c, v): return True
-    def canonicalize(self, v, c):
-        return CapabilityResult(status=Status.CANONICALIZED, value=str(v))
+
+    def can_handle(self, contract: object, value: object) -> bool:
+        return True
+
+    def canonicalize(self, value: object, contract: object) -> CapabilityResult:
+        return CapabilityResult(status=Status.CANONICALIZED, value=str(value))
 
 
 class _B:
     name = "B"
-    def can_handle(self, c, v): return True
-    def canonicalize(self, v, c):
-        return CapabilityResult(status=Status.CANONICALIZED, value=str(v))
+
+    def can_handle(self, contract: object, value: object) -> bool:
+        return True
+
+    def canonicalize(self, value: object, contract: object) -> CapabilityResult:
+        return CapabilityResult(status=Status.CANONICALIZED, value=str(value))
 
 
-@settings(max_examples=30, deadline=None)
-@given(value=st.text(min_size=1, max_size=32))
-def test_uniqueness_invariant(value: str) -> None:
+@pytest.fixture(autouse=True)
+def _two_claimants_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     r = CapabilityRegistry()
     r.register(_A())
     r.register(_B())
     r.freeze()
-    _orchestrator_runtime.default_registry = r
+    monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
+
+
+@pytest.mark.property
+@settings(max_examples=30, deadline=None, derandomize=True)
+@given(value=st.text(min_size=1, max_size=32))
+def test_uniqueness_invariant(value: str) -> None:
     art = canonicalize(value, {"kind": "canonical_email"})
     assert art.status is Status.AMBIGUOUS
     rule_names = {e.rule for e in art.evidence}

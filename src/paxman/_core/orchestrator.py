@@ -20,7 +20,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import paxman as _paxman_version  # noqa: F401  (used to read __version__)
+import paxman as _paxman_version  # used to read __version__
 
 from paxman._contracts.contract import parse_contract
 from paxman._core.artifact import ExecutionArtifact

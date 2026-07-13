@@ -22,7 +22,8 @@ def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
 
 
-@settings(max_examples=30, deadline=None)
+@pytest.mark.property
+@settings(max_examples=30, deadline=None, derandomize=True)
 @given(value=st.text(min_size=0, max_size=32))
 def test_replay_hash_matches_canonical_bytes(value: str) -> None:
     """Mandate Law 1."""

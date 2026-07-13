@@ -19,7 +19,11 @@ import paxman as _paxman_version
 
 from paxman._contracts.contract import parse_contract
 from paxman._core.artifact import ExecutionArtifact
-from paxman._errors import CanonicalizationError, VersionMismatchError
+from paxman._errors import (
+    CanonicalizationError,
+    ContractError,
+    VersionMismatchError,
+)
 from paxman import _orchestrator_runtime
 
 
@@ -28,7 +32,17 @@ def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
 
     Mandate Law 12: `replay(artifact) == artifact` byte-for-byte.
     """
-    parsed_contract = parse_contract(contract)
+    try:
+        parsed_contract = parse_contract(contract)
+    except ContractError as exc:
+        # Replay requires a contract the parser accepts; otherwise the
+        # artifact's stored contract and the caller's contract are
+        # effectively from different versions. Map to VersionMismatchError
+        # per mandate Law 8 (fail informatively, totality-preserving on
+        # rejection).
+        raise VersionMismatchError(
+            f"cannot replay: contract could not be parsed: {exc}"
+        ) from exc
 
     # Verify the VersionStamp.
     expected_paxman = _paxman_version.__version__

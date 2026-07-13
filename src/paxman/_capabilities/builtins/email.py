@@ -124,11 +124,14 @@ class EmailCapability:
 
         # Re-validate after rewrites: stripping dots or a +tag can empty
         # the local part. Mandate Law 4: a malformed canonical form
-        # is INVALID, not silently emitted.
+        # is INVALID, not silently emitted. Mandate Law 9 (Evidence Over
+        # Confidence): the evidence accumulated so far (e.g. which rules
+        # produced the empty result) is preserved, not discarded.
         if not local or not domain:
+            evidence.append(Evidence(rule="empty_local_or_domain"))
             return CapabilityResult(
                 status=Status.INVALID,
-                evidence=(Evidence(rule="empty_local_or_domain"),),
+                evidence=tuple(evidence),
             )
 
         canonical = f"{local}@{domain}"

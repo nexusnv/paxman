@@ -11,7 +11,6 @@ Mandate Laws 4, 5, 7, 8, 8a, 11:
 """
 from __future__ import annotations
 
-from paxman._capabilities.protocol import Capability
 from paxman._contracts.contract import CanonicalEmailContract, Contract
 from paxman._core.types import CapabilityResult, Evidence, Status
 
@@ -20,7 +19,12 @@ _GMAIL_DOMAINS = frozenset({"gmail.com", "googlemail.com"})
 
 
 class EmailCapability:
-    """A pure deterministic transformation that canonicalizes emails."""
+    """A pure deterministic transformation that canonicalizes emails.
+
+    `Capability` (from `paxman._capabilities.protocol`) is a structural
+    Protocol — this class satisfies it by virtue of its `name` attribute
+    and the `can_handle` / `canonicalize` methods, not by inheritance.
+    """
 
     name: str = "email_canonicalization"
 

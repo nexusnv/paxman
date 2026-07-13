@@ -48,14 +48,30 @@ class TestOrchestrator:
         from paxman import _orchestrator_runtime
         # Two capabilities both claim the same pair.
         from paxman._core.types import CapabilityResult
+        from paxman._contracts.contract import Contract
+
         class _A:
-            name = "A"
-            def can_handle(self, c, v): return True
-            def canonicalize(self, v, c): return CapabilityResult(status=Status.CANONICALIZED, value=str(v))
+            name: str = "A"
+
+            def can_handle(self, contract: Contract, value: object) -> bool:
+                return True
+
+            def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+                return CapabilityResult(
+                    status=Status.CANONICALIZED, value=str(value)
+                )
+
         class _B:
-            name = "B"
-            def can_handle(self, c, v): return True
-            def canonicalize(self, v, c): return CapabilityResult(status=Status.CANONICALIZED, value=str(v))
+            name: str = "B"
+
+            def can_handle(self, contract: Contract, value: object) -> bool:
+                return True
+
+            def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+                return CapabilityResult(
+                    status=Status.CANONICALIZED, value=str(value)
+                )
+
         r = CapabilityRegistry()
         r.register(_A())
         r.register(_B())
@@ -64,7 +80,7 @@ class TestOrchestrator:
         art = canonicalize("a@b.c", {"kind": "canonical_email"})
         assert art.status is Status.AMBIGUOUS
         rule_names = {e.rule for e in art.evidence}
-        assert any("claimants" in r for r in rule_names)
+        assert "multiple_claimants" in rule_names
 
     def test_canonicalize_invalid_yields_invalid(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from paxman import _orchestrator_runtime

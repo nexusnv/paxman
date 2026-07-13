@@ -1,6 +1,8 @@
 """Tests for the contract Dict DSL parser and the contract value objects."""
 from __future__ import annotations
 
+from typing import Any, cast
+
 import pytest
 
 from paxman._contracts.contract import (
@@ -42,7 +44,7 @@ class TestParseCanonicalEmail:
 
     def test_non_dict_input_raises_contract_error(self) -> None:
         with pytest.raises(ContractError):
-            parse_contract("not a dict")  # type: ignore[arg-type]
+            parse_contract(cast(Any, "not a dict"))
 
     def test_missing_kind_raises_contract_error(self) -> None:
         with pytest.raises(ContractError):

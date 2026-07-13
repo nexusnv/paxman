@@ -1,7 +1,7 @@
 """Tests for the post-capability validation step."""
 from __future__ import annotations
 
-import pytest
+from typing import Any, cast
 
 from paxman._core.validation import validate
 from paxman._contracts.contract import CanonicalEmailContract
@@ -15,7 +15,7 @@ def _contract(**overrides: object) -> CanonicalEmailContract:
         strict=False,
     )
     defaults.update(overrides)
-    return CanonicalEmailContract(**defaults)  # type: ignore[arg-type]
+    return CanonicalEmailContract(**cast(Any, defaults))
 
 
 class TestValidate:

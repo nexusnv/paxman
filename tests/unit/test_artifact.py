@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from typing import Any, cast
 
 import attrs
 import pytest
@@ -20,6 +21,7 @@ class _FakeContract:
 
     The artifact only needs `as_dict()` and `version` for its canonical
     serialization; this stub is enough for the unit tests in this file.
+    Structurally satisfies the `_ContractLike` Protocol in artifact.py.
     """
 
     def as_dict(self) -> dict[str, object]:
@@ -41,7 +43,7 @@ def _make_artifact(**overrides: object) -> ExecutionArtifact:
         status=Status.CANONICALIZED,
         value="a@b.c",
         evidence=(Evidence(rule="lowercased_local_part"),),
-        contract=_FakeContract(),  # type: ignore[arg-type]
+        contract=cast(Any, _FakeContract()),
         version_stamp=VersionStamp(
             paxman_version="0.0.0.dev0",
             contract_version=1,
@@ -50,7 +52,7 @@ def _make_artifact(**overrides: object) -> ExecutionArtifact:
         ),
     )
     defaults.update(overrides)
-    return ExecutionArtifact(**defaults)  # type: ignore[arg-type]
+    return ExecutionArtifact(**cast(Any, defaults))
 
 
 class TestArtifactImmutability:

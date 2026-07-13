@@ -1,30 +1,35 @@
 """Tests for the Capability Protocol (mandate §5.1)."""
 from __future__ import annotations
 
-import pytest
+from typing import Any
 
 from paxman._capabilities.protocol import Capability
-from paxman._core.types import CapabilityResult
-from paxman._contracts.contract import CanonicalEmailContract
+from paxman._contracts.contract import CanonicalEmailContract, Contract
+from paxman._core.types import CapabilityResult, Status
 
 
 class _Good:
-    name = "good"
+    name: str = "good"
 
-    def can_handle(self, contract, value):  # type: ignore[no-untyped-def]
+    def can_handle(self, contract: Contract, value: object) -> bool:
         return isinstance(contract, CanonicalEmailContract) and isinstance(value, str)
 
-    def canonicalize(self, value, contract):  # type: ignore[no-untyped-def]
-        return CapabilityResult(status=__import__("paxman._core.types", fromlist=["Status"]).Status.CANONICALIZED, value=value)
+    def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+        return CapabilityResult(
+            status=Status.CANONICALIZED, value=str(value)
+        )
 
 
 class _MissingName:
-    def can_handle(self, contract, value): ...  # type: ignore[no-untyped-def]
-    def canonicalize(self, value, contract): ...  # type: ignore[no-untyped-def]
+    def can_handle(self, contract: Any, value: Any) -> bool:
+        return False
+
+    def canonicalize(self, value: Any, contract: Any) -> CapabilityResult:
+        return CapabilityResult(status=Status.INVALID)
 
 
 class _MissingMethods:
-    name = "x"
+    name: str = "x"
 
 
 class TestProtocol:

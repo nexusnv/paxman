@@ -24,22 +24,41 @@ class TestPublicAPI:
         assert paxman.__version__  # non-empty
 
     def test_no_unexpected_public_symbols(self) -> None:
-        # The v1.0.0 public surface is exactly: __version__, canonicalize,
-        # replay, register_capability, and the email capability shim.
-        symbols = {
-            n for n in dir(paxman)
-            if not n.startswith("_")
+        # The v1.0.0 public surface is exactly the set below. Adding
+        # to this set requires a design spec and an implementation
+        # plan (mandate: one spec + one plan per change). The check
+        # is exact (==) so a stray import is caught.
+        expected = {
+            "canonicalize",
+            "replay",
+            "register_capability",
+            "ExecutionArtifact",
+            "Status",
+            "Evidence",
+            "VersionStamp",
+            "CapabilityResult",
+            "ValidationResult",
+            "Contract",
+            "CanonicalEmailContract",
+            "parse_contract",
+            "Capability",
+            "CapabilityRegistry",
+            "PaxmanError",
+            "CanonicalizationError",
+            "ContractError",
+            "ConfigurationError",
+            "FrozenRegistryError",
+            "UnsupportedContractError",
+            "VersionMismatchError",
+            "annotations",
         }
-        assert "canonicalize" in symbols
-        assert "replay" in symbols
-        assert "register_capability" in symbols
+        actual = {n for n in dir(paxman) if not n.startswith("_")}
+        assert actual == expected
 
-    def test_canonicalize_end_to_end(self, monkeypatch: object) -> None:
+    def test_canonicalize_end_to_end(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from paxman._capabilities.builtins.email import EmailCapability
         from paxman._capabilities.registry import CapabilityRegistry
         from paxman import _orchestrator_runtime
-        import pytest as _pt
-        assert isinstance(monkeypatch, _pt.MonkeyPatch)
         r = CapabilityRegistry()
         r.register(EmailCapability())
         r.freeze()
@@ -50,12 +69,10 @@ class TestPublicAPI:
         assert art.status.value == "canonicalized"
         assert art.value == "john.doe@example.com"
 
-    def test_replay_end_to_end(self, monkeypatch: object) -> None:
+    def test_replay_end_to_end(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from paxman._capabilities.builtins.email import EmailCapability
         from paxman._capabilities.registry import CapabilityRegistry
         from paxman import _orchestrator_runtime
-        import pytest as _pt
-        assert isinstance(monkeypatch, _pt.MonkeyPatch)
         r = CapabilityRegistry()
         r.register(EmailCapability())
         r.freeze()
@@ -63,3 +80,4 @@ class TestPublicAPI:
         art = paxman.canonicalize("a@b.c", {"kind": "canonical_email"})
         rehydrated = paxman.replay(art, {"kind": "canonical_email"})
         assert rehydrated == art
+        assert rehydrated.canonical_bytes() == art.canonical_bytes()

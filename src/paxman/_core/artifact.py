@@ -44,33 +44,22 @@ class ExecutionArtifact:
     replay_hash: str = attrs.field(init=False, eq=False)
 
     def __attrs_post_init__(self) -> None:
-        # The replay_hash is computed from the artifact's content
-        # (excluding itself). It is set in __attrs_post_init__ so that
-        # callers cannot forget to provide it.
-        payload = {
-            "status": self.status.value,
-            "value": self.value,
-            "evidence": [(e.rule, e.detail) for e in self.evidence],
-            "contract": self.contract.as_dict(),
-            "version_stamp": {
-                "paxman_version": self.version_stamp.paxman_version,
-                "contract_version": self.version_stamp.contract_version,
-                "capabilities_hash": self.version_stamp.capabilities_hash,
-                "configuration_version": self.version_stamp.configuration_version,
-            },
-        }
-        canonical = json.dumps(
-            payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False
-        ).encode("utf-8")
-        digest = hashlib.sha256(canonical).hexdigest()
-        object.__setattr__(self, "replay_hash", digest)
+        # The replay_hash is computed from the artifact's canonical
+        # bytes (the single source of truth for the artifact's
+        # deterministic serialization). It is set in __attrs_post_init__
+        # so callers cannot forget to provide it.
+        object.__setattr__(
+            self,
+            "replay_hash",
+            hashlib.sha256(self.canonical_bytes()).hexdigest(),
+        )
 
     def canonical_bytes(self) -> bytes:
         """The deterministic byte serialization used for replay_hash.
 
-        Identical to the bytes used at construction time. Returned as a
-        method (rather than cached) for simplicity; the cost is one
-        json.dumps per call, which is acceptable for v1.0.0.
+        `sort_keys=True` and no insignificant whitespace make the output
+        byte-stable across runs; `ensure_ascii=False` preserves UTF-8
+        characters (mandate Law 1 — same input -> same bytes).
         """
         payload = {
             "status": self.status.value,

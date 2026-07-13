@@ -19,6 +19,7 @@ def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
 
 
+@pytest.mark.integration
 class TestEndToEnd:
     def test_basic_canonicalization(self) -> None:
         art = paxman.canonicalize("John.Doe@Example.COM", {"kind": "canonical_email"})

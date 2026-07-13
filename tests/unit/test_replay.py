@@ -10,6 +10,9 @@ from paxman._errors import CanonicalizationError, VersionMismatchError
 from paxman._contracts.contract import CanonicalEmailContract, parse_contract
 
 
+_EMPTY_REGISTRY_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+
+
 def _artifact(**overrides: object) -> ExecutionArtifact:
     defaults: dict[str, object] = dict(
         status=Status.CANONICALIZED,
@@ -19,12 +22,21 @@ def _artifact(**overrides: object) -> ExecutionArtifact:
         version_stamp=VersionStamp(
             paxman_version="0.0.0.dev0",
             contract_version=1,
-            capabilities_hash="x",
+            capabilities_hash=_EMPTY_REGISTRY_HASH,
             configuration_version="0",
         ),
     )
     defaults.update(overrides)
     return ExecutionArtifact(**defaults)  # type: ignore[arg-type]
+
+
+@pytest.fixture(autouse=True)
+def _empty_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    from paxman._capabilities.registry import CapabilityRegistry
+    from paxman import _orchestrator_runtime
+    r = CapabilityRegistry()
+    r.freeze()
+    monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
 
 
 class TestReplay:
@@ -43,7 +55,7 @@ class TestReplay:
             version_stamp=VersionStamp(
                 paxman_version="9.9.9",
                 contract_version=1,
-                capabilities_hash="x",
+                capabilities_hash=_EMPTY_REGISTRY_HASH,
                 configuration_version="0",
             )
         )
@@ -55,7 +67,7 @@ class TestReplay:
             version_stamp=VersionStamp(
                 paxman_version="0.0.0.dev0",
                 contract_version=999,
-                capabilities_hash="x",
+                capabilities_hash=_EMPTY_REGISTRY_HASH,
                 configuration_version="0",
             )
         )

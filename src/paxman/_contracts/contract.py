@@ -1,0 +1,91 @@
+"""Contract value objects and the Dict DSL parser.
+
+Mandate Law 5: the contract is the truth. It declares *what* the canonical
+form is, never *how* it is produced. The DSL is a closed vocabulary:
+`kind` is a fixed set, and an unknown `kind` raises `ContractError` at
+parse time (the orchestrator catches that and yields `Status.UNSUPPORTED`).
+"""
+from __future__ import annotations
+
+from typing import Any, Union
+
+import attrs
+
+from paxman._core.types import ProviderAliasesPolicy
+from paxman._errors import ContractError
+
+
+@attrs.frozen
+class CanonicalEmailContract:
+    """The v1.0.0 email contract.
+
+    Fields are policy declarations (mandate Law 7 — Explicit Over Clever).
+    There is no `auto_detect`. There is no `infer_provider`. The caller
+    declares the policy; the capability applies it.
+    """
+
+    lowercase: bool = True
+    strip_whitespace: bool = True
+    provider_aliases: ProviderAliasesPolicy = "none"
+    strict: bool = False
+    kind: str = "canonical_email"
+    version: int = 1
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "kind": self.kind,
+            "lowercase": self.lowercase,
+            "strip_whitespace": self.strip_whitespace,
+            "provider_aliases": self.provider_aliases,
+            "strict": self.strict,
+            "version": self.version,
+        }
+
+
+# The closed union of supported contracts. v1.0.0 has exactly one kind.
+Contract = Union[CanonicalEmailContract]
+
+_KIND_DISPATCH: dict[str, type[Contract]] = {  # type: ignore[valid-type]
+    "canonical_email": CanonicalEmailContract,
+}
+
+_VALID_PROVIDER_ALIASES = {"none", "gmail"}
+
+
+def parse_contract(spec: Any) -> Contract:
+    """Parse a Dict DSL contract into a Contract value object.
+
+    Raises `ContractError` on:
+    - non-dict input
+    - missing or unknown `kind`
+    - invalid field values (e.g. provider_aliases="outlook")
+    """
+    if not isinstance(spec, dict):
+        raise ContractError(f"contract must be a dict, got {type(spec).__name__}")
+
+    kind = spec.get("kind")
+    if not isinstance(kind, str):
+        raise ContractError("contract must have a string 'kind' field")
+
+    if kind not in _KIND_DISPATCH:
+        raise ContractError(
+            f"unknown contract kind: {kind!r}; "
+            f"supported kinds: {sorted(_KIND_DISPATCH)}"
+        )
+
+    if kind == "canonical_email":
+        provider_aliases = spec.get("provider_aliases", "none")
+        if provider_aliases not in _VALID_PROVIDER_ALIASES:
+            raise ContractError(
+                f"invalid provider_aliases: {provider_aliases!r}; "
+                f"allowed: {sorted(_VALID_PROVIDER_ALIASES)}"
+            )
+        return CanonicalEmailContract(
+            lowercase=bool(spec.get("lowercase", True)),
+            strip_whitespace=bool(spec.get("strip_whitespace", True)),
+            provider_aliases=provider_aliases,  # type: ignore[arg-type]
+            strict=bool(spec.get("strict", False)),
+        )
+
+    # Unreachable: kind is guaranteed to be in _KIND_DISPATCH above.
+    raise ContractError(f"unhandled contract kind: {kind!r}")

@@ -8,37 +8,25 @@ reviews:
   collapse_walkthrough: false
   labeling_instructions:
     - label: Python Lang
-      instructions: Apply when the PR/MR contains changes to python source-code (src/paxman/**/*.py, tests/**/*.py,
-        examples/**/*.py).
-    - label: Bash Lang
-      instructions: Apply when the PR/MR contains changes to shell-scripts or BASH code snippets (scripts/**, .github/**/*.sh,
-        examples/**/scripts/**).
-    - label: Make Lang
-      instructions: Apply when the PR/MR contains changes to the file `Makefile` or makefile code snippets.
+      instructions: Apply when the PR/MR contains changes to python source-code (src/paxman/**/*.py, tests/**/*.py).
     - label: Documentation
-      instructions: Apply whenever project documentation (Markdown source-code under docs/, README.md, or mkdocs.yml) is
-        updated by the PR/MR. Also apply when the PR contains a commit whose message is prefixed with "[DOCUMENTATION]
-        ".
-    - label: ADR
-      instructions: Apply when the PR/MR modifies or adds an Architecture Decision Record under `docs/adr/`.
+      instructions: Apply whenever project documentation (README.md, MANDATE.md, PROPOSED_STRUCTURE.md, RETRACTION.md, or any markdown under docs/) is updated by the PR/MR.
     - label: Spec
-      instructions: Apply when the PR/MR modifies or adds a design specification under `docs/specs/`.
-    - label: Build / CI
-      instructions: Apply when the PR/MR changes CI configuration (`.github/workflows/**`, `.pre-commit-config.yaml`,
-        `pyproject.toml` tooling sections, `Makefile`).
-    - label: Dependency
-      instructions: Apply when the PR/MR changes dependency declarations in `pyproject.toml` (the `[project].dependencies`,
-        `[project.optional-dependencies]`, or `[dependency-groups]` sections) or `uv.lock`.
+      instructions: Apply when the PR/MR modifies or adds a design specification under `docs/superpowers/specs/`.
+    - label: Implementation Plan
+      instructions: Apply when the PR/MR modifies or adds an implementation plan under `docs/superpowers/plans/`.
+    - label: Mandate
+      instructions: Apply when the PR/MR modifies MANDATE.md, the constitutional boundary of Paxman (the 13 laws). Any change to MANDATE.md is a constitutional amendment and must be reviewed against every other law.
     - label: Public API
-      instructions: Apply when the PR/MR adds, renames, or removes symbols exported from the `paxman` package or its public
-        submodules (`paxman.testing`, `paxman.api`).
+      instructions: Apply when the PR/MR adds, renames, or removes symbols exported from the `paxman` package. The v2 public API is `paxman.canonicalize`, `paxman.replay`, and `paxman.register_capability` (plus the value-type re-exports). New public symbols require a design spec under `docs/superpowers/specs/` and an implementation plan under `docs/superpowers/plans/` (one of each per change).
+    - label: Canonicalization
+      instructions: Apply when the PR/MR touches `src/paxman/_core/orchestrator.py`, `src/paxman/_core/artifact.py`, `src/paxman/_core/replay.py`, `src/paxman/_core/types.py`, `src/paxman/_core/classification.py`, `src/paxman/_core/validation.py`, `src/paxman/_orchestrator_runtime.py`, or `src/paxman/__init__.py` in any way that could affect canonicalization, determinism, or replay.
+    - label: Capability SPI
+      instructions: Apply when the PR/MR touches `src/paxman/_capabilities/protocol.py`, `_capabilities/registry.py`, or any built-in capability under `_capabilities/builtins/`. The Capability Protocol is the only extension point of Paxman (mandate §5.1, Law 6, Law 11). New capabilities must be pure functions of (value, contract) — no I/O, no time, no randomness, no network.
+    - label: Contract
+      instructions: Apply when the PR/MR touches `src/paxman/_contracts/contract.py` or the Dict DSL. The contract declares *what* the canonical form is, never *how* it is produced (mandate Law 5). Adding a new contract `kind` requires a design spec and an implementation plan.
     - label: Replay / Determinism
-      instructions: Apply when the PR/MR touches replay, artifact serialization, hash computation, or the
-        `executor`/`reconciler`/`artifact` subsystems in any way that could affect determinism.
-    - label: Linter
-      instructions: Apply when the purpose of the PR/MR is related to fixing feedback from the project's linters (ruff, mypy,
-        pyright, import-linter, interrogate, bandit). Also apply if suggested fixes are used and improve the code's
-        compliance with the project's ruff configuration in `pyproject.toml`.
+      instructions: Apply when the PR/MR touches replay, artifact serialization, hash computation, the orchestrator, the registry, or any capability in any way that could affect determinism or replay byte-equality. The replay invariant (mandate Law 12) is `replay(artifact, contract) == artifact` byte-for-byte, and the determinism invariant (mandate Law 1) requires the same `(input, contract, capabilities, configuration, version)` to always produce the same artifact.
   path_filters:
     - "!*.xc*/**"
     - "!node_modules/**"
@@ -50,424 +38,347 @@ reviews:
     - "!__pycache__/**"
     - "!.mypy_cache/**"
     - "!.ruff_cache/**"
-    - "!.import_linter_cache/**"
     - "!.hypothesis/**"
     - "!.codegraph/**"
-    - "!site/**"
-    - "!.benchmarks/**"
-    - "!coverage.json"
-    - "!coverage.xml"
-    - "!.coverage"
-    - "!uv.lock"
-    - "!.playwright-cli/**"
     - "!.worktrees/**"
     - "!.sisyphus/**"
+    - "!uv.lock"
   path_instructions:
-    - path: README.md
+    - path: MANDATE.md
       instructions: >-
-        1. Consider the file 'README.md' the overview/introduction of the project and the first place to look for
-        project documentation.
+        When reviewing MANDATE.md:
 
-        2. When reviewing the file 'README.md' it should be linted with help from `markdownlint`, pointing out any
-        issues. The project uses GitHub-flavored Markdown.
+        1. MANDATE.md is the constitutional boundary of Paxman (the 13 laws in §7 plus the three invariants in §1.2 and the
+        formal canonicalization definition in §2). Every architectural decision, every pull request, and every new
+        abstraction is evaluated against it. Where MANDATE.md conflicts with README.md, PROPOSED_STRUCTURE.md, a design
+        spec, an implementation plan, or any other document, MANDATE.md wins.
 
-        3. README content that is a *stub* linking to the Read the Docs site (e.g. CONTRIBUTING.md, SECURITY.md,
-        CHANGELOG.md) is intentional and should not be flagged as "incomplete" — only flag genuinely stale links or
-        wrong content.
+        2. MANDATE.md is amendable, not appendable. Adding a new law is an amendment to §7. A new amendment must (a) be
+        compatible with every existing law and invariant, and (b) carry an explicit "Provenance" entry in §11 noting
+        when and why it was added. Flag any edit that silently weakens a law or removes it without an amendment.
 
-        4. Do not suggest moving example code, performance numbers, or quickstart content out of the README — those are
-        kept in-tree on purpose.
+        3. Laws 1–13 are the floor, not the ceiling. Do not suggest weakening a law to accommodate a PR — the law
+        wins.
+
+        4. The retired vocabulary list in §6.3 (`heuristic`, `confidence`, `best match`, `probably`, `approximate`) and
+        the adopted vocabulary (`resolver`, `dispatcher`, `registry`, `matcher`, `capability resolution`) is
+        normative. Edits to MANDATE.md that change the vocabulary are constitutional amendments and must carry
+        the §11 provenance note.
+
+        5. The closing sentence in §10.4 ("Paxman would rather reject a value than silently canonicalize it
+        incorrectly") is the contributor principle. It is the single sentence every contributor sees before writing
+        code. Do not weaken it.
+    - path: PROPOSED_STRUCTURE.md
+      instructions: >-
+        When reviewing PROPOSED_STRUCTURE.md:
+
+        1. PROPOSED_STRUCTURE.md is the proposed folder shape for the v2 code. It is not authoritative on its own —
+        MANDATE.md wins where the two conflict.
+
+        2. The 12-file layout under `src/paxman/` is the canonical v1.0.0 layout: `__init__.py`, `_core/{types, artifact,
+        classification, validation, orchestrator, replay}.py`, `_capabilities/{protocol, registry}.py`, `_capabilities/
+        builtins/__init__.py`, `_contracts/{__init__.py, contract.py}`, `_errors.py`. Adding new top-level
+        sub-packages or new files outside this layout must be justified against MANDATE.md §1.2 (the three
+        invariants) and the "Decisions left to make" section.
+
+        3. The "What is gone, and why" table is normative. The v1.x subsystems (planner/, executor/, reconciler/,
+        artifact/ as a subsystem, capabilities/v1/, providers/, budget.py, policy.py, the 4 contract adapters, the
+        5 V1 capabilities, examples/, playground/, scripts/, docs/adr/, docs/concepts/, docs/reference/,
+        docs/howto/, docs/contributing/, the Makefile, and the CI workflows) are intentionally absent. Flag any
+        PR that proposes resurrecting any of them without a constitutional amendment.
+
+        4. The four property tests named in the test plan (replay invariant, idempotence invariant, uniqueness
+        invariant, immutability invariant) and the canonicalization invariant test (replay_hash matches
+        sha256(canonical_bytes())) are the mechanical evidence for the three invariants in MANDATE.md §1.2.
+        Edits that drop or weaken any of these tests must be flagged.
     - path: "**/*.py"
       instructions: >-
-        When reviewing Python code for Paxman (a contract-driven deterministic normalization engine):
+        When reviewing Python code for Paxman v2 (a deterministic canonicalization engine):
 
-        1. Style: follow `ruff` rules configured in `pyproject.toml` (select: E, F, W, I, B, UP, ANN, ASYNC, S, RUF).
-        Ruff is the source of truth for style; the project does **not** use Flake8. The line length is 100 (enforced by
-        ruff format, `E501` is ignored). Quote style is double-quotes, spaces for indentation, LF line endings. Target
-        Python version is 3.11+.
+        1. Constitutional authority: MANDATE.md is the source of truth for every design decision in this file.
+        Every code review must answer: which of the 13 laws (MANDATE.md §7) does this change uphold, and does it
+        violate any? Flag any change that is silent on which laws it touches.
 
-        2. Type safety: mypy runs in `--strict` mode against `src/paxman/` (Python 3.12). pyright cross-validates.
-        **Zero-tolerance anti-patterns** that the CI rejects and you must flag:
-           - `# type: ignore`, `# pyright: ignore`, `# noqa`
-           - `as any` equivalents (e.g. `cast(..., Any)` to silence a real error)
-           - Empty `except:` or `try/except: pass` blocks
-           - `delete` of failing tests
-        Suggest the typed alternative instead. For test code (`tests/**`) asserts (`S101`) and missing annotations
-        (`ANN`) are allowed by per-file-ignores.
+        2. Capability purity (mandate Law 8a): a capability may only depend on inputs that are explicitly
+        versioned and participate in replay. No `import requests`, no `import urllib`, no `open(`, no `os.`, no
+        `time.`, no `random.`, no `secrets.`, no `datetime.`, no network calls, no filesystem reads, no
+        environment lookups inside `src/paxman/_capabilities/`. Pure functions of `(value, contract)` only.
+        Flag any of these.
 
-        3. Data classes: use `attrs` (with `@attrs.define` or `@attrs.frozen`) for internal core types, **not**
-        pydantic. Pydantic is reserved for the `contract/adapters/pydantic.py` adapter. Typing-extensions (`Self`,
-        `TypeAlias`, `Protocol`) is preferred over hand-rolled equivalents.
+        3. Vocabulary (mandate §6.3): the words `heuristic`, `confidence`, `best match`, `probably`, and
+        `approximate` are RETIRED. Their adopted replacements are `resolver`, `dispatcher`, `registry`, `matcher`,
+        `capability resolution`, `matching rule`. Flag any use of the retired words in code, comments, or
+        docstrings — including in test files, which must demonstrate the new vocabulary.
 
-        4. Naming: `snake_case` for modules/functions, `PascalCase` for classes, `SCREAMING_SNAKE_CASE` for enum
-        members, status values, confidence bands, and error codes. Public symbols must have type hints. Docstrings are
-        enforced at 100% coverage on the public surface by `interrogate` (Google style).
+        4. API naming: the public API is `paxman.canonicalize`, `paxman.replay`, `paxman.register_capability`. The
+        v1.x API name `paxman.normalize` is GONE. Flag any `def normalize` or `paxman.normalize` reference in
+        `src/paxman/` or `tests/`. Likewise, the v1.x submodules `paxman.api`, `paxman.testing`, `paxman.contract`,
+        `paxman.planner`, `paxman.executor`, `paxman.reconciler`, `paxman.artifact`, `paxman.providers` are GONE —
+        flag any import from them.
 
-        5. Architectural boundaries (per PACKAGE_STRUCTURE.md and `pyproject.toml`'s `import-linter` contracts — CI
-        fails if these are violated):
-           - `contract/` is the only layer that knows about external schemas.
-           - `planner/` never executes; it emits `FieldPlan` objects only.
-           - `capabilities/` never assign confidence and never read the canonical
-             contract directly.
-           - `executor/` never replans, never assigns confidence, never reads raw input.
-           - `reconciler/` is the sole confidence assigner; never executes; never
-             reads raw input; never sees external schemas.
-           - `artifact/` is the replay-of-truth boundary — replay must be pure
-             deserialization, never invoke capabilities/planner/executor/reconciler.
-           - `api/` is the public surface; no internal concepts leak (no `FieldPlan`,
-             no `CapabilitySpec`, no `TruthLayer` by name).
-           - The 9 cross-cutting modules at the package root
-             (`errors.py`, `types.py`, `protocols.py`, `versioning.py`,
-             `logging.py`, `budget.py`, `clock.py`, `ids.py`, `serialization.py`)
-             must not import from any subsystem layer.
-        Flag any new import that crosses these boundaries.
+        5. Status, not confidence: outcomes are the five-value `Status` enum (`CANONICALIZED`, `INVALID`,
+        `MISSING`, `AMBIGUOUS`, `UNSUPPORTED`). Confidence scores, probability bands, "best match", and ranking
+        are forbidden (mandate Law 3). Flag any float, band, or score on an artifact or capability result.
 
-        6. Domain invariants you should know about when reviewing:
-           - `MONEY` is a structured type: amount (Decimal, never float) +
-             ISO-4217 currency + precision. Flag any float arithmetic on monetary
-             values. Only `reconciler/money.py` may import `decimal` directly;
-             other reconciler modules must use `MoneyValue`.
-           - Confidence bands are fixed: `CERTAIN`, `HIGH`, `MEDIUM`, `LOW`,
-             `UNTRUSTED`. Confidence is assigned **only** by the Reconciler.
-             Planner may emit `target_confidence` only. Capabilities return no
-             confidence.
-           - V1 is sequential execution only (ADR-0006). Do not suggest async
-             parallelism in `executor/`.
-           - V1 public API is synchronous and not thread-safe. Do not suggest
-             async/threaded entry points.
-           - JSON serialization uses sorted keys, no whitespace, RFC 8785-style
-             canonical form. Do not suggest `json.dumps(..., indent=2)` in code
-             that participates in replay.
-           - Secrets are by reference only — never embed API keys in artifacts.
-           - Raw input is never logged by default (`Policy.log_raw_input: bool = False`).
-           - Inference output is untrusted until validated.
-           - Determinism is a hard test-fail invariant. Property tests use
-             Hypothesis `derandomize=True`. Flag any non-determinism source:
-             `time.time()`, `datetime.now()`, `uuid4()`, `set`/`dict` iteration
-             over a non-sorted key set used in a hash, `os.urandom()`,
-             `random.random()`, multi-threading, or unseeded RNG.
+        6. Immutability (mandate Law 13): `ExecutionArtifact` is `@attrs.frozen`. Every field on every artifact
+        is set at construction and cannot be reassigned. Flag any `artifact.<field> = ...` or any code that
+        builds an artifact via a non-frozen class.
 
-        7. Errors: every exception in `src/paxman/` carries an `error_code` (string) and a `context` dict. Flag any
-        `raise PaxmanError("...")` without structured context.
+        7. Replay (mandate Law 12): `replay(artifact, contract) == artifact` byte-for-byte. The `replay_hash`
+        must be independently re-computed from the artifact's canonical bytes at verification time, not
+        re-read from the stored value. Flag any `_compute_replay_hash(artifact)` that returns
+        `artifact.replay_hash` directly.
 
-        8. Do not silently refactor while fixing a bug — fix minimally.
+        8. Idempotence (mandate Law 2): `canonicalize(canonicalize(x), contract) == canonicalize(x, contract)`.
+        Capability implementations must be fixed points of themselves (e.g. lower-casing is a fixed point of
+        lower-casing).
 
-        9. When suggesting a change, include a short rationale that cites the relevant ADR number (e.g. "per ADR-0005
-        the Reconciler is the sole confidence assigner") or a section in PACKAGE_STRUCTURE.md / ARCHITECTURE.md so the
-        suggestion can be traced.
+        9. Contract = what, not how (mandate Law 5): contract fields are policy declarations
+        (`lowercase=True/False`, `provider_aliases="none"/"gmail"`, etc.). Flag any contract field that
+        describes an algorithm (e.g. `auto_detect`, `infer_provider`, `use_llm`).
+
+        10. Data classes: use `attrs` (`@attrs.frozen` for value types, `@attrs.define` for mutable internal
+        state if any). The only attrs use in v1.0.0 is for value types; paxman v2 has no pydantic dependency.
+        Flag any pydantic import in `src/paxman/`.
+
+        11. Errors: exceptions are reserved for calls that *cannot proceed* (broken contract, version
+        mismatch, frozen registry, internal invariant violation). The five `Status` values are *outcomes* on a
+        successfully-returned artifact, not exceptions. Flag any place that raises for a recoverable
+        canonicalization outcome (an `Invalid` input is a Status, not a raise).
+
+        12. No `as any` / `# type: ignore` / `# noqa` for type-error suppression. Use the typed alternative
+        (a `Protocol`, a `TypeAlias`, a real annotation).
     - path: tests/**/*.py
       instructions: >-
         When reviewing test code under `tests/`:
 
-        1. Style: ruff is the source of truth (no Flake8). The per-file-ignore `tests/**/*.py = ["S101", "ANN"]` permits
-        `assert` and missing annotations in test files. The `examples/**/tests/**/*.py` per-file-ignore additionally
-        permits `S603` (subprocess calls).
+        1. Three directories only: `tests/unit/`, `tests/property/`, `tests/integration/`. There is no
+        `tests/fixtures/`, no `tests/benchmark/`, no `tests/public_api/`. Flag any new test directory not in
+        this list.
 
-        2. Test markers: use the markers declared in `pyproject.toml` (`tool.pytest.ini_options.markers`):
-        `deterministic`, `replay`, `property`, `slow`, `integration`, `unit`. New markers must be added to
-        `pyproject.toml` first, otherwise `--strict-markers` rejects them.
+        2. Test markers: the only markers declared in `pyproject.toml`'s `[tool.pytest.ini_options].markers` are
+        `property` and `integration`. New markers must be added to `pyproject.toml` first or pytest's
+        `--strict-markers` rejects them.
 
-        3. Property tests: must use Hypothesis with `derandomize=True` (or be in a `@given(...)` that the project's test
-        strategy controls). Flag any seeded-randomness bypass.
+        3. Property tests: must use Hypothesis. The five property tests named in PROPOSED_STRUCTURE.md are the
+        mechanical evidence for MANDATE.md §1.2's three invariants and Laws 2, 12, 13. They are:
+        `test_replay_invariant`, `test_idempotence_invariant`, `test_uniqueness_invariant`,
+        `test_artifact_immutability_invariant`, `test_canonicalization_invariant`. Flag any PR that drops or
+        weakens any of these.
 
-        4. Replay tests must verify byte-equality of the rehydrated artifact to the original (`assert rehydrated ==
-        artifact`). Flag any replay test that only checks a subset of fields.
+        4. Replay tests must verify byte-equality of the rehydrated artifact to the original
+        (`assert rehydrated == artifact` AND `assert rehydrated.canonical_bytes() == art.canonical_bytes()`).
+        Flag any replay test that checks only a subset of fields.
 
-        5. Test data: vendored data lives in `tests/fixtures/`. Real PII is forbidden. License gating is enforced by
-        `scripts/fetch_test_data.py --validate-licenses`. Flag any test that reads from a path not in the vendored
-        corpus or that introduces unvetted third-party data.
+        5. No vendored test data. v2 has no `tests/fixtures/`, no PII, no third-party corpora. If a test
+        needs data, it must be generated inline (Hypothesis strategies) or in a one-off local fixture inside
+        the test file. Flag any test that reads from a path not under `tests/`.
 
-        6. Public API stability: there is a `tests/test_public_api.py` snapshot test. Adding a new symbol to the public
-        surface (anything re-exported from `paxman` or `paxman.testing` or `paxman.api`) **requires an ADR** and an
-        update to that snapshot. Flag new public exports that lack an ADR.
+        6. The Capability Protocol test must verify that two independent implementations of the same capability
+        produce the same canonical value (mandate §5.1 litmus test). The EmailCapability test must verify
+        every policy combination (default, gmail alias, strict, strict+unicode-reject) and verify
+        idempotence.
 
-        7. Coverage targets (CI fails below): `errors.py` and `versioning.py` must be 100%; `contract/`, `planner/`,
-        `executor/`, `reconciler/` must be ≥ 90%; `artifact/` must be ≥ 95%; overall fail-under is 90. Flag deletions of
-        tests whose corresponding code would drop below these thresholds.
-
-        8. Hypothesis strategies for the public testing surface live in `paxman.testing` (re-exported). Prefer composing
-        those strategies over building ad-hoc ones.
-
-        9. Do not delete or weaken a failing test to make the suite pass. A determinism violation is a hard test
-        failure, not a flake.
-    - path: src/paxman/**/contract/**
+        7. Do not delete or weaken a failing test to make the suite pass. A determinism violation is a hard
+        test failure, not a flake.
+    - path: src/paxman/_core/orchestrator.py
       instructions: >-
-        When reviewing the `contract/` subsystem:
+        When reviewing the orchestrator (the pipeline Paxman owns, mandate Law 6):
 
-        1. `contract/` is the only layer that knows about external schemas (pydantic, jsonschema,
-        openapi-spec-validator, plain dict). Flag any import of these libraries from outside `contract/`.
+        1. The pipeline walks exactly six stages: `inspect → resolve → execute → canonicalize → validate → classify`.
+        Users can register capabilities (the `execute` stage); they may NOT rearrange the other five. Flag any
+        user-facing hook into a non-`execute` stage.
 
-        2. The contract layer must not depend on any other subsystem (`planner`, `executor`, `reconciler`, `artifact`,
-        `capabilities`, `api`). This is enforced by `import-linter` in `pyproject.toml`.
+        2. The orchestrator catches `ContractError` and yields `Status.UNSUPPORTED` rather than raising. The
+        catch must include an `Evidence` entry naming the unknown `kind`. Flag any re-raise of `ContractError`
+        for a malformed contract that is in scope (the user can pass an unknown `kind`; that is an
+        `UNSUPPORTED` outcome, not a runtime error).
 
-        3. Adapters translate 4 input formats (Pydantic / JSON Schema / OpenAPI / Dict DSL) into `CanonicalContract`.
-        Adding a new adapter requires an ADR (see ADR-0007) and must follow the `Adapter` protocol in
-        `contract/adapters/base.py`.
+        3. The orchestrator calls `registry.freeze()` implicitly on the first invocation. The freeze is
+        idempotent. Flag any explicit freeze that races with an in-flight call.
 
-        4. V1 ships exactly 4 adapters (Pydantic, JSON Schema, OpenAPI, Dict DSL). Flag any new adapter or any reference
-        to a V2 adapter (ERP, agent tool, wrapper) — those are explicitly out of V1.
-    - path: src/paxman/**/planner/**
+        4. The multi-claimant case yields `Status.AMBIGUOUS` with an `Evidence` entry listing all claimants
+        (mandate §5.4, Law 4). Flag any code path that picks a single capability from a multi-claimant set.
+
+        5. The orchestrator is a pure function of `(input, contract, frozen_registry, paxman_version)`. Flag
+        any read of `time`, `os.urandom`, `uuid.uuid4`, or any other non-deterministic source inside
+        `canonicalize`.
+    - path: src/paxman/_core/artifact.py
       instructions: >-
-        When reviewing the `planner/` subsystem:
+        When reviewing `ExecutionArtifact`:
 
-        1. The planner is a pure function (ADR-0002) — no LLM, no agent, no network calls, no filesystem access. Flag
-        any of these.
+        1. The class is `@attrs.frozen`. Every field is set at construction. `replay_hash` is computed in
+        `__attrs_post_init__` via `object.__setattr__` (the one permitted mutation). Flag any code path that
+        bypasses `__setattr__` enforcement.
 
-        2. The planner never executes; it emits `FieldPlan` objects only. Flag any code path that mutates state outside
-        the planner module.
+        2. `canonical_bytes()` produces a deterministic JSON serialization: `sort_keys=True`, no whitespace,
+        `ensure_ascii=False`, UTF-8 encoded. The `replay_hash` is `sha256(canonical_bytes())`. Flag any
+        change to the serialization that breaks byte-equality across runs.
 
-        3. The planner may read the canonical contract (its only consumer) and may emit `target_confidence`, but it
-        never assigns final confidence (per ADR-0005).
+        3. The artifact must not embed secrets, raw input, or any external state. Flag any field that carries
+        a URL, an environment variable name, or a raw input payload.
 
-        4. The planner must not import from `executor`, `reconciler`, `artifact`, or `api` (enforced by
-        `import-linter`).
-    - path: src/paxman/**/capabilities/**
+        4. The contract is stored on the artifact in addition to the parsed view, so `replay(artifact,
+        contract)` does not need the caller's original contract dict. The stored form must round-trip
+        through `parse_contract`.
+    - path: src/paxman/_core/replay.py
       instructions: >-
-        When reviewing the `capabilities/` subsystem:
+        When reviewing the replay path (mandate Law 12):
 
-        1. The 5 V1 capabilities are atomic and named: `text_extraction`, `regex_extraction`, `lookup`, `inference`,
-        `validation`. Each lives in its own module under `capabilities/v1/`. Flag any new capability not added via ADR.
+        1. `replay(artifact, contract)` verifies, in order: (a) `paxman_version` matches, (b) `contract_version`
+        matches, (c) `capabilities_hash` matches the current frozen registry, (d) `replay_hash` matches
+        `sha256(artifact.canonical_bytes())`. Each mismatch raises a specific exception
+        (`VersionMismatchError` for (a)–(c), `CanonicalizationError` for (d)). Flag any "verification" that
+        re-reads the stored value rather than recomputing it.
 
-        2. Capabilities never assign confidence and never read the canonical contract directly. They operate on
-        `CapabilitySpec` + raw input and return `CapabilityResult` candidates only.
+        2. The function returns the artifact, byte-equal, or raises. There is no `Status` on the replay path.
+        Flag any code path that returns a `Status`-bearing artifact instead of raising.
 
-        3. Capabilities must not import from `planner`, `executor`, `reconciler`, `artifact`, or `api`.
-
-        4. The `inference` capability in V1 is a stub provider (no real remote LLM calls). Flag any code that calls a
-        remote API in V1.
-    - path: src/paxman/**/executor/**
+        3. Replay must not re-execute any capability. The orchestrator, the registry, the contract parser, and
+        the validators are all in scope; capabilities and their canonicalize methods are NOT. Flag any
+        `capability.canonicalize(...)` call inside `replay`.
+    - path: src/paxman/_capabilities/**
       instructions: >-
-        When reviewing the `executor/` subsystem:
+        When reviewing the Capability SPI and any built-in capability:
 
-        1. The executor runs field plans **sequentially** (ADR-0006). No parallel field execution, no async, no thread
-        pools in V1.
+        1. The `Capability` Protocol has exactly two methods: `can_handle(contract, value) -> bool` and
+        `canonicalize(value, contract) -> CapabilityResult`. The Protocol deliberately omits control-flow
+        verbs: no `next`, `execute`, `pipeline`, `stage`, `context switching`, `branching`. Flag any
+        addition to the Protocol that introduces orchestration.
 
-        2. The executor never replans, never assigns confidence, and never reads raw input directly (it receives
-        prepared context from the planner).
+        2. A capability is a pure function of `(value, contract)` (mandate Law 8a). No `import requests`,
+        no `open(`, no `os.`, no `time.`, no `random.`, no `secrets.`, no `datetime.`, no environment reads,
+        no filesystem. Flag any of these in any file under `src/paxman/_capabilities/`.
 
-        3. The executor tracks `Budget` and stops early on budget exhaustion. Flag any code path that bypasses the
-        budget tracker.
+        3. Two independent implementations of the same capability, given the same `(value, contract)` and the
+        same MANDATE.md anchors, MUST produce the same canonical value (mandate §5.1 litmus test). Flag any
+        capability that depends on a global, a module-level cache, or a hidden state.
 
-        4. The executor must not import from `reconciler`, `artifact`, or `api`.
-    - path: src/paxman/**/reconciler/**
+        4. The CapabilityRegistry exposes `register(capability)`, `resolve(contract, value)`, `resolve_all(...)`,
+        `freeze()`, and `capabilities_hash()`. After `freeze()`, `register` raises `FrozenRegistryError`. A
+        duplicate name at `register` time raises `ConfigurationError`. Flag any registry method that ranks
+        capabilities, scores them, or picks a "best" one (mandate Law 3 — never guess).
+
+        5. Built-in capabilities live under `src/paxman/_capabilities/builtins/`. The `__init__.py` is empty
+        by design (v2 ships one capability; the directory exists for import-path stability). Flag any
+        placeholder capability that is not yet implemented.
+    - path: src/paxman/_contracts/contract.py
       instructions: >-
-        When reviewing the `reconciler/` subsystem:
+        When reviewing the contract layer:
 
-        1. The reconciler is the **sole** confidence assigner (ADR-0005). It is the only place where final confidence
-        values appear. Flag any confidence assignment outside `reconciler/`.
+        1. v1.0.0 has exactly one contract kind: `canonical_email`. The Dict DSL's `kind` field is a closed
+        enum. Adding a new `kind` requires a design spec under `docs/superpowers/specs/` and an implementation
+        plan under `docs/superpowers/plans/`. Flag any new `kind` without those documents.
 
-        2. The reconciler merges candidate results, resolves truth conflicts, and produces the final resolved values. It
-        never executes capabilities and never reads raw input — it operates on `Candidate` objects from the executor.
+        2. Contract fields are policy declarations (mandate Law 5 — "what, not how"). The current fields are
+        `lowercase`, `strip_whitespace`, `provider_aliases`, `strict`. Flag any field that describes an
+        algorithm (`auto_detect`, `infer_provider`, `use_llm`).
 
-        3. The reconciler never sees external schemas (those are normalized to `CanonicalContract` by `contract/`
-        first).
+        3. `parse_contract` raises `ContractError` on malformed input. The orchestrator catches
+        `ContractError` and yields `Status.UNSUPPORTED`. Flag any `parse_contract` call site that does not
+        catch.
 
-        4. `reconciler/money.py` is the only module in the reconciler that may import `decimal` directly. All other
-        reconciler modules must use `MoneyValue` (a contract-level structured type). This is enforced by
-        `tests/unit/test_reconciler_static_checks.py`.
-
-        5. MONEY fields are amount (Decimal, never float) + ISO-4217 currency + precision. Flag any float arithmetic on
-        monetary values.
-
-        6. The reconciler must not import from `artifact` or `api`.
-    - path: src/paxman/**/artifact/**
+        4. The contract carries a `version` field. Replay verifies the contract version matches between the
+        artifact and the current contract. Bumping the version is a breaking change to the contract
+        vocabulary.
+    - path: src/paxman/__init__.py
       instructions: >-
-        When reviewing the `artifact/` subsystem:
+        When reviewing the public API:
 
-        1. The artifact is the replay-of-truth boundary. `paxman.replay(artifact, contract=...)` is **pure
-        deserialization** — it must never invoke `planner`, `executor`, `reconciler`, or any capability. Flag any new
-        code path that does.
+        1. The v2 public surface is exactly: `paxman.canonicalize`, `paxman.replay`, `paxman.register_capability`,
+        plus the value-type re-exports (`ExecutionArtifact`, `Status`, `Evidence`, `VersionStamp`,
+        `CapabilityResult`, `ValidationResult`, `Contract`, `CanonicalEmailContract`, `parse_contract`,
+        `Capability`, `CapabilityRegistry`) and the error types. The v1.x submodule `paxman.api` is GONE; the
+        v1.x submodule `paxman.testing` is GONE. Flag any import from `paxman.api` or `paxman.testing`.
 
-        2. The artifact format includes a SHA-256 `replay_hash` that is deterministic over the captured truth. Flag any
-        non-deterministic serialization (e.g. `json.dumps` without `sort_keys=True`, `dict` iteration over non-sorted
-        keys, `time.time()`, `uuid.uuid4()`).
+        2. New public symbols require a design spec under `docs/superpowers/specs/` and an implementation
+        plan under `docs/superpowers/plans/`. Flag any new export in `__all__` that lacks both.
 
-        3. The artifact must not embed secrets (by-reference only) and must not embed raw input by default
-        (`Policy.log_raw_input: bool = False`).
-
-        4. The artifact must not import from `api/`.
+        3. `register_capability` is a thin wrapper over the default registry in `paxman._orchestrator_runtime`.
+        It must NOT auto-register any capability on `import paxman` — the user opts in by importing the
+        built-in module. Flag any module-level side effect in `_capabilities/builtins/` that auto-registers
+        on import.
     - path: pyproject.toml
       instructions: >-
-        When reviewing `pyproject.toml`:
+        When reviewing pyproject.toml:
 
-        1. **Core dependencies are capped at 4 packages** (DEPENDENCIES.md §1, current count: `attrs`,
-        `typing-extensions`, `structlog`, `packaging`). Adding a new core dependency requires an ADR. Optional extras
-        (pydantic, jsonschema, openapi-spec-validator) are exempt from the cap but each still requires an ADR.
+        1. The runtime dependency set is empty (`[project].dependencies = []`). The v1.x 4-package core cap
+        is GONE; v2 has no runtime dependencies beyond the standard library and `attrs` (which is in the
+        `dev` group only, not runtime). Flag any addition to `[project].dependencies`.
 
-        2. **Forbidden runtime dependencies**: `numpy`, `torch`, `requests`, and any package that pulls them in
-        transitively for core use. Flag any such addition.
+        2. v1.0.0 has no `ruff`, `mypy`, `pyright`, `import-linter`, or `coverage` configuration in
+        `pyproject.toml`. The only `[tool.pytest.ini_options]` section is the one that registers the
+        `property` and `integration` markers. Adding these tools requires a design spec (each is a
+        constitutional-level decision because it can either uphold or violate Law 1 / Law 11 depending on
+        configuration).
 
-        3. Ruff config is the source of truth for lint/format. Do not suggest adding flake8 / black / isort — they would
-        conflict with ruff.
+        3. The `hatchling` build backend and the `[tool.hatch.build.targets.wheel]` section pointing at
+        `src/paxman` are the v1.0.0 build settings. Do not change them.
 
-        4. mypy is `strict = true` against `src/paxman/`. Do not relax this.
+        4. There is no Makefile, no CI workflow, no pre-commit config in v1.0.0. Adding any of these is a
+        v1.0.x decision and requires a design spec.
 
-        5. import-linter contracts in `[tool.importlinter]` enforce the subsystem boundary rules in
-        PACKAGE_STRUCTURE.md. New boundary rules belong in import-linter, not as a docstring comment.
-
-        6. Coverage thresholds in `[tool.coverage.report]` are V1 acceptance criteria (`fail-under = 90`; `errors.py`
-        and `versioning.py` at 100%; subsystems at 90%+). Do not lower them without an ADR.
-    - path: docs/adr/**/*.md
+        5. The package version is `0.0.0.dev0` until the first release; do not bump it without a release
+        process being defined.
+    - path: docs/superpowers/specs/**/*.md
       instructions: >-
-        When reviewing Architecture Decision Records under `docs/adr/`:
+        When reviewing design specifications under `docs/superpowers/specs/`:
 
-        1. ADRs follow the MADR 4.0 format (see `docs/adr/index.md` and `docs/adr/0001-field-centric-planning.md` for
-        the template).
+        1. Specs are the v2 design artefacts. They are anchored to MANDATE.md: every design decision in a
+        spec must trace to a section or law in MANDATE.md, or be marked as a candidate for drift. Flag any
+        spec section that introduces a concept not in MANDATE.md without marking it as drift.
 
-        2. **Once an ADR is `Accepted`, it is immutable.** A reversal or refinement must be a new ADR that marks the old
-        one `Superseded` with a back-link. Flag any edit to the prose of an Accepted ADR that changes its decision —
-        instead suggest a new ADR.
+        2. The user has directed that there be at most ONE design spec and ONE implementation plan per
+        capability in v1.0.0. Multiple specs for the same capability are not allowed.
 
-        3. New ADRs go in `docs/adr/NNNN-kebab-case-title.md` with a 4-digit monotonically increasing number. Update
-        `docs/adr/index.md` in the same PR.
+        3. Specs must be precise enough to be implemented against. Flag hand-wavy language (`"etc."`,
+        `"and so on"`, `"TBD"`) in normative sections.
 
-        4. When to write an ADR (per `docs/adr/index.md`): new public API surface, new public SPI, system boundary
-        change, new core dependency, artifact format change, replay model change, public API deprecation. Flag any PR
-        touching these areas that lacks an ADR.
-
-        5. Cross-link ADRs from the related docs (ARCHITECTURE.md, PACKAGE_STRUCTURE.md, GLOSSARY.md) only when the doc
-        also changes — do not stage out-of-band link updates.
-    - path: docs/specs/**/*.md
+        4. Specs may evolve freely (unlike MANDATE.md, which is amendable, not appendable). Version-bump
+        the spec title or add a "Changelog" section when behavior changes.
+    - path: docs/superpowers/plans/**/*.md
       instructions: >-
-        When reviewing design specifications under `docs/specs/`:
+        When reviewing implementation plans under `docs/superpowers/plans/`:
 
-        1. These are developer-reference, implementation-level specs (Dict DSL, Input Profile, Capability Cost Model).
-        They are **not** the architectural source of truth — that role is owned by `docs/adr/`. Flag any spec that
-        contradicts an Accepted ADR; the ADR wins.
+        1. Plans are TDD-first: each task is "write failing test, run it RED, implement, run GREEN, commit".
+        Flag any plan that does not have this structure.
 
-        2. Specs may evolve freely (unlike ADRs). Version-bump the spec title or add a "Changelog" section when behavior
-        changes.
+        2. There must be at most ONE implementation plan per design spec in v1.0.0. Flag any second plan
+        for the same spec.
 
-        3. Specs must be precise enough to be implemented against. Flag hand-wavy language (`"etc."`, `"and so on"`,
-        `"TBD"`) in normative sections. Examples and rationale sections may be looser.
-    - path: docs/concepts/**/*.md
+        3. Plans must reference their design spec by path. Flag any plan that does not.
+
+        4. Plans must include an end-to-end manual verification step (a `uv run python -c '...'` block) that
+        the implementer runs after all tasks complete. Flag any plan that omits this.
+    - path: RETRACTION.md
       instructions: >-
-        When reviewing concept documentation under `docs/concepts/`:
+        When reviewing RETRACTION.md:
 
-        1. These are the mental-model docs read by users first. Lint with `markdownlint`.
+        1. RETRACTION.md is a permanent historical record. Do not edit it to reflect v2 changes — it
+        documents the v1.x failure. New v2 history belongs in a new document (or in the commit log).
 
-        2. Cross-references to ADRs must use the form `[ADR-0005](../adr/0005-confidence-ownership.md)`. Verify the link
-        target exists.
-
-        3. Migration guides (e.g. `MIGRATION_GUIDE.md`) and release notes (`RELEASE_NOTES_vX.Y.Z.md`) are append-only
-        historical artifacts. Flag edits that rewrite past behavior descriptions — prefer a new entry that supersedes
-        the old.
-    - path: docs/howto/**/*.md
-      instructions: >-
-        When reviewing how-to guides under `docs/howto/`:
-
-        1. These are 5-minute task recipes (add_adapter, add_capability, add_inference_provider, replay_artifact). They
-        must be runnable end-to-end against the current code. Flag any code snippet that no longer matches the public
-        API.
-
-        2. Code snippets should be `python` fenced blocks and should import directly from `paxman` or its public
-        submodules (`paxman.testing`). Flag snippets that use private internals.
-
-        3. Each how-to must end with a verification step (run a test, an example, or `make ci`) so the reader can prove
-        the recipe works.
-    - path: docs/reference/**/*.md
-      instructions: >-
-        When reviewing reference documentation under `docs/reference/`:
-
-        1. These are the authoritative descriptions of the architecture, package structure, glossary, replay model,
-        extending guide, and dependency policy. They are the prose companion to the ADRs.
-
-        2. Architecture changes belong in ADRs first, with a back-link from the reference doc. Flag reference doc
-        changes that have no corresponding ADR.
-
-        3. The glossary (`docs/reference/glossary.md`) is the vocabulary source of truth. New project-specific terms
-        must be added there before being used in other docs.
-    - path: docs/contributing/**/*.md
-      instructions: >-
-        When reviewing contributing docs under `docs/contributing/`:
-
-        1. The development guide (`development.md`), testing strategy (`testing-strategy.md`), and test data policy
-        (`test-data.md`) describe the contributor workflow. CI tooling must match what these docs say (and vice versa).
-        Flag drift.
-
-        2. The maintainers guide (`maintainers.md`) defines the merge process and reviewer rotation. Edits to it should
-        be reviewed by a maintainer.
-    - path: .github/workflows/**
-      instructions: >-
-        When reviewing GitHub Actions workflows under `.github/workflows/`:
-
-        1. Workflows are pinned by SHA, not by tag, for third-party actions (supply-chain hardening). Flag any `uses:
-        foo/bar@vN` or `@main` on a third-party action.
-
-        2. The 9 CI checks (per the `ci.yml` workflow) are the gate for merge: `install-frozen`, `lint`, `format-check`,
-        `typecheck`, `typecheck-pyright`, `imports`, `docs-check`, `security`, `test-cov`. Do not suggest skipping or
-        weakening any of them without an ADR.
-
-        3. `actionlint` is the linter for workflow files. Do not re-flag issues it would already catch (false-positive
-        `${{ }}` in conditionals, suggestions to remove valid `${{ }}` syntax).
-
-        4. Workflows must not print raw input by default. Flag any `run:` step that echoes `${{ github.event.* }}`
-        payloads to logs.
-    - path: .github/**
-      instructions: >-
-        When reviewing other files under `.github/`:
-
-        1. Issue templates, PR templates, and CODEOWNERS define the triage and review process. Changes here should be
-        cross-checked with the contributing guide.
-
-        2. Do not remove or weaken required status checks in branch protection (those live in GitHub settings, not in
-        the repo, but PR descriptions that propose doing so should be flagged).
-    - path: mkdocs.yml
-      instructions: >-
-        When reviewing `mkdocs.yml`:
-
-        1. The nav structure mirrors the on-disk directory layout under `docs/`. A new doc must be added in both the
-        file tree and the nav. Flag missing nav entries for files that exist on disk.
-
-        2. MkDocs Material is the theme. Plugin and Markdown extension changes can affect the rendered site — verify
-        with `mkdocs build --strict` locally.
+        2. RETRACTION.md is allowed to quote v1.x API names verbatim from the audit (e.g.
+        `paxman.normalize(...)`) as part of the failure record. Do not flag those quotes as v1.x API
+        contamination — they are intentional historical evidence.
     - path: "**/*.md"
       instructions: >-
-        General Markdown rules for the whole project:
+        General Markdown rules for the project:
 
-        1. The project uses GitHub-flavored Markdown. Lint with `markdownlint`.
+        1. The project uses GitHub-flavored Markdown.
 
-        2. Wrap inline code with single backticks; use fenced blocks (```python, ```bash, ```yaml) for multi-line
-        snippets. Specify a language on every fenced block.
+        2. Wrap inline code with single backticks; use fenced blocks (```python, ```bash, ```yaml) for
+        multi-line snippets. Specify a language on every fenced block.
 
-        3. Internal links must be relative paths that exist in the repo (or be a Read the Docs site link). Flag absolute
-        file:// links and links to deleted files.
+        3. Internal links must be relative paths that exist in the repo. Flag absolute `file://` links and
+        links to deleted files. Files that exist in v1.x but not v2 (e.g. `docs/adr/0001-...`, `examples/`,
+        `playground/`, `Makefile`, `mkdocs.yml`) must not be linked.
 
-        4. Headings must be in title case and have a blank line before and after.
+        4. Headings must be in title case with a blank line before and after.
 
-        5. The README, CONTRIBUTING, SECURITY, and CHANGELOG stubs in the repo root are intentional links to the docs
-        site (`docs/contributing/`, `docs/security/`, `docs/operations/`). Do not flag them as "incomplete" — only flag
-        stale links.
-    - path: examples/**/src/**/*.py
-      instructions: >-
-        When reviewing example package code under `examples/`:
-
-        1. Examples are standalone mini-packages (backend_service, ai_agent_ingest, saas_procurement). They have their
-        own `pyproject.toml` and are installed with `uv pip install -e ".[dev]"`.
-
-        2. Example code may use `Any` for tool/agent contract parameters (per-file-ignore `examples/**/*.py =
-        ["ANN401"]`). Do not flag that as a style issue.
-
-        3. Example tests use the additional per-file-ignore `S603` (subprocess calls). Do not flag subprocess usage in
-        example tests as a security issue.
-
-        4. Examples must import from the **public** `paxman` API only — no imports from `paxman._internal`,
-        `paxman.contract._types`, or any module prefixed with `_`.
-
-        5. Examples must be runnable end-to-end. The README quickstart for each example is the source of truth for the
-        run command.
-    - path: scripts/**
-      instructions: >-
-        When reviewing scripts under `scripts/`:
-
-        1. `scripts/fetch_test_data.py` is a vendoring tool. The download step is stubbed in V1; the real download is a
-        separate concern. License gating is enforced by `--validate-licenses`.
-
-        2. Shell scripts in `scripts/` should be POSIX-ish bash and should be lintable with `shellcheck`. Do not suggest
-        bashisms that `shellcheck` would flag.
-
-        3. Scripts are excluded from ruff (`extend-exclude` in `pyproject.toml`). They are not part of the library and
-        should not be subject to the same style rules.
+        5. The vocabulary in MANDATE.md §6.3 is normative. Flag any use of `heuristic`, `confidence`,
+        `best match`, `probably`, or `approximate` in any markdown file under the project — including in
+        examples, rationale sections, and "alternatives considered" callouts. The adopted vocabulary
+        (`resolver`, `dispatcher`, `registry`, `matcher`, `capability resolution`) is preferred.
   auto_review:
     ignore_title_keywords:
       - WIP
@@ -481,6 +392,7 @@ reviews:
       - sprint-*
       - v*.*.*
       - release/*
+      - feat/*
   finishing_touches:
     unit_tests:
       enabled: false

@@ -60,8 +60,18 @@ class CapabilityRegistry:
         Callers (the orchestrator) inspect the full set and classify
         `Status.AMBIGUOUS` when the set has more than one entry
         (mandate §5.4). Callers MUST NOT silently pick a single entry.
+
+        Results are sorted by capability name so two registries with
+        the same capability set registered in different orders yield
+        the same `resolve_all` output, the same `AMBIGUOUS` evidence
+        string, and therefore the same `replay_hash` (mandate Law 1).
+        Without this sort, the dict's insertion order would leak into
+        the evidence and break replay byte-equality across registration
+        orders.
         """
-        return [cap for cap in self._capabilities.values() if cap.can_handle(contract, value)]
+        claimants = [cap for cap in self._capabilities.values() if cap.can_handle(contract, value)]
+        claimants.sort(key=lambda c: c.name)
+        return claimants
 
     def capabilities_hash(self) -> str:
         """Deterministic hash of the registered capability set.

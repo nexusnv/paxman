@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 import pytest
 
@@ -16,7 +16,7 @@ _EMPTY_REGISTRY_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b
 
 
 def _artifact(**overrides: object) -> ExecutionArtifact:
-    defaults: dict[str, object] = dict(
+    defaults: dict[str, Any] = dict(
         status=Status.CANONICALIZED,
         value="a@b.c",
         evidence=(Evidence(rule="lowercased_local_part"),),
@@ -29,7 +29,7 @@ def _artifact(**overrides: object) -> ExecutionArtifact:
         ),
     )
     defaults.update(overrides)
-    return ExecutionArtifact(**cast(Any, defaults))
+    return ExecutionArtifact(**defaults)
 
 
 @pytest.fixture(autouse=True)

@@ -195,7 +195,7 @@ home is `types.py`.
 
 ### 2.1 The pipeline
 
-```
+```text
 Input (str)
   ↓ inspect:         contract.parse(contract_dict)   (from _contracts/contract.py)
 Contract (or _StubContract on parse failure)
@@ -377,10 +377,19 @@ artifact carry a serializable contract view without forcing a
 forward import from `_contracts/contract.py`.
 
 `canonical_bytes()` produces a deterministic byte serialization (sorted
-keys, no whitespace, `ensure_ascii=False`) used for `replay_hash`
-computation and for `__eq__` / `__hash__`. This is the answer to
-`PROPOSED_STRUCTURE.md` Decision #6 (byte-equal serialization for
-`replay_hash`).
+keys, no insignificant whitespace, `ensure_ascii=False`) used for
+`replay_hash` computation. This is the answer to `PROPOSED_STRUCTURE.md`
+Decision #6 (byte-equal serialization for `replay_hash`).
+
+> **Equality and hashing.** `ExecutionArtifact` is `@attrs.frozen`; the
+> attrs-generated `__eq__` and `__hash__` operate on the field values,
+> excluding `replay_hash` (`eq=False`). For two artifacts produced by
+> Paxman from the same `(input, contract, registry)`, field equality
+> and `canonical_bytes()` equality agree, so the two views of
+> "byte-equal" are observationally equivalent. They diverge only in
+> edge cases the determinism invariant already excludes (forged
+> artifacts, mutated `replay_hash`); the `replay_hash` is the
+> authoritative proof, `__eq__` is the ergonomic shortcut.
 
 ### 3.7 `Capability` Protocol
 
@@ -402,13 +411,32 @@ on `register`. The Protocol deliberately omits control-flow verbs
 
 ## 4. The public API (mandate §1.3, `PROPOSED_STRUCTURE.md` §`__init__.py`)
 
-Three exports, nothing else:
+The v1.0.0 public API surface is the exact set below. The set is
+enforced by `test_no_unexpected_public_symbols` in
+`tests/unit/test_public_api.py` (exact-set comparison, not
+presence-only). Adding or removing a public symbol requires a spec +
+plan change; the test will fail until both the surface and the
+allowlist agree.
 
-```python
-def canonicalize(input_data: object, contract: object) -> ExecutionArtifact: ...
-def replay(artifact: ExecutionArtifact, contract: object) -> ExecutionArtifact: ...
-def register_capability(capability: Capability) -> None: ...
-```
+Public surface (22 symbols, plus `__version__`):
+
+- **Functions** (3): `canonicalize`, `replay`, `register_capability`.
+- **Value types** (7): `Status`, `Evidence`, `VersionStamp`,
+  `CapabilityResult`, `ValidationResult`, `ExecutionArtifact`,
+  `__version__`.
+- **Contracts** (3): `Contract`, `CanonicalEmailContract`,
+  `parse_contract`.
+- **Capability SPI** (2): `Capability`, `CapabilityRegistry`.
+- **Errors** (7): `PaxmanError`, `CanonicalizationError`,
+  `ContractError`, `ConfigurationError`, `FrozenRegistryError`,
+  `UnsupportedContractError`, `VersionMismatchError`.
+
+The 22-symbol set is the surface a user sees on `dir(paxman)`. Internal
+modules under `paxman._core/`, `paxman._capabilities/`,
+`paxman._contracts/`, `paxman._errors.py`, and
+`paxman._orchestrator_runtime.py` are implementation detail and must
+not be reached for from user code (the leading underscore is the
+convention; the public surface is the only path the test enforces).
 
 `canonicalize` calls `registry.freeze()` on the first invocation if it
 has not been called explicitly. The user may call `register_capability`

@@ -17,6 +17,12 @@ from paxman._core.types import CapabilityResult, Evidence, Status
 
 _GMAIL_DOMAINS = frozenset({"gmail.com", "googlemail.com"})
 
+# Spec §1.3 step 1: "Strip leading and trailing ASCII whitespace."
+# str.strip() also trims Unicode whitespace (e.g. U+00A0 NO-BREAK SPACE,
+# U+2009 THIN SPACE) which the spec does not authorise; the explicit
+# ASCII-only set is the contract.
+_ASCII_WHITESPACE = " \t\n\r\f\v"
+
 
 class EmailCapability:
     """A pure deterministic transformation that canonicalizes emails.
@@ -74,9 +80,9 @@ class EmailCapability:
 
         evidence: list[Evidence] = []
 
-        # 1. Strip whitespace.
+        # 1. Strip ASCII whitespace (spec §1.3 step 1).
         if contract.strip_whitespace:
-            stripped = value.strip()
+            stripped = value.strip(_ASCII_WHITESPACE)
             if stripped != value:
                 evidence.append(Evidence(rule="stripped_whitespace"))
                 value = stripped

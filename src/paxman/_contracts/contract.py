@@ -33,6 +33,15 @@ class CanonicalEmailContract:
     version: int = 1
 
     def as_dict(self) -> dict[str, Any]:
+        """Return the Dict DSL form of this contract.
+
+        Round-trips through `parse_contract` (the `kind` discriminator
+        and the `version` are explicit so a future schema change can
+        detect a stale serialization).
+
+        Returns:
+            A dict compatible with `parse_contract`.
+        """
         return {
             "kind": self.kind,
             "lowercase": self.lowercase,

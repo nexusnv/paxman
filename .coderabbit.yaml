@@ -75,11 +75,17 @@ reviews:
         1. PROPOSED_STRUCTURE.md is the proposed folder shape for the v2 code. It is not authoritative on its own —
         MANDATE.md wins where the two conflict.
 
-        2. The 12-file layout under `src/paxman/` is the canonical v1.0.0 layout: `__init__.py`, `_core/{types, artifact,
-        classification, validation, orchestrator, replay}.py`, `_capabilities/{protocol, registry}.py`, `_capabilities/
-        builtins/__init__.py`, `_contracts/{__init__.py, contract.py}`, `_errors.py`. Adding new top-level
-        sub-packages or new files outside this layout must be justified against MANDATE.md §1.2 (the three
-        invariants) and the "Decisions left to make" section.
+        2. The canonical v1.0.0 layout under `src/paxman/` is the 12 source
+        modules from `PROPOSED_STRUCTURE.md`, plus `_orchestrator_runtime.py`
+        (an internal helper that exists only to break the circular import
+        between `_core/orchestrator.py` and `paxman/__init__.py`). The full
+        13-file inventory is: `__init__.py`, `_core/{types, artifact,
+        classification, validation, orchestrator, replay}.py`, `_capabilities/
+        {protocol, registry}.py`, `_capabilities/builtins/__init__.py`,
+        `_contracts/{__init__.py, contract.py}`, `_errors.py`, and
+        `_orchestrator_runtime.py`. Adding new top-level sub-packages or new
+        files outside this layout must be justified against MANDATE.md §1.2
+        (the three invariants) and the "Decisions left to make" section.
 
         3. The "What is gone, and why" table is normative. The v1.x subsystems (planner/, executor/, reconciler/,
         artifact/ as a subsystem, capabilities/v1/, providers/, budget.py, policy.py, the 4 contract adapters, the

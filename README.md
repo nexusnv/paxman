@@ -4,6 +4,19 @@
 
 Paxman is not deterministic-first. Paxman is deterministic, full stop.
 
+## Philosophy & paradigm
+
+From this version onward, Paxman identifies as a **deterministic canonicalization engine** — and explicitly **not** as a normalizer, a deterministic parser, a workflow engine, or an AI extraction system. The distinction is load-bearing:
+
+- **Canonicalization, not normalization.** Normalization is a wider, fuzzier category that admits heuristics, scoring, and interpretation. Paxman does not interpret; it rewrites equivalent representations of *known* information into a single chosen form. Normalization can guess; canonicalization cannot.
+- **Canonicalization, not parsing.** A parser maps text → structured value against a grammar. Paxman operates on any representation of known information and produces a canonical form, not a syntax tree. Calling Paxman a parser mis-sets the expected input and output.
+- **Capabilities, not pipelines.** Users may contribute new deterministic capabilities; they may not redefine Paxman's pipeline. The pipeline is part of the promise.
+- **Resolver, not planner.** "Planner" implies intelligence and strategy. Paxman discovers which capability explicitly declares that it canonicalizes the contract — a deterministic lookup, not a guess.
+
+The complete mandate — thirteen constitutional laws, the SPI rules, the vocabulary to retire, and the contributor litmus test — is recorded in [`MANDATE.md`](./MANDATE.md). That document supersedes the v1.x "contract-driven normalization" framing and is the boundary no future contributor may silently cross.
+
+> Paxman would rather reject a value than silently canonicalize it incorrectly.
+
 ## What Paxman does
 
 Paxman takes input that has many valid representations (free text, structured records, etc.) and produces a single canonical output. If the input admits more than one canonical form, Paxman does not pick one. It tells you the input is ambiguous and stops.
@@ -20,7 +33,7 @@ Paxman takes input that has many valid representations (free text, structured re
 ```python
 import paxman
 
-result = paxman.normalize(
+result = paxman.canonicalize(
     input_data=raw_input,
     contract=MyContract,
 )
@@ -29,7 +42,7 @@ rehydrated = paxman.replay(result, contract=MyContract)
 assert rehydrated == result  # byte-equal
 ```
 
-- `normalize(input_data, contract) -> ExecutionArtifact` — produce a canonical artifact.
+- `canonicalize(input_data, contract) -> ExecutionArtifact` — produce a canonical artifact.
 - `replay(artifact, contract) -> ExecutionArtifact` — rehydrate the artifact from the stored form, without re-execution.
 
 The `replay_hash` on the artifact is the deterministic signature that proves the artifact can be rehydrated byte-for-byte.

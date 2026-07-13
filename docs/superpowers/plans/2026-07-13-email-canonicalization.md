@@ -18,7 +18,7 @@
 
 ### Source files to create
 
-```
+```text
 src/paxman/__init__.py
 src/paxman/_core/__init__.py
 src/paxman/_core/types.py
@@ -39,7 +39,7 @@ src/paxman/_errors.py
 
 ### Test files to create
 
-```
+```text
 tests/__init__.py
 tests/conftest.py
 tests/unit/__init__.py
@@ -604,10 +604,8 @@ git commit -m "feat(core): ExecutionArtifact — immutable, byte-equal serialize
 """Tests for the deterministic classifier (Status assignment)."""
 from __future__ import annotations
 
-import pytest
-
 from paxman._core.classification import ValidationResult, classify
-from paxman._core.types import CapabilityResult, Evidence, Status
+from paxman._core.types import CapabilityResult, Status
 
 
 class TestClassify:
@@ -949,7 +947,7 @@ parse time (the orchestrator catches that and yields `Status.UNSUPPORTED`).
 """
 from __future__ import annotations
 
-from typing import Any, Union
+from typing import Any, Union, cast
 
 import attrs
 
@@ -994,6 +992,17 @@ _KIND_DISPATCH: dict[str, type[Contract]] = {  # type: ignore[valid-type]
 _VALID_PROVIDER_ALIASES = {"none", "gmail"}
 
 
+def _require_bool(field: str, value: object) -> bool:
+    """Validate that a contract field is a real bool. Non-bool values
+    (including truthy strings) raise `ContractError` rather than being
+    silently coerced. Mandate Law 7 — explicit over clever."""
+    if not isinstance(value, bool):
+        raise ContractError(
+            f"contract field {field!r} must be a bool, got {type(value).__name__}"
+        )
+    return value
+
+
 def parse_contract(spec: Any) -> Contract:
     """Parse a Dict DSL contract into a Contract value object.
 
@@ -1023,10 +1032,12 @@ def parse_contract(spec: Any) -> Contract:
                 f"allowed: {sorted(_VALID_PROVIDER_ALIASES)}"
             )
         return CanonicalEmailContract(
-            lowercase=bool(spec.get("lowercase", True)),
-            strip_whitespace=bool(spec.get("strip_whitespace", True)),
-            provider_aliases=provider_aliases,  # type: ignore[arg-type]
-            strict=bool(spec.get("strict", False)),
+            lowercase=_require_bool("lowercase", spec.get("lowercase", True)),
+            strip_whitespace=_require_bool(
+                "strip_whitespace", spec.get("strip_whitespace", True)
+            ),
+            provider_aliases=cast(ProviderAliasesPolicy, provider_aliases),
+            strict=_require_bool("strict", spec.get("strict", False)),
         )
 
     # Unreachable: kind is guaranteed to be in _KIND_DISPATCH above.
@@ -1275,19 +1286,18 @@ class _AlsoAlwaysTrue:
 
 
 class TestRegister:
-    def test_register_then_resolve(self) -> None:
+    def test_register_then_resolve_all(self) -> None:
         r = CapabilityRegistry()
         r.register(_AlwaysTrue())
         c = parse_contract({"kind": "canonical_email"})
-        assert r.resolve(c, "x@y.z") is not None
-        assert r.resolve(c, "x@y.z").name == "A"
+        assert r.resolve_all(c, "x@y.z") == [_AlwaysTrue()]
 
     def test_duplicate_name_raises(self) -> None:
         r = CapabilityRegistry()
         r.register(_AlwaysTrue())
-        with pytest.raises(ConfigurationError):
-            r.register(_AlsoAlwaysTrue())  # also named "B" — different name, no conflict
-        # Now register a duplicate of "A"
+        # Different name — succeeds.
+        r.register(_AlsoAlwaysTrue())
+        # Same name as _AlwaysTrue (registered above) — raises.
         class _Dup:
             name = "A"
             def can_handle(self, contract, value): return True
@@ -1407,26 +1417,25 @@ class CapabilityRegistry:
     def is_frozen(self) -> bool:
         return self._frozen
 
-    def resolve(self, contract: Contract, value: Any) -> Capability | None:
-        """Return the single matching capability, or None.
-
-        If multiple capabilities claim the same pair, returns the first
-        (in registration order) but `resolve_all` returns the full set.
-        The orchestrator uses `resolve_all` so the per-call
-        determination is correct under any order.
-        """
-        claimants = self.resolve_all(contract, value)
-        if not claimants:
-            return None
-        return claimants[0]
-
     def resolve_all(self, contract: Contract, value: Any) -> list[Capability]:
-        """Return every capability that claims the (contract, value) pair."""
-        return [
+        """Return every capability that claims the (contract, value) pair.
+
+        Callers (the orchestrator) inspect the full set and classify
+        `Status.AMBIGUOUS` when the set has more than one entry
+        (mandate §5.4). Callers MUST NOT silently pick a single entry.
+
+        Results are sorted by capability name so two registries with
+        the same capability set registered in different orders yield
+        the same `resolve_all` output, the same `AMBIGUOUS` evidence
+        string, and therefore the same `replay_hash` (mandate Law 1).
+        """
+        claimants = [
             cap
             for cap in self._capabilities.values()
             if cap.can_handle(contract, value)
         ]
+        claimants.sort(key=lambda c: c.name)
+        return claimants
 
     def capabilities_hash(self) -> str:
         """Deterministic hash of the registered capability set.
@@ -1474,11 +1483,9 @@ These tests assert the v1.0.0 default behaviour:
 """
 from __future__ import annotations
 
-import pytest
-
 from paxman._capabilities.builtins.email import EmailCapability
 from paxman._contracts.contract import CanonicalEmailContract
-from paxman._core.types import CapabilityResult, Evidence, Status
+from paxman._core.types import Status
 
 
 def _cap() -> EmailCapability:
@@ -1671,9 +1678,9 @@ class EmailCapability:
 
         evidence: list[Evidence] = []
 
-        # 1. Strip whitespace.
+        # 1. Strip ASCII whitespace (spec §1.3 step 1).
         if contract.strip_whitespace:
-            stripped = value.strip()
+            stripped = value.strip(" \t\n\r\f\v")
             if stripped != value:
                 evidence.append(Evidence(rule="stripped_whitespace"))
                 value = stripped
@@ -1691,17 +1698,18 @@ class EmailCapability:
             local = new_local
             domain = new_domain
 
-        # 3. Provider aliases (gmail).
-        if contract.provider_aliases == "gmail" and domain in _GMAIL_DOMAINS:
-            # Normalize googlemail.com -> gmail.com.
-            if domain == "googlemail.com":
+        # 3. Provider aliases (gmail). The casefold comparison makes the
+        # Gmail rule trigger regardless of `lowercase`; the domain is
+        # then normalized to its canonical-case form (`gmail.com`).
+        if contract.provider_aliases == "gmail" and domain.casefold() in _GMAIL_DOMAINS:
+            if domain != "gmail.com":
                 evidence.append(
                     Evidence(
                         rule="domain_synonym_gmail",
-                        detail="googlemail.com -> gmail.com",
+                        detail=f"{domain} -> gmail.com",
                     )
                 )
-                domain = "gmail.com"
+            domain = "gmail.com"
             # Strip dots in the local part.
             new_local = local.replace(".", "")
             if new_local != local:
@@ -1748,13 +1756,8 @@ import pytest
 
 from paxman._capabilities.builtins.email import EmailCapability
 from paxman._capabilities.registry import CapabilityRegistry
-from paxman._contracts.contract import parse_contract
 from paxman._core.orchestrator import canonicalize
 from paxman._core.types import Status
-from paxman._errors import (
-    CanonicalizationError,
-    ContractError,
-)
 
 
 def _setup_email_registry() -> CapabilityRegistry:
@@ -1870,14 +1873,40 @@ from __future__ import annotations
 
 from typing import Any
 
-import paxman as _paxman_version  # noqa: F401  (used to read __version__)
+import paxman as _paxman_version  # used to read __version__
 
 from paxman._contracts.contract import parse_contract
-from paxman._core.artifact import ExecutionArtifact
+from paxman._capabilities.registry import CapabilityRegistry
+from paxman._core.artifact import ExecutionArtifact, _ContractLike
 from paxman._core.classification import ValidationResult, classify
 from paxman._core.types import Evidence, Status, VersionStamp
 from paxman._core.validation import validate as validate_value
 from paxman._errors import ContractError, UnsupportedContractError
+
+
+class _StubContract:
+    """Minimal contract stand-in for unparseable contract specs.
+
+    Satisfies the `_ContractLike` Protocol structurally (provides
+    `as_dict()` and a read-only `version` property). The orchestrator
+    hands a `_StubContract` to `_build_artifact` when the caller's
+    contract could not be parsed, so the resulting artifact still has
+    a serializable contract representation.
+    """
+
+    def __init__(self, spec: object) -> None:
+        self._spec = spec
+        self.kind = "unknown"
+        self._version = 0
+
+    @property
+    def version(self) -> int:
+        return self._version
+
+    def as_dict(self) -> dict[str, object]:
+        if isinstance(self._spec, dict):
+            return dict(self._spec)
+        return {"kind": "unknown"}
 
 
 def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
@@ -1897,25 +1926,41 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
 
     # Stage 1: inspect — parse the contract Dict DSL.
     try:
-        parsed_contract = parse_contract(contract)
-    except ContractError as exc:
+        parsed_contract: _ContractLike = parse_contract(contract)
+    except ContractError:
         # An unparseable contract is a call that cannot proceed. The
         # contract is the truth (Law 5); a malformed contract is a
-        # caller error, not a Status outcome.
-        raise ContractError(str(exc)) from exc
+        # caller error, but the orchestrator maps unknown kinds to
+        # Status.UNSUPPORTED (mandate Law 8 — fail informatively).
+        return _build_artifact(
+            registry=registry,
+            parsed_contract=_StubContract(contract),
+            status=Status.UNSUPPORTED,
+            value=None,
+            evidence=(
+                Evidence(
+                    rule="unparseable_contract",
+                    detail=str(contract),
+                ),
+            ),
+        )
 
     # Stage 2: resolve — find the claimants.
     claimants = registry.resolve_all(parsed_contract, input_data)
 
     if not claimants:
         return _build_artifact(
+            registry=registry,
             parsed_contract=parsed_contract,
             status=Status.UNSUPPORTED,
             value=None,
             evidence=(
                 Evidence(
                     rule="no_capability_claims",
-                    detail=f"contract kind {parsed_contract.kind!r}, value type {type(input_data).__name__}",
+                    detail=(
+                        f"contract kind {parsed_contract.kind!r}, "
+                        f"value type {type(input_data).__name__}"
+                    ),
                 ),
             ),
         )
@@ -1923,6 +1968,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
     if len(claimants) > 1:
         # Mandate §5.4: more than one claimant -> Status.AMBIGUOUS.
         return _build_artifact(
+            registry=registry,
             parsed_contract=parsed_contract,
             status=Status.AMBIGUOUS,
             value=None,
@@ -1941,12 +1987,20 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
     # Stage 3+4: execute + canonicalize. The capability did both.
     # Stage 5: validate.
     if capability_result.status is Status.CANONICALIZED:
+        # A CANONICALIZED capability result is required to carry a
+        # non-None value (mandate Law 2 — the canonical value is the
+        # whole point of canonicalization). The assert narrows the
+        # static type from `str | None` to `str` for the validator.
+        assert capability_result.value is not None, (
+            "CANONICALIZED capability result must carry a value"
+        )
         try:
             validation = validate_value(capability_result.value, parsed_contract)
         except UnsupportedContractError:
             # Defensive: validation should never raise for a parsed
             # contract. If it does, treat as UNSUPPORTED.
             return _build_artifact(
+                registry=registry,
                 parsed_contract=parsed_contract,
                 status=Status.UNSUPPORTED,
                 value=None,
@@ -1959,6 +2013,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
     final_status = classify(capability_result, validation)
 
     return _build_artifact(
+        registry=registry,
         parsed_contract=parsed_contract,
         status=final_status,
         value=capability_result.value if final_status is Status.CANONICALIZED else None,
@@ -1968,25 +2023,29 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
 
 def _build_artifact(
     *,
-    parsed_contract: object,
+    registry: CapabilityRegistry,
+    parsed_contract: _ContractLike,
     status: Status,
     value: str | None,
     evidence: tuple[Evidence, ...],
 ) -> ExecutionArtifact:
-    """Construct an ExecutionArtifact with the current VersionStamp."""
-    from paxman import _orchestrator_runtime
+    """Construct an ExecutionArtifact with the current VersionStamp.
 
+    The `registry` is passed in (not read from a global) so the function
+    is testable in isolation and so a future orchestrator variation can
+    use a non-default registry without monkey-patching.
+    """
     version_stamp = VersionStamp(
         paxman_version=_paxman_version.__version__,
-        contract_version=parsed_contract.version,  # type: ignore[attr-defined]
-        capabilities_hash=_orchestrator_runtime.default_registry.capabilities_hash(),
+        contract_version=parsed_contract.version,
+        capabilities_hash=registry.capabilities_hash(),
         configuration_version="0",
     )
     return ExecutionArtifact(
         status=status,
         value=value,
         evidence=evidence,
-        contract=parsed_contract,  # type: ignore[arg-type]
+        contract=parsed_contract,
         version_stamp=version_stamp,
     )
 ```
@@ -2016,17 +2075,19 @@ git commit -m "feat(core): orchestrator — the pipeline (inspect/resolve/execut
 """Tests for the replay path (mandate Law 12)."""
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from paxman._core.replay import replay
 from paxman._core.types import Evidence, Status, VersionStamp
 from paxman._core.artifact import ExecutionArtifact
-from paxman._errors import CanonicalizationError, VersionMismatchError
-from paxman._contracts.contract import CanonicalEmailContract, parse_contract
+from paxman._errors import VersionMismatchError
+from paxman._contracts.contract import parse_contract
 
 
 def _artifact(**overrides: object) -> ExecutionArtifact:
-    defaults: dict[str, object] = dict(
+    defaults: dict[str, Any] = dict(
         status=Status.CANONICALIZED,
         value="a@b.c",
         evidence=(Evidence(rule="lowercased_local_part"),),
@@ -2039,7 +2100,7 @@ def _artifact(**overrides: object) -> ExecutionArtifact:
         ),
     )
     defaults.update(overrides)
-    return ExecutionArtifact(**defaults)  # type: ignore[arg-type]
+    return ExecutionArtifact(**defaults)
 
 
 class TestReplay:
@@ -2112,13 +2173,14 @@ on the replay path — the input artifact is already complete.
 """
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
 import paxman as _paxman_version
 
 from paxman._contracts.contract import parse_contract
 from paxman._core.artifact import ExecutionArtifact
-from paxman._errors import CanonicalizationError, VersionMismatchError
+from paxman._errors import CanonicalizationError, ContractError, VersionMismatchError
 from paxman import _orchestrator_runtime
 
 
@@ -2127,7 +2189,16 @@ def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
 
     Mandate Law 12: `replay(artifact) == artifact` byte-for-byte.
     """
-    parsed_contract = parse_contract(contract)
+    try:
+        parsed_contract = parse_contract(contract)
+    except ContractError as exc:
+        # Replay requires a contract the parser accepts; otherwise the
+        # artifact's stored contract and the caller's contract are
+        # effectively from different versions. Map to VersionMismatchError
+        # per mandate Law 8 (fail informatively).
+        raise VersionMismatchError(
+            f"cannot replay: contract could not be parsed: {exc}"
+        ) from exc
 
     # Verify the VersionStamp.
     expected_paxman = _paxman_version.__version__
@@ -2167,11 +2238,11 @@ def _compute_replay_hash(artifact: ExecutionArtifact) -> str:
     orchestrator and replay can both call it without duplicating the
     canonical-bytes logic.
     """
-    # The artifact's stored `replay_hash` is exactly the value computed
-    # at construction; recomputing it here is a tautology unless we
-    # also recompute the canonical bytes — but canonical_bytes() is
-    # deterministic and a property of the artifact's other fields.
-    return artifact.replay_hash
+    # Recompute the hash from canonical_bytes() rather than reading the
+    # stored value: a forged artifact with mismatched fields is detected
+    # at replay time, not trusted because the field is frozen
+    # (mandate Law 12).
+    return hashlib.sha256(artifact.canonical_bytes()).hexdigest()
 ```
 
 - [ ] **Step 11.4: Run the tests — they will fail because `paxman/__init__.py` does not yet export `__version__` and `_orchestrator_runtime`**
@@ -2224,15 +2295,17 @@ def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
 
 
-@settings(max_examples=50, deadline=None)
+@settings(max_examples=50, deadline=None, derandomize=True)
+@pytest.mark.property
 @given(value=st.text(min_size=0, max_size=64))
 def test_replay_byte_equal_invariant(value: str) -> None:
-    """Mandate Law 12."""
+    """Mandate Law 12 — exercised for every artifact status (not just
+    CANONICALIZED) so non-canonical outcomes are part of the invariant.
+    """
     art = canonicalize(value, {"kind": "canonical_email"})
-    if art.status.value in ("canonicalized",):
-        rehydrated = replay(art, {"kind": "canonical_email"})
-        assert rehydrated == art
-        assert rehydrated.canonical_bytes() == art.canonical_bytes()
+    rehydrated = replay(art, {"kind": "canonical_email"})
+    assert rehydrated == art
+    assert rehydrated.canonical_bytes() == art.canonical_bytes()
 ```
 
 - [ ] **Step 12.2: Write `tests/property/test_idempotence_invariant.py`**
@@ -2249,7 +2322,6 @@ from paxman._capabilities.builtins.email import EmailCapability
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman import _orchestrator_runtime
 from paxman._core.orchestrator import canonicalize
-from paxman._core.types import Status
 
 
 @pytest.fixture(autouse=True)
@@ -2260,18 +2332,15 @@ def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
 
 
-@settings(max_examples=50, deadline=None)
+@settings(max_examples=50, deadline=None, derandomize=True)
+@pytest.mark.property
 @given(value=st.text(min_size=0, max_size=64))
 def test_idempotence_invariant(value: str) -> None:
-    """Mandate Law 2."""
+    """Mandate Law 2 — full artifact equality, not just status + value."""
     first = canonicalize(value, {"kind": "canonical_email"})
-    if first.status is not Status.CANONICALIZED:
-        # Idempotence is defined for canonicalized inputs; non-canonical
-        # outcomes are not part of the law's scope.
-        return
     second = canonicalize(first.value, {"kind": "canonical_email"})
-    assert second.status is Status.CANONICALIZED
-    assert second.value == first.value
+    assert second == first
+    assert second.canonical_bytes() == first.canonical_bytes()
 ```
 
 - [ ] **Step 12.3: Write `tests/property/test_uniqueness_invariant.py`**
@@ -2304,14 +2373,19 @@ class _B:
         return CapabilityResult(status=Status.CANONICALIZED, value=str(v))
 
 
-@settings(max_examples=30, deadline=None)
-@given(value=st.text(min_size=1, max_size=32))
-def test_uniqueness_invariant(value: str) -> None:
+@pytest.fixture(autouse=True)
+def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     r = CapabilityRegistry()
     r.register(_A())
     r.register(_B())
     r.freeze()
-    _orchestrator_runtime.default_registry = r
+    monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
+
+
+@settings(max_examples=30, deadline=None, derandomize=True)
+@pytest.mark.property
+@given(value=st.text(min_size=1, max_size=32))
+def test_uniqueness_invariant(value: str) -> None:
     art = canonicalize(value, {"kind": "canonical_email"})
     assert art.status is Status.AMBIGUOUS
     rule_names = {e.rule for e in art.evidence}
@@ -2333,7 +2407,6 @@ from paxman._capabilities.builtins.email import EmailCapability
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman import _orchestrator_runtime
 from paxman._core.orchestrator import canonicalize
-from paxman._core.types import Status
 
 
 @pytest.fixture(autouse=True)
@@ -2344,7 +2417,8 @@ def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
 
 
-@settings(max_examples=30, deadline=None)
+@settings(max_examples=30, deadline=None, derandomize=True)
+@pytest.mark.property
 @given(value=st.text(min_size=0, max_size=32))
 def test_artifact_immutability_invariant(value: str) -> None:
     """Mandate Law 13: every field on every artifact is immutable."""
@@ -2370,7 +2444,6 @@ from paxman._capabilities.builtins.email import EmailCapability
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman import _orchestrator_runtime
 from paxman._core.orchestrator import canonicalize
-from paxman._core.types import Status
 
 
 @pytest.fixture(autouse=True)
@@ -2381,7 +2454,8 @@ def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
 
 
-@settings(max_examples=30, deadline=None)
+@settings(max_examples=30, deadline=None, derandomize=True)
+@pytest.mark.property
 @given(value=st.text(min_size=0, max_size=32))
 def test_replay_hash_matches_canonical_bytes(value: str) -> None:
     """Mandate Law 1."""
@@ -2587,17 +2661,21 @@ import pytest
 
 import paxman
 from paxman._capabilities.builtins.email import EmailCapability
+from paxman._capabilities.registry import CapabilityRegistry
 from paxman._core.types import Status
 
 
 @pytest.fixture(autouse=True)
-def _register_email() -> None:
-    # The public API does not auto-register the email capability; the
-    # integration test does so explicitly. (See spec §4 — the user opts
-    # in by importing the builtin module.)
-    paxman.register_capability(EmailCapability())
+def _isolated_registry(monkeypatch: pytest.MonkeyPatch) -> None:
+    from paxman import _orchestrator_runtime
+
+    r = CapabilityRegistry()
+    r.register(EmailCapability())
+    r.freeze()
+    monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
 
 
+@pytest.mark.integration
 class TestEndToEnd:
     def test_basic_canonicalization(self) -> None:
         art = paxman.canonicalize("John.Doe@Example.COM", {"kind": "canonical_email"})

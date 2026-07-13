@@ -25,6 +25,8 @@ class _ContractLike(Protocol):
     and its fields are read-only.
     """
 
+    kind: str
+
     def as_dict(self) -> dict[str, Any]: ...
     @property
     def version(self) -> int: ...

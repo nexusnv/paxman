@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, cast
+from typing import Any
 
 import attrs
 import pytest
@@ -25,6 +25,8 @@ class _FakeContract:
     Structurally satisfies the `_ContractLike` Protocol in artifact.py.
     """
 
+    kind: str = "canonical_email"
+
     def as_dict(self) -> dict[str, object]:
         return {"kind": "canonical_email", "version": 1}
 
@@ -40,11 +42,11 @@ class _FakeContract:
 
 
 def _make_artifact(**overrides: object) -> ExecutionArtifact:
-    defaults: dict[str, object] = dict(
+    defaults: dict[str, Any] = dict(
         status=Status.CANONICALIZED,
         value="a@b.c",
         evidence=(Evidence(rule="lowercased_local_part"),),
-        contract=cast(Any, _FakeContract()),
+        contract=_FakeContract(),
         version_stamp=VersionStamp(
             paxman_version="0.0.0.dev0",
             contract_version=1,
@@ -53,7 +55,7 @@ def _make_artifact(**overrides: object) -> ExecutionArtifact:
         ),
     )
     defaults.update(overrides)
-    return ExecutionArtifact(**cast(Any, defaults))
+    return ExecutionArtifact(**defaults)
 
 
 class TestArtifactImmutability:

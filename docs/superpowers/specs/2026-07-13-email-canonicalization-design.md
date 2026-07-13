@@ -149,13 +149,16 @@ asked for the stricter input.
 ## 2. The architecture (from `PROPOSED_STRUCTURE.md`, instantiated)
 
 The 12-file layout from `PROPOSED_STRUCTURE.md` is realized with the
-following files (12 source modules + 5 empty `__init__.py` package
-markers + 1 internal helper to break a circular import). The empty
-`__init__.py` files exist for import-path stability and carry no
-runtime code; the helper `_orchestrator_runtime.py` is also internal
-(no leading underscore on the module because the import-cycle
-workaround requires a clean `paxman._orchestrator_runtime` import
-target). The full file list is:
+following files (12 source modules + 5 `__init__.py` package markers
+of which 3 are empty and 2 carry public re-exports + 1 internal helper
+to break a circular import). The empty `__init__.py` files exist for
+import-path stability and carry no runtime code; the two non-empty
+ones (`src/paxman/__init__.py` and `src/paxman/_contracts/__init__.py`)
+carry the public API surface and contract re-exports respectively. The
+helper `_orchestrator_runtime.py` is also internal (no leading
+underscore on the module because the import-cycle workaround
+requires a clean `paxman._orchestrator_runtime` import target). The
+full file list is:
 
 | File | Responsibility |
 |---|---|
@@ -177,8 +180,14 @@ target). The full file list is:
 | `src/paxman/_orchestrator_runtime.py` | Holds `default_registry` (a `CapabilityRegistry`) to break the circular import between the orchestrator and `__init__.py`. |
 | `src/paxman/_errors.py` | `PaxmanError` and the 6 concrete exception classes. |
 
-**Total source modules: 12** (excluding the 5 empty `__init__.py`
-package markers and the 1 internal helper).
+**Total source modules: 12** (of which 1 is the internal
+`_orchestrator_runtime.py` helper that exists only to break the
+circular import between `_core/orchestrator.py` and `paxman/__init__.py`;
+the other 11 are the v1.0.0 source modules from `PROPOSED_STRUCTURE.md`).
+Plus 5 `__init__.py` package markers (3 empty, 2 with content —
+`paxman/__init__.py` carries the public API; `_contracts/__init__.py`
+carries contract re-exports). Total `.py` files under `src/paxman/`:
+17.
 
 `Status` is defined in `_core/types.py` (with the other value types) and
 re-exported from `_core/classification.py` for convenience; the canonical

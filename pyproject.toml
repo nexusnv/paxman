@@ -42,7 +42,7 @@ packages = ["src/paxman"]
 dev = [
     "pytest>=8.0",
     "hypothesis>=6.0",
-    "ruff>=0.4",
+    "ruff>=0.15.21",
     "mypy>=1.10",
 ]
 

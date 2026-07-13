@@ -1,0 +1,65 @@
+"""Tests for the public API surface (mandate §1.3)."""
+from __future__ import annotations
+
+import pytest
+
+import paxman
+
+
+class TestPublicAPI:
+    def test_canonicalize_is_exported(self) -> None:
+        assert hasattr(paxman, "canonicalize")
+        assert callable(paxman.canonicalize)
+
+    def test_replay_is_exported(self) -> None:
+        assert hasattr(paxman, "replay")
+        assert callable(paxman.replay)
+
+    def test_register_capability_is_exported(self) -> None:
+        assert hasattr(paxman, "register_capability")
+        assert callable(paxman.register_capability)
+
+    def test_version_is_present(self) -> None:
+        assert isinstance(paxman.__version__, str)
+        assert paxman.__version__  # non-empty
+
+    def test_no_unexpected_public_symbols(self) -> None:
+        # The v1.0.0 public surface is exactly: __version__, canonicalize,
+        # replay, register_capability, and the email capability shim.
+        symbols = {
+            n for n in dir(paxman)
+            if not n.startswith("_")
+        }
+        assert "canonicalize" in symbols
+        assert "replay" in symbols
+        assert "register_capability" in symbols
+
+    def test_canonicalize_end_to_end(self, monkeypatch: object) -> None:
+        from paxman._capabilities.builtins.email import EmailCapability
+        from paxman._capabilities.registry import CapabilityRegistry
+        from paxman import _orchestrator_runtime
+        import pytest as _pt
+        assert isinstance(monkeypatch, _pt.MonkeyPatch)
+        r = CapabilityRegistry()
+        r.register(EmailCapability())
+        r.freeze()
+        monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
+        art = paxman.canonicalize(
+            "  John.Doe@Example.COM  ", {"kind": "canonical_email"}
+        )
+        assert art.status.value == "canonicalized"
+        assert art.value == "john.doe@example.com"
+
+    def test_replay_end_to_end(self, monkeypatch: object) -> None:
+        from paxman._capabilities.builtins.email import EmailCapability
+        from paxman._capabilities.registry import CapabilityRegistry
+        from paxman import _orchestrator_runtime
+        import pytest as _pt
+        assert isinstance(monkeypatch, _pt.MonkeyPatch)
+        r = CapabilityRegistry()
+        r.register(EmailCapability())
+        r.freeze()
+        monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)
+        art = paxman.canonicalize("a@b.c", {"kind": "canonical_email"})
+        rehydrated = paxman.replay(art, {"kind": "canonical_email"})
+        assert rehydrated == art

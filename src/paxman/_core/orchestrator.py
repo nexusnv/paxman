@@ -30,6 +30,20 @@ from paxman._core.validation import validate as validate_value
 from paxman._errors import ContractError, UnsupportedContractError
 
 
+class _StubContract:
+    """Minimal contract stand-in for unparseable contract specs."""
+
+    def __init__(self, spec: object) -> None:
+        self._spec = spec
+        self.kind = "unknown"
+        self.version = 0
+
+    def as_dict(self) -> dict[str, object]:
+        if isinstance(self._spec, dict):
+            return dict(self._spec)
+        return {"kind": "unknown"}
+
+
 def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
     """The single entry point that produces an ExecutionArtifact.
 
@@ -48,11 +62,22 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
     # Stage 1: inspect — parse the contract Dict DSL.
     try:
         parsed_contract = parse_contract(contract)
-    except ContractError as exc:
+    except ContractError:
         # An unparseable contract is a call that cannot proceed. The
         # contract is the truth (Law 5); a malformed contract is a
-        # caller error, not a Status outcome.
-        raise ContractError(str(exc)) from exc
+        # caller error, but the orchestrator maps unknown kinds to
+        # Status.UNSUPPORTED (mandate Law 8 — fail informatively).
+        return _build_artifact(
+            parsed_contract=_StubContract(contract),
+            status=Status.UNSUPPORTED,
+            value=None,
+            evidence=(
+                Evidence(
+                    rule="unparseable_contract",
+                    detail=str(contract),
+                ),
+            ),
+        )
 
     # Stage 2: resolve — find the claimants.
     claimants = registry.resolve_all(parsed_contract, input_data)

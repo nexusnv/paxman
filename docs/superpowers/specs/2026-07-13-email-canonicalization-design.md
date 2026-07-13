@@ -418,7 +418,7 @@ presence-only). Adding or removing a public symbol requires a spec +
 plan change; the test will fail until both the surface and the
 allowlist agree.
 
-Public surface (22 symbols, plus `__version__`):
+Public surface (22 symbols, including `__version__`):
 
 - **Functions** (3): `canonicalize`, `replay`, `register_capability`.
 - **Value types** (7): `Status`, `Evidence`, `VersionStamp`,

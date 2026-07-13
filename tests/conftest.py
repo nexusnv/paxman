@@ -5,8 +5,13 @@ import pytest
 
 
 @pytest.fixture
-def fresh_registry() -> object:  # returns CapabilityRegistry once Task 8 lands
-    """A new, unfrozen CapabilityRegistry for tests that do not want the default."""
+def fresh_registry() -> object:
+    """A new, unfrozen CapabilityRegistry for tests that do not want the default.
+
+    The `CapabilityRegistry` import is lazy so conftest does not pull
+    in the paxman package at collection time (per-task fixture
+    isolation, not a load-ordering requirement).
+    """
     from paxman._capabilities.registry import CapabilityRegistry
 
     return CapabilityRegistry()

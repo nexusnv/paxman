@@ -19,12 +19,13 @@ class _ContractLike(Protocol):
 
     The real Contract (in src/paxman/_contracts/contract.py) provides
     this and more. Keeping the dependency here as a Protocol avoids
-    a forward import.
+    a forward import. The `version` attribute may be a class attribute
+    (as on `CanonicalEmailContract`) or an instance attribute (as on
+    the orchestrator's `_StubContract` for unparseable inputs).
     """
 
     def as_dict(self) -> dict[str, Any]: ...
-    @property
-    def version(self) -> int: ...
+    version: int
 
 
 @attrs.frozen

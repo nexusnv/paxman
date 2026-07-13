@@ -40,3 +40,11 @@ dev = [
     "ruff>=0.4",
     "mypy>=1.10",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "property: hypothesis-driven property tests",
+    "integration: end-to-end integration tests",
+]

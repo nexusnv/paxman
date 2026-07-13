@@ -97,12 +97,14 @@ This operation is:
 ### 1.4 Gmail alias canonicalization (Law 5, Law 7)
 
 When the contract sets `provider_aliases="gmail"` and the domain is
-`gmail.com` or `googlemail.com`, the capability applies the documented
+`gmail.com` or `googlemail.com` (case-insensitive — `GMAIL.COM` and
+`Gmail.Com` match the rule), the capability applies the documented
 Gmail rules:
 
 - The local part has all ASCII dots removed.
 - The `+tag` (plus-suffix) is removed.
-- The domain is normalized to `gmail.com` (`googlemail.com` is a synonym).
+- The domain is normalized to `gmail.com` (`googlemail.com` is a
+  synonym; the case of the input domain is normalized to lowercase).
 
 When the contract sets `provider_aliases="gmail"` but the domain is **not**
 a Gmail domain, the `+tag` and the dots are **preserved** (we have no rule
@@ -115,11 +117,19 @@ This is "explicit over clever" in action (Law 7): the caller declares
 
 ### 1.5 Strict mode (Law 4, Law 7)
 
-When `strict=True`, the capability rejects any input that does not
-match the RFC 5321 §3.2.3 production for the address (the dot-atom /
-quoted-string local part and the dot-atom domain). It returns
-`Status.Invalid`. This is a *policy declaration*, not a heuristic; the
-caller has explicitly asked for the stricter grammar.
+When `strict=True`, the capability rejects any input that contains
+embedded whitespace (space, tab, newline) or any non-ASCII characters
+in the local or domain part. It returns `Status.INVALID`. This is a
+*policy declaration*, not a matching rule; the caller has explicitly
+asked for the stricter input.
+
+> **v1.0.0 scope.** The strict-mode check is intentionally narrow:
+> whitespace rejection and ASCII-only enforcement. Full RFC 5321
+> §3.2.3 grammar (dot-atom / quoted-string local part, dot-atom
+> domain, leading-dot / consecutive-dot / length limits) is deferred
+> to a v1.0.x release. Recording the v1.0.0 strict-mode scope here
+> makes the gap explicit so a future reader does not infer broader
+> validation than the code performs.
 
 ### 1.6 What the capability does NOT do (Law 4, Law 8a)
 
@@ -130,34 +140,45 @@ caller has explicitly asked for the stricter grammar.
   (Law 4 — that's interpretation, not canonicalization).
 - It does not invent policies based on the input (Law 5).
 - It does not learn from prior inputs (Law 1 — no mutable state).
-- It does not return a confidence score (Law 3 — Never Guess). It
-  returns `Status.Canonicalized` with a value, or one of the other four
-  status values. There is no number between them.
+- It does not return a number, score, rank, or hint between the five
+  `Status` outcomes (Law 3 — Never Guess). It returns one of the five
+  values; there is no number between them.
 
 ---
 
 ## 2. The architecture (from `PROPOSED_STRUCTURE.md`, instantiated)
 
-The 12-file layout from `PROPOSED_STRUCTURE.md` is realized with one
-addition: the `EmailCapability` lives under
-`src/paxman/_capabilities/builtins/email.py`. The full file list is:
+The 12-file layout from `PROPOSED_STRUCTURE.md` is realized with the
+following files (12 source modules + 5 empty `__init__.py` package
+markers + 1 internal helper to break a circular import). The empty
+`__init__.py` files exist for import-path stability and carry no
+runtime code; the helper `_orchestrator_runtime.py` is also internal
+(no leading underscore on the module because the import-cycle
+workaround requires a clean `paxman._orchestrator_runtime` import
+target). The full file list is:
 
 | File | Responsibility |
 |---|---|
 | `src/paxman/__init__.py` | Public API: `canonicalize`, `replay`, `register_capability`. |
-| `src/paxman/_core/types.py` | `Contract`, `CapabilityResult`, `CanonicalValue`, `Evidence`, `VersionStamp`, `Status` enum. |
-| `src/paxman/_core/artifact.py` | `ExecutionArtifact` (frozen dataclass; Law 13). |
+| `src/paxman/_core/__init__.py` | Empty. Marks `_core/` as a package. |
+| `src/paxman/_core/types.py` | `CapabilityResult`, `Evidence`, `VersionStamp`, `Status` enum, `ProviderAliasesPolicy` alias. |
+| `src/paxman/_core/artifact.py` | `ExecutionArtifact` (`@attrs.frozen`; Law 13). |
 | `src/paxman/_core/classification.py` | `classify(...)` — maps `(capability_result, validation)` → `Status`. |
 | `src/paxman/_core/validation.py` | `validate(value, contract)` — gates a `Canonicalized` outcome. |
 | `src/paxman/_core/orchestrator.py` | The pipeline. Walks the six stages. |
 | `src/paxman/_core/replay.py` | Byte-equal rehydration. |
+| `src/paxman/_capabilities/__init__.py` | Empty. Marks `_capabilities/` as a package. |
 | `src/paxman/_capabilities/protocol.py` | `Capability` Protocol. |
-| `src/paxman/_capabilities/registry.py` | `CapabilityRegistry` with `register`, `resolve`, `freeze`. |
+| `src/paxman/_capabilities/registry.py` | `CapabilityRegistry` with `register`, `freeze`, `resolve_all`. |
 | `src/paxman/_capabilities/builtins/__init__.py` | Empty. Built-ins grow on demand. |
 | `src/paxman/_capabilities/builtins/email.py` | `EmailCapability`. |
 | `src/paxman/_contracts/__init__.py` | Re-export `Contract`, `parse_contract`. |
-| `src/paxman/_contracts/contract.py` | Dict DSL → `Contract`. |
-| `src/paxman/_errors.py` | `CanonicalizationError`, `AmbiguousInputError`, `ContractError`, `VersionMismatchError`, `FrozenRegistryError`. |
+| `src/paxman/_contracts/contract.py` | Dict DSL → `Contract` (currently `CanonicalEmailContract` only). |
+| `src/paxman/_orchestrator_runtime.py` | Holds `default_registry` (a `CapabilityRegistry`) to break the circular import between the orchestrator and `__init__.py`. |
+| `src/paxman/_errors.py` | `PaxmanError` and the 6 concrete exception classes. |
+
+**Total source modules: 12** (excluding the 5 empty `__init__.py`
+package markers and the 1 internal helper).
 
 `Status` is defined in `_core/types.py` (with the other value types) and
 re-exported from `_core/classification.py` for convenience; the canonical
@@ -167,26 +188,29 @@ home is `types.py`.
 
 ```
 Input (str)
-  ↓ contract.parse(contract_dict)  (from _contracts/contract.py)
-Contract
-  ↓ registry.resolve(contract, value)
-Capability | None
-  ↓ capability.canonicalize(value, contract)
+  ↓ inspect:         contract.parse(contract_dict)   (from _contracts/contract.py)
+Contract (or _StubContract on parse failure)
+  ↓ resolve:         registry.resolve_all(contract, value)
+list[Capability]   (empty list → Status.UNSUPPORTED;
+                     length > 1 → Status.AMBIGUOUS)
+  ↓ execute:         capability.canonicalize(value, contract)   (one capability)
 CapabilityResult
-  ↓ validation.validate(result.value, contract)
+  ↓ validate:        validation.validate(result.value, contract)
 ValidationResult
-  ↓ classification.classify(capability_result, validation)
-Status
-  ↓ artifact.build(value, status, evidence, version_stamp)
+  ↓ classify + build: classification.classify(capability_result, validation)
+                     + _build_artifact(...)
 ExecutionArtifact
 ```
 
-If the contract is unknown to the registry, `registry.resolve` returns
-`None` and the orchestrator produces an `ExecutionArtifact` with
-`Status.Unsupported` and an `Evidence` entry that names the contract
-kind. If two capabilities claim the same pair, the registry returns
-both; the orchestrator classifies `Status.Ambiguous` and records all
-claimants in evidence (mandate §5.4).
+If the contract is unknown to the registry, `registry.resolve_all`
+returns an empty list and the orchestrator produces an
+`ExecutionArtifact` with `Status.UNSUPPORTED` and an `Evidence`
+entry that names the contract kind. If two capabilities claim the
+same pair, `resolve_all` returns both; the orchestrator classifies
+`Status.AMBIGUOUS` and records all claimants in evidence (mandate
+§5.4). The `_build_artifact` step is private to
+`_core/orchestrator.py` and is the final act of the `classify`
+stage.
 
 ### 2.2 Capability resolution uniqueness (mandate §5.4)
 
@@ -237,9 +261,9 @@ stream of inputs.
 
 | Invariant | Mechanism |
 |---|---|
-| **Identity** (only canonicalize) | The capability cannot classify — there is no `classify` method on `Capability`; the only post-capability step is `validation`, which is also policy-driven. |
+| **Identity** (only canonicalize) | The capability cannot orchestrate — it has no `classify` method, no `next`, no `execute`. The post-capability steps are `validation` (policy-driven check) and `classify` (deterministic mapping from `(capability_result, validation)` to `Status` + artifact construction). All three are owned by Paxman. |
 | **Determinism** (same inputs → same artifact) | `registry.freeze()` makes the capability set fixed before the first call. The `VersionStamp` is recorded on every artifact. The capability is a pure function of `(value, contract)`. |
-| **Replay** (`replay(a) == a` byte-equal) | `replay.py` rehydrates from the artifact's stored content; `replay_hash` is verified; the artifact is `frozen=True`. |
+| **Replay** (`replay(a) == a` byte-equal) | `replay.py` rehydrates from the artifact's stored content; `replay_hash` is independently recomputed from `canonical_bytes()`; the artifact is `@attrs.frozen`. |
 
 ---
 
@@ -288,8 +312,8 @@ class Evidence:
 ```
 
 A list of `Evidence` is recorded on every `ExecutionArtifact`. This is
-Law 9 (Evidence Over Confidence) — the artifact records *what matched
-and why*, never a confidence score.
+Law 9 (Evidence Over Score) — the artifact records *what matched and
+why*, never a number, score, rank, or probability.
 
 ### 3.4 `VersionStamp`
 
@@ -327,16 +351,25 @@ class ExecutionArtifact:
     status: Status
     value: str | None
     evidence: tuple[Evidence, ...]
-    contract: Contract
+    contract: _ContractLike             # structural Protocol
     version_stamp: VersionStamp
-    replay_hash: str                # sha256 of the canonical serialization
+    replay_hash: str                    # sha256 of the canonical serialization
 
     def canonical_bytes(self) -> bytes: ...
 ```
 
+The `contract` field is typed as a structural Protocol
+(`_ContractLike`, defined in `src/paxman/_core/artifact.py`) that
+exposes `as_dict() -> dict[str, Any]` and `version: int`. Both
+`CanonicalEmailContract` (the parsed real contract) and the
+orchestrator's internal `_StubContract` (used for unparseable
+inputs) satisfy this Protocol structurally. This is what lets the
+artifact carry a serializable contract view without forcing a
+forward import from `_contracts/contract.py`.
+
 `canonical_bytes()` produces a deterministic byte serialization (sorted
-keys, no whitespace) used for `replay_hash` computation and for
-`__eq__` / `__hash__`. This is the answer to
+keys, no whitespace, `ensure_ascii=False`) used for `replay_hash`
+computation and for `__eq__` / `__hash__`. This is the answer to
 `PROPOSED_STRUCTURE.md` Decision #6 (byte-equal serialization for
 `replay_hash`).
 
@@ -373,11 +406,15 @@ has not been called explicitly. The user may call `register_capability`
 *before* the first `canonicalize`; calling it after the first
 `canonicalize` raises `FrozenRegistryError`.
 
-The `EmailCapability` is auto-registered when `paxman._capabilities.builtins.email`
-is imported. The library does not auto-register on `import paxman`;
-the user opts in by `from paxman._capabilities.builtins import email`
-(or via a public `paxman.enable_email_capability()` convenience — see
-`§6`).
+> **Built-ins are NOT auto-registered.** Importing
+> `paxman._capabilities.builtins.email` has no side effect. The user
+> must explicitly call `paxman.register_capability(EmailCapability())`
+> to enable email canonicalization. This is mandated by Law 6 (Paxman
+> owns the algorithm) and Law 8a (no hidden state on import).
+
+A future v1.0.x release may add a convenience helper for built-in
+registration (e.g. `paxman.enable_builtin("email")`); v1.0.0 ships the
+explicit `register_capability` path only.
 
 ---
 
@@ -387,17 +424,17 @@ the user opts in by `from paxman._capabilities.builtins import email`
 
 | Test file | Coverage |
 |---|---|
-| `test_types.py` | `Status`, `Contract`, `Evidence`, `VersionStamp` value-object invariants. |
-| `test_artifact.py` | `ExecutionArtifact` is `frozen=True`; all five `Status` values produce a valid artifact; `canonical_bytes()` is deterministic and order-independent. |
+| `test_types.py` | `Status`, `CapabilityResult`, `Evidence`, `VersionStamp` value-object invariants. |
+| `test_artifact.py` | `ExecutionArtifact` is `@attrs.frozen`; all five `Status` values produce a valid artifact; `canonical_bytes()` is deterministic and order-independent; `replay_hash` matches `sha256(canonical_bytes())`. |
 | `test_classification.py` | `classify(...)` maps `(capability_result, validation)` → `Status` per the rules in §2.1. |
 | `test_validation.py` | `validate(value, contract)` accepts canonical email forms; rejects strict-mode violations. |
 | `test_orchestrator.py` | End-to-end pipeline against an in-test capability that records what it was called with. |
-| `test_replay.py` | `replay` returns the same artifact byte-equal; raises `VersionMismatchError` on Paxman-version mismatch; raises `CanonicalizationError` on `replay_hash` mismatch. |
-| `test_protocol.py` | `Capability` Protocol structural checks; missing methods raise `TypeError` at `register`. |
-| `test_registry.py` | `register`, `resolve`, `freeze`; double-register raises; post-freeze register raises. |
-| `test_email_capability.py` | The email capability: all six cases from §1.3–§1.5. |
-| `test_contract.py` | Dict DSL parsing: defaults, validation, `version` field. |
-| `test_public_api.py` | `paxman.canonicalize`, `paxman.replay`, `paxman.register_capability` are the only public symbols beyond the version and the builtin-import shim. |
+| `test_replay.py` | `replay` returns the same artifact byte-equal; raises `VersionMismatchError` on Paxman-version mismatch, contract-version mismatch, or capabilities-hash mismatch; raises `VersionMismatchError` on a malformed contract spec; raises `CanonicalizationError` on `replay_hash` mismatch. |
+| `test_protocol.py` | `Capability` Protocol structural checks; objects missing `name`, `can_handle`, or `canonicalize` are not instances. |
+| `test_registry.py` | `register`, `freeze`, `resolve_all`; double-register raises `ConfigurationError`; post-freeze register raises `FrozenRegistryError`; `resolve_all` returns every claimant. |
+| `test_email_capability.py` | The email capability: all six cases from §1.3–§1.5, plus the case-insensitive Gmail domain case and the post-rewrite revalidation case. |
+| `test_contract.py` | Dict DSL parsing: defaults, validation, `version` field, bool-field validation rejecting non-bool inputs. |
+| `test_public_api.py` | `paxman.canonicalize`, `paxman.replay`, `paxman.register_capability` and the documented type re-exports are the public surface; the exact set is asserted with `==`. |
 
 ### 5.2 Property tests (`tests/property/`)
 
@@ -456,9 +493,13 @@ true:
 3. The integration test in §5.3 passes end-to-end.
 4. A manual `uv run python -c '...'` invocation of the README-style
    example returns the expected canonical form.
-5. A grep for the retired words in `MANDATE.md` §6.3 (`heuristic`,
-   `confidence`, `best match`, `probably`, `approximate`) in
-   `src/paxman/**.py` returns zero matches.
+5. A grep for the retired vocabulary in `MANDATE.md` §6.3 (the
+   matched-line grep pattern is in `.coderabbit.yaml`; it is a
+   fixed-string alternation of the five words, not a regex of the
+   words appearing in code) in `src/paxman/**.py` returns zero
+   matches. The five words are listed in `MANDATE.md` §6.3; the
+   intent of this gate is to ensure the *adopted* vocabulary is
+   used in code, not the retired one.
 6. The thirteen laws are each backed by at least one test (Law 11 has
    the SPI litmus test; Law 12 has the replay property test; Law 13
    has the immutability property test, etc.).

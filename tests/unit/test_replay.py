@@ -1,6 +1,8 @@
 """Tests for the replay path (mandate Law 12)."""
 from __future__ import annotations
 
+from typing import Any, cast
+
 import pytest
 
 from paxman._core.replay import replay
@@ -27,7 +29,7 @@ def _artifact(**overrides: object) -> ExecutionArtifact:
         ),
     )
     defaults.update(overrides)
-    return ExecutionArtifact(**defaults)  # type: ignore[arg-type]
+    return ExecutionArtifact(**cast(Any, defaults))
 
 
 @pytest.fixture(autouse=True)

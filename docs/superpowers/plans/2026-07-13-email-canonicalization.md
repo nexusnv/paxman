@@ -4,7 +4,7 @@
 
 **Goal:** Ship a working Paxman v2 library, end-to-end, with email canonicalization as its first and only capability. `paxman.canonicalize(input, contract)` runs and returns a correct canonical form for a representative set of email inputs; `paxman.replay(artifact, contract)` is byte-equal to the original artifact without re-execution.
 
-**Architecture:** The pipeline from `PROPOSED_STRUCTURE.md` is realized as 12 source files under `src/paxman/`, plus a `tests/` tree with unit, property, and integration tests. The pipeline walks `inspect → resolve → execute → validate → classify → build_artifact`; the algorithm is owned by Paxman (mandate Law 6); users may register capabilities, not rearrange the pipeline.
+**Architecture:** The pipeline from `PROPOSED_STRUCTURE.md` is realized as 12 source modules under `src/paxman/` (the canonical v1.0.0 layout from `PROPOSED_STRUCTURE.md`) plus one additional internal helper, `_orchestrator_runtime.py`, that holds the default registry to break a circular import between the orchestrator and `paxman/__init__.py`, plus 5 empty `__init__.py` package markers, for a total of 18 `.py` files. Plus a `tests/` tree with unit, property, and integration tests. The pipeline walks `inspect → resolve → execute → canonicalize → validate → classify`; the algorithm is owned by Paxman (mandate Law 6); users may register capabilities, not rearrange the pipeline. Artifact construction (the `ExecutionArtifact` and its `replay_hash`) is the final act of the `classify` stage — the `_build_artifact` helper is a private function inside `_core/orchestrator.py`, not a user-visible pipeline stage.
 
 **Tech Stack:** Python 3.11+ (target 3.13.5 locally), `attrs>=23.0` for frozen dataclasses, `pytest>=8.0` for unit/integration, `hypothesis>=6.0` for property tests, `hatchling` as build backend, `uv` for environment management. No runtime dependencies beyond the standard library + `attrs`.
 
@@ -1583,7 +1583,7 @@ class TestEmailCapability:
         assert r.value == "John.Doe@Example.COM"
 
     def test_evidence_is_recorded(self) -> None:
-        # Mandate Law 9: evidence, not confidence.
+        # Mandate Law 9: evidence, not a score or rank.
         c = _cap()
         r = c.canonicalize("User@Example.COM", _contract())
         rule_names = {e.rule for e in r.evidence}
@@ -2716,7 +2716,7 @@ print('strict rejected space:', strict.status.value)
 "
 ```
 
-Expected output (approximate — actual values are deterministic):
+Expected output (illustrative — the actual values are deterministic and byte-stable across runs):
 
 ```
 default: 'john.doe@example.com' status= canonicalized

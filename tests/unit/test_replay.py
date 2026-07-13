@@ -1,16 +1,16 @@
 """Tests for the replay path (mandate Law 12)."""
+
 from __future__ import annotations
 
 from typing import Any, cast
 
 import pytest
 
+from paxman._contracts.contract import parse_contract
+from paxman._core.artifact import ExecutionArtifact
 from paxman._core.replay import replay
 from paxman._core.types import Evidence, Status, VersionStamp
-from paxman._core.artifact import ExecutionArtifact
-from paxman._errors import CanonicalizationError, VersionMismatchError
-from paxman._contracts.contract import CanonicalEmailContract, parse_contract
-
+from paxman._errors import VersionMismatchError
 
 _EMPTY_REGISTRY_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
@@ -34,8 +34,9 @@ def _artifact(**overrides: object) -> ExecutionArtifact:
 
 @pytest.fixture(autouse=True)
 def _empty_registry(monkeypatch: pytest.MonkeyPatch) -> None:
-    from paxman._capabilities.registry import CapabilityRegistry
     from paxman import _orchestrator_runtime
+    from paxman._capabilities.registry import CapabilityRegistry
+
     r = CapabilityRegistry()
     r.freeze()
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", r)

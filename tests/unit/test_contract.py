@@ -1,13 +1,14 @@
 """Tests for the contract Dict DSL parser and the contract value objects."""
+
 from __future__ import annotations
 
 from typing import Any, cast
 
+import attrs
 import pytest
 
 from paxman._contracts.contract import (
     CanonicalEmailContract,
-    Contract,
     parse_contract,
 )
 from paxman._errors import ContractError
@@ -52,9 +53,7 @@ class TestParseCanonicalEmail:
 
     def test_invalid_provider_aliases_raises_contract_error(self) -> None:
         with pytest.raises(ContractError):
-            parse_contract(
-                {"kind": "canonical_email", "provider_aliases": "outlook"}
-            )
+            parse_contract({"kind": "canonical_email", "provider_aliases": "outlook"})
 
 
 class TestCanonicalEmailContract:
@@ -70,7 +69,7 @@ class TestCanonicalEmailContract:
 
     def test_is_frozen(self) -> None:
         c = parse_contract({"kind": "canonical_email"})
-        with pytest.raises(Exception):  # attrs.FrozenInstanceError
+        with pytest.raises(attrs.exceptions.FrozenInstanceError):
             c.lowercase = False  # type: ignore[misc]
 
     def test_equality(self) -> None:

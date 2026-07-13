@@ -52,6 +52,79 @@ jobs:
         run: uv run --python ${{ matrix.python-version }} pytest tests/unit --no-header
 
   # ---------------------------------------------------------------------------
+  # Lint (ruff) and format check
+  # The user asked to add lint and typecheck so that CodeRabbit's quota
+  # is spent on design-level comments, not on code errors that lint and
+  # typecheck can catch first. Ruff is in the dev dependency group; the
+  # config lives in [tool.ruff] in pyproject.toml.
+  # py3.12 only: ruff is a static tool, not affected by Python version.
+  # ---------------------------------------------------------------------------
+  lint:
+    name: lint (ruff)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3 # v8.3.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (frozen lockfile)
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+
+      - name: Format check (ruff format --check)
+        run: uv run ruff format --check .
+
+  # ---------------------------------------------------------------------------
+  # Type check (mypy)
+  # Moderate config in [tool.mypy] in pyproject.toml. Not full --strict:
+  # the orchestrator's lazy circular-import workaround and the
+  # `_ContractLike` Protocol structural typing would require additional
+  # stubs that are not yet worth the complexity for v1.0.0.
+  # py3.12 only: mypy is a static tool, not affected by Python version.
+  # ---------------------------------------------------------------------------
+  typecheck:
+    name: typecheck (mypy)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3 # v8.3.0
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (frozen lockfile)
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Type check (mypy src/paxman)
+        run: uv run mypy src/paxman
+
+  # ---------------------------------------------------------------------------
   # Property tests (Hypothesis; mandate §1.2 three invariants)
   # py3.12 only: the property tests are the mechanical evidence for the
   # three invariants (replay byte-equality, idempotence, uniqueness).

@@ -1,10 +1,11 @@
 """Tests for the post-capability validation step."""
+
 from __future__ import annotations
 
 from typing import Any, cast
 
-from paxman._core.validation import validate
 from paxman._contracts.contract import CanonicalEmailContract
+from paxman._core.validation import validate
 
 
 def _contract(**overrides: object) -> CanonicalEmailContract:
@@ -29,9 +30,7 @@ class TestValidate:
         assert validate("noatsign", _contract()).is_valid is False
 
     def test_strict_mode_rejects_embedded_space(self) -> None:
-        assert (
-            validate("a b@c.d", _contract(strict=True)).is_valid is False
-        )
+        assert validate("a b@c.d", _contract(strict=True)).is_valid is False
 
     def test_non_strict_mode_accepts_embedded_space(self) -> None:
         # Non-strict: only the @-sign requirement is enforced.

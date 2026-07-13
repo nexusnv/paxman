@@ -315,8 +315,12 @@ reviews:
         3. The `hatchling` build backend and the `[tool.hatch.build.targets.wheel]` section pointing at
         `src/paxman` are the v1.0.0 build settings. Do not change them.
 
-        4. There is no Makefile, no CI workflow, no pre-commit config in v1.0.0. Adding any of these is a
-        v1.0.x decision and requires a design spec.
+        4. There is no Makefile or pre-commit config in v1.0.0. The CI workflow (`.github/workflows/ci.yml`)
+         runs the test suite on three Python versions (3.11, 3.12, 3.13): unit tests on all three,
+         property tests and integration tests on 3.12. The CI does NOT include lint, typecheck, build
+         wheel, coverage thresholds, security scanning, or test-examples — v2 has not earned those gates
+         yet. Adding any of those to CI requires a design spec (each is a constitutional-level decision
+         because it can either uphold or violate Law 1 / Law 11 depending on configuration).
 
         5. The package version is `0.0.0.dev0` until the first release; do not bump it without a release
         process being defined.

@@ -96,12 +96,11 @@ paxman/
 │
 ├── pyproject.toml                      # project metadata, dependencies
 ├── .gitignore                          # universal Python + toolchain patterns
-├── .pre-commit-config.yaml             # ruff, mypy, interrogate
 ├── .coderabbit.yaml                    # code-review assistant config
 │
 ├── .github/                            # CI + issue templates + CODEOWNERS
 │   ├── workflows/
-│   │   └── ci.yml                      # single workflow: test, lint, type-check
+│   │   └── ci.yml                      # v1.0.0 CI: unit tests (py3.11, 3.12, 3.13), property + integration (py3.12)
 │   ├── ISSUE_TEMPLATE/
 │   │   └── bug_report.md
 │   ├── PULL_REQUEST_TEMPLATE.md

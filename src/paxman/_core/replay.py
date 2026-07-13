@@ -12,6 +12,7 @@ on the replay path — the input artifact is already complete.
 """
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
 import paxman as _paxman_version
@@ -59,16 +60,14 @@ def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
 
 
 def _compute_replay_hash(artifact: ExecutionArtifact) -> str:
-    """Recompute the replay_hash from the artifact's content.
+    """Independently recompute the replay_hash from the artifact's
+    canonical bytes (mandate Law 12).
 
-    The hash is stored on the artifact at construction time, so this
-    function is the verification side: it must produce the same value
-    the constructor did. Implemented as a module-level helper so the
-    orchestrator and replay can both call it without duplicating the
-    canonical-bytes logic.
+    This is the verification side of the hash. The constructor stored
+    `artifact.replay_hash` from the same `canonical_bytes()` at
+    construction time, so the two values must match. Recomputing
+    independently — rather than reading the stored value — means a
+    forged artifact with mismatched fields is detected at replay time,
+    not just trusted because the field is frozen.
     """
-    # The artifact's stored `replay_hash` is exactly the value computed
-    # at construction; recomputing it here is a tautology unless we
-    # also recompute the canonical bytes — but canonical_bytes() is
-    # deterministic and a property of the artifact's other fields.
-    return artifact.replay_hash
+    return hashlib.sha256(artifact.canonical_bytes()).hexdigest()

@@ -27,7 +27,7 @@ classifiers = [
 # `src/paxman/` (mandate Laws 1, 12, 13). v1.0.0 ships no other
 # runtime dependencies.
 dependencies = [
-    "attrs>=23.0",
+    "attrs>=26.1.0",
 ]
 
 [project.urls]

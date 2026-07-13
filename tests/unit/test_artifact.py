@@ -1,4 +1,5 @@
 """Tests for ExecutionArtifact immutability and byte-equal serialization."""
+
 from __future__ import annotations
 
 import hashlib

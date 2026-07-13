@@ -1,14 +1,15 @@
 """Mandate §5.4: multiple claimants -> Status.AMBIGUOUS, never a silent pick."""
+
 from __future__ import annotations
 
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from paxman._capabilities.registry import CapabilityRegistry
-from paxman._core.types import CapabilityResult, Status
 from paxman import _orchestrator_runtime
+from paxman._capabilities.registry import CapabilityRegistry
 from paxman._core.orchestrator import canonicalize
+from paxman._core.types import CapabilityResult, Status
 
 
 class _A:

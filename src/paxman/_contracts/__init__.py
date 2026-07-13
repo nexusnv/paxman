@@ -1,4 +1,5 @@
 """Contract adapters (v1.0.0: the Dict DSL only)."""
+
 from paxman._contracts.contract import (
     CanonicalEmailContract,
     Contract,

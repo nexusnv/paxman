@@ -3,6 +3,7 @@
 Mandate Laws 1, 2, 9, 12, 13 all converge here. The artifact is the
 single thing that paxman produces and replays.
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -19,13 +20,14 @@ class _ContractLike(Protocol):
 
     The real Contract (in src/paxman/_contracts/contract.py) provides
     this and more. Keeping the dependency here as a Protocol avoids
-    a forward import. The `version` attribute may be a class attribute
-    (as on `CanonicalEmailContract`) or an instance attribute (as on
-    the orchestrator's `_StubContract` for unparseable inputs).
+    a forward import. `version` is a read-only property because
+    `CanonicalEmailContract` (the real contract) is `@attrs.frozen`
+    and its fields are read-only.
     """
 
     def as_dict(self) -> dict[str, Any]: ...
-    version: int
+    @property
+    def version(self) -> int: ...
 
 
 @attrs.frozen

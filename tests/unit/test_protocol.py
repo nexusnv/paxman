@@ -1,4 +1,5 @@
 """Tests for the Capability Protocol (mandate §5.1)."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -15,9 +16,7 @@ class _Good:
         return isinstance(contract, CanonicalEmailContract) and isinstance(value, str)
 
     def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
-        return CapabilityResult(
-            status=Status.CANONICALIZED, value=str(value)
-        )
+        return CapabilityResult(status=Status.CANONICALIZED, value=str(value))
 
 
 class _MissingName:

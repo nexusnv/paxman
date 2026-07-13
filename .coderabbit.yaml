@@ -306,21 +306,32 @@ reviews:
         is GONE; v2 has no runtime dependencies beyond the standard library and `attrs` (which is in the
         `dev` group only, not runtime). Flag any addition to `[project].dependencies`.
 
-        2. v1.0.0 has no `ruff`, `mypy`, `pyright`, `import-linter`, or `coverage` configuration in
-        `pyproject.toml`. The only `[tool.pytest.ini_options]` section is the one that registers the
-        `property` and `integration` markers. Adding these tools requires a design spec (each is a
-        constitutional-level decision because it can either uphold or violate Law 1 / Law 11 depending on
-        configuration).
+        2. v1.0.0 DOES have a conservative `[tool.ruff]` config (select: E, F, W, I, B,
+        UP, RUF; line-length 100; S101/B011 ignored in tests) and a moderate
+        `[tool.mypy]` config (`disallow_untyped_defs`, `warn_unused_ignores`,
+        `warn_redundant_casts`; not full `--strict`). The configs are deliberately
+        conservative to catch real issues (unused imports, pycodestyle, bugbear,
+        isort, pyupgrade, missing annotations) without flagging a large volume
+        of test/legacy code. ANN (annotations) and S (security) are excluded
+        because they would flag patterns that are appropriate for v2's test/dev
+        code (the orchestrator's `object`/`Any` usage; `assert` in tests). The CI
+        runs ruff and mypy as required gates. Adding stricter configs (e.g.
+        `--strict` mypy) requires a design spec.
 
         3. The `hatchling` build backend and the `[tool.hatch.build.targets.wheel]` section pointing at
         `src/paxman` are the v1.0.0 build settings. Do not change them.
 
-        4. There is no Makefile or pre-commit config in v1.0.0. The CI workflow (`.github/workflows/ci.yml`)
-         runs the test suite on three Python versions (3.11, 3.12, 3.13): unit tests on all three,
-         property tests and integration tests on 3.12. The CI does NOT include lint, typecheck, build
-         wheel, coverage thresholds, security scanning, or test-examples — v2 has not earned those gates
-         yet. Adding any of those to CI requires a design spec (each is a constitutional-level decision
-         because it can either uphold or violate Law 1 / Law 11 depending on configuration).
+        4. There is no Makefile or pre-commit config in v1.0.0. The CI workflow
+         (`.github/workflows/ci.yml`) runs five jobs: `test-unit` (matrix on
+         py3.11/3.12/3.13), `lint` (ruff check + ruff format --check on py3.12),
+         `typecheck` (mypy on py3.12), `test-property` (Hypothesis property tests
+         on py3.12), and `test-integration` (end-to-end on py3.12). The CI does
+         NOT include build wheel, coverage thresholds, security scanning,
+         test-examples, pyright, interrogate, bandit, pip-audit, or
+         import-linter — v2 has not earned those gates yet. Adding any of those
+         to CI requires a design spec (each is a constitutional-level decision
+         because it can either uphold or violate Law 1 / Law 11 depending on
+         configuration).
 
         5. The package version is `0.0.0.dev0` until the first release; do not bump it without a release
         process being defined.

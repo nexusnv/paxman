@@ -2,10 +2,12 @@
 
 Mandate: see MANDATE.md. Spec: see docs/superpowers/specs/.
 """
+
 from __future__ import annotations
 
 __version__ = "0.0.0.dev0"
 
+from paxman import _orchestrator_runtime
 from paxman._capabilities.protocol import Capability
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman._contracts.contract import (
@@ -32,7 +34,6 @@ from paxman._errors import (
     UnsupportedContractError,
     VersionMismatchError,
 )
-from paxman import _orchestrator_runtime
 
 
 def canonicalize(input_data: object, contract: object) -> ExecutionArtifact:
@@ -55,29 +56,26 @@ def register_capability(capability: Capability) -> None:
 
 
 __all__ = [
-    "__version__",
-    "canonicalize",
-    "replay",
-    "register_capability",
-    # Re-exports of the public types so users do not need to know
-    # about the _core / _contracts / _capabilities internal layout.
-    "ExecutionArtifact",
-    "Status",
-    "Evidence",
-    "VersionStamp",
-    "CapabilityResult",
-    "ValidationResult",
-    "Contract",
     "CanonicalEmailContract",
-    "parse_contract",
+    "CanonicalizationError",
     "Capability",
     "CapabilityRegistry",
-    # Errors
-    "PaxmanError",
-    "CanonicalizationError",
-    "ContractError",
+    "CapabilityResult",
     "ConfigurationError",
+    "Contract",
+    "ContractError",
+    "Evidence",
+    "ExecutionArtifact",
     "FrozenRegistryError",
+    "PaxmanError",
+    "Status",
     "UnsupportedContractError",
+    "ValidationResult",
     "VersionMismatchError",
+    "VersionStamp",
+    "__version__",
+    "canonicalize",
+    "parse_contract",
+    "register_capability",
+    "replay",
 ]

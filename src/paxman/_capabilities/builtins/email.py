@@ -9,11 +9,11 @@ Mandate Laws 4, 5, 7, 8, 8a, 11:
 - Law 11: the canonical form is a function of (value, contract). Two
   independent implementations must produce the same value.
 """
+
 from __future__ import annotations
 
 from paxman._contracts.contract import CanonicalEmailContract, Contract
 from paxman._core.types import CapabilityResult, Evidence, Status
-
 
 _GMAIL_DOMAINS = frozenset({"gmail.com", "googlemail.com"})
 

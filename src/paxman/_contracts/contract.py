@@ -5,6 +5,7 @@ form is, never *how* it is produced. The DSL is a closed vocabulary:
 `kind` is a fixed set, and an unknown `kind` raises `ContractError` at
 parse time (the orchestrator catches that and yields `Status.UNSUPPORTED`).
 """
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -58,9 +59,7 @@ def _require_bool(field: str, value: object) -> bool:
     (including truthy strings) raise `ContractError` rather than being
     silently coerced. Mandate Law 7 — explicit over clever."""
     if not isinstance(value, bool):
-        raise ContractError(
-            f"contract field {field!r} must be a bool, got {type(value).__name__}"
-        )
+        raise ContractError(f"contract field {field!r} must be a bool, got {type(value).__name__}")
     return value
 
 
@@ -81,8 +80,7 @@ def parse_contract(spec: Any) -> Contract:
 
     if kind not in _KIND_DISPATCH:
         raise ContractError(
-            f"unknown contract kind: {kind!r}; "
-            f"supported kinds: {sorted(_KIND_DISPATCH)}"
+            f"unknown contract kind: {kind!r}; supported kinds: {sorted(_KIND_DISPATCH)}"
         )
 
     if kind == "canonical_email":
@@ -94,9 +92,7 @@ def parse_contract(spec: Any) -> Contract:
             )
         return CanonicalEmailContract(
             lowercase=_require_bool("lowercase", spec.get("lowercase", True)),
-            strip_whitespace=_require_bool(
-                "strip_whitespace", spec.get("strip_whitespace", True)
-            ),
+            strip_whitespace=_require_bool("strip_whitespace", spec.get("strip_whitespace", True)),
             provider_aliases=cast(ProviderAliasesPolicy, provider_aliases),
             strict=_require_bool("strict", spec.get("strict", False)),
         )

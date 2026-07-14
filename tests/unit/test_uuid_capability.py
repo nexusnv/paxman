@@ -13,6 +13,8 @@ These tests assert the v2.0.0 default behaviour:
 
 from __future__ import annotations
 
+from typing import cast
+
 from paxman import Status
 from paxman._capabilities.builtins.uuid import _RULE_PROVENANCE, UUIDCapability
 from paxman._contracts.contract import CanonicalUUIDContract, Contract
@@ -39,11 +41,11 @@ class TestUUIDCapability:
 
     def test_can_handle_rejects_non_uuid_contract(self) -> None:
         c = _cap()
-        assert c.can_handle("not a contract", V4_CANONICAL) is False  # type: ignore[arg-type]
+        assert c.can_handle(cast(Contract, "not a contract"), V4_CANONICAL) is False
 
     def test_can_handle_rejects_non_string_value(self) -> None:
         c = _cap()
-        assert c.can_handle(_contract(), 12345) is False  # type: ignore[arg-type]
+        assert c.can_handle(_contract(), cast(str, 12345)) is False
 
     def test_canonicalize_on_canonical_input_returns_canonical(self) -> None:
         c = _cap()
@@ -96,13 +98,13 @@ class TestUUIDCapability:
 
     def test_canonicalize_rejects_non_uuid_contract(self) -> None:
         c = _cap()
-        r = c.canonicalize(V4_CANONICAL, "not a contract")  # type: ignore[arg-type]
+        r = c.canonicalize(V4_CANONICAL, cast(Contract, "not a contract"))
         assert r.status is Status.INVALID
         assert r.evidence[0].rule == "not_a_uuid_contract"
 
     def test_canonicalize_rejects_non_string_value(self) -> None:
         c = _cap()
-        r = c.canonicalize(12345, _contract())  # type: ignore[arg-type]
+        r = c.canonicalize(cast(str, 12345), _contract())
         assert r.status is Status.INVALID
         assert r.evidence[0].rule == "not_a_string_value"
 
@@ -127,7 +129,7 @@ class TestUUIDCapability:
             (" 550e8400-e29b-41d4-a716-446655440000 ", _contract()),
             (V1_CANONICAL, _contract(version="4")),
             (12345, _contract()),
-            (V4_CANONICAL, "not a contract"),  # type: ignore[arg-type]
+            (V4_CANONICAL, cast(Contract, "not a contract")),
         ]
         fired: set[str] = set()
         for value, contract in inputs:

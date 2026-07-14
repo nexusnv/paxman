@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import typing
+
 import pytest
 
 from paxman._contracts.contract import UUID, CanonicalUUIDContract, parse_contract
@@ -28,8 +30,9 @@ class TestUUIDFactory:
         # attrs does not validate Literal at runtime, so the contract's
         # __attrs_post_init__ must reject unknown versions loudly (Law 7 —
         # explicit over clever; never a silent INVALID for every input).
+        invalid_version: typing.Any = "99"
         with pytest.raises(ContractError):
-            UUID(version="99")
+            UUID(version=invalid_version)
 
     def test_parse_contract_non_string_version_raises(self) -> None:
         # A malformed (non-string) version must raise ContractError, not

@@ -1,35 +1,32 @@
-"""Grep-zero gate for 'Capability' outside the Extending Paxman section.
+"""Thin pytest gate: 'Capability' appears in README only under
+'## Extending Paxman'.
 
-Spec §4.6 + issue criterion 6: the word 'Capability' (case-sensitive)
-appears in README.md ONLY within the '## Extending Paxman' section. This
-makes criterion 6 a hard CI gate.
+The actual check lives in scripts/check_capability_section_isolation.py
+— per the path instructions, tests under tests/ must not read files
+from outside tests/, and the README lives at the repo root, not under
+tests/. This thin pytest module just invokes the script via
+subprocess.run and asserts the exit code is 0.
 """
 
 from __future__ import annotations
 
-import pathlib
+import subprocess
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+SCRIPT = REPO_ROOT / "scripts" / "check_capability_section_isolation.py"
 
 
 def test_capability_appears_only_in_extending_section() -> None:
-    readme = pathlib.Path("README.md").read_text(encoding="utf-8")
-    marker = "## Extending Paxman"
-    extending_start = readme.find(marker)
-    assert extending_start != -1, "README.md has no '## Extending Paxman' section"
-
-    before = readme[:extending_start]
-    after = readme[extending_start:]
-
-    # Case-sensitive substring 'Capability' must NOT appear before the
-    # Extending Paxman section.
-    assert "Capability" not in before, (
-        "the word 'Capability' appears in README.md outside the "
-        "'## Extending Paxman' section; this violates criterion 6. "
-        f"Offending prefix:\n{before[-200:]}"
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
     )
-
-    # Case-sensitive substring 'Capability' MUST appear inside the
-    # Extending Paxman section (otherwise the SPI doc is missing).
-    assert "Capability" in after, (
-        "the word 'Capability' does not appear inside '## Extending "
-        "Paxman'; the SPI documentation is missing."
+    assert result.returncode == 0, (
+        f"scripts/check_capability_section_isolation.py failed:\n"
+        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
     )
+    assert "OK:" in result.stdout

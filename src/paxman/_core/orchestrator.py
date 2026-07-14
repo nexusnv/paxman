@@ -76,7 +76,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
         # top) to keep 'import paxman' side-effect-free and to avoid a
         # potential circular import between builtins.email and the
         # contract module.
-        from paxman._capabilities.builtins import builtin_capabilities
+        from paxman._capabilities.builtins.discovery import builtin_capabilities
 
         registry.load_builtins(builtin_capabilities())
         registry.freeze()

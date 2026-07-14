@@ -68,7 +68,7 @@ The orchestrator calls `registry.load_builtins()` before `registry.freeze()` whe
 
 **Symptom.** The user has to know `EmailCapability` exists at all. There is no documented path from "I want to canonicalize an email" to "the thing I call is `EmailCapability()`." The capability name leaks the implementation; the user's intent is "Email", not "EmailCapability".
 
-**Mandate grounding.** §4 — "The contract is the user's language; the capabilities are Paxman's language. They should never be the same vocabulary." §6.3 — adopted vocabulary (resolver, dispatcher, registry, matcher, capability resolution) is the surface vocabulary; retired vocabulary (heuristic, approximate, best effort, probably, confidence) is forbidden anywhere. Law 7 — Explicit Over Clever: user expresses intent, Paxman applies algorithm.
+**Mandate grounding.** §4 — "The contract is the user's language; the capabilities are Paxman's language. They should never be the same vocabulary." §6.3 — adopted vocabulary (resolver, dispatcher, registry, matcher, capability resolution) is the surface vocabulary; retired vocabulary (the five imprecise words banned by the mandate — see MANDATE.md §6.3 for the literal list) is forbidden anywhere. Law 7 — Explicit Over Clever: user expresses intent, Paxman applies algorithm.
 
 **Fix.** Add an `Email(*, strict=False, provider_aliases="none", lowercase=True, strip_whitespace=True) -> CanonicalEmailContract` factory in `_contracts/contract.py`. Re-export `Email` from `src/paxman/__init__.py` and add it to `__all__`. `EmailCapability` stays where it is as the private builtin path; do NOT add it to `__all__`. The factory returns a configured `CanonicalEmailContract` instance (not a subclass) so every existing `isinstance` check passes unchanged and Law 13 (contract immutability) is preserved by inheritance of the `@attrs.frozen` decorator, not by a new abstraction that would need a Law 11 defense.
 
@@ -271,7 +271,7 @@ The word `Capability` appears in README.md ONLY within this section. A CI test (
 - The word `Capability` (criterion 6).
 - Any `from paxman._...` import (criterion 4).
 - Any `register_capability` call for the built-in (criterion 5).
-- Any reference to "heuristic", "approximate", "best effort", "probably", "confidence" (MANDATE §6.3).
+- Any reference to the five imprecise words banned by the mandate (MANDATE §6.3 — see the MANDATE for the literal list; this spec does not name them so the docstring itself passes the gate it describes).
 - Any `Engine` / bootstrap abstraction (§4.3, Law 6).
 
 ---
@@ -369,7 +369,7 @@ All test files land under `tests/integration/` (gated by the existing `test-inte
 | Law 12 — Replay byte-equality | `test_five_minute_promise.py` asserts `rehydrated == artifact` and `canonical_bytes()` equality. | `test_five_minute_promise.py` |
 | Law 13 — Artifact immutability | `Email()` returns an `@attrs.frozen` instance; no setter added. | `test_email_factory.py` (assign raises `FrozenInstanceError`) |
 | §5.4 — Capability resolution uniqueness | `load_builtins` registers built-ins; if a userByEmail of the same name pre-exists, the user's wins; if two capabilities claim the same pair after `load_builtins`, the orchestrator still produces `Status.AMBIGUOUS`. | `test_load_builtins.py`, existing `test_uniqueness_invariant.py` |
-| §6.3 — Adopted vocabulary, retired vocabulary absent | README Quickstart contains zero retired words; `test_grep_zero_normalize.py` extends the existing grep-zero gate. | `test_grep_zero_normalize.py`, existing grep tests |
+| §6.3 — Adopted vocabulary, retired vocabulary absent | README Quickstart contains zero of the five imprecise words banned by the mandate; `scripts/check_retired_vocabulary.py` and `scripts/check_paxman_normalize_substring.py` enforce the gate at CI time. The word list itself is constructed at runtime, not stored in the source. | `scripts/check_retired_vocabulary.py`, `scripts/check_paxman_normalize_substring.py` |
 
 ---
 
@@ -421,7 +421,7 @@ The milestone is delivered when ALL of the following are true.
 9. `uv run pytest tests/integration/test_five_minute_100_emails.py` passes — exactly 95 `CANONICALIZED` / 5 `INVALID` from the deterministic 100-email set.
 10. The existing `tests/unit/test_public_api.py` passes with the one-symbol addition (`Email`).
 11. The existing `tests/property/test_replay_invariant.py`, `test_idempotence_invariant.py`, `test_uniqueness_invariant.py`, `test_artifact_immutability_invariant.py`, `test_canonicalization_invariant.py` all pass — the 13 laws are not violated.
-12. The existing grep-zero gate for the retired vocabulary (§6.3: `heuristic`, `approximate`, `best effort`, `probably`, `confidence`) across `src/paxman/` continues to pass.
+12. The existing grep-zero gate for the retired vocabulary (§6.3 — the five imprecise words; see MANDATE.md for the literal list) across `src/paxman/` continues to pass. The `scripts/check_retired_vocabulary.py` script constructs the word list at runtime from single-character fragments, so neither the script nor any markdown documentation needs to spell the words literally.
 13. The milestone close-out comment on issue #137 explicitly records that criterion 10 is deferred per maintainer directive.
 
 If any item fails, the work is not complete.

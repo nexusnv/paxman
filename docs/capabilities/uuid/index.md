@@ -18,7 +18,7 @@ The capability does not interpret non-canonical inputs as the canonical form of 
 
 | Field | Type | Default | What it does |
 |---|---|---|---|
-| `version` | `"any"`, `"1"`, `"3"`, `"4"`, `"5"`, `"7"` | `"any"` | Which UUID version to accept. `"any"` accepts all five. A specific value rejects other versions with `Status.INVALID`. |
+| `version` | `"any"`, `"1"`, `"3"`, `"4"`, `"5"`, `"7"` | `"any"` | Which UUID version to accept. Under `version="any"` the capability validates only RFC 4122 §3 form — any version nibble (and any variant nibble) in canonical form is accepted verbatim. A specific value (e.g. `"4"`) adds an RFC 4122 §4.1.3 check that rejects other versions with `Status.INVALID`. |
 
 The `kind` and `version_field` fields are fixed (`"canonical_uuid"` and `1` respectively). They are not part of the `UUID()` factory signature.
 
@@ -39,7 +39,7 @@ Every transformation the capability performs is recorded as an `Evidence` entry 
 
 | Rule | When it fires | Citation |
 |---|---|---|
-| `no_transformation_needed` | The input is already in canonical form and matches the version policy. The canonical value is the input verbatim. | RFC 4122 §3 |
+| `no_transformation_needed` | The input is already in canonical form and matches the version policy (under `version="any"`, any version nibble in canonical form matches). The canonical value is the input verbatim. | RFC 4122 §3 |
 
 ## Limitations of v1
 

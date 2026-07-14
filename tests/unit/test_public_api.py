@@ -51,6 +51,7 @@ class TestPublicAPI:
             "PaxmanError",
             "CanonicalizationError",
             "ContractError",
+            "Email",
             "ConfigurationError",
             "FrozenRegistryError",
             "UnsupportedContractError",

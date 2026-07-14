@@ -22,6 +22,11 @@ from paxman._core.types import CapabilityResult, Evidence, Status
 
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
+_ISO_DATETIME_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$"
+)
+_ISO_NAIVE_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$")
+
 _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
     {
         # dispatch invariants (no provenance — Law 14 §3.6 allow-list)
@@ -182,6 +187,35 @@ class DateCapability:
                 status=Status.CANONICALIZED,
                 value=_render_date(dt),
                 evidence=(_evidence("parsed_iso_date"),),
+            )
+
+        # ISO 8601 datetime with timezone: YYYY-MM-DDTHH:MM:SS[.fff](Z|±HH:MM)
+        if _ISO_DATETIME_RE.match(value):
+            iso = value.replace("Z", "+00:00")
+            try:
+                dt = datetime.fromisoformat(iso)
+            except ValueError:
+                return CapabilityResult(
+                    status=Status.INVALID,
+                    evidence=(_evidence("invalid_iso_format"),),
+                )
+            already = value == _render_datetime(dt)
+            return CapabilityResult(
+                status=Status.CANONICALIZED,
+                value=_render_datetime(dt),
+                evidence=(
+                    _evidence("parsed_iso_datetime"),
+                    _evidence("normalized_to_utc"),
+                )
+                if not already
+                else (_evidence("no_transformation_needed"),),
+            )
+
+        # ISO 8601 naive datetime (no timezone — ambiguous per RFC 3339 §5.6)
+        if _ISO_NAIVE_DATETIME_RE.match(value):
+            return CapabilityResult(
+                status=Status.AMBIGUOUS,
+                evidence=(_evidence("ambiguous_naive_datetime"),),
             )
 
         return CapabilityResult(

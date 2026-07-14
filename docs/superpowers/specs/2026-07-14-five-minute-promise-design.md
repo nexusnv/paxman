@@ -128,9 +128,9 @@ def Email(
 
 **Defaults invariant.** The four factory kwargs (`strict=False`, `provider_aliases="none"`, `lowercase=True`, `strip_whitespace=True`) **exactly** match `CanonicalEmailContract`'s own field defaults. A unit test asserts `Email().strict == CanonicalEmailContract().strict` (and the other three) and that `isinstance(Email(), CanonicalEmailContract)` is `True`.
 
-**Why a factory and not a subclass.** Subclassing a `@attrs.frozen` class creates a new abstraction that must satisfy Law 11. A factory is not an abstraction — it returns an existing value object whose Law 11 defense is already on record in the v1.0.0 design spec (2026-07-13-email-canonicalization-design.md §3.2). The factory pattern generalises cleanly to `Money()`, `Date()`, and the north-star multi-field form `InvoiceContract(vendor_email=Email(), ...)` — each future type is one factory, no new abstraction class.
+**Why a factory and not a subclass.** Subclassing a `@attrs.frozen` class creates a new abstraction that must satisfy Law 11. A factory is not an abstraction — it returns an existing value object whose Law 11 defense is already on record in the v2.0.0 design spec (2026-07-13-email-canonicalization-design.md §3.2). The factory pattern generalises cleanly to `Money()`, `Date()`, and the north-star multi-field form `InvoiceContract(vendor_email=Email(), ...)` — each future type is one factory, no new abstraction class.
 
-**Why a factory and not the contract class directly.** `CanonicalEmailContract` is implementation vocabulary (the v1.0.0 spec name). `Email` is user vocabulary (the issue's criterion 6 — user expresses intent through contracts, not capabilities). The factory bridges the two vocabularies without duplicating the value object.
+**Why a factory and not the contract class directly.** `CanonicalEmailContract` is implementation vocabulary (the v2.0.0 spec name). `Email` is user vocabulary (the issue's criterion 6 — user expresses intent through contracts, not capabilities). The factory bridges the two vocabularies without duplicating the value object.
 
 **`EmailCapability` stays put.** Do NOT add `EmailCapability` to `paxman.__all__`. It remains documented only in the README's "Extending Paxman" section. The grep-zero gate for the word `Capability` outside "Extending Paxman" in `README.md` is a hard CI test.
 

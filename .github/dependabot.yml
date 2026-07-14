@@ -1,0 +1,53 @@
+# Dependabot configuration for Paxman
+# See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+# Sprint 9 D9.14: config-only, automated PRs enabled (low risk, high value for security)
+
+version: 2
+
+updates:
+  # Python dependencies (uv-managed via pyproject.toml)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kuala_Lumpur"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "needs-triage"
+    # Allow up to 5 in-flight PRs; assign to the project owner for triage
+    assignees:
+      - "nexusnv"
+    groups:
+      # Group non-breaking updates together (low risk, easy review).
+      # Named "non-breaking" because Dependabot groups named "patch"
+      # would be misleading — this group includes both minor AND patch
+      # version bumps (i.e., anything that shouldn't break the public API).
+      non-breaking:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+      # Group production dependency updates separately for stricter review
+      production:
+        applies-to: version-updates
+        patterns:
+          - "attrs"
+          - "typing-extensions"
+          - "structlog"
+          - "packaging"
+
+  # GitHub Actions (workflow dependencies)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    labels:
+      - "ci"
+      - "dependencies"
+    assignees:
+      - "nexusnv"

@@ -1,0 +1,44 @@
+# Paxman pre-commit configuration.
+# Per DEVELOPMENT.md §2.4 and sprint-01-foundation.md D1.3.
+#
+# Install with: `uv run pre-commit install`
+# Run on all files: `uv run pre-commit run --all-files`
+
+repos:
+  # --- Standard hygiene hooks ---
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+      - id: check-shebang-scripts-are-executable
+
+  # --- Ruff (lint + format) ---
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: ["--fix", "--exit-non-zero-on-fix"]
+        types_or: [python, pyi]
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  # --- Mypy (strict) ---
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.2
+    hooks:
+      - id: mypy
+        files: ^src/paxman/
+        args: ["--strict", "--config-file=pyproject.toml"]
+        additional_dependencies:
+          - attrs>=23.0
+          - typing-extensions>=4.0
+          - structlog>=24.1

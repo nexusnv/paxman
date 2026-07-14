@@ -120,7 +120,7 @@ class TestParseCanonicalDate:
     def test_is_frozen(self) -> None:
         c = parse_contract({"kind": "canonical_date", "locale": "ISO"})
         with pytest.raises(attrs.exceptions.FrozenInstanceError):
-            c.locale = "US"  # type: ignore[misc]
+            setattr(c, "locale", "US")  # noqa: B010
 
     def test_short_circuit_on_value_object(self) -> None:
         c = Date(locale="ISO")

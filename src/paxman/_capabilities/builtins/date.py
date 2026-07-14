@@ -23,9 +23,7 @@ from paxman._core.types import CapabilityResult, Evidence, Status
 
 _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
-_ISO_DATETIME_RE = re.compile(
-    r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$"
-)
+_ISO_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$")
 _ISO_NAIVE_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$")
 
 _NUMERIC_4YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})$")
@@ -56,6 +54,7 @@ def _is_epoch(value: str) -> bool:
         return True
     return int(value) >= 1_000_000_000
 
+
 _RFC2822_TIME_RE = re.compile(r"\d{1,2}:\d{2}(:\d{2})?")
 _RFC2822_RE = re.compile(
     r"^(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s*)?"
@@ -85,6 +84,7 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
             "ISO 8601:2004 (4-digit year required); Law 4 (century not uniquely determinable)"
         ),
         "ambiguous_naive_datetime": "RFC 3339 §5.6 (unknown local offset convention)",
+        "invalid_epoch_value": "POSIX/IEEE 1003.1 (epoch seconds out of representable range)",
         # transforming rules (success path)
         "parsed_iso_date": "ISO 8601:2004 §5.2.1",
         "parsed_iso_datetime": "RFC 3339",
@@ -145,8 +145,7 @@ def _render_datetime(dt: datetime) -> str:
     # Format the year explicitly: strftime("%Y") drops zero-padding below
     # AD 1000 on glibc, which would break the RFC 3339 canonical form.
     base = (
-        f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}"
-        f"T{dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}"
+        f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}T{dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}"
     )
     if dt.microsecond:
         base += f".{dt.microsecond:06d}"
@@ -246,7 +245,13 @@ class DateCapability:
         # Unix epoch: integer or float seconds since 1970-01-01T00:00:00Z
         if _is_epoch(value):
             ts = float(value)
-            dt = datetime.fromtimestamp(ts, tz=UTC)
+            try:
+                dt = datetime.fromtimestamp(ts, tz=UTC)
+            except (ValueError, OverflowError, OSError):
+                return CapabilityResult(
+                    status=Status.INVALID,
+                    evidence=(_evidence("invalid_epoch_value"),),
+                )
             return CapabilityResult(
                 status=Status.CANONICALIZED,
                 value=_render_datetime(dt),
@@ -344,38 +349,39 @@ class DateCapability:
                 # Date-only RFC 2822: parsedate_to_datetime requires time,
                 # so fall back to strptime for the "D Mon YYYY" form.
                 # Strip optional day-of-week prefix (e.g. "Tue, ") first.
-                date_part = re.sub(
-                    r"^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s*", "", value.strip()
-                )
+                date_part = re.sub(r"^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s*", "", value.strip())
                 try:
                     parsed = datetime.strptime(date_part, "%d %b %Y")
                 except ValueError:
-                    parsed = None
-                if parsed is not None:
                     return CapabilityResult(
-                        status=Status.CANONICALIZED,
-                        value=_render_date(parsed),
-                        evidence=(_evidence("parsed_rfc2822"),),
+                        status=Status.INVALID,
+                        evidence=(_evidence("invalid_calendar_date"),),
                     )
-            else:
-                try:
-                    parsed = parsedate_to_datetime(value)
-                except (TypeError, ValueError):
-                    parsed = None
-                if parsed is not None:
-                    if parsed.tzinfo is None:
-                        return CapabilityResult(
-                            status=Status.AMBIGUOUS,
-                            evidence=(_evidence("ambiguous_naive_datetime"),),
-                        )
-                    return CapabilityResult(
-                        status=Status.CANONICALIZED,
-                        value=_render_datetime(parsed),
-                        evidence=(
-                            _evidence("parsed_rfc2822"),
-                            _evidence("normalized_to_utc"),
-                        ),
-                    )
+                return CapabilityResult(
+                    status=Status.CANONICALIZED,
+                    value=_render_date(parsed),
+                    evidence=(_evidence("parsed_rfc2822"),),
+                )
+            try:
+                parsed = parsedate_to_datetime(value)
+            except (TypeError, ValueError):
+                return CapabilityResult(
+                    status=Status.INVALID,
+                    evidence=(_evidence("invalid_calendar_date"),),
+                )
+            if parsed.tzinfo is None:
+                return CapabilityResult(
+                    status=Status.AMBIGUOUS,
+                    evidence=(_evidence("ambiguous_naive_datetime"),),
+                )
+            return CapabilityResult(
+                status=Status.CANONICALIZED,
+                value=_render_datetime(parsed),
+                evidence=(
+                    _evidence("parsed_rfc2822"),
+                    _evidence("normalized_to_utc"),
+                ),
+            )
 
         return CapabilityResult(
             status=Status.UNSUPPORTED,

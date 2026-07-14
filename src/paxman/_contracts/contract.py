@@ -8,7 +8,7 @@ parse time (the orchestrator catches that and yields `Status.UNSUPPORTED`).
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import attrs
 
@@ -95,12 +95,48 @@ def Email(
     )
 
 
+@attrs.frozen
+class CanonicalUUIDContract:
+    """The v2.0.0 UUID contract.
+
+    The canonical form is the RFC 4122 §3 representation: 32 lowercase
+    hex characters in 8-4-4-4-12 grouping, total 36 characters. The
+    `version` field is the only policy lever; a contract that says
+    `version="4"` rejects v1, v3, v5, and v7 inputs with `Status.INVALID`.
+    """
+
+    version: Literal["any", "1", "3", "4", "5", "7"] = "any"
+    kind: str = "canonical_uuid"
+    version_field: int = 1
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the Dict DSL form of this contract (round-trips via parse_contract)."""
+        return {
+            "kind": self.kind,
+            "version": self.version,
+            "version_field": self.version_field,
+        }
+
+
+def UUID(
+    *,
+    version: Literal["any", "1", "3", "4", "5", "7"] = "any",
+) -> CanonicalUUIDContract:
+    """Domain-type sugar: declare a UUID contract in user vocabulary.
+
+    Returns a `CanonicalUUIDContract` value object; does NOT subclass it.
+    Mirrors the `Email()` factory pattern.
+    """
+    return CanonicalUUIDContract(version=version)
+
+
 # v2.0.0 has exactly one contract kind. New kinds bump the contract
 # version and are added here.
-Contract = CanonicalEmailContract
+Contract = CanonicalEmailContract | CanonicalUUIDContract
 
 _KIND_DISPATCH: dict[str, type[Contract]] = {
     "canonical_email": CanonicalEmailContract,
+    "canonical_uuid": CanonicalUUIDContract,
 }
 
 _VALID_PROVIDER_ALIASES = {"none", "gmail"}
@@ -123,11 +159,13 @@ def parse_contract(spec: Any) -> Contract:
     - missing or unknown `kind`
     - invalid field values (wrong type, unknown provider_aliases)
     """
-    # Short-circuit: an already-parsed CanonicalEmailContract is the
-    # source of truth (Law 5). Exact-type check (not the parent
+    # Short-circuit: an already-parsed contract value object is the
+    # source of truth (Law 5). Exact-type checks (not the parent
     # `Contract` alias) so a future multi-field contract type is NOT
     # silently absorbed here — it must grow its own dispatch branch.
     if isinstance(spec, CanonicalEmailContract):
+        return spec
+    if isinstance(spec, CanonicalUUIDContract):
         return spec
 
     if not isinstance(spec, dict):
@@ -155,6 +193,14 @@ def parse_contract(spec: Any) -> Contract:
             provider_aliases=cast(ProviderAliasesPolicy, provider_aliases),
             strict=_require_bool("strict", spec.get("strict", False)),
         )
+
+    if kind == "canonical_uuid":
+        version = spec.get("version", "any")
+        if version not in {"any", "1", "3", "4", "5", "7"}:
+            raise ContractError(
+                f"invalid uuid version: {version!r}; allowed: ['any', '1', '3', '4', '5', '7']"
+            )
+        return CanonicalUUIDContract(version=version)
 
     # Unreachable: kind is guaranteed to be in _KIND_DISPATCH above.
     raise ContractError(f"unhandled contract kind: {kind!r}")

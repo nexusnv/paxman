@@ -106,6 +106,16 @@ class TestUUIDCapability:
         assert r.status is Status.INVALID
         assert r.evidence[0].rule == "not_a_string_value"
 
+    def test_canonicalize_rejects_non_hex_character(self) -> None:
+        """Spec §9.1 case #11: a 36-char string with a non-hex character
+        (e.g. a trailing 'Z') is INVALID with not_canonical_form, even
+        though its length and hyphen positions are otherwise canonical."""
+        c = _cap()
+        non_hex = "00000000-0000-0000-0000-00000000000Z"
+        result = c.canonicalize(non_hex, _contract())
+        assert result.status is Status.INVALID
+        assert result.evidence[0].rule == "not_canonical_form"
+
     def test_every_evidence_rule_has_provenance_in_manifest(self) -> None:
         c = _cap()
         inputs: list[tuple[object, Contract]] = [

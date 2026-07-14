@@ -94,7 +94,7 @@ of them in a different sense in code, comment, docstring, or ADR is wrong.
 | **matching rule** | A deterministic predicate ("regex A matches → dispatch to ISO parser") used by the resolver. This is distinct from a *heuristic* in the soft sense (§3.2, §6.4). |
 | **ExecutionArtifact** | The immutable return value of `canonicalize`. Carries the canonical value (on success) and the evidence of how it was produced. Immutability is mandated by Law 13. |
 | **Status** | An enum value on every `ExecutionArtifact`: `Canonicalized`, `Invalid`, `Missing`, `Ambiguous`, `Unsupported`. Status values are *outcomes*, not exceptions (Law 7). |
-| **evidence** | A structured record on the artifact of *what matched and why* — which capability ran, which rule fired, which checksum passed. Evidence replaces confidence scores (Law 9). |
+| **evidence** | A structured record on the artifact of *what matched and why* — which capability ran, which rule fired, which checksum passed. Evidence replaces confidence scores (Law 9) and carries each rule's Law 14 provenance citation. |
 | **capability result** | The internal value a capability returns from `canonicalize(value, contract)`. Carries the canonical value or a `Status` other than `Canonicalized`. |
 | **Paxman version** | The version string of the library itself. Part of the determinism and replay invariants. |
 | **contract version** | A version attached to a contract. Contracts evolve; replay across contract versions is governed by §"Decisions left to make." |
@@ -384,10 +384,11 @@ here is: *I'd almost stop calling that a heuristic. It's a matching rule.*
 
 ---
 
-## 7. The Constitution — Thirteen Laws
+## 7. The Constitution — Fourteen Laws
 
-These are the laws. No PR may violate any of them. Law 13 (Replayability) and
-Law 11 (Abstraction Preserves Determinism) are the filters that enforce all
+These are the laws. No PR may violate any of them. Law 11 (Abstraction
+Preserves Determinism), Law 13 (Artifact Immutability), and Law 14
+(Canonical Forms Have Provenance) are the filters that enforce all
 the others.
 
 ### Law 1 — Determinism Above All
@@ -618,8 +619,96 @@ box. To "modify" an artifact is to produce a new artifact via a new
 `canonicalize` call.
 
 This applies to every field on the artifact: the canonical value, the
-`Status`, the evidence list, the `replay_hash`, the version stamps. None of
-them may be reassigned after construction.
+`Status`, the evidence list, the `replay_hash`, the version stamps. None
+of them may be reassigned after construction.
+
+### Law 14 — Canonical Forms Have Provenance
+
+> Paxman does not invent canonical forms. Every normalization rule that a
+> capability applies must derive its canonical form from one of exactly
+> three sources, recorded as provenance:
+>
+> 1. **An authoritative specification** — cited by document and section
+>    (e.g., RFC 5321 §2.4, ISO 4217, RFC 4122).
+> 2. **Documented platform behavior** — cited by vendor document title,
+>    version, and retrieval date (e.g., Google Help: "Use aliases on your
+>    Account," retrieved 2026-07-14).
+> 3. **An explicitly declared Paxman policy** — cited by a Paxman document
+>    that records the decision (MANDATE.md section, an ADR, or the
+>    capability's published spec under `docs/superpowers/specs/`).
+>
+> A rule with no provenance citation is, by construction, a rule without
+> an authority — which is precisely what Law 4 (Canonicalize, Don't
+> Interpret) forbids. Provenance is what makes the difference between
+> "Paxman applied a spec" and "Paxman invented a rewrite."
+
+#### What "rule" means here
+
+A *rule* is any code path inside a capability that, when it fires,
+contributes to the canonical value or to an evidence entry that records
+*why the canonical value is what it is*. Rejection paths
+(`Status.Invalid`, `Status.Ambiguous`, etc.) also carry provenance for
+the *criterion* that triggered the rejection — e.g., "missing `@`"
+cites RFC 5322 §3.6, "non-RFC-5321 grammar" cites RFC 5322 §3.2.3.
+
+#### What the law forbids
+
+- ❌ A rule invented because it "felt right." Examples: silently
+  strip trailing slashes from email domains; collapse consecutive dots in
+  an arbitrary local part; reverse the local part; uppercase everything.
+- ❌ A rule derived from observed production patterns or training-data
+  statistics. Observed patterns aren't a spec; they drift.
+- ❌ A rule whose provenance cannot be named. "Because I wrote it that
+  way" is not a citation.
+- ❌ A rule that silently accepts malformed input without a grammar gate
+  backed by a cited specification — the EmailCapability's pre-Law-14
+  behaviour of returning `CANONICALIZED` for `user@example.com@example.com`,
+  `user@[127.0.0.300]`, `user@-domain.com`, etc., is the exact failure
+  mode this law exists to forbid.
+
+#### What the law allows
+
+- ✅ A rewrite rule whose canonical form is selected by RFC (e.g.
+  lowercasing the domain, citing RFC 5321 §2.4).
+- ✅ A rewrite rule whose canonical form is selected by documented
+  vendor behavior (e.g. Gmail's dot-ignoring and `+tag`-stripping, cited
+  to a Google Help article).
+- ✅ A rewrite rule whose canonical form is selected by an explicit
+  Paxman policy (e.g. local-part lowercasing as a default matching
+  convenience), provided the policy is recorded in MANDATE, an ADR, or
+  the capability's spec.
+
+#### The three operational consequences
+
+1. **Provenance is part of the evidence record.** Each `Evidence` entry
+   in an `ExecutionArtifact` carries a `provenance: str` field. A rule
+   with an empty `provenance` string is a violation. This makes the law
+   machine-checkable at runtime and at code review, not merely
+   aspirational.
+
+2. **Provenance is cited at capability construction time, never inferred.**
+   There is no `infer_provenance(rule_name)` path. Each rule's citation is
+   a constant in the capability module (`_RULE_PROVENANCE: Mapping[str,
+   str]` in `email.py`). Changing a citation is a capability-version
+   bump, not a no-op — the capability's behavior identity includes the
+   provenance set under which it operates.
+
+3. **Existing rules are not grandfathered.** Adopting this law requires
+   auditing every rule in every shipped capability against the three
+   authoritative sources. A rule that cannot be cited is removed; if its
+   removal changes the canonical form of inputs that previously
+   canonicalized, that is the law doing its job — it surfaces silent
+   invention that had been hiding behind a `CANONICALIZED` status.
+
+#### Provenance freezes at the capability's version
+
+Provenance citations reference documents as they existed at the time the
+capability version was published. Subsequent upstream changes to a cited
+spec (RFC revision, vendor help article edit, MANDATE amendment) motivate
+a *new capability version*, not a re-interpretation of past artifacts.
+This keeps Law 1 (Determinism) and Law 12 (Replayability) intact: an
+artifact's provenance is recorded on the artifact; the same artifact
+replayed tomorrow cites the same document, even if the document mutates.
 
 ---
 
@@ -690,12 +779,19 @@ comment, or docstring, must either:
 PRs that mutate an `ExecutionArtifact` in place (Law 13) or that allow a
 capability to depend on un-versioned state (Law 8a) are rejected on sight.
 
+PRs that introduce a new rule (transforming or rejecting) inside a capability
+without an entry in that capability's `_RULE_PROVENANCE` manifest are
+rejected on sight (Law 14). A reviewer asking "what spec backs this rule?"
+and getting an answer that is not one of the three Law 14 sources is a
+blocker.
+
 ### 10.3 For ADR authors
 
-A new ADR must declare which of the thirteen laws are relevant to it, and
+A new ADR must declare which of the fourteen laws are relevant to it, and
 must not violate any of them. If a proposed ADR would require violating a law,
 the ADR's first section must be a constitutional amendment argument, not a
-design argument.
+design argument. An ADR that introduces or changes a canonical-form rule must
+record the rule's Law 14 provenance citation as a first-class section.
 
 ### 10.4 For every design decision
 
@@ -720,6 +816,17 @@ Law 2 (Idempotence), Law 12 (Replayability), Law 13 (Artifact Immutability),
 Law 8a (Capabilities Depend Only on Replayable Inputs), and the §2 formal
 definition of canonicalization were added during the first review pass to
 make explicit what the original conversation left implicit.
+
+Law 14 (Canonical Forms Have Provenance) was added on 2026-07-14, after a
+first-time-user experiment surfaced that the v2 EmailCapability silently
+returned `CANONICALIZED` for malformed inputs (`user@example.com@example.com`,
+`user@-domain.com`, `user@[127.0.0.300]`, etc.). The existing thirteen laws
+described *how* Paxman behaves (deterministically, no guessing,
+evidence-first) but none of them described *where canonical forms come from*.
+Law 14 closes that gap; it is the constitutional answer to silent
+canonical-form invention. The recalibration audit for the EmailCapability
+is recorded in
+[`docs/superpowers/specs/2026-07-14-law-14-canonical-form-provenance.md`](./docs/superpowers/specs/2026-07-14-law-14-canonical-form-provenance.md).
 
 The constitutional framing — "laws, not ADRs" — is the lesson of the audit
 in [`.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md`](./.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md):

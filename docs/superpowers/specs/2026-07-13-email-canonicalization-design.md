@@ -123,11 +123,11 @@ in the local or domain part. It returns `Status.INVALID`. This is a
 *policy declaration*, not a matching rule; the caller has explicitly
 asked for the stricter input.
 
-> **v1.0.0 scope.** The strict-mode check is intentionally narrow:
+> **v2.0.0 scope.** The strict-mode check is intentionally narrow:
 > whitespace rejection and ASCII-only enforcement. Full RFC 5321
 > §3.2.3 grammar (dot-atom / quoted-string local part, dot-atom
 > domain, leading-dot / consecutive-dot / length limits) is deferred
-> to a v1.0.x release. Recording the v1.0.0 strict-mode scope here
+> to a v2.0.x release. Recording the v2.0.0 strict-mode scope here
 > makes the gap explicit so a future reader does not infer broader
 > validation than the code performs.
 
@@ -183,7 +183,7 @@ full file list is:
 **Total source modules: 12** (of which 1 is the internal
 `_orchestrator_runtime.py` helper that exists only to break the
 circular import between `_core/orchestrator.py` and `paxman/__init__.py`;
-the other 11 are the v1.0.0 source modules from `PROPOSED_STRUCTURE.md`).
+the other 11 are the v2.0.0 source modules from `PROPOSED_STRUCTURE.md`).
 Plus 5 `__init__.py` package markers (3 empty, 2 with content —
 `paxman/__init__.py` carries the public API; `_contracts/__init__.py`
 carries contract re-exports). Total `.py` files under `src/paxman/`:
@@ -411,7 +411,7 @@ on `register`. The Protocol deliberately omits control-flow verbs
 
 ## 4. The public API (mandate §1.3, `PROPOSED_STRUCTURE.md` §`__init__.py`)
 
-The v1.0.0 public API surface is the exact set below. The set is
+The v2.0.0 public API surface is the exact set below. The set is
 enforced by `test_no_unexpected_public_symbols` in
 `tests/unit/test_public_api.py` (exact-set comparison, not
 presence-only). Adding or removing a public symbol requires a spec +
@@ -449,8 +449,8 @@ has not been called explicitly. The user may call `register_capability`
 > to enable email canonicalization. This is mandated by Law 6 (Paxman
 > owns the algorithm) and Law 8a (no hidden state on import).
 
-A future v1.0.x release may add a convenience helper for built-in
-registration (e.g. `paxman.enable_builtin("email")`); v1.0.0 ships the
+A future v2.0.x release may add a convenience helper for built-in
+registration (e.g. `paxman.enable_builtin("email")`); v2.0.0 ships the
 explicit `register_capability` path only.
 
 ---
@@ -501,16 +501,16 @@ explicit `register_capability` path only.
 
 ---
 
-## 6. Open decisions and the v1.0.0 answer (per `PROPOSED_STRUCTURE.md` "Decisions left to make")
+## 6. Open decisions and the v2.0.0 answer (per `PROPOSED_STRUCTURE.md` "Decisions left to make")
 
 The user said *"Forget about ADR first."* — so each decision below is
-resolved to a v1.0.0 default, recorded here for posterity. A future
+resolved to a v2.0.0 default, recorded here for posterity. A future
 ADR process may revisit any of them; doing so must pass the
 mandate §10.3 law-by-law test.
 
-| Decision | v1.0.0 default | Rationale |
+| Decision | v2.0.0 default | Rationale |
 |---|---|---|
-| What is the canonical form? (Decision 1) | A lower-cased, whitespace-stripped ASCII string with optional Gmail rules per `provider_aliases` policy. | The mandate §2 formal definition constrains the properties (deterministic, total, idempotent, totality-preserving); the v1.0.0 representation is the simplest string that satisfies them. |
+| What is the canonical form? (Decision 1) | A lower-cased, whitespace-stripped ASCII string with optional Gmail rules per `provider_aliases` policy. | The mandate §2 formal definition constrains the properties (deterministic, total, idempotent, totality-preserving); the v2.0.0 representation is the simplest string that satisfies them. |
 | Contract DSL shape (Decision 2) | Dict DSL with `kind` discriminator and policy fields. `kind` is a closed enum; an unknown `kind` produces `Status.UNSUPPORTED`. | The mandate Law 5 says the contract is the truth. A closed enum makes "what contracts are supported" answerable as a one-line lookup. |
 | Replay across versions (Decision 3) | `VersionMismatchError` is raised when the Paxman version, the contract version, or the capabilities hash on the artifact does not match the current environment. | Mandate §8 and Law 12. Conservative default; a permissive future option is recorded as a v2.x candidate. |
 | Multiple capabilities claim a pair (Decision 4) | `Status.AMBIGUOUS` is returned immediately, with an evidence entry listing all claimants. | Mandate §5.4. The orchestrator never silently picks. |

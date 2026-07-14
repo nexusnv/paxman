@@ -2,7 +2,7 @@
 
 All types in this module are immutable. They are the smallest units of
 state paxman manipulates and the boundary at which mandate Laws 1, 2, 9,
-and 12 are enforced.
+12, and 14 are enforced.
 """
 
 from __future__ import annotations
@@ -31,10 +31,22 @@ class Status(enum.Enum):
 
 @attrs.frozen
 class Evidence:
-    """One entry on an ExecutionArtifact's evidence list (mandate Law 9)."""
+    """One entry on an ExecutionArtifact's evidence list (mandate Law 9).
+
+    Each entry records **what matched and why** (mandate Law 9) plus
+    **where the canonical form came from** (mandate Law 14). The
+    `provenance` field carries a human-readable citation to one of the
+    three Law 14 sources: an authoritative spec, a documented platform
+    behavior, or a declared Paxman policy. Two dispatch-invariant rules
+    (`not_an_email_contract`, `not_a_string_value`) are allow-listed
+    with empty `provenance` because they describe a routing failure,
+    not a canonical-form rule (see `docs/superpowers/specs/
+    2026-07-14-law-14-canonical-form-provenance.md` §3.6).
+    """
 
     rule: str
     detail: str = ""
+    provenance: str = ""
 
 
 @attrs.frozen
@@ -66,6 +78,6 @@ class CapabilityResult:
     evidence: tuple[Evidence, ...] = ()
 
 
-# Closed enum for provider_aliases in the v1.0.0 contract (mandate §6
+# Closed enum for provider_aliases in the v2.0.0 contract (mandate §6
 # openness about deliberate scope).
 ProviderAliasesPolicy = Literal["none", "gmail"]

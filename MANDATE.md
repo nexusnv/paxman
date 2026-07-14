@@ -822,11 +822,11 @@ first-time-user experiment surfaced that the v2 EmailCapability silently
 returned `CANONICALIZED` for malformed inputs (`user@example.com@example.com`,
 `user@-domain.com`, `user@[127.0.0.300]`, etc.). The existing thirteen laws
 described *how* Paxman behaves (deterministically, no guessing,
-evidence-first) but none of them described *where canonical forms come from*.
+evidence-first) but none of them described *where canonical forms come from`.
 Law 14 closes that gap; it is the constitutional answer to silent
 canonical-form invention. The recalibration audit for the EmailCapability
 is recorded in
-[`docs/superpowers/specs/2026-07-14-law-14-canonical-form-provenance.md`](./docs/superpowers/specs/2026-07-14-law-14-canonical-form-provenance.md).
+[`docs/superpowers/specs/2026-07-13-email-canonicalization-design.md` §7](./docs/superpowers/specs/2026-07-13-email-canonicalization-design.md).
 
 The constitutional framing — "laws, not ADRs" — is the lesson of the audit
 in [`.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md`](./.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md):

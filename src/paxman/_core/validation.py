@@ -40,10 +40,14 @@ def validate(value: str, contract: CanonicalEmailContract) -> ValidationResult:
         return ValidationResult(is_valid=False)
 
     if contract.strict:
-        # Strict mode: the local part must match a dot-atom production
-        # (no spaces). The domain is checked by the @-sign + non-empty
-        # check above; the dot-atom-domain check is intentionally loose
-        # in v2.0.0 (a single dot suffices).
+        # Strict mode in v2.0.0 is intentionally narrow: it rejects
+        # embedded whitespace and non-ASCII characters in the local
+        # and domain parts. It does NOT enforce a dot-atom grammar —
+        # the dot-atom gate is owned by the EmailCapability's
+        # surface-grammar check (Law 14 spec), not by this post-
+        # capability validation step. The domain check below is the
+        # same non-empty + ASCII check as for the local part; single-
+        # label domains like `localhost` are accepted.
         if " " in local or " " in domain:
             return ValidationResult(is_valid=False)
         # IDN/unicode is rejected in v2.0.0 (out of scope).

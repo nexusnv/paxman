@@ -811,10 +811,14 @@ def validate(value: str, contract: CanonicalEmailContract) -> ValidationResult:
         return ValidationResult(is_valid=False)
 
     if contract.strict:
-        # Strict mode: the local part must match a dot-atom production
-        # (no spaces). The domain is checked by the @-sign + non-empty
-        # check above; the dot-atom-domain check is intentionally loose
-        # in v2.0.0 (a single dot suffices).
+        # Strict mode in v2.0.0 is intentionally narrow: it rejects
+        # embedded whitespace and non-ASCII characters in the local
+        # and domain parts. It does NOT enforce a dot-atom grammar —
+        # the dot-atom gate is owned by the EmailCapability's
+        # surface-grammar check (Law 14 spec), not by this post-
+        # capability validation step. The domain check below is the
+        # same non-empty + ASCII check as for the local part; single-
+        # label domains like `localhost` are accepted.
         if " " in local or " " in domain:
             return ValidationResult(is_valid=False)
         # IDN/unicode is rejected in v2.0.0 (out of scope).
@@ -1047,7 +1051,22 @@ def parse_contract(spec: Any) -> Contract:
 - [ ] **Step 6.4: Implement `src/paxman/_contracts/__init__.py`**
 
 ```python
-"""Contract adapters (v2.0.0: the Dict DSL only)."""
+"""Contract adapters.
+
+v2.0.0 supports two equivalent contract forms:
+
+1. **Dict DSL** — `{"kind": "canonical_email", "lowercase": True, ...}`.
+   The closed `kind` discriminator is the wire form; an unknown `kind`
+   raises `ContractError` at parse time.
+2. **Value-object / factory form** — `CanonicalEmailContract(...)` or
+   the `Email(...)` domain-type factory. `parse_contract` short-circuits
+   on an already-parsed `CanonicalEmailContract` (Law 5 — the contract
+   is the truth), so calling `parse_contract(Email(...))` is a no-op
+   identity.
+
+Both forms resolve to the same `CanonicalEmailContract` value object
+that the orchestrator and capabilities consume.
+"""
 from paxman._contracts.contract import (
     CanonicalEmailContract,
     Contract,
@@ -2509,8 +2528,12 @@ class TestPublicAPI:
         assert paxman.__version__  # non-empty
 
     def test_no_unexpected_public_symbols(self) -> None:
-        # The v2.0.0 public surface is exactly: __version__, canonicalize,
-        # replay, register_capability, and the email capability shim.
+        # The v2.0.0 public surface is the exact set below (22 symbols,
+        # including `__version__` and the `Email` capability shim).
+        # This must match the authoritative allowlist in
+        # `tests/unit/test_public_api.py` exactly — the test fails on
+        # any drift. The author of a public-surface change updates
+        # both the test and the spec §4 in lockstep.
         symbols = {
             n for n in dir(paxman)
             if not n.startswith("_")
@@ -2518,6 +2541,7 @@ class TestPublicAPI:
         assert "canonicalize" in symbols
         assert "replay" in symbols
         assert "register_capability" in symbols
+        assert "Email" in symbols  # email capability shim (value-object factory)
 
     def test_canonicalize_end_to_end(self) -> None:
         from paxman._capabilities.builtins.email import EmailCapability
@@ -2618,6 +2642,7 @@ __all__ = [
     "parse_contract",
     "Capability",
     "CapabilityRegistry",
+    "Email",
     # Errors
     "PaxmanError",
     "CanonicalizationError",
@@ -2632,9 +2657,16 @@ __all__ = [
 - [ ] **Step 13.4: Run the entire test suite to verify all Tasks 2–13 pass**
 
 Run: `uv run pytest -q`
-Expected: all tests pass. (Some property tests may surface a flaky
-generator input; the deadline=None + max_examples=50/30 caps make this
-extremely unlikely in v2.0.0.)
+Expected: all tests pass.
+
+A determinism violation (non-deterministic ordering, time-of-day
+branching, flaky Hypothesis shrink) **fails the suite hard** with no
+max_examples, deadline=None, or health-check suppression softening the
+verdict. The Hypothesis strategies in the property tests are authored
+to be deterministic by construction (sorted-tuple keys, no `random`
+calls, no time, no environment reads); any flake is treated as a
+generator bug, not a tuning problem, and the suite is not considered
+green until the flake is fixed.
 
 - [ ] **Step 13.5: Commit**
 

@@ -41,7 +41,7 @@ class Evidence:
     (`not_an_email_contract`, `not_a_string_value`) are allow-listed
     with empty `provenance` because they describe a routing failure,
     not a canonical-form rule (see `docs/superpowers/specs/
-    2026-07-14-law-14-canonical-form-provenance.md` §3.6).
+    2026-07-13-email-canonicalization-design.md` §7.2).
     """
 
     rule: str

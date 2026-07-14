@@ -42,6 +42,11 @@ def _is_epoch(value: str) -> bool:
     bare integers are compact-date shapes (spec §2.2, out of scope) and are
     deliberately NOT treated as epochs (Law 4 — do not guess intent).
     This boundary is a declared Paxman policy (spec §11).
+
+    Edge case (declared policy, spec §2.2/§11): a 10+ digit bare integer such
+    as ``2025010101`` is >= 1e9 and is therefore read as an epoch. Compact-date
+    shapes longer than 9 digits are out of scope; this is a deliberate,
+    documented boundary rather than a guess.
     """
     if not _UNIX_RE.match(value):
         return False
@@ -183,9 +188,22 @@ class DateCapability:
     def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
         """Canonicalize a date string according to the contract's locale policy.
 
-        ISO 8601 date strings (``YYYY-MM-DD``) are accepted for all locales.
-        US and EU numeric forms (``MM/DD/YYYY`` and ``DD/MM/YYYY``) will be
-        added in a subsequent task; this skeleton handles only ISO parsing.
+        The capability recognises five input families (spec §2.1); each is
+        matched by a deterministic predicate — never by guessing (Law 4):
+
+        * ISO 8601 date ``YYYY-MM-DD`` (all locales).
+        * ISO 8601 date-time ``YYYY-MM-DDTHH:MM:SS[.ffffff][Z|±HH:MM]``; a
+          datetime without a zone is reported ``AMBIGUOUS`` (RFC 3339 §5.6).
+        * US numeric ``MM/DD/YYYY`` (locale ``"US"``) / EU numeric
+          ``DD/MM/YYYY`` (locale ``"EU"``); a 2-digit year is ``AMBIGUOUS``.
+        * RFC 2822 date-time (e.g. ``Tue, 01 Jan 2025 12:00:00 +0000``).
+        * Unix epoch seconds (integer or float, rendered in UTC/Z).
+
+        ``locale="ISO"`` rejects slash forms with ``Status.INVALID``; ``"US"``
+        and ``"EU"`` additionally accept their numeric reading. The canonical
+        form is ``YYYY-MM-DD`` for dates and
+        ``YYYY-MM-DDTHH:MM:SS[.ffffff]Z`` for datetimes (RFC 3339, normalised
+        to UTC).
 
         Args:
             value: The input date string.
@@ -210,6 +228,11 @@ class DateCapability:
                 evidence=(_evidence("empty_value"),),
             )
 
+        # Dispatch order (MANDATE §6.4 / spec §6.1): Unix epoch -> ISO -> numeric
+        # -> RFC 2822. The spec lists RFC 2822 before ISO, but the grammars are
+        # disjoint (no single input matches two), so the order is not observable
+        # in the output. Every branch is a deterministic predicate, never a
+        # scored guess.
         # Unix epoch: integer or float seconds since 1970-01-01T00:00:00Z
         if _is_epoch(value):
             ts = float(value)

@@ -12,26 +12,31 @@ from __future__ import annotations
 
 from paxman._capabilities.builtins.discovery import builtin_capabilities
 from paxman._capabilities.builtins.email import EmailCapability
+from paxman._capabilities.builtins.uuid import UUIDCapability
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman._contracts.contract import CanonicalEmailContract
 
 
 class TestBuiltinCapabilities:
-    def test_returns_list_of_email_capability(self) -> None:
+    def test_returns_list_of_email_and_uuid_capabilities(self) -> None:
         result = builtin_capabilities()
         assert isinstance(result, list)
-        assert len(result) == 1
-        assert isinstance(result[0], EmailCapability)
+        assert len(result) == 2
+        names = {c.name for c in result}
+        assert names == {"email_canonicalization", "uuid_canonicalization"}
+        assert any(isinstance(c, EmailCapability) for c in result)
+        assert any(isinstance(c, UUIDCapability) for c in result)
 
     def test_returns_fresh_instances_on_each_call(self) -> None:
         # No shared mutable state across calls (Law 1, Law 8a).
         a = builtin_capabilities()
         b = builtin_capabilities()
         assert a is not b
-        # But each entry is equal by name (an EmailCapability is equal
-        # to another EmailCapability by attrs equality since it has no
-        # instance state, only the class-level 'name' attribute).
-        assert a[0].name == b[0].name
+        assert [c.name for c in a] == [c.name for c in b]
+        assert [c.name for c in a] == [
+            "email_canonicalization",
+            "uuid_canonicalization",
+        ]
 
 
 class TestLoadBuiltins:
@@ -88,9 +93,9 @@ class TestLoadBuiltins:
         registry_a.load_builtins(builtin_capabilities())
         registry_a.freeze()
 
-        # Registry B: only the user's cap is registered (the control).
         registry_b = CapabilityRegistry()
         registry_b.register(MyEmailCap())
+        registry_b.register(UUIDCapability())
         registry_b.freeze()
 
         assert registry_a.capabilities_hash() == registry_b.capabilities_hash()
@@ -118,6 +123,7 @@ class TestLoadBuiltins:
 
         via_register = CapabilityRegistry()
         via_register.register(EmailCapability())
+        via_register.register(UUIDCapability())
         via_register.freeze()
 
         assert via_load.capabilities_hash() == via_register.capabilities_hash()

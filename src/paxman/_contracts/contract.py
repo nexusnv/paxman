@@ -52,6 +52,49 @@ class CanonicalEmailContract:
         }
 
 
+def Email(
+    *,
+    strict: bool = False,
+    provider_aliases: ProviderAliasesPolicy = "none",
+    lowercase: bool = True,
+    strip_whitespace: bool = True,
+) -> CanonicalEmailContract:
+    """Domain-type sugar: declare an email contract in user vocabulary.
+
+    MANDATE §4: the contract is the user's language; the capability is
+    Paxman's language. This factory returns a configured
+    CanonicalEmailContract value object; it does NOT subclass it
+    (preserves all isinstance checks and @attrs.frozen immutability
+    without introducing a new abstraction to defend under Law 11).
+
+    Field defaults mirror CanonicalEmailContract's own field defaults
+    exactly. Generalizes cleanly to future domain types (Money(), Date())
+    and the north-star multi-field form (InvoiceContract(vendor_email=
+    Email(), ...)) — each future type is one factory, no new abstraction
+    class.
+
+    Args:
+        strict: reject inputs with embedded whitespace or non-ASCII
+            characters (Law 7 — Explicit Over Clever). Default False.
+        provider_aliases: "none" preserves the input domain; "gmail"
+            applies the documented Gmail dot-ignoring and +tag-stripping
+            rules (Law 5 — the contract declares the policy). Default
+            "none".
+        lowercase: lowercase the local part and the domain. Default True.
+        strip_whitespace: strip leading/trailing ASCII whitespace.
+            Default True.
+
+    Returns:
+        A frozen CanonicalEmailContract instance.
+    """
+    return CanonicalEmailContract(
+        lowercase=lowercase,
+        strip_whitespace=strip_whitespace,
+        provider_aliases=provider_aliases,
+        strict=strict,
+    )
+
+
 # v1.0.0 has exactly one contract kind. New kinds bump the contract
 # version and are added here.
 Contract = CanonicalEmailContract

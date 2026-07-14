@@ -223,11 +223,7 @@ def parse_contract(spec: Any) -> Contract:
 
     if kind == "canonical_uuid":
         version = spec.get("version", "any")
-        if not isinstance(version, str):
-            raise ContractError(
-                f"invalid uuid version: {version!r}; allowed: {sorted(_UUID_VERSIONS_ALLOWED)}"
-            )
-        if version not in _UUID_VERSIONS_ALLOWED:
+        if not isinstance(version, str) or version not in _UUID_VERSIONS_ALLOWED:
             raise ContractError(
                 f"invalid uuid version: {version!r}; allowed: {sorted(_UUID_VERSIONS_ALLOWED)}"
             )

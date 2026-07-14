@@ -27,6 +27,9 @@ _ISO_DATETIME_RE = re.compile(
 )
 _ISO_NAIVE_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$")
 
+_NUMERIC_4YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})$")
+_NUMERIC_2YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{2})$")
+
 _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
     {
         # dispatch invariants (no provenance — Law 14 §3.6 allow-list)
@@ -216,6 +219,41 @@ class DateCapability:
             return CapabilityResult(
                 status=Status.AMBIGUOUS,
                 evidence=(_evidence("ambiguous_naive_datetime"),),
+            )
+
+        # US/EU numeric: MM/DD/YYYY or DD/MM/YYYY
+        if contract.locale in ("US", "EU"):
+            m2 = _NUMERIC_2YEAR_RE.match(value)
+            m4 = _NUMERIC_4YEAR_RE.match(value)
+            if m2 and not m4:
+                return CapabilityResult(
+                    status=Status.AMBIGUOUS,
+                    evidence=(_evidence("ambiguous_two_digit_year"),),
+                )
+            if m4:
+                a, b, y = m4.groups()
+                month = int(a) if contract.locale == "US" else int(b)
+                day = int(b) if contract.locale == "US" else int(a)
+                year = int(y)
+                if not _valid_calendar_date(year, month, day):
+                    return CapabilityResult(
+                        status=Status.INVALID,
+                        evidence=(_evidence("invalid_calendar_date"),),
+                    )
+                dt = datetime(year, month, day)
+                rule = "parsed_us_numeric" if contract.locale == "US" else "parsed_eu_numeric"
+                return CapabilityResult(
+                    status=Status.CANONICALIZED,
+                    value=_render_date(dt),
+                    evidence=(_evidence(rule),),
+                )
+
+        if contract.locale == "ISO" and (
+            _NUMERIC_4YEAR_RE.match(value) or _NUMERIC_2YEAR_RE.match(value)
+        ):
+            return CapabilityResult(
+                status=Status.INVALID,
+                evidence=(_evidence("numeric_format_requires_us_or_eu_locale"),),
             )
 
         return CapabilityResult(

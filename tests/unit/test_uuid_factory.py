@@ -23,3 +23,16 @@ class TestUUIDFactory:
         with pytest.raises(ContractError):
             parse_contract({"kind": "canonical_uuid", "version": "9"})
         assert parse_contract({"kind": "canonical_uuid"}) == CanonicalUUIDContract(version="any")
+
+    def test_uuid_factory_invalid_version_raises(self) -> None:
+        # attrs does not validate Literal at runtime, so the contract's
+        # __attrs_post_init__ must reject unknown versions loudly (Law 7 —
+        # explicit over clever; never a silent INVALID for every input).
+        with pytest.raises(ContractError):
+            UUID(version="99")
+
+    def test_parse_contract_non_string_version_raises(self) -> None:
+        # A malformed (non-string) version must raise ContractError, not
+        # crash with TypeError during the membership check (CodeRabbit #19).
+        with pytest.raises(ContractError):
+            parse_contract({"kind": "canonical_uuid", "version": ["4"]})

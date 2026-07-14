@@ -33,6 +33,7 @@ def test_uuid_replay_byte_equality(uuid_str: str) -> None:
     artifact = paxman.canonicalize(uuid_str, UUID())
     rehydrated = paxman.replay(artifact, UUID())
     assert rehydrated == artifact
+    assert rehydrated.canonical_bytes() == artifact.canonical_bytes()
 
 
 @given(uuid_strings)

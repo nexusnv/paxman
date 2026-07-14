@@ -32,7 +32,7 @@ class CanonicalEmailContract:
 
 The `kind` and `version` fields are fixed. They are not part of the `Email()` factory signature.
 
-## `CanonicalUUIDContract`
+## `Canonical UUID Contract`
 
 The frozen value object representing a UUID canonicalization policy.
 
@@ -50,7 +50,7 @@ class CanonicalUUIDContract:
 | `kind` | `str` | `"canonical_uuid"` | The contract kind discriminator. Fixed. |
 | `version_field` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
 
-## `UUID()` — the factory
+## `UUID()` — The Factory
 
 ```python
 def UUID(
@@ -109,7 +109,7 @@ contract = paxman.parse_contract({
 
 **Raises:** `ContractError` if the spec is malformed. `parse_contract()` runs at the call site, *before* capability dispatch, so a bad contract is a programming error caught at the call site, not a `Status` outcome on the artifact.
 
-`parse_contract` is a no-op for an already-parsed `CanonicalEmailContract` (the contract is the truth; an instance is its own best representation).
+`parse_contract` is a no-op for an already-parsed contract value object — both `CanonicalEmailContract` and `CanonicalUUIDContract` (the contract is the truth; an instance is its own best representation).
 
 ## The Dict DSL
 

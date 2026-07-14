@@ -32,7 +32,7 @@ CANONICAL_CHARS = frozenset("0123456789abcdef-")
 
 _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
     {
-        # --- dispatch invariants (no provenance — Law 14 §3.6 allow-list) ---
+        # --- dispatch invariants (no provenance — Law 14 allow-list) ---
         "not_a_uuid_contract": "",
         "not_a_string_value": "",
         # --- rejecting rules (authoritative spec) ---

@@ -21,6 +21,7 @@ def test_canonicalize_then_replay() -> None:
     original = paxman.canonicalize("550e8400-e29b-41d4-a716-446655440000", UUID())
     rehydrated = paxman.replay(original, UUID())
     assert rehydrated == original
+    assert rehydrated.canonical_bytes() == original.canonical_bytes()
 
 
 def test_idempotence() -> None:

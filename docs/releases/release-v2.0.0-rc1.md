@@ -19,7 +19,7 @@ Paxman reports that fact rather than guessing.
 - `paxman.register_capability(capability)` — register a custom capability
   with the default registry before the first `canonicalize()` call.
 
-### The built-in capabilities
+### The Built-In Capabilities
 
 v2.0.0-rc1 ships with two built-in capabilities:
 

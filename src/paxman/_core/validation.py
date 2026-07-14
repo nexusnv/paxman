@@ -12,14 +12,18 @@ Any other kind raises `UnsupportedContractError` (defined in
 
 from __future__ import annotations
 
-from paxman._contracts.contract import CanonicalEmailContract, CanonicalUUIDContract
+from paxman._contracts.contract import (
+    CanonicalDateContract,
+    CanonicalEmailContract,
+    CanonicalUUIDContract,
+)
 from paxman._core.classification import ValidationResult
 from paxman._errors import UnsupportedContractError
 
 
 def validate(
     value: str,
-    contract: CanonicalEmailContract | CanonicalUUIDContract,
+    contract: CanonicalDateContract | CanonicalEmailContract | CanonicalUUIDContract,
 ) -> ValidationResult:
     """Validate a canonical value against the contract.
 
@@ -36,6 +40,11 @@ def validate(
         # Mandate Law 11: Paxman must not silently canonicalize
         # incorrectly — delegating to the capability's prior validation
         # upholds that guarantee (deterministic, no guessing).
+        return ValidationResult(is_valid=True)
+    if isinstance(contract, CanonicalDateContract):
+        # The DateCapability has already validated the canonical form;
+        # no further policy check is needed here (same rationale as
+        # UUID above — Law 11).
         return ValidationResult(is_valid=True)
     if not isinstance(contract, CanonicalEmailContract):
         raise UnsupportedContractError(

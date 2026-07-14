@@ -8,6 +8,7 @@ implementation before the first canonicalize call.
 
 from __future__ import annotations
 
+from paxman._capabilities.builtins.date import DateCapability
 from paxman._capabilities.builtins.email import EmailCapability
 from paxman._capabilities.builtins.uuid import UUIDCapability
 from paxman._capabilities.protocol import Capability
@@ -21,4 +22,4 @@ def builtin_capabilities() -> list[Capability]:
     new built-in here makes it auto-registered before the first
     canonicalize; the user does not need to register it themselves.
     """
-    return [EmailCapability(), UUIDCapability()]
+    return [EmailCapability(), UUIDCapability(), DateCapability()]

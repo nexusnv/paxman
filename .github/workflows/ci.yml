@@ -134,7 +134,7 @@ jobs:
   # ---------------------------------------------------------------------------
   # Property tests (Hypothesis; MANDATE §1.2 three invariants)
   # py3.12 only: the property tests are the mechanical evidence for the
-  # three invariants (Identity, Determinism, Replay). Running on one
+  # three invariants (Replay, Idempotence, Uniqueness). Running on one
   # version is sufficient; the unit-test matrix covers multi-version
   # compatibility.
   # ---------------------------------------------------------------------------

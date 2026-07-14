@@ -44,14 +44,16 @@ A useful security report includes:
 
 ## Threat Model
 
-Paxman's threat model is the threat model of a pure function:
+For Paxman core and the default configuration — that is, with no custom
+capabilities registered — Paxman's threat model is the threat model of a pure
+function:
 
 - **Inputs that control canonicalization are user-controlled.** A caller
   who passes an untrusted input to `paxman.canonicalize()` is trusting
   the canonicalization pipeline not to do anything beyond rewriting the
-  input. The pipeline does not call out to the network, the filesystem,
+  input. The core pipeline does not call out to the network, the filesystem,
   subprocesses, or any other side-effecting system. An untrusted input
-  cannot cause Paxman to do anything beyond producing an
+  cannot cause Paxman core to do anything beyond producing an
   `ExecutionArtifact`.
 - **Registered capabilities are user-controlled.** A caller who calls
   `paxman.register_capability()` is trusting the capability they

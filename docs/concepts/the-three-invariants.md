@@ -14,7 +14,7 @@ If you find yourself wanting Paxman to "figure out the right form" or "try a few
 
 > The same `input`, `contract`, registered `capabilities`, `configuration`, and Paxman `version` always produce the same artifact.
 
-The five inputs that shape a canonicalization are:
+The inputs that shape a canonicalization are:
 
 - The `input` you pass to `paxman.canonicalize()`.
 - The `contract` you pass to the same call.
@@ -22,7 +22,12 @@ The five inputs that shape a canonicalization are:
 - The `configuration` — Paxman has no user-visible configuration in v2.0.0; the configuration version is currently `"0"`. It is reserved for future use.
 - The Paxman `version` — the version string reported by `paxman.__version__`.
 
-All five are recorded on the artifact's `VersionStamp`. Run the same call in two different processes, on two different machines, a year apart — same artifact, byte-for-byte.
+Four of these are recorded on the artifact's `VersionStamp`: the contract
+version, the capabilities hash, the configuration version, and the Paxman
+version. The `input` is not part of the `VersionStamp` — it shapes the
+artifact's content and therefore its `replay_hash`. Run the same call in two
+different processes, on two different machines, a year apart — same artifact,
+byte-for-byte.
 
 ## 3. Replay
 
@@ -36,7 +41,7 @@ Replay matters because:
 
 - **It catches tampering.** A stored artifact whose `replay_hash` no longer matches its content is detected at replay time, not silently trusted.
 - **It catches version drift.** A stored artifact produced under Paxman v1 cannot be replayed under v2 if the version stamp differs.
-- **It enables safe re-canonicalization.** If a user re-canonicalizes the canonical value, the result is byte-equal to the original artifact. Idempotence is a separate Law 2 requirement on every capability: a capability must canonicalize its own canonical value to the same value. The replay property is what makes the stored artifact's bytes trustworthy; idempotence is what makes the capability self-consistent.
+- **It enables confident storage of the canonical value.** A capability that satisfies Law 2 reproduces the same canonical value when given that value, so re-canonicalizing a canonical value does not change it (the transformation evidence is not re-derived, but the value, contract, and version stamp are stable). Idempotence is a separate Law 2 requirement on every capability: a capability must canonicalize its own canonical value to the same value. The replay property is what makes the stored artifact's bytes trustworthy; idempotence is what makes the capability self-consistent.
 
 ## How the Three Invariants Reinforce Each Other
 
@@ -48,7 +53,7 @@ A capability that depends on hidden state — a network call, a current-time rea
 
 This is why Paxman's design refuses these inputs. A capability may only depend on inputs that are explicitly versioned and recorded on the artifact. A pure function of `(value, contract)` is allowed. A lookup into a bundled, versioned dataset is allowed (the dataset's version is on the artifact). A network call to fetch a fresh result is not.
 
-## What this means for you
+## What This Means for You
 
 - If you call `paxman.canonicalize(x, c)` and then call `paxman.canonicalize(x, c)` again, the artifacts are byte-equal.
 - If you store the artifact and call `paxman.replay(artifact, c)` a year later under the same Paxman version, you get the same artifact back.

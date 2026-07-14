@@ -135,7 +135,7 @@ Before registering, ask: *can two independent implementations of this capability
 - If **yes** — the capability's dispatch is underdetermined. Do not register it.
 - If **no** — the capability is a deterministic transformation. Register it.
 
-The litmus test is necessary, not sufficient. A capability that passes the test may still be undesirable (e.g. a capability that canonicalizes `"John"` and `"JOHN"` to the same form is non-deterministic only in the trivial sense; in practice, conflating them is a real problem). The litmus test catches the structural defects; the rest is judgment.
+The litmus test is necessary, not sufficient. A capability that passes the test may still be undesirable (e.g. a capability that canonicalizes `"John"` and `"JOHN"` to the same form is fully deterministic, but conflating them may be a semantic error if the contract does not intend case-folded equivalence). The litmus test catches the structural defects; the rest is judgment.
 
 ## The Rule-to-Citation Manifest
 

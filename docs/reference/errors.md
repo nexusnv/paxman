@@ -38,7 +38,7 @@ Base class for runtime errors during canonicalization or replay. Subclasses are 
 
 ## `ContractError`
 
-The contract is malformed or self-contradictory. Raised **at parse time** (by `parse_contract()`), not by `canonicalize()` itself. The parse step runs before capability dispatch, so a bad contract is a programming error caught at the call site, not a `Status` outcome on the artifact.
+The contract is malformed or self-contradictory. Raised **at parse time** (by `parse_contract()`), not by `canonicalize()` itself. The parse step runs before capability dispatch, so a bad contract is a programming error caught at the call site, not a `Status` outcome on the artifact. `paxman.canonicalize()` catches a malformed contract internally and returns an artifact with `Status.UNSUPPORTED` rather than raising; only a direct `parse_contract()` call raises `ContractError`.
 
 Common causes:
 

@@ -39,9 +39,10 @@ class UriPercentEncodingCapability:
     name = "uri_percent_encoding"
 
     def can_handle(self, contract, value):
+        # The orchestrator passes the *parsed* contract object, not a raw
+        # dict, so match on its `kind` attribute.
         return (
-            isinstance(contract, dict)
-            and contract.get("kind") == "uri_percent_encoding"
+            getattr(contract, "kind", None) == "uri_percent_encoding"
             and isinstance(value, str)
         )
 
@@ -82,7 +83,7 @@ register_capability(UriPercentEncodingCapability())
 
 result = paxman.canonicalize("a b/c", {"kind": "uri_percent_encoding"})
 assert result.status is Status.CANONICALIZED
-assert result.value == "a%20b/c"
+assert result.value == "a%20b%2Fc"  # "/" is a reserved char -> "%2F"
 ```
 
 The capability:

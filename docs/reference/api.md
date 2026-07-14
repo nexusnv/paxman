@@ -101,7 +101,7 @@ See [How-to: Write a compliant capability](../how-to/write-a-compliant-capabilit
 
 ## The Dict DSL Helper
 
-`parse_contract()` is a convenience helper for turning the Dict DSL into a `CanonicalEmailContract` value object. It is re-exported from `paxman` and is used by callers that store contracts as JSON and reconstruct them at load time.
+`parse_contract()` is a *contract helper*, not one of the three public verbs (`canonicalize`, `replay`, `register_capability`). It is a convenience for turning the Dict DSL into a `CanonicalEmailContract` value object. It is re-exported from `paxman` and is used by callers that store contracts as JSON and reconstruct them at load time.
 
 ### `parse_contract`
 

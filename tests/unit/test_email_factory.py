@@ -38,7 +38,9 @@ class TestEmailFactory:
         assert Email().strip_whitespace is True
 
     def test_email_accepts_all_four_kwargs(self) -> None:
-        result = Email(strict=True, provider_aliases="gmail", lowercase=False, strip_whitespace=False)
+        result = Email(
+            strict=True, provider_aliases="gmail", lowercase=False, strip_whitespace=False
+        )
         assert result.strict is True
         assert result.provider_aliases == "gmail"
         assert result.lowercase is False
@@ -48,7 +50,7 @@ class TestEmailFactory:
         # The '*' in the signature enforces keyword-only. A positional
         # call must raise TypeError.
         with pytest.raises(TypeError):
-            Email(True)  # type: ignore[call-arg]  # noqa: PGH003
+            Email(True)  # type: ignore[call-arg]
 
     def test_email_result_is_immutable(self) -> None:
         # Law 13: the returned contract is @attrs.frozen. Assignment

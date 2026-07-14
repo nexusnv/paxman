@@ -143,33 +143,29 @@ CANONICALIZABLE: list[str] = [
 # 5 invalid inputs. The contract form used for each is noted in the
 # test file because some require a non-default Email() kwarg.
 INVALID: list[str] = [
-    "not.an.email",        # missing '@' sign
-    "@example.com",        # empty local part
-    "user@",               # empty domain part
+    "not.an.email",  # missing '@' sign
+    "@example.com",  # empty local part
+    "user@",  # empty domain part
 ]
 
 # Inputs that require a non-default contract form are kept separate so
 # the test can build the matching Email() for each. These use strict=True
 # to reject whitespace or non-ASCII characters.
 STRICT_INVALID: list[tuple[str, dict[str, object]]] = [
-    ("  a@b.c  ", {"strict": True}),         # whitespace under strict mode
-    ("jöhn@example.com", {"strict": True}),   # non-ASCII under strict mode
+    ("  a@b.c  ", {"strict": True}),  # whitespace under strict mode
+    ("jöhn@example.com", {"strict": True}),  # non-ASCII under strict mode
 ]
 
 
 def all_canonicalizable_emails() -> list[str]:
     """Return the 95 inputs that should be Status.CANONICALIZED."""
-    assert len(CANONICALIZABLE) == 95, (
-        f"expected 95 canonicalizable, got {len(CANONICALIZABLE)}"
-    )
+    assert len(CANONICALIZABLE) == 95, f"expected 95 canonicalizable, got {len(CANONICALIZABLE)}"
     return list(CANONICALIZABLE)
 
 
 def all_invalid_pairs() -> list[tuple[str, dict[str, object]]]:
     """Return the 5 inputs that should be Status.INVALID with their contracts."""
-    invalid_with_contracts: list[tuple[str, dict[str, object]]] = [
-        (email, {}) for email in INVALID
-    ]
+    invalid_with_contracts: list[tuple[str, dict[str, object]]] = [(email, {}) for email in INVALID]
     invalid_with_contracts.extend(
         (email, contract_kwargs) for email, contract_kwargs in STRICT_INVALID
     )

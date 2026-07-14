@@ -53,3 +53,35 @@ class TestDateCapability:
         r = _cap().canonicalize("2025-01-01T12:00:00", _contract())
         assert r.status is Status.AMBIGUOUS
         assert r.evidence[0].rule == "ambiguous_naive_datetime"
+
+    def test_us_numeric_mm_dd_yyyy(self) -> None:
+        r = _cap().canonicalize("03/04/2025", _contract("US"))
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "2025-03-04"
+        assert r.evidence[0].rule == "parsed_us_numeric"
+
+    def test_eu_numeric_dd_mm_yyyy(self) -> None:
+        r = _cap().canonicalize("03/04/2025", _contract("EU"))
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "2025-04-03"
+        assert r.evidence[0].rule == "parsed_eu_numeric"
+
+    def test_numeric_under_iso_locale_is_invalid(self) -> None:
+        r = _cap().canonicalize("03/04/2025", _contract("ISO"))
+        assert r.status is Status.INVALID
+        assert r.evidence[0].rule == "numeric_format_requires_us_or_eu_locale"
+
+    def test_us_numeric_invalid_month_is_invalid(self) -> None:
+        r = _cap().canonicalize("13/04/2025", _contract("US"))
+        assert r.status is Status.INVALID
+        assert r.evidence[0].rule == "invalid_calendar_date"
+
+    def test_eu_numeric_invalid_month_is_invalid(self) -> None:
+        r = _cap().canonicalize("04/13/2025", _contract("EU"))
+        assert r.status is Status.INVALID
+        assert r.evidence[0].rule == "invalid_calendar_date"
+
+    def test_two_digit_year_is_ambiguous(self) -> None:
+        r = _cap().canonicalize("03/04/25", _contract("US"))
+        assert r.status is Status.AMBIGUOUS
+        assert r.evidence[0].rule == "ambiguous_two_digit_year"

@@ -101,7 +101,7 @@ jobs:
   # Moderate config in [tool.mypy] in pyproject.toml. Not full --strict:
   # the orchestrator's lazy circular-import workaround and the
   # `_ContractLike` Protocol structural typing would require additional
-  # stubs that are not yet worth the complexity for v1.0.0.
+  # stubs that are not yet worth the complexity for v2.0.0.
   # py3.12 only: mypy is a static tool, not affected by Python version.
   # ---------------------------------------------------------------------------
   typecheck:
@@ -132,11 +132,11 @@ jobs:
         run: uv run mypy src/paxman
 
   # ---------------------------------------------------------------------------
-  # Property tests (Hypothesis; mandate §1.2 three invariants)
+  # Property tests (Hypothesis; MANDATE §1.2 four invariants)
   # py3.12 only: the property tests are the mechanical evidence for the
-  # three invariants (replay byte-equality, idempotence, uniqueness).
-  # Running on one version is sufficient; the unit-test matrix covers
-  # multi-version compatibility.
+  # four invariants (replay byte-equality, idempotence, uniqueness, and
+  # artifact immutability). Running on one version is sufficient; the
+  # unit-test matrix covers multi-version compatibility.
   # ---------------------------------------------------------------------------
   test-property:
     name: property tests (py3.12)
@@ -163,7 +163,7 @@ jobs:
         run: uv sync --frozen --all-extras --dev
 
       - name: Run property tests
-        # Property tests are the mechanical evidence for the three
+        # Property tests are the mechanical evidence for the four
         # invariants in MANDATE.md §1.2. They use Hypothesis with
         # derandomize=True for determinism (mandate Law 1).
         run: uv run pytest -m property --no-header

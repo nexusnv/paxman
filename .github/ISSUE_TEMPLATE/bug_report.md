@@ -45,11 +45,10 @@ import paxman
 
 ## Additional context
 
-<!-- Links to the relevant ADRs, design docs, or related issues. -->
+<!-- Links to relevant docs, the source file, or related code paths. -->
 
-- `paxman/` source file: `src/paxman/<subsystem>/<file>.py`
-- Related ADR: `docs/adr/NNNN-*.md`
-- Related issue: #
+- `paxman/` source file: `src/paxman/_<module>/<file>.py`
+- Relevant doc page: `docs/<section>/<page>.md`
 
 ## Checklist
 
@@ -61,4 +60,4 @@ import paxman
 - [ ] I have included a minimal reproducer.
 - [ ] I have included the actual behavior (with traceback if any).
 - [ ] This is **not** a security vulnerability (security reports go
-      to the address in `SECURITY.md` §7, **not** a public issue).
+      to the address in `SECURITY.md`, **not** a public issue).

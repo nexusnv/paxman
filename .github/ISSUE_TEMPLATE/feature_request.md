@@ -29,42 +29,35 @@ import paxman
 
 <!-- What other approaches did you consider? Why is this one better? -->
 
-## Is this an ADR-worthy change?
+## Is this within Paxman's identity?
 
-<!-- Significant changes require an ADR. See docs/adr/README.md "When to write an ADR". -->
+<!-- Paxman is a deterministic canonicalization engine. Features that
+     turn it into a normalizer, a parser framework, a workflow engine,
+     or an AI extraction system are outside its identity boundary. -->
 
-- [ ] This adds a new public API surface
-- [ ] This adds a new public SPI
-- [ ] This changes a system boundary rule
-- [ ] This adds a new dependency to the core
-- [ ] This changes the artifact format
-- [ ] This changes the replay model
-- [ ] This deprecates or removes public API
+- [ ] This adds a new built-in capability (e.g. a new canonical type)
+- [ ] This adds a new contract kind
+- [ ] This adds a new public symbol to `paxman.__all__`
+- [ ] This changes artifact immutability or the `VersionStamp` shape
+- [ ] This changes the `Capability` protocol (the SPI)
+- [ ] This changes the five `Status` outcomes
 - [ ] None of the above — this is a small enhancement
 
-If any of the above is checked, the implementation **must** be
-preceded by an ADR. See [`docs/adr/README.md`](../../docs/adr/README.md).
-
-## Is this V1 scope?
-
-<!-- Paxman V1 is a fixed surface; V2 is a separate roadmap. -->
-
-- [ ] This is in the V1 scope (see `V1_ACCEPTANCE_CRITERIA.md` and the ADRs)
-- [ ] This is V2 scope (post-1.0)
-- [ ] Not sure — please triage
+If any of the above is checked, the change requires a brief
+explanation of how it preserves the three invariants (identity,
+determinism, replay) and the artifact immutability rule.
 
 ## Additional context
 
-<!-- Links to the relevant ADRs, design docs, or related issues. -->
+<!-- Links to relevant docs, the source file, or related code paths. -->
 
-- Related ADR: `docs/adr/NNNN-*.md`
-- Related issue: #
+- Relevant doc page: `docs/<section>/<page>.md`
+- Related source file: `src/paxman/_<module>/<file>.py`
 
 ## Checklist
 
 - [ ] I have searched the existing issues and found no duplicate.
 - [ ] I have read [`CONTRIBUTING.md`](../../CONTRIBUTING.md).
-- [ ] I have read the V1 acceptance criteria (`V1_ACCEPTANCE_CRITERIA.md`)
-      and the ADRs (`docs/adr/`).
 - [ ] I have included a sketch of the proposed API.
-- [ ] I have identified whether this is V1 or V2 scope.
+- [ ] I have identified whether the change is within Paxman's identity
+      boundary.

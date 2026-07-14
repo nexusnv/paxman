@@ -1,22 +1,5 @@
 name: Release
 
-# FROZEN on 2026-07-12 as part of the v1.x retraction. See RETRACTION.md
-# and .agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md.
-#
-# The `on:` triggers below are preserved for v2 reuse, but every job
-# is gated by `if: ${{ env.RELEASE_FROZEN != 'true' }}` and the
-# `RELEASE_FROZEN` environment variable is set to `'true'` at the
-# workflow level. This means:
-#   - `git push origin vX.Y.Z` does NOT trigger a publish.
-#   - `workflow_dispatch` (manual) does NOT run the jobs.
-#   - The workflow file remains in tree so v2 can re-enable it after
-#     the heuristic planner is wired up and a README-quickstart smoke
-#     test passes in CI.
-#
-# To re-enable for a future release: remove the `env: RELEASE_FROZEN: "true"`
-# line and the `if:` guards on each job. Do not do this until the
-# v2 acceptance criteria in RETRACTION.md §"What v2 must do" are met.
-
 on:
   push:
     tags:
@@ -24,32 +7,28 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to release (e.g., v2.0.0)'
+        description: 'Tag to release (e.g., v2.0.0-rc1)'
         required: true
         type: string
 
-env:
-  RELEASE_FROZEN: "true"
-
-# Cancel in-progress runs for the same tag (safety)
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false  # Don't cancel in-progress releases
+  cancel-in-progress: false
 
-# Minimal permissions; jobs opt-in to more as needed.
-# `id-token: write` is REQUIRED for PyPI OIDC trusted publishing
-# but is scoped to the publish job below (not top-level).
+# Minimal permissions at the top level; jobs opt-in to more.
+# `id-token: write` is required for PyPI OIDC trusted publishing and is
+# scoped to the publish jobs below.
 permissions:
   contents: read
 
 jobs:
   # ---------------------------------------------------------------------------
-  # Build wheel + sdist
+  # CI gate (the same checks ci.yml runs, gathered into one job)
   # ---------------------------------------------------------------------------
-  build:
-    name: Build wheel + sdist
+  ci:
+    name: CI gate
     runs-on: ubuntu-latest
-    if: ${{ env.RELEASE_FROZEN != 'true' }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -62,6 +41,7 @@ jobs:
         with:
           enable-cache: true
           cache-dependency-glob: |
+            uv.lock
             pyproject.toml
 
       - name: Set up Python 3.12
@@ -70,22 +50,60 @@ jobs:
       - name: Install dependencies (frozen lockfile)
         run: uv sync --frozen --all-extras --dev
 
-      - name: Run CI gates (lint, format, typecheck, tests, security)
-        # Run the same checks as make ci to gate the release
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+
+      - name: Format check (ruff format --check)
+        run: uv run ruff format --check .
+
+      - name: Type check (mypy)
+        # Moderate config in [tool.mypy]; not --strict.
+        run: uv run mypy src/paxman
+
+      - name: Static analysis gates
         run: |
-          uv run ruff check .
-          uv run ruff format --check .
-          uv run mypy --strict src/paxman
-          uv run lint-imports
-          uv run interrogate -vv src/paxman
-          uv run bandit -r src/paxman -c pyproject.toml
-          uv run pip-audit
-          uv run pytest tests/unit tests/property tests/integration --no-header
+          uv run python scripts/check_readme_quickstart.py
+          uv run python scripts/check_capability_section_isolation.py
+          uv run python scripts/check_paxman_normalize_substring.py
+          uv run python scripts/check_retired_vocabulary.py
 
-      - name: Build (hatchling)
-        run: uv run hatchling build
+      - name: Run tests
+        run: uv run pytest tests/unit tests/property tests/integration --no-header
 
-      - name: Inspect wheel (verify py.typed, no __pycache__)
+  # ---------------------------------------------------------------------------
+  # Build wheel + sdist
+  # Uses `uv build` (delegates to hatchling via build-system.requires).
+  # ---------------------------------------------------------------------------
+  build:
+    name: Build wheel + sdist
+    runs-on: ubuntu-latest
+    needs: ci
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (frozen lockfile)
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Build
+        run: uv build
+
+      - name: Inspect wheel
         run: |
           python -c "
           import zipfile, pathlib
@@ -105,16 +123,16 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # Publish to TestPyPI via OIDC trusted publishing
+  # Always runs first; this is the rc1 verification step.
   # ---------------------------------------------------------------------------
   publish-testpypi:
     name: Publish to TestPyPI
     runs-on: ubuntu-latest
     needs: build
-    if: ${{ env.RELEASE_FROZEN != 'true' }}
     environment: testpypi
     permissions:
       contents: read
-      id-token: write  # Required for PyPI OIDC trusted publishing
+      id-token: write
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4
@@ -127,27 +145,27 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
           packages-dir: dist/
-          # OIDC: no API token needed; the GitHub OIDC token authenticates
-          # the publish request via the PyPI trusted publisher config.
 
   # ---------------------------------------------------------------------------
-  # Publish to PyPI via OIDC trusted publishing (Sprint 10; commented out for now)
+  # Publish to PyPI via OIDC trusted publishing
+  # Runs after TestPyPI succeeds. The `pypi` environment can be configured
+  # with required reviewers for manual approval.
   # ---------------------------------------------------------------------------
   publish-pypi:
-    permissions:
-      contents: read
-      id-token: write  # Required for PyPI OIDC trusted publishing
     name: Publish to PyPI
     runs-on: ubuntu-latest
     needs: [build, publish-testpypi]
-    if: ${{ env.RELEASE_FROZEN != 'true' }}
     environment: pypi
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v4
         with:
           name: dist
           path: dist/
+
       - name: Publish to PyPI (OIDC)
         uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1
         with:

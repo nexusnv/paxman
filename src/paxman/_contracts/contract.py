@@ -119,10 +119,17 @@ def parse_contract(spec: Any) -> Contract:
     """Parse a Dict DSL contract into a Contract value object.
 
     Raises `ContractError` on:
-    - non-dict input
+    - non-dict input (unless it's already a CanonicalEmailContract)
     - missing or unknown `kind`
     - invalid field values (wrong type, unknown provider_aliases)
     """
+    # Short-circuit: an already-parsed CanonicalEmailContract is the
+    # source of truth (Law 5). Exact-type check (not the parent
+    # `Contract` alias) so a future multi-field contract type is NOT
+    # silently absorbed here — it must grow its own dispatch branch.
+    if isinstance(spec, CanonicalEmailContract):
+        return spec
+
     if not isinstance(spec, dict):
         raise ContractError(f"contract must be a dict, got {type(spec).__name__}")
 

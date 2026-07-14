@@ -105,7 +105,7 @@ In a well-designed system, ambiguity should be rare. Most use cases have a singl
 - A custom capability was registered that duplicates a built-in.
 - A custom capability's `can_handle` is too permissive.
 
-If ambiguity comes back and you did not expect it, audit the registered capabilities. The registry's `CapabilityRegistry.capabilities_hash()` returns the sorted list of registered capability names; you can compare it against your expected set.
+If ambiguity comes back and you did not expect it, audit the registered capabilities. The registry's `CapabilityRegistry.capabilities_hash()` returns a SHA-256 hash of the sorted registered capability names (not the list itself); compare the hash against the value you expect for your capability set.
 
 ## Where to Go Next
 

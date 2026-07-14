@@ -30,4 +30,4 @@ The email capability is versioned. Each entry below records a contract-version b
 
 These are deferred to future versions.
 
-**Citation policy:** Every rule in the capability cites one of three sources — an RFC, a documented platform behavior (Google Help), or a Paxman policy. The complete rule-to-citation manifest is in the capability source. See the [Email capability spec](index.md#the-rules) for the rule table.
+**Citation policy:** Every canonical-form rule in the capability cites one of three sources — an RFC, a documented platform behavior (Google Help), or a Paxman policy. The only rules allowed an empty provenance are the named dispatch invariants (e.g. `not_a_string_value`), which describe routing failures rather than canonical forms. The complete rule-to-citation manifest is in the capability source. See the [Email capability spec](index.md#the-rules) for the rule table.

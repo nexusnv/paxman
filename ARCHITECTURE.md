@@ -190,13 +190,17 @@ circular import between `paxman/__init__.py` and `_core/orchestrator.py`.
 ### `_core/orchestrator.py` — The Pipeline (Paxman Owns It)
 
 One orchestrator. It walks the stages in §"The pipeline Paxman owns" and
-returns an `ExecutionArtifact`. It is pure (Law 1): same input, contract,
-registered capabilities, configuration, and Paxman version → same artifact.
+returns an `ExecutionArtifact`. It is deterministic (Law 1): once the
+registry is frozen, the same input, contract, registered capabilities,
+configuration, and Paxman version produce the same artifact.
 
-The orchestrator loads the built-in capabilities lazily, on the first
-`canonicalize` call, *before* it freezes the registry — so the capability
-set is fixed at resolve time (Law 1: the capability set is part of the
-determinism invariant). The lazy import keeps `import paxman`
+The orchestrator performs one-time initialization on the first `canonicalize`
+call: it loads the built-in capabilities lazily and then freezes the registry,
+*before* any execution — so the capability set is fixed at resolve time (Law
+1: the capability set is part of the determinism invariant). This
+initialization is deterministic and runs exactly once; it is not referential
+transparency, but it does not affect the determinism guarantee for any call
+after the registry is frozen. The lazy import keeps `import paxman`
 side-effect-free and avoids a circular import between the built-ins and the
 contract module (mandate Law 8a).
 

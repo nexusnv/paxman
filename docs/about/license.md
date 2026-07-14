@@ -30,7 +30,7 @@ SOFTWARE.
 
 ## Third-Party Dependencies
 
-Paxman v2.0.0 has one runtime dependency:
+Paxman v2.0.0-rc1 has one runtime dependency:
 
 - **attrs** — Python library for defining classes without boilerplate. Used for frozen value objects throughout Paxman. MIT licensed. https://www.attrs.org/
 

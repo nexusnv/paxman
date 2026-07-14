@@ -45,7 +45,7 @@ Most libraries that produce a "result" also produce a numeric score. Paxman prod
 
 A numeric score is opinion: "I'm 91% sure this is right." Where did `0.91` come from? Can it change? Why `0.91` and not `0.75`?
 
-Evidence is fact: "I applied rule X, which cites specification Y, and the result is Z." Every rule in a Paxman capability cites one of three sources:
+Evidence is fact: "I applied rule X, which cites specification Y, and the result is Z." Every canonical-form rule in a Paxman capability cites one of three sources (the named dispatch-invariant rules, such as `not_a_string_value`, are the only exception allowed to carry an empty provenance, per Law 14):
 
 1. An authoritative specification (RFC, ISO standard).
 2. A documented platform behavior (vendor help article, versioned and dated).

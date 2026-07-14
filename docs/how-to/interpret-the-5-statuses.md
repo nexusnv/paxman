@@ -100,42 +100,46 @@ The action depends on the cause:
 
 A canonicalize call should not raise for any outcome representable as a `Status`. Exceptions are reserved for situations where the call cannot proceed at all. See the [Error reference](../reference/errors.md) for the full list.
 
-If you wrap canonicalize calls in a `try/except`, the only exception you should expect is `ContractError` (from `parse_contract()`, not from `canonicalize()` itself).
+`paxman.canonicalize()` never raises `ContractError`: a malformed contract is caught internally and returned as an artifact with `Status.UNSUPPORTED`. If you wrap canonicalize calls in a `try/except`, do not expect `ContractError` from `canonicalize()` itself — reserve that exception for direct `parse_contract()` calls. The errors canonicalize can raise are internal invariants (e.g. a broken registry); treat those as bugs, not expected control flow.
 
 ## A Complete Example
 
 ```python
+import hashlib
 import paxman
 from paxman import Email, Status
 
 def canonicalize_email(raw_input: str) -> str | None:
     """Return the canonical email form, or None if the input cannot be canonicalized."""
+    # A redacted, application-generated correlation id — never log the raw
+    # address. Logging the raw address is an explicit, opt-in decision.
+    correlation_id = hashlib.sha256(raw_input.encode("utf-8")).hexdigest()[:16]
     result = paxman.canonicalize(raw_input, Email(provider_aliases="gmail"))
 
     if result.status is Status.CANONICALIZED:
         return result.value
 
     if result.status is Status.INVALID:
-        log_invalid(raw_input, result.evidence)
+        log_invalid(correlation_id, result.evidence)
         return None
 
     if result.status is Status.AMBIGUOUS:
-        log_ambiguous(raw_input, result.evidence)
+        log_ambiguous(correlation_id, result.evidence)
         return None
 
     if result.status is Status.UNSUPPORTED:
-        log_unsupported(raw_input, result.evidence)
+        log_unsupported(correlation_id, result.evidence)
         return None
 
     if result.status is Status.MISSING:
-        log_missing(raw_input, result.evidence)
+        log_missing(correlation_id, result.evidence)
         return None
 
     # Unreachable: the five Status values are exhaustive.
     raise AssertionError(f"unhandled status: {result.status}")
 ```
 
-The function returns the canonical email or `None`. Each branch logs the reason. The artifact is the result; the function decides what the rest of the application does with it.
+The function returns the canonical email or `None`. Each branch logs a redacted correlation id and the evidence, not the raw address — logging the raw address is an explicit, opt-in choice. The artifact is the result; the function decides what the rest of the application does with it.
 
 ## Where to Go Next
 

@@ -106,9 +106,12 @@ def deserialize_artifact(stored: dict):
 
     record = json.loads(raw)
     rehydrated = paxman.canonicalize(record["value"], paxman.parse_contract(record["contract"]))
-    assert rehydrated.value == record["value"]
-    assert rehydrated.contract.as_dict() == record["contract"]
-    assert rehydrated.version_stamp == paxman.VersionStamp(**record["version_stamp"])
+    if rehydrated.value != record["value"]:
+        raise CanonicalizationError("value mismatch — artifact was tampered with")
+    if rehydrated.contract.as_dict() != record["contract"]:
+        raise CanonicalizationError("contract mismatch — artifact was tampered with")
+    if rehydrated.version_stamp != paxman.VersionStamp(**record["version_stamp"]):
+        raise CanonicalizationError("version_stamp mismatch — artifact was tampered with")
     return rehydrated
 ```
 

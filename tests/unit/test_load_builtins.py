@@ -10,7 +10,7 @@ hidden state).
 
 from __future__ import annotations
 
-from paxman._capabilities.builtins import builtin_capabilities
+from paxman._capabilities.builtins.discovery import builtin_capabilities
 from paxman._capabilities.builtins.email import EmailCapability
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman._contracts.contract import CanonicalEmailContract
@@ -74,10 +74,10 @@ class TestLoadBuiltins:
         class MyEmailCap:
             name = "email_canonicalization"
 
-            def can_handle(self, contract, value):
+            def can_handle(self, contract: object, value: object) -> bool:
                 return False
 
-            def canonicalize(self, value, contract):
+            def canonicalize(self, value: object, contract: object) -> object:
                 raise NotImplementedError
 
         # Registry A: user registers their cap, then load_builtins is

@@ -1,11 +1,13 @@
-"""Grep-zero gate for the substring 'paxman.normalize'.
+"""Thin pytest gate: the substring 'paxman.normalize' is absent from
+src/paxman/.
 
-Spec §4.7 + §1.1: the substring 'paxman.normalize' must appear ZERO
-times in src/paxman/. This includes the teaching error message
-string in src/paxman/__init__.py (phrased to avoid the substring).
-The §1.1 identity boundary is mechanically enforced.
+The actual grep-zero check lives in scripts/check_paxman_normalize_substring.py
+— per the path instructions, tests under tests/ must not read files
+from outside tests/, and the src/ tree lives at the repo root, not
+under tests/. This thin pytest module just invokes the script via
+subprocess.run and asserts the exit code is 0.
 
-Note: the substring DOES appear in tests/ — specifically, in
+The substring IS allowed to appear in tests/ — specifically, in
 tests/unit/test_normalize_teaching_error.py, where the assertion
 'paxman.normalize' not in str(exc_info.value) necessarily contains
 the substring as a string literal. That is the only legitimate use
@@ -14,20 +16,23 @@ of the substring in the repo.
 
 from __future__ import annotations
 
-import pathlib
+import subprocess
+import sys
+from pathlib import Path
 
-
-def _iter_python_files(root: pathlib.Path) -> list[pathlib.Path]:
-    return [p for p in root.rglob("*.py") if "__pycache__" not in p.parts]
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+SCRIPT = REPO_ROOT / "scripts" / "check_paxman_normalize_substring.py"
 
 
 def test_paxman_normalize_substring_absent_from_src() -> None:
-    src = pathlib.Path("src/paxman")
-    offenders: list[str] = []
-    for path in _iter_python_files(src):
-        text = path.read_text(encoding="utf-8")
-        if "paxman.normalize" in text:
-            offenders.append(str(path))
-    assert not offenders, (
-        "the substring 'paxman.normalize' appears in these src files: " + ", ".join(offenders)
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT)],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
     )
+    assert result.returncode == 0, (
+        f"scripts/check_paxman_normalize_substring.py failed:\n"
+        f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
+    )
+    assert "OK:" in result.stdout

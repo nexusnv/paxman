@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from paxman import Status
-from paxman._capabilities.builtins.date import DateCapability
-from paxman._contracts.contract import CanonicalDateContract
+from paxman._capabilities.builtins.date import _RULE_PROVENANCE, DateCapability
+from paxman._contracts.contract import CanonicalDateContract, Contract
 
 
 def _cap() -> DateCapability:
@@ -155,3 +155,57 @@ class TestDateCapability:
         r = _cap().canonicalize("2025-13-01", _contract())
         assert r.status is Status.INVALID
         assert r.evidence[0].rule == "invalid_calendar_date"
+
+
+class TestLaw14ProvenanceManifest:
+    """Audit ``_RULE_PROVENANCE`` against the capability source (MANDATE §10.2)."""
+
+    _DISPATCH_INVARIANTS = frozenset(
+        {"not_a_date_contract", "not_a_string_value", "empty_value", "unrecognized_format"}
+    )
+
+    def test_every_manifest_entry_beyond_dispatch_has_provenance(self) -> None:
+        for rule_name, provenance in _RULE_PROVENANCE.items():
+            if rule_name in self._DISPATCH_INVARIANTS:
+                continue
+            assert provenance != "", f"Law 14 violation: {rule_name!r} has empty provenance"
+
+    def test_dispatch_invariants_allow_listed_empty(self) -> None:
+        for invariant in self._DISPATCH_INVARIANTS:
+            assert invariant in _RULE_PROVENANCE, f"{invariant!r} missing from manifest"
+            assert _RULE_PROVENANCE[invariant] == "", f"{invariant!r} should be empty"
+
+    def test_manifest_keys_cover_every_fired_rule(self) -> None:
+        c = _cap()
+        inputs: list[tuple[object, Contract]] = [
+            ("2025-01-01", _contract()),
+            ("2025-01-01T12:00:00Z", _contract()),
+            ("2025-01-01T07:00:00-05:00", _contract()),
+            ("2025-01-01T12:00:00", _contract()),
+            ("03/04/2025", _contract("US")),
+            ("03/04/2025", _contract("EU")),
+            ("03/04/2025", _contract("ISO")),
+            ("03/04/25", _contract("US")),
+            ("1 Jan 2025", _contract()),
+            ("Tue, 01 Jan 2025 12:00:00 +0000", _contract()),
+            ("01 Jan 2025 12:00:00", _contract()),
+            ("1700000000", _contract()),
+            ("20250101", _contract()),
+            ("tomorrow", _contract()),
+            ("", _contract()),
+            ("  ", _contract()),
+            ("2025/01/01", _contract("ISO")),
+            ("2025-13-01", _contract()),
+        ]
+        fired: set[str] = set()
+        for value, contract in inputs:
+            r = c.canonicalize(value, contract)
+            for ev in r.evidence:
+                fired.add(ev.rule)
+        # Exercise the two non-str dispatch paths directly.
+        r1 = c.canonicalize("2025-01-01", "not a contract")  # type: ignore[arg-type]
+        r2 = c.canonicalize(12345, _contract())  # type: ignore[arg-type]
+        for ev in r1.evidence + r2.evidence:
+            fired.add(ev.rule)
+        for rule in fired:
+            assert rule in _RULE_PROVENANCE, f"fired rule {rule!r} missing from manifest"

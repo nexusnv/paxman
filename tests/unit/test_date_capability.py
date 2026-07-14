@@ -132,3 +132,26 @@ class TestDateCapability:
     def test_compact_integer_is_not_a_timestamp(self) -> None:
         r = _cap().canonicalize("20250101", _contract())
         assert r.status is Status.UNSUPPORTED
+
+    def test_unrecognized_format_is_unsupported(self) -> None:
+        r = _cap().canonicalize("tomorrow", _contract())
+        assert r.status is Status.UNSUPPORTED
+        assert r.evidence[0].rule == "unrecognized_format"
+
+    def test_empty_value_is_missing(self) -> None:
+        r = _cap().canonicalize("", _contract())
+        assert r.status is Status.MISSING
+        assert r.evidence[0].rule == "empty_value"
+
+    def test_whitespace_only_is_missing(self) -> None:
+        r = _cap().canonicalize("   ", _contract())
+        assert r.status is Status.MISSING
+
+    def test_non_iso_slash_under_iso_is_invalid(self) -> None:
+        r = _cap().canonicalize("2025/01/01", _contract("ISO"))
+        assert r.status is Status.INVALID
+
+    def test_invalid_iso_date_is_invalid(self) -> None:
+        r = _cap().canonicalize("2025-13-01", _contract())
+        assert r.status is Status.INVALID
+        assert r.evidence[0].rule == "invalid_calendar_date"

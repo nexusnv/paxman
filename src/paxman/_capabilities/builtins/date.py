@@ -30,6 +30,7 @@ _ISO_NAIVE_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+
 
 _NUMERIC_4YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})$")
 _NUMERIC_2YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{2})$")
+_SLASH_YEAR_FIRST_RE = re.compile(r"^\d{4}/\d{2}/\d{2}$")
 
 _UNIX_RE = re.compile(r"^-?\d+(\.\d+)?$")
 
@@ -294,7 +295,9 @@ class DateCapability:
                 )
 
         if contract.locale == "ISO" and (
-            _NUMERIC_4YEAR_RE.match(value) or _NUMERIC_2YEAR_RE.match(value)
+            _NUMERIC_4YEAR_RE.match(value)
+            or _NUMERIC_2YEAR_RE.match(value)
+            or _SLASH_YEAR_FIRST_RE.match(value)
         ):
             return CapabilityResult(
                 status=Status.INVALID,

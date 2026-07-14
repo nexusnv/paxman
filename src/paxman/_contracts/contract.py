@@ -157,13 +157,45 @@ def UUID(
     return CanonicalUUIDContract(version=version)
 
 
-# v2.0.0 ships exactly two contract kinds (canonical_email,
-# canonical_uuid). New kinds bump the contract version and are added here.
-Contract = CanonicalEmailContract | CanonicalUUIDContract
+@attrs.frozen
+class CanonicalDateContract:
+    """The date contract (MANDATE §4: the contract is the user's language).
+
+    ``locale`` is REQUIRED — there is no default and no ``auto_detect``
+    (Law 7 — Explicit Over Clever). A numeric slash form cannot be resolved
+    to a unique reading without it (Law 4).
+    """
+
+    locale: Literal["ISO", "US", "EU"]
+    kind: str = "canonical_date"
+    version_field: int = 1
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return the Dict DSL form of this contract (round-trips via parse_contract)."""
+        return {
+            "kind": self.kind,
+            "locale": self.locale,
+            "version_field": self.version_field,
+        }
+
+
+def Date(*, locale: Literal["ISO", "US", "EU"]) -> CanonicalDateContract:
+    """Domain-type sugar: declare a date contract in user vocabulary.
+
+    ``locale`` has NO default — the caller must state the reading policy
+    explicitly (Law 7). MANDATE §6.4 shows ``CanonicalDate(locale="MY")``.
+    """
+    return CanonicalDateContract(locale=locale)
+
+
+# v2.0.0 ships three contract kinds (canonical_email, canonical_uuid,
+# canonical_date). New kinds bump the contract version and are added here.
+Contract = CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract
 
 _KIND_DISPATCH: dict[str, type[Contract]] = {
     "canonical_email": CanonicalEmailContract,
     "canonical_uuid": CanonicalUUIDContract,
+    "canonical_date": CanonicalDateContract,
 }
 
 _VALID_PROVIDER_ALIASES = {"none", "gmail"}
@@ -193,6 +225,8 @@ def parse_contract(spec: Any) -> Contract:
     if isinstance(spec, CanonicalEmailContract):
         return spec
     if isinstance(spec, CanonicalUUIDContract):
+        return spec
+    if isinstance(spec, CanonicalDateContract):
         return spec
 
     if not isinstance(spec, dict):
@@ -228,6 +262,14 @@ def parse_contract(spec: Any) -> Contract:
                 f"invalid uuid version: {version!r}; allowed: {sorted(_UUID_VERSIONS_ALLOWED)}"
             )
         return CanonicalUUIDContract(version=version)
+
+    if kind == "canonical_date":
+        locale = spec.get("locale")
+        if locale not in {"ISO", "US", "EU"}:
+            raise ContractError(
+                f"invalid or missing locale: {locale!r}; allowed: ['ISO', 'US', 'EU']"
+            )
+        return CanonicalDateContract(locale=locale)
 
     # Unreachable: kind is guaranteed to be in _KIND_DISPATCH above.
     raise ContractError(f"unhandled contract kind: {kind!r}")

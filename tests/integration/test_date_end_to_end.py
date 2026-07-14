@@ -26,6 +26,7 @@ def test_canonicalize_and_replay_byte_equal() -> None:
     assert artifact.value == "2025-03-04"
     rehydrated = paxman.replay(artifact, contract)
     assert rehydrated == artifact
+    assert rehydrated.canonical_bytes() == artifact.canonical_bytes()
 
 
 def test_iso_datetime_resolves_through_default_registry() -> None:

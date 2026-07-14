@@ -57,7 +57,7 @@ class TestValidate:
     def test_unsupported_contract_kind_raises(self) -> None:
         # A contract that is neither email, uuid, nor date is unsupported.
         with pytest.raises(UnsupportedContractError):
-            validate("x", cast(Any, _UnsupportedContract()))
+            validate("x", _UnsupportedContract())
 
     def test_strict_mode_accepts_ascii(self) -> None:
         assert validate("a@b.c", _contract(strict=True)).is_valid is True

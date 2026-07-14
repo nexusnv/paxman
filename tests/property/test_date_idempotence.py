@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -28,14 +30,16 @@ _ISO_DATES = st.builds(
     st.integers(1, 28),
 )
 
+_LOCALES: tuple[Literal["ISO", "US", "EU"], ...] = ("ISO", "US", "EU")
+
 
 @pytest.mark.property
 @settings(max_examples=50, deadline=None, derandomize=True)
-@given(value=_ISO_DATES)
-def test_date_idempotence(value: str) -> None:
-    first = canonicalize(value, Date(locale="ISO"))
+@given(value=_ISO_DATES, locale=st.sampled_from(_LOCALES))
+def test_date_idempotence(value: str, locale: Literal["ISO", "US", "EU"]) -> None:
+    first = canonicalize(value, Date(locale=locale))
     if first.status is not Status.CANONICALIZED:
         return
-    second = canonicalize(first.value, Date(locale="ISO"))
+    second = canonicalize(first.value, Date(locale=locale))
     assert second.status is Status.CANONICALIZED
     assert second.value == first.value

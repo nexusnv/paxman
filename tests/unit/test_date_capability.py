@@ -156,6 +156,21 @@ class TestDateCapability:
         assert r.status is Status.INVALID
         assert r.evidence[0].rule == "invalid_calendar_date"
 
+    def test_rfc2822_date_only_calendar_invalid_is_invalid(self) -> None:
+        r = _cap().canonicalize("32 Jan 2025", _contract())
+        assert r.status is Status.INVALID
+        assert r.evidence[0].rule == "invalid_calendar_date"
+
+    def test_rfc2822_datetime_calendar_invalid_is_invalid(self) -> None:
+        r = _cap().canonicalize("Tue, 32 Jan 2025 12:00:00 +0000", _contract())
+        assert r.status is Status.INVALID
+        assert r.evidence[0].rule == "invalid_calendar_date"
+
+    def test_unix_timestamp_out_of_range_is_invalid(self) -> None:
+        r = _cap().canonicalize("999999999999999999999", _contract())
+        assert r.status is Status.INVALID
+        assert r.evidence[0].rule == "invalid_epoch_value"
+
 
 class TestSub1000YearCanonicalization:
     """Years below AD 1000 must render with a 4-digit, zero-padded year.

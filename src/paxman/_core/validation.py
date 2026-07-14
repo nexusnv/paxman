@@ -23,7 +23,7 @@ from paxman._errors import UnsupportedContractError
 
 def validate(
     value: str,
-    contract: CanonicalDateContract | CanonicalEmailContract | CanonicalUUIDContract,
+    contract: object,
 ) -> ValidationResult:
     """Validate a canonical value against the contract.
 

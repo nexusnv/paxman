@@ -40,10 +40,32 @@ packages = ["src/paxman"]
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "pytest-cov>=6.0.0",
     "hypothesis>=6.156.6",
     "ruff>=0.15.21",
     "mypy>=2.3.0",
 ]
+
+# ---------------------------------------------------------------------------
+# Coverage (pytest-cov / coverage.py)
+# The CI enforces a per-subpackage ≥90% line-coverage gate (see
+# .github/workflows/ci.yml, "coverage" job). We measure only first-party
+# source under `paxman`; tests and generated files are excluded. The
+# per-package thresholds are asserted in CI via `coverage report
+# --fail-under=90 --include=...`, so no global `fail_under` is set here
+# (a global threshold would let a well-covered package subsidize a
+# poorly-covered one, which the per-subpackage gate is meant to prevent).
+# ---------------------------------------------------------------------------
+[tool.coverage.run]
+source = ["paxman"]
+omit = [
+    "*/tests/*",
+    "*/tests/**/*",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

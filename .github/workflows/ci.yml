@@ -174,6 +174,58 @@ jobs:
   # py3.12 only: the integration test exercises the public API surface
   # (paxman.canonicalize, paxman.replay, paxman.register_capability).
   # ---------------------------------------------------------------------------
+  # ---------------------------------------------------------------------------
+  # Coverage gate (per-subpackage, ≥90% each)
+  # Every top-level first-party package under src/paxman
+  # (_capabilities, _contracts, _core) must independently maintain at least
+  # 90% line coverage. We run the unit suite once to produce a single
+  # .coverage data file, then assert each subpackage's coverage with
+  # `coverage report --fail-under=90 --include=...`. A subpackage below 90%
+  # makes that report step exit non-zero and fails the job.
+  # A global threshold is deliberately NOT used: it would let a
+  # well-covered package subsidize a poorly-covered one.
+  # ---------------------------------------------------------------------------
+  coverage:
+    name: coverage gate (per-package ≥90%)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (frozen lockfile)
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Run unit tests with coverage
+        run: uv run pytest tests/unit --cov=paxman --cov-report= --no-header
+
+      - name: Coverage gate — per-subpackage ≥90%
+        run: |
+          set +e
+          uv run coverage report --fail-under=90 --include="*/paxman/_capabilities/*"
+          rc1=$?
+          uv run coverage report --fail-under=90 --include="*/paxman/_contracts/*"
+          rc2=$?
+          uv run coverage report --fail-under=90 --include="*/paxman/_core/*"
+          rc3=$?
+          if [ "$rc1" -ne 0 ] || [ "$rc2" -ne 0 ] || [ "$rc3" -ne 0 ]; then
+            echo "::error::One or more subpackages are below the 90% coverage gate."
+            exit 1
+          fi
+
   test-integration:
     name: integration tests (py3.12)
     runs-on: ubuntu-latest

@@ -50,6 +50,36 @@ class CapabilityRegistry:
         """Make the registry immutable. Idempotent."""
         self._frozen = True
 
+    def load_builtins(self, builtins: list[Capability]) -> None:
+        """Register built-in capabilities whose names are not already present.
+
+        MANDATE §4.3 + Law 8a: built-in loading is explicit at the
+        call site (the orchestrator's first-canonicalize step), never
+        at import. Law 6: the loading happens inside the orchestrator,
+        not as user-visible API.
+
+        Idempotency + ordering invariants (spec §2.4):
+        - skipping a name that is already registered is NOT a
+          ConfigurationError — the user intentionally registered a
+          capability of that name before their first canonicalize, and
+          that registration is the one that wins (§5.3 litmus: the
+          user's knowledge wins over Paxman's).
+        - is a no-op when the registry is already frozen (defense in
+          depth; the orchestrator only calls this when not frozen).
+        - the resulting capabilities_hash includes ALL registered
+          capabilities (user + built-in) so replay (which recompute-
+          hashes the same default_registry) still matches.
+
+        Args:
+            builtins: the list returned by builtin_capabilities().
+        """
+        if self._frozen:
+            return
+        existing = set(self._capabilities.keys())
+        for cap in builtins:
+            if cap.name not in existing:
+                self._capabilities[cap.name] = cap
+
     @property
     def is_frozen(self) -> bool:
         return self._frozen

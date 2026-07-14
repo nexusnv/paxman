@@ -117,7 +117,7 @@ Parse a Dict DSL contract into a `Contract` value object. Also accepts an alread
 
 **Returns:** `Contract` (the union `CanonicalEmailContract | CanonicalUUIDContract`).
 
-**Raises:** `ContractError` if the spec is malformed (unknown `kind`, missing `kind`, wrong-type field, or a `provider_aliases` value outside the closed set).
+**Raises:** `ContractError` if the spec is malformed (unknown `kind`, missing `kind`, wrong-type field, a `provider_aliases` value outside the closed set, or an invalid uuid version value for a `canonical_uuid` contract).
 
 **Example:**
 
@@ -194,7 +194,7 @@ class CanonicalEmailContract:
 
 The frozen value object representing an email canonicalization policy. Has a method `as_dict() -> dict` that round-trips through `parse_contract()`.
 
-### `CanonicalUUIDContract`
+### `Canonical UUID Contract`
 
 ```python
 @attrs.frozen

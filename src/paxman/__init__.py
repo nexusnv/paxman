@@ -15,6 +15,7 @@ from paxman._capabilities.registry import CapabilityRegistry
 from paxman._contracts.contract import (
     CanonicalEmailContract,
     Contract,
+    Email,
     parse_contract,
 )
 from paxman._core.artifact import ExecutionArtifact
@@ -83,6 +84,7 @@ __all__ = [
     "ConfigurationError",
     "Contract",
     "ContractError",
+    "Email",
     "Evidence",
     "ExecutionArtifact",
     "FrozenRegistryError",

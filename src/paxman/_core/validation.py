@@ -33,6 +33,9 @@ def validate(
     if isinstance(contract, CanonicalUUIDContract):
         # The UUIDCapability has already validated the canonical form and
         # the version policy; no further policy check is needed here.
+        # Mandate Law 11: Paxman must not silently canonicalize
+        # incorrectly — delegating to the capability's prior validation
+        # upholds that guarantee (deterministic, no guessing).
         return ValidationResult(is_valid=True)
     if not isinstance(contract, CanonicalEmailContract):
         raise UnsupportedContractError(

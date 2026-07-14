@@ -1,4 +1,4 @@
-"""Tests for the DateCapability (spec: .superpowers/specs/2026-07-15-...)."""
+"""Tests for the DateCapability (see spec 2026-07-15-date-canonicalization-design)."""
 
 from __future__ import annotations
 

@@ -14,9 +14,11 @@ from paxman._capabilities.protocol import Capability
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman._contracts.contract import (
     UUID,
+    CanonicalDateContract,
     CanonicalEmailContract,
     CanonicalUUIDContract,
     Contract,
+    Date,
     Email,
     parse_contract,
 )
@@ -79,6 +81,7 @@ def __getattr__(name: str) -> Any:
 
 __all__ = [
     "UUID",
+    "CanonicalDateContract",
     "CanonicalEmailContract",
     "CanonicalUUIDContract",
     "CanonicalizationError",
@@ -88,6 +91,7 @@ __all__ = [
     "ConfigurationError",
     "Contract",
     "ContractError",
+    "Date",
     "Email",
     "Evidence",
     "ExecutionArtifact",

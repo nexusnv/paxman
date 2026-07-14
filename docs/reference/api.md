@@ -109,13 +109,13 @@ See [How-to: Write a compliant capability](../how-to/write-a-compliant-capabilit
 def parse_contract(spec: Any) -> Contract
 ```
 
-Parse a Dict DSL contract into a `Contract` value object. Also accepts an already-parsed `CanonicalEmailContract` and returns it unchanged.
+Parse a Dict DSL contract into a `Contract` value object. Also accepts an already-parsed contract value object (`CanonicalEmailContract` or `CanonicalUUIDContract`) and returns it unchanged.
 
 | Parameter | Type | Description |
 |---|---|---|
 | `spec` | `Any` | A dict with a `kind` discriminator, or an already-parsed contract. |
 
-**Returns:** `Contract` (currently bound to `CanonicalEmailContract`).
+**Returns:** `Contract` (the union `CanonicalEmailContract | CanonicalUUIDContract`).
 
 **Raises:** `ContractError` if the spec is malformed (unknown `kind`, missing `kind`, wrong-type field, or a `provider_aliases` value outside the closed set).
 
@@ -209,10 +209,10 @@ The frozen value object representing a UUID canonicalization policy. Has an `as_
 ### `Contract`
 
 ```python
-Contract = CanonicalEmailContract
+Contract = CanonicalEmailContract | CanonicalUUIDContract
 ```
 
-Type alias. Currently bound to `CanonicalEmailContract`. Future versions may add new contract kinds.
+The union of both frozen contract types; currently `CanonicalEmailContract | CanonicalUUIDContract`. Future versions may add new contract kinds.
 
 ### `Capability`
 
@@ -267,7 +267,6 @@ class ExecutionArtifact:
     contract: _ContractLike
     version_stamp: VersionStamp
     replay_hash: str  # computed in __attrs_post_init__
-```
 
     def canonical_bytes(self) -> bytes: ...
 ```

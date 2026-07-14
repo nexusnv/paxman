@@ -28,24 +28,37 @@ Paxman takes input that has many valid representations (free text, structured re
 - It does not run in parallel. Capability invocation is sequential.
 - It does not improvise. A field the contract does not describe is left alone. A field the input cannot populate is reported as unresolvable.
 
-## Public API
+## Quickstart
 
 ```python
 import paxman
+from paxman import Email
 
 result = paxman.canonicalize(
-    input_data=raw_input,
-    contract=MyContract,
+    "  John.Doe@Gmail.COM  ",
+    Email(provider_aliases="gmail"),
 )
+print(result.status.name, "->", result.value)
+print("evidence:", [(e.rule, e.detail) for e in result.evidence])
 
-rehydrated = paxman.replay(result, contract=MyContract)
-assert rehydrated == result  # byte-equal
+rehydrated = paxman.replay(result, Email(provider_aliases="gmail"))
+assert rehydrated == result
+print("replay ok")
 ```
+
+Expected output:
+
+```
+CANONICALIZED -> johndoe@gmail.com
+evidence: [('stripped_whitespace', ''), ('lowercased_local_part', ''), ('lowercased_domain', ''), ('stripped_dots_in_local_part', '')]
+replay ok
+```
+
+Install with `git clone https://github.com/nexusnv/paxman.git && cd paxman && uv sync`, then `uv run python quickstart.py`.
 
 - `canonicalize(input_data, contract) -> ExecutionArtifact` — produce a canonical artifact.
 - `replay(artifact, contract) -> ExecutionArtifact` — rehydrate the artifact from the stored form, without re-execution.
-
-The `replay_hash` on the artifact is the deterministic signature that proves the artifact can be rehydrated byte-for-byte.
+- `Email(*, strict=False, provider_aliases="none", lowercase=True, strip_whitespace=True) -> CanonicalEmailContract` — declare the email contract (your vocabulary, not Paxman's).
 
 ## Status
 
@@ -66,3 +79,39 @@ uv sync
 ## License
 
 MIT. See [`LICENSE`](./LICENSE).
+
+## Extending Paxman
+
+Paxman ships with a built-in email capability. To register your own
+custom deterministic capability (a new canonical type, or an alternative
+implementation of an existing one), use the SPI:
+
+```python
+import paxman
+from paxman import Capability, register_capability
+
+class MyCapability:
+    name: str = "my_canonicalization"
+
+    def can_handle(self, contract, value) -> bool:
+        # Your deterministic predicate here.
+        ...
+
+    def canonicalize(self, value, contract):
+        # Your pure (value, contract) -> CapabilityResult transform here.
+        ...
+
+# Register BEFORE your first canonicalize call.
+register_capability(MyCapability())
+```
+
+**Because the registry freezes on the first `paxman.canonicalize(...)` call,
+register custom capabilities BEFORE your first canonicalize in the process.
+Calling `register_capability` after the first canonicalize raises
+`FrozenRegistryError`.**
+
+The built-in `EmailCapability` lives at
+`paxman._capabilities.builtins.email.EmailCapability` (private module —
+the import path is part of the SPI surface; user-facing vocabulary is
+`Email()`, not `EmailCapability()`). The built-in is auto-loaded on the
+first canonicalize; you do not need to register it yourself.

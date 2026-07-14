@@ -160,6 +160,25 @@ Domain-type sugar for declaring an email contract. Returns a `CanonicalEmailCont
 
 See [Concepts: Contracts](../concepts/contracts.md) and the [Email capability spec](../capabilities/email/index.md).
 
+### `UUID`
+
+```python
+def UUID(
+    *,
+    version: Literal["any", "1", "3", "4", "5", "7"] = "any",
+) -> CanonicalUUIDContract
+```
+
+Domain-type sugar for declaring a UUID contract. Returns a `CanonicalUUIDContract` value object. Keyword-only arguments.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `version` | `"any"`, `"1"`, `"3"`, `"4"`, `"5"`, `"7"` | `"any"` | Which UUID version to accept. `"any"` accepts all five. A specific value rejects other versions with `Status.INVALID`. |
+
+**Returns:** `CanonicalUUIDContract` — a frozen value object with the same field.
+
+See [Concepts: Contracts](../concepts/contracts.md) and the [UUID capability spec](../capabilities/uuid/index.md).
+
 ### `CanonicalEmailContract`
 
 ```python
@@ -174,6 +193,18 @@ class CanonicalEmailContract:
 ```
 
 The frozen value object representing an email canonicalization policy. Has a method `as_dict() -> dict` that round-trips through `parse_contract()`.
+
+### `CanonicalUUIDContract`
+
+```python
+@attrs.frozen
+class CanonicalUUIDContract:
+    version: Literal["any", "1", "3", "4", "5", "7"] = "any"
+    kind: str = "canonical_uuid"
+    version_field: int = 1
+```
+
+The frozen value object representing a UUID canonicalization policy. Has an `as_dict()` method; `parse_contract` produces it from a dict, and the orchestrator uses `as_dict()` via the structural Protocol.
 
 ### `Contract`
 

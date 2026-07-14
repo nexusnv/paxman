@@ -19,12 +19,19 @@ Paxman reports that fact rather than guessing.
 - `paxman.register_capability(capability)` — register a custom capability
   with the default registry before the first `canonicalize()` call.
 
-### The one built-in capability
+### The built-in capabilities
+
+v2.0.0-rc1 ships with two built-in capabilities:
 
 - `email_canonicalization` — canonicalizes email addresses under the
   `canonical_email` contract kind. The contract is built with the
   `Email()` factory. See
   [Email capability spec](../capabilities/email/index.md) for the full
+  rule table.
+- `uuid_canonicalization` — canonicalizes UUIDs under the
+  `canonical_uuid` contract kind. The contract is built with the
+  `UUID()` factory. See
+  [UUID capability spec](../capabilities/uuid/index.md) for the full
   rule table.
 
 ### The five outcomes

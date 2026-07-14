@@ -32,6 +32,35 @@ class CanonicalEmailContract:
 
 The `kind` and `version` fields are fixed. They are not part of the `Email()` factory signature.
 
+## `CanonicalUUIDContract`
+
+The frozen value object representing a UUID canonicalization policy.
+
+```python
+@attrs.frozen
+class CanonicalUUIDContract:
+    version: Literal["any", "1", "3", "4", "5", "7"] = "any"
+    kind: str = "canonical_uuid"
+    version_field: int = 1
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `version` | `"any"`, `"1"`, `"3"`, `"4"`, `"5"`, `"7"` | `"any"` | Which UUID version(s) to accept. |
+| `kind` | `str` | `"canonical_uuid"` | The contract kind discriminator. Fixed. |
+| `version_field` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
+
+## `UUID()` — the factory
+
+```python
+def UUID(
+    *,
+    version: Literal["any", "1", "3", "4", "5", "7"] = "any",
+) -> CanonicalUUIDContract
+```
+
+Domain-type sugar for declaring a UUID contract. Returns a `CanonicalUUIDContract`. All arguments are keyword-only.
+
 ## `Email()` — The Factory
 
 ```python

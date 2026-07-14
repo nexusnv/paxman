@@ -5,6 +5,8 @@ Mandate: see MANDATE.md. Spec: see docs/superpowers/specs/.
 
 from __future__ import annotations
 
+from typing import Any as _Any
+
 __version__ = "0.0.0.dev0"
 
 from paxman import _orchestrator_runtime
@@ -53,6 +55,23 @@ def register_capability(capability: Capability) -> None:
     further calls raise `FrozenRegistryError` (mandate §5.4).
     """
     _orchestrator_runtime.default_registry.register(capability)
+
+
+def __getattr__(name: str) -> _Any:
+    """PEP 562 module-level attribute lookup (mandate §1.1, Law 8).
+
+    The 'normalize' name does not exist on this module — Paxman
+    canonicalizes, it does not normalize. Raising an AttributeError that
+    teaches the right function is informative failure (Law 8); there is
+    still no 'normalize' attribute (§1.1 identity boundary holds).
+    """
+    if name == "normalize":
+        raise AttributeError(
+            "the 'normalize' name does not exist on this module; "
+            "Paxman canonicalizes, it does not normalize. "
+            "Use canonicalize() instead."
+        )
+    raise AttributeError(f"module 'paxman' has no attribute {name!r}")
 
 
 __all__ = [

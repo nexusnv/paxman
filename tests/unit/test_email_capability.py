@@ -210,7 +210,7 @@ class TestEmailCapability:
         assert r.status is Status.INVALID
         assert "grammar_rejected" in {e.rule for e in r.evidence}
 
-    def test_grammar_rejects_quoted_string_local_part_v1_scope(self) -> None:
+    def test_grammar_rejects_quoted_string_local_part_v2x_scope(self) -> None:
         c = _cap()
         r = c.canonicalize('"user name"@example.com', _contract())
         assert r.status is Status.INVALID

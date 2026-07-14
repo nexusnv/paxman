@@ -124,12 +124,18 @@ in the local or domain part. It returns `Status.INVALID`. This is a
 asked for the stricter input.
 
 > **v2.0.0 scope.** The strict-mode check is intentionally narrow:
-> whitespace rejection and ASCII-only enforcement. Full RFC 5321
-> §3.2.3 grammar (dot-atom / quoted-string local part, dot-atom
-> domain, leading-dot / consecutive-dot / length limits) is deferred
-> to a v2.0.x release. Recording the v2.0.0 strict-mode scope here
-> makes the gap explicit so a future reader does not infer broader
-> validation than the code performs.
+> whitespace rejection and ASCII-only enforcement. Strict mode does
+> NOT invoke a dot-atom grammar check. The dot-atom surface-grammar
+> gate (RFC 5322 §3.2.3 + RFC 5321 §3.4 + RFC 1035 §2.3.1) is a
+> separate Law 14 requirement and runs unconditionally for every
+> input, regardless of `strict`. Quoted-string local parts
+> (`RFC 5322 §3.2.4`) and bracketed domain literals
+> (`RFC 5321 §3.4.1` / `§3.4.2`) are out of v2.0.0 scope and fail
+> the gate with `grammar_rejected` in both strict and non-strict
+> modes; an explicit v2.x may extend the gate to admit them. Recording
+> the v2.0.0 strict-mode scope here makes the gap explicit so a
+> future reader does not infer broader validation than the code
+> performs.
 
 ### 1.6 What the capability does NOT do (Law 4, Law 8a)
 
@@ -418,20 +424,32 @@ presence-only). Adding or removing a public symbol requires a spec +
 plan change; the test will fail until both the surface and the
 allowlist agree.
 
-Public surface (22 symbols, including `__version__`):
+Public surface (24 entries on `dir(paxman)` after filtering
+underscore-prefixed names; `__version__` is also present as the
+module's dunder but the `dir()` filter excludes it):
 
 - **Functions** (3): `canonicalize`, `replay`, `register_capability`.
-- **Value types** (7): `Status`, `Evidence`, `VersionStamp`,
-  `CapabilityResult`, `ValidationResult`, `ExecutionArtifact`,
-  `__version__`.
+- **Value types** (6): `Status`, `Evidence`, `VersionStamp`,
+  `CapabilityResult`, `ValidationResult`, `ExecutionArtifact`.
 - **Contracts** (3): `Contract`, `CanonicalEmailContract`,
   `parse_contract`.
-- **Capability SPI** (2): `Capability`, `CapabilityRegistry`.
+- **Capability SPI** (3): `Capability`, `CapabilityRegistry`,
+  `Email` (the email capability shim — value-object / factory form
+  that returns a `CanonicalEmailContract`).
 - **Errors** (7): `PaxmanError`, `CanonicalizationError`,
   `ContractError`, `ConfigurationError`, `FrozenRegistryError`,
   `UnsupportedContractError`, `VersionMismatchError`.
+- **PEP 562 leak** (2): `Any` (typing primitive leaked by the
+  `__getattr__` return type), `annotations` (`__future__` artifact).
+  These are documented as accepted trade-offs in the v2.0.0 plan and
+  are pinned in the test allowlist.
 
-The 22-symbol set is the surface a user sees on `dir(paxman)`. Internal
+`__version__` (e.g. `"0.0.0.dev0"`) is the Paxman package version
+recorded on every `VersionStamp`; it is exposed as a dunder and is
+excluded from the `dir()` allowlist filter (which skips names
+starting with `_`).
+
+The 24-entry set is the surface a user sees on `dir(paxman)`. Internal
 modules under `paxman._core/`, `paxman._capabilities/`,
 `paxman._contracts/`, `paxman._errors.py`, and
 `paxman._orchestrator_runtime.py` are implementation detail and must
@@ -519,7 +537,103 @@ mandate §10.3 law-by-law test.
 
 ---
 
-## 7. Exit verification
+## 7. Law 14 — Canonical Form Provenance
+
+[Law 14](../../../MANDATE.md#law-14--canonical-forms-have-provenance)
+requires that every rule emitted by a capability carries a
+`provenance: str` citation naming one of three authoritative sources:
+a published specification, documented platform behavior, or a
+declared Paxman policy. This section is the canonical record of the
+EmailCapability's Law 14 audit.
+
+### 7.1 Evidence schema
+
+`Evidence` carries a `provenance` field:
+
+```python
+@attrs.frozen
+class Evidence:
+    rule: str
+    detail: str = ""
+    provenance: str = ""
+```
+
+`replay_hash` serialization is updated to include `provenance`
+(breaking change to the byte layout; v2 has no pre-Law 14
+artifacts in production, so no migration is needed).
+
+### 7.2 Rule-by-rule audit of `EmailCapability`
+
+| Rule | Law 14 category | Citation |
+|---|---|---|
+| `not_an_email_contract` | runtime invariant | n/a (Law 14 §3.6 allow-list) |
+| `not_a_string_value` | runtime invariant | n/a (Law 14 §3.6 allow-list) |
+| `strict_rejected_whitespace` | declared Paxman policy | `paxman spec/email §1.5` |
+| `strict_rejected_non_ascii` | declared Paxman policy | `paxman spec/email §1.5` |
+| `missing_at_sign` | authoritative spec | RFC 5322 §3.6 |
+| `empty_local_or_domain` | authoritative spec | RFC 5322 §3.6 |
+| `grammar_rejected` | authoritative spec | RFC 5322 §3.2.3 + RFC 5321 §3.4 + RFC 1035 §2.3.1 |
+| `stripped_whitespace` | authoritative spec | RFC 5322 §2.1 + §3.6.3 (CFWS) |
+| `lowercased_local_part` | declared Paxman policy | `paxman spec/email §1.3` (diverges from RFC 5321 §2.4) |
+| `lowercased_domain` | authoritative spec | RFC 5321 §2.4 |
+| `domain_synonym_gmail` | documented platform behavior | Google Help: "Use aliases on your Account" |
+| `stripped_dots_in_local_part` | documented platform behavior | Google Help: dots don't matter in Gmail |
+| `stripped_plus_tag` | documented platform behavior | Google Help: Gmail +alias addressing |
+
+The provenance manifest lives at `_RULE_PROVENANCE` in
+`src/paxman/_capabilities/builtins/email.py`; every `Evidence(...)`
+construction pulls its `provenance` from it by rule name via the
+`_evidence` helper. A rule with no manifest entry raises `KeyError`
+at the construction site, surfacing a missing citation.
+
+### 7.3 Surface-grammar gate
+
+The local part is accepted iff it matches RFC 5322 §3.2.3 `dot-atom`:
+
+```text
+atext = ALPHA / DIGIT / "!" / "#" / "$" / "%" / "&" / "'" / "*" /
+        "+" / "-" / "/" / "=" / "?" / "^" / "_" / "`" / "{" /
+        "|" / "}" / "~"
+dot-atom = atext *("." atext)
+```
+
+The domain is accepted iff it matches RFC 5321 §3.4 dot-atom form:
+
+```text
+sub-domain = Let-dig *Ldh-str
+Ldh-str = Let-dig | "-"
+Let-dig = ALPHA / DIGIT
+dot-atom-domain = sub-domain *("." sub-domain)
+```
+
+Each label is ≤ 63 chars (RFC 1035 §2.3.1); total ≤ 253 (RFC 1035
+§2.3.4). Quoted-string local parts and bracketed domain literals
+are out of v2.0.0 scope and fail with `grammar_rejected`. The gate
+runs AFTER the rewrite pass (strip / lowercase / gmail dot-strip /
++tag-strip) so an input like `..@gmail.com` is rewritten to an
+empty local part, which the gate rejects, rather than the input
+being rejected before rewrite would have produced a canonical form.
+Idempotence is preserved: a canonical dot-atom email passes the
+gate trivially on re-canonicalize.
+
+### 7.4 Out-of-scope follow-ups (deferred)
+
+1. Quoted-string local parts (`RFC 5322 §3.2.4`) — currently
+   `grammar_rejected`; a v2.x capability extension.
+2. Bracketed domain literals (`RFC 5321 §3.4.1` / `§3.4.2`) — same.
+3. Internationalized email (`RFC 6530` / `6531`) — non-ASCII in
+   local part or domain continues to be `grammar_rejected`. Tied
+   to SMTPUTF8 support design.
+4. README "Status Reference" + "Email defaults" + "no batch API"
+   docs gaps surfaced by the user-experiment report — explicitly
+   deferred per user direction.
+5. `canonicalize_many` batch API — explicitly deferred and not
+   shipped in v2.0.0, per user direction. A future major-version
+   bump would re-open the design question.
+
+---
+
+## 8. Exit verification
 
 Before the design is considered "delivered" the following must all be
 true:
@@ -540,5 +654,10 @@ true:
 6. The thirteen laws are each backed by at least one test (Law 11 has
    the SPI litmus test; Law 12 has the replay property test; Law 13
    has the immutability property test, etc.).
+7. Law 14: every `Evidence` entry from `EmailCapability.canonicalize`
+   carries a non-empty `provenance` (except the two allow-listed
+   dispatch invariants, `not_an_email_contract` and
+   `not_a_string_value`). The `test_no_empty_provenance_in_email_capability`
+   unit test enforces this.
 
 If any item fails, the work is not complete.

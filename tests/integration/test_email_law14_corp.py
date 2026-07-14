@@ -1,7 +1,7 @@
 """Golden 100+-email regression corpus for Law 14 (canonical-form provenance).
 
 Spec: `docs/superpowers/specs/
-2026-07-14-law-14-canonical-form-provenance.md` §5.2.
+2026-07-13-email-canonicalization-design.md` §7.
 
 This test pins the expected ``(Status, canonical value, set of evidence
 rule names)`` for every entry in the corpus. Unlike the existing

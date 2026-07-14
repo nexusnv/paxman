@@ -11,7 +11,7 @@ Mandate Laws 4, 5, 7, 8, 8a, 11, 14:
 - Law 14: every transformation rule has provenance. The rule→citation
   manifest is `_RULE_PROVENANCE`; `Evidence.provenance` is populated
   from it. See `docs/superpowers/specs/
-  2026-07-14-law-14-canonical-form-provenance.md` for the rule-by-rule
+  2026-07-13-email-canonicalization-design.md` §7 for the rule-by-rule
   audit.
 
 Surface-grammar gate
@@ -178,8 +178,11 @@ def _validate_dot_atom_domain(domain: str) -> bool:
     NOTE on intentional acceptances: a single-label domain like
     `localhost` is *valid* under RFC 1035 §2.3.1 (a label is a
     sub-domain). This capability accepts `user@localhost` as
-    CANONICALIZED under the v2.0.0 grammar gate — the contract author
-    can opt out via `strict=True` for tighter enforcement.
+    CANONICALIZED under the v2.0.0 grammar gate. `strict=True` is
+    intentionally narrow in v2.0.0 (whitespace + ASCII-only) and
+    does NOT reject single-label domains; a contract author wanting
+    a tighter multi-label requirement is not served by `strict=True`
+    in v2.0.0 and would need a future v2.x capability extension.
     """
     if not domain:
         return False
@@ -301,15 +304,6 @@ class EmailCapability:
         # the gate trivially on re-canonicalize.
         if not _validate_dot_atom_local(local) or not _validate_dot_atom_domain(domain):
             evidence.append(_evidence("grammar_rejected"))
-            return CapabilityResult(
-                status=Status.INVALID,
-                evidence=tuple(evidence),
-            )
-
-        # Re-validate empty parts after rewrites (Law 4) and after grammar
-        # gate. Stripping dots or a +tag can empty the local part.
-        if not local or not domain:
-            evidence.append(_evidence("empty_local_or_domain"))
             return CapabilityResult(
                 status=Status.INVALID,
                 evidence=tuple(evidence),

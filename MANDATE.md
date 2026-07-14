@@ -5,15 +5,9 @@
 > recorded here. Every architectural decision, every pull request, and every
 > new abstraction is evaluated against the principles in this document.
 >
-> **Supersedes:** the v1.x "contract-driven normalization" framing recorded in
-> [`.sisyphus/introduction-to-paxman.md`](./.sisyphus/introduction-to-paxman.md).
-> That document describes a system that was retracted on 2026-07-12; see
-> [`RETRACTION.md`](./RETRACTION.md) and the audit in
-> [`.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md`](./.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md).
->
-> **Authoritative for:** v2 and all subsequent releases. Where this document
-> conflicts with `README.md`, [`PROPOSED_STRUCTURE.md`](./PROPOSED_STRUCTURE.md),
-> an ADR, or any other document, this document wins.
+> Where this document conflicts with `README.md`,
+> [`PROPOSED_STRUCTURE.md`](./PROPOSED_STRUCTURE.md), an ADR, or any other
+> document, this document wins.
 
 ---
 
@@ -25,7 +19,7 @@ It transforms equivalent representations of *known* information into a single
 canonical form. When the input does not contain enough information to
 determine a unique result, Paxman reports that fact rather than guessing.
 
-The project's v1.x drift was caused by leaving the boundaries implicit. They
+The project's drift was caused by leaving the boundaries implicit. They
 are now explicit.
 
 ### 1.1 What Paxman is not
@@ -35,7 +29,7 @@ are now explicit.
 | a **normalizer** | "Normalization" is a wider, fuzzier category that admits heuristic rules, scoring, and interpretation. Paxman does not interpret. It canonicalizes — it rewrites equivalent representations of *known* information into one chosen form. Normalization can guess; canonicalization cannot. |
 | a **deterministic parser** | A parser maps text → structured value against a grammar. Paxman's job is broader on the input side (any representation of known information, not just text) and narrower on the output side (a single canonical form, not a parsed AST). Calling Paxman a parser mis-sets the expectation that the input must be a string and the output must be a syntax tree. |
 | a **workflow engine** / **DAG orchestrator** | A user-defined pipeline places control flow in the caller's hands. Once you allow that, Paxman stops being a deterministic canonicalization engine and becomes a general-purpose workflow framework — it would re-create part of LangChain, Haystack, or a DAG orchestrator. See §4. |
-| an **AI / extraction system** | v1.x drifted because it quietly adopted the mindset of an AI system: *"How do I maximize successful extraction?"* The mindset of a deterministic canonicalization engine is the opposite: *"How do I ensure that every successful canonicalization is unquestionably correct?"* See §7. |
+| an **AI / extraction system** | Canonicalization drifts when it quietly adopts the mindset of an AI system: *"How do I maximize successful extraction?"* The mindset of a deterministic canonicalization engine is the opposite: *"How do I ensure that every successful canonicalization is unquestionably correct?"* See §7. |
 
 If a contributor proposes any abstraction that turns Paxman into one of the
 four above, the answer is no, and Law 11 is the rule that enforces it.
@@ -87,7 +81,7 @@ of them in a different sense in code, comment, docstring, or ADR is wrong.
 |---|---|
 | **canonical form** | A single, chosen representation selected from a set of semantically equivalent representations. Defined formally in §2. |
 | **canonicalization** | The act of producing a canonical form from an input. Defined formally in §2. |
-| **contract** | A value (the v2 starter format is the Dict DSL) that declares *what* the canonical form must be for an input. It is the source of truth (Law 4). The contract never declares *how* to produce it. |
+| **contract** | A value (the starter format is the Dict DSL) that declares *what* the canonical form must be for an input. It is the source of truth (Law 4). The contract never declares *how* to produce it. |
 | **capability** | A pure, deterministic transformation that answers one question: *"Can I canonicalize this value, given this contract?"* and, if yes, produces a `CapabilityResult`. Capabilities do not orchestrate (Law 5, Law 8). |
 | **resolver** / **dispatcher** | The component that, given `(contract, value)`, finds the capability (or capabilities) that explicitly declare they canonicalize it. Resolution is a deterministic lookup, never a guess (§6). |
 | **registry** | The container that holds registered capabilities and answers `resolve(contract, value)`. It is a data structure, not a strategist. |
@@ -149,8 +143,8 @@ law of the project.
 
 ## 3. The Three Conflated Concepts
 
-The conversation that motivated this reboot identified three things that v1.x
-conflated. Naming them is the first defense against repeating the drift.
+Three things are commonly conflated in canonicalization systems. Naming them
+is the first defense against drift.
 
 ### 3.1 Deterministic algorithm — ✅ allowed
 
@@ -194,7 +188,7 @@ something else.
 
 A capability is one deterministic transformation that answers one question:
 *"Can I canonicalize this value, given this contract?"* Examples of the kind
-of capability the v2 SPI should admit:
+of capability the SPI should admit:
 
 ```
 DateParser   MoneyParser   EmailParser   PhoneNumberParser
@@ -264,7 +258,7 @@ class Capability(Protocol):
     def canonicalize(self, value, contract) -> CapabilityResult: ...
 ```
 
-Or whatever shape v2 settles on — but the shape must forbid control-flow
+Or whatever shape the SPI settles on — but the shape must forbid control-flow
 verbs. **Absent from the SPI:**
 
 - `next()`
@@ -330,9 +324,9 @@ this pair; classified Ambiguous"*).
 
 ### 6.1 Why "planner" was retired
 
-v1.x invested heavily in a "planner." After this reboot, that name is retired.
-"Planner" implies intelligence and strategy. What Paxman actually does is
-**resolve**:
+Earlier canonicalization work invested heavily in a "planner." That name is
+retired. "Planner" implies intelligence and strategy. What Paxman actually
+does is **resolve**:
 
 ```
 Contract  →  Capability Resolution  →  Execution
@@ -591,8 +585,8 @@ If not, it belongs elsewhere.
 > 2. Can it ever guess? → If yes, reject.
 > 3. Can score ordering change between runs? → If yes, reject.
 
-This law becomes a filter for **every pull request**. It is the law that would
-have saved v1.x.
+This law becomes a filter for **every pull request**. It is the law that
+prevents silent invention.
 
 ### Law 12 — Replayability is a First-Class Invariant
 
@@ -725,7 +719,7 @@ locale = "en-MY")`. Replay across that boundary is governed by two rules:
 1. **A contract carries a version.** The Dict DSL will grow a `version` field
    (or equivalent) so that an artifact records not only the Paxman version
    and the capability set but also the contract version that produced it.
-2. **Replay against a different contract version is a v2 design decision.**
+2. **Replay against a different contract version is an open design decision.**
    It is recorded in `PROPOSED_STRUCTURE.md` §"Decisions left to make." The
    conservative default is to raise `VersionMismatchError`; a permissive
    future option is to allow replay if the byte-equal contract is unchanged.
@@ -738,10 +732,10 @@ Contracts are not exempt from the determinism invariant.
 
 ## 9. The Two Mindsets
 
-v1.x drifted because it quietly adopted the mindset of an AI system. v2
-deliberately inverts it.
+Canonicalization drifts when it quietly adopts the mindset of an AI system.
+Paxman deliberately inverts it.
 
-| v1.x mindset (rejected) | v2 mindset (mandate) |
+| AI / extraction mindset (rejected) | Canonicalization mindset (mandate) |
 |---|---|
 | "How do I maximize successful extraction?" | "How do I ensure that every successful canonicalization is unquestionably correct?" |
 
@@ -808,17 +802,15 @@ That sentence captures everything in this document.
 
 ## 11. Provenance
 
-This document codifies the conversation that motivated the v2 reboot
-(2026-07-13), which followed the v1.x retraction recorded in
-[`RETRACTION.md`](./RETRACTION.md). The eleven original laws and the
-capability/pipeline distinction are drawn directly from that conversation.
-Law 2 (Idempotence), Law 12 (Replayability), Law 13 (Artifact Immutability),
-Law 8a (Capabilities Depend Only on Replayable Inputs), and the §2 formal
+The eleven original laws and the capability/pipeline distinction are drawn
+directly from the conversation that produced this document. Law 2
+(Idempotence), Law 12 (Replayability), Law 13 (Artifact Immutability), Law 8a
+(Capabilities Depend Only on Replayable Inputs), and the §2 formal
 definition of canonicalization were added during the first review pass to
 make explicit what the original conversation left implicit.
 
 Law 14 (Canonical Forms Have Provenance) was added on 2026-07-14, after a
-first-time-user experiment surfaced that the v2 EmailCapability silently
+first-time-user experiment surfaced that the EmailCapability silently
 returned `CANONICALIZED` for malformed inputs (`user@example.com@example.com`,
 `user@-domain.com`, `user@[127.0.0.300]`, etc.). The existing thirteen laws
 described *how* Paxman behaves (deterministically, no guessing,
@@ -828,7 +820,7 @@ canonical-form invention. The recalibration audit for the EmailCapability
 is recorded in
 [`docs/superpowers/specs/2026-07-13-email-canonicalization-design.md` §7](./docs/superpowers/specs/2026-07-13-email-canonicalization-design.md).
 
-The constitutional framing — "laws, not ADRs" — is the lesson of the audit
-in [`.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md`](./.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md):
-v1.x failed because it lacked constitutional boundaries, not because it
-lacked components.
+The constitutional framing — "laws, not ADRs" — is what makes Paxman
+resistant to the kind of silent invention that constitutional boundaries
+exist to prevent: a system can fail not because it lacked components, but
+because it lacked the laws to reject inventions.

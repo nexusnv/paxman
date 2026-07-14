@@ -258,8 +258,11 @@ class Capability(Protocol):
     def canonicalize(self, value, contract) -> CapabilityResult: ...
 ```
 
-Or whatever shape the SPI settles on — but the shape must forbid control-flow
-verbs. **Absent from the SPI:**
+This shape — defined concretely in `src/paxman/_capabilities/protocol.py`
+and re-exported from `paxman` as `Capability` — is the constitutional
+interface. The shape must forbid control-flow verbs. Future changes to
+the SPI require an explicit mandate amendment (this section), not a
+silent extension of the protocol. **Absent from the SPI:**
 
 - `next()`
 - `execute()`

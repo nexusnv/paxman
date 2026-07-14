@@ -1,8 +1,8 @@
-# Handle ambiguous input
+# Handle Ambiguous Input
 
 `Status.AMBIGUOUS` means more than one registered capability claimed the same `(contract, value)` pair. Paxman refuses to pick one. This page explains what to do.
 
-## What ambiguity means
+## What Ambiguity Means
 
 Each capability's `can_handle(contract, value)` method returns `True` if the capability declares it can canonicalize the pair. The registry collects every capability whose `can_handle` returned `True`. If the list has:
 
@@ -12,7 +12,7 @@ Each capability's `can_handle(contract, value)` method returns `True` if the cap
 
 Paxman does not pick between claimants. The reason: if two capabilities both return `True` for the same pair, by construction there is no unique canonical answer — the system has, in effect, two equally-valid definitions of "canonical" for that input. The library reports the situation and stops.
 
-## A contrived example
+## A Contrived Example
 
 Suppose you have two capabilities registered:
 
@@ -28,7 +28,7 @@ If you call `paxman.canonicalize("John@Example.com", Email())`:
 
 The artifact's `value` is `None`. The evidence contains a `multiple_claimants` rule listing both capabilities.
 
-## How to fix it
+## How to Fix It
 
 The fix is to remove the ambiguity. Three options:
 
@@ -36,7 +36,7 @@ The fix is to remove the ambiguity. Three options:
 2. **Narrow the `can_handle` predicate.** Make one of the capabilities more specific so it only claims a subset of pairs. For example, `EmailUppercase` could be renamed and registered under a different contract `kind` that only uppercase-canonicalization declares.
 3. **Use a more specific contract.** A more specific contract (with stricter fields) might be claimed by only one capability. The contract is the policy; if the policy is clear, the ambiguity goes away.
 
-## What to do at runtime
+## What to Do at Runtime
 
 If ambiguity comes back and you cannot change the registry, you have three options at runtime:
 
@@ -46,7 +46,7 @@ If ambiguity comes back and you cannot change the registry, you have three optio
 
 In all three cases, log the evidence. The `multiple_claimants` rule lists the claiming capabilities, which is the information you need to debug.
 
-## A worked example
+## A Worked Example
 
 ```python
 import paxman
@@ -97,7 +97,7 @@ print(result.evidence)
 
 If you re-run this code after removing one of the `register_capability` calls, the artifact's status becomes `CANONICALIZED`.
 
-## When ambiguity should not happen
+## When Ambiguity Should Not Happen
 
 In a well-designed system, ambiguity should be rare. Most use cases have a single capability per contract `kind`. Ambiguity is a sign that:
 
@@ -107,7 +107,7 @@ In a well-designed system, ambiguity should be rare. Most use cases have a singl
 
 If ambiguity comes back and you did not expect it, audit the registered capabilities. The registry's `CapabilityRegistry.capabilities_hash()` returns the sorted list of registered capability names; you can compare it against your expected set.
 
-## Where to go next
+## Where to Go Next
 
 - [Interpret the five outcomes](interpret-the-5-statuses.md) — the full pattern.
 - [Status and evidence](../concepts/status-and-evidence.md) — what the evidence list contains.

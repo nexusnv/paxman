@@ -1,14 +1,14 @@
-# What canonicalization is
+# What Canonicalization Is
 
 Paxman is a **deterministic canonicalization engine**. This page explains what that means and how it differs from related ideas.
 
-## Canonicalization, in one sentence
+## Canonicalization, in One Sentence
 
 Canonicalization is the selection of exactly one representation from a set of semantically equivalent representations.
 
-For example, the strings `"John.Doe@Gmail.COM"`, `"johndoe@gmail.com"`, and `"  JohnDoe@GMAIL.com  "` are all valid representations of the same email address. A canonicalization engine selects one — `"johndoe@gmal.com"` after lowercasing and Gmail's dot-ignoring rule — and rewrites the input to match.
+For example, the strings `"John.Doe@Gmail.COM"`, `"johndoe@gmail.com"`, and `"  JohnDoe@GMAIL.com  "` are all valid representations of the same email address. A canonicalization engine selects one — `"johndoe@gmail.com"` after lowercasing and Gmail's dot-ignoring rule — and rewrites the input to match.
 
-## What canonicalization is not
+## What Canonicalization Is Not
 
 Paxman canonicalizes. It does not:
 
@@ -17,7 +17,7 @@ Paxman canonicalizes. It does not:
 - **Orchestrate.** Paxman does not let you define a pipeline of operations to apply to the input. The pipeline is fixed. You can teach Paxman new transformations (called *capabilities*); you cannot rearrange the order in which Paxman applies them.
 - **Infer.** Paxman does not use any form of AI, language model, or statistical guess. If the canonical form is not determined by the input and the contract, Paxman reports the situation and stops.
 
-## The three properties Paxman guarantees
+## The Three Properties Paxman Guarantees
 
 Every `paxman.canonicalize()` call returns an artifact that satisfies three properties. The full formal statement is in [The three invariants](the-three-invariants.md); the short version is:
 
@@ -25,7 +25,7 @@ Every `paxman.canonicalize()` call returns an artifact that satisfies three prop
 2. **Idempotence.** Re-canonicalizing a canonical value yields the same value. `canonicalize(canonicalize(x)) == canonicalize(x)`. This eliminates a whole class of bugs where re-running canonicalization on already-canonical data drifts.
 3. **Replay.** Given an artifact and its contract, `replay()` returns the same artifact without re-executing the capability. The artifact is independently verifiable.
 
-## The role of the contract
+## The Role of the Contract
 
 The contract declares *what* the canonical form is, never *how* to produce it. The contract is the source of truth; the capability is the mechanism that satisfies it.
 
@@ -33,17 +33,18 @@ For example, `Email(provider_aliases="gmail")` declares that the canonical form 
 
 This separation — *what* from *how* — is the central design decision of Paxman. It is what makes the determinism and replay guarantees enforceable: a contract is a closed declaration of policy, and the contract is part of the artifact's identity.
 
-## What happens when canonicalization is not possible
+## What Happens When Canonicalization Is Not Possible
 
-If the input does not contain enough information to determine a unique canonical form, Paxman does not guess. It reports one of three non-success outcomes on the artifact:
+If the input does not contain enough information to determine a unique canonical form, Paxman does not guess. It reports one of the four non-success outcomes on the artifact:
 
 - `Status.INVALID` — the input cannot satisfy the contract (e.g. `"foo"` is not a valid email).
-- `Status.AMBIGUOUS` — the input admits more than one canonical reading (e.g. with no `provider_aliases` policy, `"a@b.com"` and `"A@b.com"` are not equivalent unless the contract says so; if the contract cannot decide, the outcome is `AMBIGUOUS`).
+- `Status.MISSING` — the contract requires information the input does not provide (a future Money contract might require a currency that the input does not specify).
+- `Status.AMBIGUOUS` — more than one registered capability claims the same `(contract, value)` pair. Paxman refuses to pick one; either narrow the registry, or treat the outcome as a rejection.
 - `Status.UNSUPPORTED` — the contract's shape is recognized but no registered capability declares that it canonicalizes it.
 
 These are not errors. They are outcomes, recorded on the artifact. Your code is expected to handle them. See [Interpret the five outcomes](../how-to/interpret-the-5-statuses.md) for the recommended pattern.
 
-## Where to go next
+## Where to Go Next
 
 - [The three invariants](the-three-invariants.md) — the formal statement of the three guarantees.
 - [Contracts](contracts.md) — what a contract is, and why the contract is the truth.

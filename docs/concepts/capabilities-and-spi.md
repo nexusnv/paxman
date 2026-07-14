@@ -2,7 +2,7 @@
 
 A capability is a pure, deterministic transformation that satisfies a contract. It is the only extension point of Paxman.
 
-## What a capability does
+## What a Capability Does
 
 A capability answers one question: *"Can I canonicalize this value, given this contract?"* If yes, it returns a `CapabilityResult` with the canonical value and a list of evidence entries.
 
@@ -12,7 +12,7 @@ A capability is:
 - **Deterministic.** Given the same input and contract, the capability always returns the same `CapabilityResult`. The order in which the registry sees the capabilities does not change the result.
 - **Bounded.** A capability transforms. It does not orchestrate, branch, or sequence. The Paxman pipeline is fixed; the capability plugs into one stage of it.
 
-## What a capability does not do
+## What a Capability Does Not Do
 
 A capability does not:
 
@@ -40,21 +40,21 @@ class Capability(Protocol):
 
 Notice what is *not* in the SPI. There is no `next()`, no `execute()`, no `pipeline`, no `stage`, no context switching, no branching. A capability does not orchestrate; it transforms.
 
-## Why the SPI is narrow
+## Why the SPI Is Narrow
 
 The narrowness is the central design decision. It is what keeps Paxman from becoming a workflow engine.
 
-If the SPI allowed a capability to return "I have a result, and now run this other capability," the system would have a pipeline. Once you have a pipeline, you have control flow in the user's hands. Once you have control flow, the user can encode heuristics, fallbacks, and probabilistic logic. Once you have heuristics, the system is no longer deterministic.
+If the SPI allowed a capability to return "I have a result, and now run this other capability," the system would have a pipeline. Once you have a pipeline, you have control flow in the user's hands. Once you have control flow, the user can encode ranking, fallbacks, and probabilistic logic. Once ranking or probability enters the dispatch, determinism has been silently forfeited.
 
 The narrow SPI prevents this. A capability answers one question and returns one result. The library owns the question of *how* to combine multiple capabilities' answers (currently: if exactly one claims the pair, use it; if zero claim it, return `UNSUPPORTED`; if more than one claims it, return `AMBIGUOUS`).
 
-## The SPI litmus test
+## The SPI Litmus Test
 
 Before registering a new capability, run it through this question:
 
 > Can two independent implementations of this capability produce different outputs for the same `(value, contract)` pair while both correctly implementing the SPI?
 
-If the answer is **yes**, the capability is not a Paxman capability. It is a heuristic in disguise. Paxman only admits capabilities that are fully determined by their inputs.
+If the answer is **yes**, the capability is not a Paxman capability. The abstraction is underdetermined; the dispatch would have to pick a winner. Paxman rejects underdetermined abstractions at the SPI boundary.
 
 For example:
 
@@ -63,7 +63,7 @@ For example:
 
 The litmus test is the filter for whether a candidate capability belongs in Paxman.
 
-## How capabilities are registered
+## How Capabilities Are Registered
 
 You register a capability before your first `paxman.canonicalize()` call:
 
@@ -87,7 +87,7 @@ After the first `canonicalize()` call, the registry is frozen. Further `register
 
 See the [How-to: Write a compliant capability](../how-to/write-a-compliant-capability.md) page for a full worked example.
 
-## What comes in the box
+## What Comes in the Box
 
 Paxman v2.0.0 ships one built-in capability:
 
@@ -95,7 +95,7 @@ Paxman v2.0.0 ships one built-in capability:
 
 The built-in is auto-loaded on the first `canonicalize()` call. You do not need to register it yourself. If you register a capability named `email_canonicalization` before the first call, your registration wins; the built-in is skipped.
 
-## Where to go next
+## Where to Go Next
 
 - [Why rules cite sources](why-rules-cite-sources.md) — what makes a capability compliant.
 - [The three invariants](the-three-invariants.md) — why the narrow SPI exists.

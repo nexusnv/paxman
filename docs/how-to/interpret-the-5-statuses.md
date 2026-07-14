@@ -1,8 +1,8 @@
-# Interpret the five outcomes
+# Interpret the Five Outcomes
 
 `paxman.canonicalize()` returns an `ExecutionArtifact` with one of five `Status` values. This page shows the recommended pattern for handling all of them.
 
-## The five outcomes
+## The Five Outcomes
 
 | Status | Meaning |
 |---|---|
@@ -12,7 +12,7 @@
 | `AMBIGUOUS` | More than one capability claimed the `(contract, value)` pair. |
 | `UNSUPPORTED` | No registered capability declared it canonicalizes this pair, or the contract's `kind` is not recognized. |
 
-## The recommended pattern
+## The Recommended Pattern
 
 ```python
 import paxman
@@ -89,20 +89,20 @@ The `evidence` list contains a `multiple_claimants` rule with the names of the c
 
 No registered capability declared it canonicalizes this pair, or the contract's `kind` is not recognized.
 
-For the v2.0.0 release, the only contract `kind` is `"canonical_email"`. If you pass a dict with `kind="canonical_money"` to `parse_contract()`, it raises `ContractError` and the orchestrator maps it to `Status.UNSUPPORTED`.
+For the v2.0.0 release, the only contract `kind` is `"canonical_email"`. If you pass a dict with `kind="canonical_money"` to `parse_contract()`, it raises `ContractError` at parse time (a programming error caught at the call site, not a `Status` outcome on the artifact).
 
 The action depends on the cause:
 
 - **Unknown contract kind** — fix the contract. The valid kinds are enumerated in the [Contracts reference](../reference/contracts.md).
 - **No capability claims the pair** — register a capability that does, or stop calling `canonicalize()` for this input.
 
-## What about exceptions?
+## What About Exceptions?
 
 A canonicalize call should not raise for any outcome representable as a `Status`. Exceptions are reserved for situations where the call cannot proceed at all. See the [Error reference](../reference/errors.md) for the full list.
 
 If you wrap canonicalize calls in a `try/except`, the only exception you should expect is `ContractError` (from `parse_contract()`, not from `canonicalize()` itself).
 
-## A complete example
+## A Complete Example
 
 ```python
 import paxman
@@ -137,7 +137,7 @@ def canonicalize_email(raw_input: str) -> str | None:
 
 The function returns the canonical email or `None`. Each branch logs the reason. The artifact is the result; the function decides what the rest of the application does with it.
 
-## Where to go next
+## Where to Go Next
 
 - [Handle ambiguous input](handle-ambiguous-input.md) — a deeper look at one branch.
 - [Status and evidence](../concepts/status-and-evidence.md) — the artifact fields.

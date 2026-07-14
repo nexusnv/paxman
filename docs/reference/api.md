@@ -1,10 +1,10 @@
-# Reference
+# API Reference
 
 This section is the API reference. It documents every public symbol in `paxman`, with signatures, parameters, return types, and the exceptions that may be raised.
 
-## Top-level functions
+## Top-Level Functions
 
-The four functions you call directly. All are imported from `paxman`.
+The three public verbs you call directly. All are imported from `paxman`.
 
 ### `canonicalize`
 
@@ -17,7 +17,7 @@ Canonicalize `input_data` against `contract`. Returns an `ExecutionArtifact`. Ne
 | Parameter | Type | Description |
 |---|---|---|
 | `input_data` | `object` | The value to canonicalize. For the email capability, this is a `str`. |
-| `contract` | `object` | The contract that declares the canonical form. Usually an `Email(...)` value object or a Dict DSL dict passed through `parse_contract()`. |
+| `contract` | `object` | The contract that declares the canonical form. Usually an `Email(...)` value object. |
 
 **Returns:** `ExecutionArtifact` — the immutable result. The artifact's `status` is one of the five `Status` values. If `status is Status.CANONICALIZED`, the artifact's `value` holds the canonical form.
 
@@ -49,7 +49,7 @@ Rehydrate an artifact from its stored form. Verifies the artifact's `VersionStam
 | `artifact` | `ExecutionArtifact` | The artifact to rehydrate. |
 | `contract` | `object` | The contract the artifact was produced with. Must match the artifact's stored contract for replay to succeed. |
 
-**Returns:** `ExecutionArtifact` — a new artifact object, byte-equal to the input.
+**Returns:** `ExecutionArtifact` — the same frozen artifact instance, byte-equal to the input.
 
 **Raises:**
 
@@ -99,6 +99,10 @@ register_capability(YourCapability())
 
 See [How-to: Write a compliant capability](../how-to/write-a-compliant-capability.md).
 
+## The Dict DSL Helper
+
+`parse_contract()` is a convenience helper for turning the Dict DSL into a `CanonicalEmailContract` value object. It is re-exported from `paxman` and is used by callers that store contracts as JSON and reconstruct them at load time.
+
 ### `parse_contract`
 
 ```python
@@ -113,7 +117,7 @@ Parse a Dict DSL contract into a `Contract` value object. Also accepts an alread
 
 **Returns:** `Contract` (currently bound to `CanonicalEmailContract`).
 
-**Raises:** `ContractError` if the spec is malformed.
+**Raises:** `ContractError` if the spec is malformed (unknown `kind`, missing `kind`, wrong-type field, or a `provider_aliases` value outside the closed set).
 
 **Example:**
 
@@ -127,7 +131,7 @@ contract = paxman.parse_contract({
 })
 ```
 
-## Core types
+## Core Types
 
 The types the public surface uses for inputs, outputs, and configuration.
 
@@ -232,6 +236,7 @@ class ExecutionArtifact:
     contract: _ContractLike
     version_stamp: VersionStamp
     replay_hash: str  # computed in __attrs_post_init__
+```
 
     def canonical_bytes(self) -> bytes: ...
 ```
@@ -329,7 +334,7 @@ __version__ = "0.0.0.dev0"
 
 The Paxman version string. Reported by `paxman.__version__` and recorded on every artifact's `VersionStamp.paxman_version`.
 
-## Where to go next
+## Where to Go Next
 
 - [Contracts reference](contracts.md) — the full contract vocabulary.
 - [Capability protocol reference](capability-protocol.md) — the SPI for custom capabilities.

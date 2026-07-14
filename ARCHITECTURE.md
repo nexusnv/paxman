@@ -10,7 +10,7 @@
 > this document conflicts with the mandate, the mandate wins. Where this
 > document is silent, the fourteen laws apply.
 
-## The principle
+## The Principle
 
 The legacy tree confused *infrastructure* with *implementation*. There were
 seven subsystems, four contract adapters, five capabilities, ten ADRs, eight
@@ -23,7 +23,7 @@ The only constraint Paxman places on itself, by design, is **determinism**
 **capability SPI** (§5 of the mandate). Every directory, file, and module
 exists to support one of those two things, or it does not exist.
 
-### The three invariants, mirrored here
+### The Three Invariants, Mirrored Here
 
 Per mandate §1.2, Paxman rests on three invariants. The folder structure
 makes each one mechanically enforceable.
@@ -40,7 +40,7 @@ serves. Otherwise the directory is rejected.
 
 ---
 
-## The pipeline Paxman owns
+## The Pipeline Paxman Owns
 
 Per mandate §4.2, Paxman owns the pipeline. Users plug capabilities into one
 stage of it; they may not rearrange the rest.
@@ -82,9 +82,9 @@ may extend capabilities, not the pipeline shape.
 
 ---
 
-## The library, end to end
+## The Library, End to End
 
-### Public surface
+### Public Surface
 
 `paxman.__init__` exports the public vocabulary of the library. Users
 import from it; the orchestrator and core modules stay private. As of this
@@ -112,7 +112,7 @@ from paxman import (
 `__getattr__` raises an `AttributeError` that teaches the right function
 (mandate §1.1 — Paxman canonicalizes, it does not normalize).
 
-### The library's directory shape
+### The Library's Directory Shape
 
 ```text
 src/paxman/
@@ -148,20 +148,20 @@ src/paxman/
 
 **Total: 18 Python source files (16 with content, 2 empty package markers).**
 
-### The test layout
+### The Test Layout
 
 ```text
 tests/
 ├── conftest.py                 # shared pytest configuration
 ├── unit/                       # fast, pure-function tests (one file per source file)
-├── property/                   # Hypothesis property tests for the four invariants
+├── property/                   # Hypothesis property tests for the three invariants
 └── integration/                # the README quickstart, end-to-end
 ```
 
 | Directory | Role |
 |---|---|
 | `tests/unit/` | Fast, pure-function tests. One test file per source file. No I/O, no time, no network. |
-| `tests/property/` | Hypothesis property tests. The four properties that must hold: (1) **replay invariant** — for any `(input, contract, registered capabilities, configuration, Paxman version)`, `replay(canonicalize(input, contract), contract) == canonicalize(input, contract)` byte-for-byte (mandate Law 12); (2) **idempotence invariant** — `canonicalize(canonicalize(x)) == canonicalize(x)` (mandate Law 2); (3) **uniqueness invariant** — for any input that admits more than one canonical reading, `canonicalize` returns an artifact with `Status.AMBIGUOUS` (mandate Law 4 and §5.4); (4) **immutability invariant** — every field on `ExecutionArtifact` raises on assignment after construction (mandate Law 13). |
+| `tests/property/` | Hypothesis property tests. The three properties that must hold: (1) **replay invariant** — for any `(input, contract, registered capabilities, configuration, Paxman version)`, `replay(canonicalize(input, contract), contract) == canonicalize(input, contract)` byte-for-byte (mandate Law 12); (2) **idempotence invariant** — for any supported input, `canonicalize(canonicalize(input, contract), contract) == canonicalize(input, contract)` (mandate Law 2); (3) **uniqueness invariant** — for any input that admits more than one canonical reading, `canonicalize` returns an artifact with `Status.AMBIGUOUS` (mandate Law 4 and §5.4). The artifact immutability check (mandate Law 13) is enforced at the type level (`@attrs.frozen`) and verified in unit tests. |
 | `tests/integration/` | The end-to-end tests that exercise the public API: the README quickstart, the `EmailCapability` end-to-end path, the 5-Minute Promise regressions, the `CapabilityRegistry` autoload-on-first-canonicalize path, and the isolation between the README's "Extending Paxman" section and the rest of the document. |
 
 There is no `tests/fixtures/`, no `tests/benchmark/`, no `tests/public_api/`.
@@ -170,9 +170,9 @@ claim, plus a hypothesis property per invariant.
 
 ---
 
-## What each file is for
+## What Each File Is For
 
-### `__init__.py` — the public surface
+### `__init__.py` — The Public Surface
 
 The module re-exports the public vocabulary listed above. The `__getattr__`
 at the bottom makes `paxman.normalize` raise a teaching `AttributeError`
@@ -180,14 +180,14 @@ at the bottom makes `paxman.normalize` raise a teaching `AttributeError`
 `AttributeError` is the mechanism, not an inconvenience: the absence of a
 `normalize` attribute is a load-bearing part of the identity boundary.
 
-### `_orchestrator_runtime.py` — the default registry holder
+### `_orchestrator_runtime.py` — The Default Registry Holder
 
 A 15-line module that owns the module-level `default_registry: CapabilityRegistry`
 instance. It exists in its own module so `paxman.canonicalize` and
 `paxman.register_capability` can both refer to the same registry without a
 circular import between `paxman/__init__.py` and `_core/orchestrator.py`.
 
-### `_core/orchestrator.py` — the pipeline (Paxman owns it)
+### `_core/orchestrator.py` — The Pipeline (Paxman Owns It)
 
 One orchestrator. It walks the stages in §"The pipeline Paxman owns" and
 returns an `ExecutionArtifact`. It is pure (Law 1): same input, contract,
@@ -205,7 +205,7 @@ The orchestrator is intentionally split from `validation.py`,
 responsibility; none is exported. Splitting improves review-ability
 *without* opening extension points.
 
-### `_core/validation.py` — validate canonical values against contracts
+### `_core/validation.py` — Validate Canonical Values Against Contracts
 
 After a capability produces a canonical value, the orchestrator asks this
 module: does the value actually satisfy the contract's strictness policy?
@@ -220,7 +220,7 @@ on) the absence of embedded whitespace and non-ASCII characters. It does
 not enforce the full RFC 5321 dot-atom grammar — that is owned by the
 `EmailCapability` surface-grammar check (mandate Law 14).
 
-### `_core/classification.py` — the `classify()` function
+### `_core/classification.py` — The `classify()` Function
 
 The deterministic function that maps `(capability_result, validation)` to a
 `Status`. The classifier never picks between candidates: if more than one
@@ -231,7 +231,7 @@ The `Status` enum itself lives in `_core/types.py`, not here. This module
 also carries the `ValidationResult` value object (the verdict of the
 validation step).
 
-### `_core/artifact.py` — `ExecutionArtifact` (immutable, Law 13)
+### `_core/artifact.py` — `ExecutionArtifact` (Immutable, Law 13)
 
 The artifact is the result. There is one canonical artifact schema. The
 `Status` field carries the five classification outcomes per Law 8 of the
@@ -253,9 +253,9 @@ The artifact also carries the **evidence** of how the value was canonicalized
 (mandate Law 9): which capability matched, which rule fired, which
 checksum passed, and on `AMBIGUOUS` outcomes, which capabilities claimed
 the pair. Each evidence entry also carries a `provenance` citation
-(mandate Law 14). It does **not** carry a confidence score.
+(mandate Law 14). It does **not** carry a numeric score.
 
-### `_core/replay.py` — byte-equal rehydration (first-class module)
+### `_core/replay.py` — Byte-Equal Rehydration (First-Class Module)
 
 Given an artifact and a contract, return the same artifact without
 re-execution. The `replay_hash` on the artifact is the deterministic
@@ -281,7 +281,7 @@ raises `VersionMismatchError`. The conservative default is to raise on any
 mismatch; a future permissive variant (allow replay if the relevant
 version-stamp component is byte-identical) is not yet implemented.
 
-### `_core/types.py` — leaf value objects
+### `_core/types.py` — Leaf Value Objects
 
 The smallest units of state Paxman manipulates, and the boundary at which
 mandate Laws 1, 2, 9, 12, and 14 are enforced. All are frozen `attrs`
@@ -308,7 +308,7 @@ The module carries:
   `provider_aliases` values for the email contract (`"none"` and `"gmail"`
   in v2.0.0).
 
-### `_capabilities/protocol.py` — the SPI (mandate Law 8a)
+### `_capabilities/protocol.py` — The SPI (Mandate Law 8a)
 
 The Capability Protocol is, in its narrowest form:
 
@@ -333,7 +333,7 @@ versioned, immutable dataset that is recorded on the artifact's evidence
 then it is *not* a network call — it is a lookup whose version is part of
 the artifact. That is allowed; the un-versioned network call is not.
 
-### `_capabilities/registry.py` — the resolver / dispatcher
+### `_capabilities/registry.py` — The Resolver / Dispatcher
 
 This is the replacement for the legacy "planner." The registry holds
 capabilities; on each canonicalization call, the orchestrator asks the
@@ -370,7 +370,7 @@ orchestrator classifies the outcome as `Status.AMBIGUOUS` (mandate Law 4
 and §5.4) rather than choosing one. If zero capabilities claim it, the
 orchestrator classifies as `UNSUPPORTED`.
 
-### `_capabilities/builtins/` — built-in capabilities
+### `_capabilities/builtins/` — Built-In Capabilities
 
 Ships one built-in today: `EmailCapability`, in `email.py`. The discovery
 helper that lists every built-in lives in `discovery.py`. The package
@@ -388,7 +388,7 @@ here as its own module. The directory's import path is stable from day
 one, even when the directory contains only the one built-in the v2.0.0
 release ships.
 
-### `_contracts/contract.py` — the one contract format
+### `_contracts/contract.py` — The One Contract Format
 
 The v2.0.0 contract vocabulary. Lives in one file, named `contract.py` —
 not `dict_dsl.py` — *for the concept, not the in-memory shape*. The
@@ -409,7 +409,7 @@ the orchestrator and capabilities consume. Future contract kinds (Money,
 Date, etc.) bump the contract `version` and add a new dispatch branch
 here.
 
-### `_errors.py` — error hierarchy
+### `_errors.py` — Error Hierarchy
 
 `PaxmanError` (base), with two parallel sub-hierarchies:
 
@@ -440,7 +440,7 @@ invariant violation, structural mis-configuration of a capability).
 
 ---
 
-## What is gone, and why
+## What Is Gone, and Why
 
 The legacy tree was removed because it encoded decisions that the project
 was wrong about. Removing it is not cleanup; it is refusal to re-inherit

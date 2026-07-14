@@ -2,7 +2,7 @@
 
 Paxman distinguishes between **outcomes** (returned on an artifact) and **exceptions** (raised when a call cannot proceed). This page documents the exception hierarchy and when each is raised.
 
-## Outcomes vs. exceptions
+## Outcomes vs. Exceptions
 
 | | Outcomes (Status values) | Exceptions |
 |---|---|---|
@@ -13,9 +13,9 @@ Paxman distinguishes between **outcomes** (returned on an artifact) and **except
 
 A canonicalize call should never raise an exception for a situation representable as a `Status`. If `paxman.canonicalize()` raises, something unexpected has happened.
 
-## The exception hierarchy
+## The Exception Hierarchy
 
-```
+```text
 PaxmanError
 ├── CanonicalizationError
 │   ├── AmbiguousInputError
@@ -38,7 +38,7 @@ Base class for runtime errors during canonicalization or replay. Subclasses are 
 
 ## `ContractError`
 
-The contract is malformed or self-contradictory. Raised **at parse time** (by `parse_contract()`), not by `canonicalize()` itself.
+The contract is malformed or self-contradictory. Raised **at parse time** (by `parse_contract()`), not by `canonicalize()` itself. The parse step runs before capability dispatch, so a bad contract is a programming error caught at the call site, not a `Status` outcome on the artifact.
 
 Common causes:
 
@@ -47,8 +47,6 @@ Common causes:
 - The `kind` field is not one of the supported kinds.
 - A bool field has a non-bool value.
 - The `provider_aliases` field has a value other than `"none"` or `"gmail"`.
-
-The orchestrator catches `ContractError` raised inside a capability and maps it to `Status.UNSUPPORTED` on the artifact, so a bad contract is reported as an outcome, not an exception. The exception is raised only when `parse_contract()` is called directly.
 
 **Example:**
 
@@ -139,9 +137,9 @@ These are defensive exceptions raised only in code paths that should never run d
 
 If you catch one of these in normal application code, something has gone wrong in the library. Open an issue.
 
-## Decision tree: when is it Status, when is it exception?
+## Decision Tree: When Is It Status, When Is It Exception?
 
-```
+```text
                     ┌─ Is the contract malformed?
                     │   YES → ContractError (at parse_contract time)
                     │
@@ -162,7 +160,7 @@ raise?              ├─ Is the artifact's version stamp current?
                       AMBIGUOUS, UNSUPPORTED.
 ```
 
-## What you should catch
+## What You Should Catch
 
 In a typical application:
 
@@ -173,7 +171,7 @@ In a typical application:
 
 You usually do not need to catch `PaxmanError` at the top level, because the outcomes (`Status` values) are returned on the artifact and your code already branches on them. A `PaxmanError` indicates a programmer error or a version mismatch, both of which deserve explicit handling rather than a blanket catch.
 
-## Where to go next
+## Where to Go Next
 
 - [API reference](api.md) — the full function signatures and exception lists.
 - [Status and evidence](../concepts/status-and-evidence.md) — the outcomes and what each means.

@@ -2,7 +2,7 @@
 
 A contract declares *what* the canonical form is. It is the source of truth in Paxman.
 
-## The contract types in v2.0.0
+## The Contract Types in v2.0.0
 
 v2.0.0 ships exactly one contract kind: `canonical_email`. Future versions may add new kinds (Money, Date, etc.). The `Contract` type alias is currently bound to `CanonicalEmailContract`.
 
@@ -24,15 +24,15 @@ class CanonicalEmailContract:
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `lowercase` | `bool` | `True` | Lowercase the local part and domain. |
-| `strip_whitespace` | `bool` | `True` | Strip leading/trailing ASCII whitespace. |
-| `provider_aliases` | `"none"` or `"gmail"` | `"none"` | Apply a provider's alias rules. Only `"gmail"` is supported in v2.0.0. |
+| `strip_whitespace` | `bool` | `True` | Strip leading and trailing ASCII whitespace. |
+| `provider_aliases` | `"none"` or `"gmail"` | `"none"` | Apply a provider's documented alias rules. Only `"gmail"` is supported in v2.0.0. |
 | `strict` | `bool` | `False` | Reject inputs with embedded whitespace or non-ASCII characters. |
 | `kind` | `str` | `"canonical_email"` | The contract kind discriminator. Fixed. |
 | `version` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
 
 The `kind` and `version` fields are fixed. They are not part of the `Email()` factory signature.
 
-## `Email()` — the factory
+## `Email()` — The Factory
 
 ```python
 def Email(
@@ -56,7 +56,7 @@ contract = Email(provider_aliases="gmail", strict=True)
 
 The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
 
-## `parse_contract()` — the Dict DSL parser
+## `parse_contract()` — The Dict DSL Parser
 
 ```python
 def parse_contract(spec: Any) -> Contract
@@ -78,7 +78,7 @@ contract = paxman.parse_contract({
 })
 ```
 
-**Raises:** `ContractError` if the spec is malformed.
+**Raises:** `ContractError` if the spec is malformed. `parse_contract()` runs at the call site, *before* capability dispatch, so a bad contract is a programming error caught at the call site, not a `Status` outcome on the artifact.
 
 `parse_contract` is a no-op for an already-parsed `CanonicalEmailContract` (the contract is the truth; an instance is its own best representation).
 
@@ -110,7 +110,7 @@ Unknown `kind` values, missing `kind`, non-bool values for bool fields, and unkn
 
 The Dict DSL is round-trip-safe: `parse_contract(contract.as_dict()) == contract` for any valid `CanonicalEmailContract`.
 
-## What a contract is not
+## What a Contract Is Not
 
 A contract is **not**:
 
@@ -119,7 +119,7 @@ A contract is **not**:
 - A plugin configuration. A contract does not say which capability to invoke. The resolver (the registry) decides based on what capabilities declare.
 - A regex. A contract is a typed value object. The input is the string; the contract is the policy.
 
-## Field semantics in detail
+## Field Semantics in Detail
 
 ### `lowercase`
 
@@ -130,9 +130,11 @@ When `True`, the capability lowercases the local part and the domain. When `Fals
 
 ### `strip_whitespace`
 
-When `True`, the capability strips leading and trailing ASCII whitespace. When `False`, the input is canonicalized as-is.
+When `True`, the capability strips **leading and trailing ASCII whitespace only**. When `False`, the input is canonicalized as-is.
 
 The whitespace stripped is the ASCII set (` `, `\t`, `\n`, `\r`, `\f`, `\v`). Unicode whitespace (e.g. U+00A0 NO-BREAK SPACE) is *not* stripped, even when this field is `True`. Inputs that contain only Unicode whitespace fall through to the grammar gate and are rejected (or, with `strict=True`, are rejected by the strict-mode check first).
+
+The contract does not strip embedded whitespace anywhere in the input. `strict=True` is the only way to reject an input with embedded whitespace; the default `strip_whitespace=True` leaves interior whitespace untouched.
 
 ### `provider_aliases`
 
@@ -157,7 +159,7 @@ The check happens *before* any rewriting. A non-strict input that would canonica
 
 When `False` (the default), the capability accepts the input and applies the contract's rewriting rules. An input with embedded whitespace will be canonicalized (the whitespace is stripped); an input with non-ASCII characters will be canonicalized (the characters are preserved, then the grammar gate runs on the result).
 
-## Where to go next
+## Where to Go Next
 
 - [Concepts: Contracts](../concepts/contracts.md) — the conceptual background.
 - [Capability protocol reference](capability-protocol.md) — the SPI for custom capabilities.

@@ -1,8 +1,8 @@
-# Canonicalize a value
+# Canonicalize a Value
 
 This is the most basic Paxman operation. You give it an input and a contract. It gives you back an artifact with the canonical form (or an outcome explaining why it could not).
 
-## The minimal call
+## The Minimal Call
 
 ```python
 import paxman
@@ -21,7 +21,7 @@ The two required arguments:
 
 The return value is an `ExecutionArtifact`. It always has a `status` field. If the status is `CANONICALIZED`, the `value` field holds the canonical form. Otherwise, `value` is `None` and the `evidence` field explains what happened.
 
-## Choosing the contract
+## Choosing the Contract
 
 The contract is the policy. Pick the policy that matches what "canonical" means for your use case:
 
@@ -41,7 +41,7 @@ paxman.canonicalize(input_str, Email(lowercase=False, strip_whitespace=False))
 
 See [Contracts](../concepts/contracts.md) for what each field means.
 
-## Reading the result
+## Reading the Result
 
 Every artifact has six fields. The three you will read most often:
 
@@ -55,13 +55,13 @@ The other three (`contract`, `version_stamp`, `replay_hash`) are used by `replay
 
 For the full artifact schema, see [Reference: ExecutionArtifact](../reference/api.md#executionartifact).
 
-## Inspecting the evidence
+## Inspecting the Evidence
 
 To understand what a canonicalize call did, read the `evidence` list:
 
 ```python
 result = paxman.canonicalize(
-    "  John.Doe@Gmail.COM  ",
+    "  John.Doe+Work@GoogleMail.COM  ",
     Email(provider_aliases="gmail"),
 )
 
@@ -82,11 +82,11 @@ Output for the input above:
 
 Each rule has a `provenance` field. The `provenance` is a citation. See [Why rules cite sources](../concepts/why-rules-cite-sources.md) for the citation policy.
 
-## What if the call returns a non-success status?
+## What If the Call Returns a Non-Success Status?
 
 The call did not fail — it succeeded in reporting the situation. Your code should handle each of the five outcomes. See [Interpret the five outcomes](interpret-the-5-statuses.md) for the recommended pattern.
 
-## What if the call raises an exception?
+## What If the Call Raises an Exception?
 
 A canonicalize call should not raise for any outcome representable as a `Status`. Exceptions are reserved for situations the library cannot proceed through:
 
@@ -96,7 +96,7 @@ A canonicalize call should not raise for any outcome representable as a `Status`
 
 If `paxman.canonicalize()` raises an exception, something unexpected happened. See the [Error reference](../reference/errors.md).
 
-## Where to go next
+## Where to Go Next
 
 - [Replay for verification](replay-for-verification.md) — verify an artifact byte-for-byte.
 - [Interpret the five outcomes](interpret-the-5-statuses.md) — handle each `Status` value.

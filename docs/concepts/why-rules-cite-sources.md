@@ -1,8 +1,8 @@
-# Why rules cite sources
+# Why Rules Cite Sources
 
 Every rule in a Paxman capability has a citation. The citation is part of the `Evidence` entry on the artifact. This page explains why.
 
-## The rule
+## The Rule
 
 Every transformation or rejection that a capability performs is recorded as an `Evidence` entry on the artifact. Each entry has a `rule` name, a `detail` string, and a `provenance` field.
 
@@ -14,7 +14,7 @@ The `provenance` field is non-empty for every rule except two dispatch invariant
 
 A rule whose source is none of these is, by construction, a rule invented because it "felt right." Paxman does not allow invented rules.
 
-## Why this matters
+## Why This Matters
 
 Consider two capabilities, A and B, that both canonicalize the same input differently. Without citations, a user has no way to decide which one is right. With citations, the user can read each capability's evidence, find the rule, look up the citation, and decide for themselves.
 
@@ -22,9 +22,9 @@ For example, the email capability lowercases the local part of an email address,
 
 If the rule had no citation, the user would have to guess. The guess might be wrong. The wrong guess would propagate to every artifact produced under the wrong assumption.
 
-## The three sources, in detail
+## The Three Sources, in Detail
 
-### Authoritative specifications
+### Authoritative Specifications
 
 These are documents published by a standards body, with a clear identifier. RFCs are the common case (RFC 5321, RFC 5322, RFC 1035, RFC 4122, ISO 4217, etc.). The citation is the document number and the section number:
 
@@ -34,7 +34,7 @@ These are documents published by a standards body, with a clear identifier. RFCs
 
 The library does not fetch the RFC at canonicalize time. The citation is a string on the artifact; the user can look it up out of band.
 
-### Documented platform behavior
+### Documented Platform Behavior
 
 Some rules reflect how a real-world system (Gmail, Outlook, etc.) treats an input. These are not standards; they are observations. The citation records the platform, the document, the version (or retrieval date), and the relevant section.
 
@@ -44,7 +44,7 @@ Some rules reflect how a real-world system (Gmail, Outlook, etc.) treats an inpu
 
 The retrieval date is part of the citation. If the platform updates the document, the citation on existing artifacts still points to the document as it was at retrieval. A new artifact that wants to cite the new behavior gets a new capability version and a new `capabilities_hash`.
 
-### Declared Paxman policy
+### Declared Paxman Policy
 
 Sometimes the canonical form is a choice Paxman makes because no specification covers it. These choices are recorded in a Paxman document (the MANDATE, a capability spec, or another declared Paxman policy document) and cited by section:
 
@@ -53,7 +53,7 @@ Sometimes the canonical form is a choice Paxman makes because no specification c
 
 The Paxman spec is the source of truth for these decisions. If you disagree with a Paxman policy, the right response is to write a different capability with different rules — not to ask the existing capability to behave differently.
 
-## What is not a citation
+## What Is Not a Citation
 
 A rule whose `provenance` is one of the following is rejected:
 
@@ -64,15 +64,15 @@ A rule whose `provenance` is one of the following is rejected:
 - A link to a tutorial, blog post, or Stack Overflow answer.
 - A claim that the rule is "industry standard" without naming the document.
 
-These are heuristics in disguise. The library does not have heuristics.
+These are unsourced opinions in disguise. The library does not have unsourced opinions.
 
-## The rule→citation manifest
+## The Rule-to-Citation Manifest
 
 Every capability maintains a manifest that maps rule names to citations. The manifest is the single source of truth. A rule with no manifest entry raises `KeyError` at the exact site where the rule is emitted. This makes "I forgot to cite a rule" a build error, not a documentation oversight.
 
 For the email capability, the manifest is `_RULE_PROVENANCE` in the capability source. See the [Email capability spec](../capabilities/email/index.md) for the full rule table.
 
-## How this affects you
+## How This Affects You
 
 - When you read an artifact, the evidence tells you exactly which rules fired and where each rule came from.
 - When you write a new capability, every rule you add must cite one of the three sources. The manifest is the spec.

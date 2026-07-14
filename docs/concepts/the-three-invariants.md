@@ -1,4 +1,4 @@
-# The three invariants
+# The Three Invariants
 
 Paxman rests on exactly three invariants. Every design decision in the library — the design of the artifact, the registry, the contract system, the evidence list — exists to support one or more of these invariants.
 
@@ -6,7 +6,7 @@ Paxman rests on exactly three invariants. Every design decision in the library �
 
 > Paxman only canonicalizes. It never interprets. It never infers. It never orchestrates.
 
-This is what keeps Paxman out of AI and workflow-engine territory. The library has no confidence scores, no best-match algorithms, no probability thresholds, no language-model paths, no user-defined pipelines.
+This is what keeps Paxman out of AI and workflow-engine territory. The library has no scoring, no ranking algorithms, no probability thresholds, no language-model paths, no user-defined pipelines.
 
 If you find yourself wanting Paxman to "figure out the right form" or "try a few approaches and pick the best one," the answer is that the use case is outside the library's identity boundary. The contract is the source of truth, and the capability satisfies it. There is no third step that picks between options.
 
@@ -36,9 +36,9 @@ Replay matters because:
 
 - **It catches tampering.** A stored artifact whose `replay_hash` no longer matches its content is detected at replay time, not silently trusted.
 - **It catches version drift.** A stored artifact produced under Paxman v1 cannot be replayed under v2 if the version stamp differs.
-- **It enables safe re-canonicalization.** If a user re-canonicalizes the canonical value, the result is byte-equal to the original artifact. Idempotence follows from the replay property.
+- **It enables safe re-canonicalization.** If a user re-canonicalizes the canonical value, the result is byte-equal to the original artifact. Idempotence is a separate Law 2 requirement on every capability: a capability must canonicalize its own canonical value to the same value. The replay property is what makes the stored artifact's bytes trustworthy; idempotence is what makes the capability self-consistent.
 
-## How the three invariants reinforce each other
+## How the Three Invariants Reinforce Each Other
 
 A capability that depends on hidden state — a network call, a current-time read, a random number, a file lookup — breaks all three:
 

@@ -105,7 +105,7 @@ jobs:
 
       - name: Inspect wheel
         run: |
-          python -c "
+          uv run python -c "
           import zipfile, pathlib
           wheel = sorted(pathlib.Path('dist').glob('*.whl'))[0]
           contents = zipfile.ZipFile(wheel).namelist()
@@ -165,8 +165,3 @@ jobs:
         with:
           name: dist
           path: dist/
-
-      - name: Publish to PyPI (OIDC)
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1
-        with:
-          packages-dir: dist/

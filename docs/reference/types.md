@@ -1,12 +1,12 @@
 # Reference: Types
 
-The types you read from and pass to Paxman's public functions. All are frozen value objects; none are mutable after construction.
+The types you read from and pass to Paxman's public functions. Most are frozen value objects; the one exception is the `CapabilityRegistry`, which is mutable until you call `freeze()` on it.
 
-## Input types
+## Input Types
 
 Types you pass **to** `paxman.canonicalize()`.
 
-### The contract
+### The Contract
 
 `CanonicalEmailContract` is the only contract type in v2.0.0. You usually build one with the `Email()` factory.
 
@@ -27,11 +27,11 @@ Methods:
 
 `Contract = CanonicalEmailContract` is a type alias. Future versions may add new contract kinds under this name.
 
-### The input value
+### The Input Value
 
 The first argument to `paxman.canonicalize()`. For the email capability, this is a `str`. Custom capabilities may accept other types.
 
-## Output types
+## Output Types
 
 Types you read **from** `paxman.canonicalize()` and `paxman.replay()`.
 
@@ -70,13 +70,13 @@ These are outcomes, not exceptions. Every `paxman.canonicalize()` call returns a
 
 ### `Evidence`
 
-One entry on the artifact's evidence list.
+One entry on the artifact's evidence list. **Every rule that contributes to a canonical form or a rejection decision must carry a non-empty `provenance` citation** (MANDATE Law 14). The only entries allowed to have an empty `provenance` are the two named dispatch invariants (`not_an_email_contract`, `not_a_string_value`), which describe a routing failure rather than a canonical-form rule.
 
 | Field | Type | Description |
 |---|---|---|
 | `rule` | `str` | Machine-readable rule name (e.g. `stripped_whitespace`, `lowercased_domain`, `grammar_rejected`). |
 | `detail` | `str` | Human-readable detail. May be empty. |
-| `provenance` | `str` | Citation: RFC, documented platform behavior, or Paxman policy. May be empty for dispatch invariants only. |
+| `provenance` | `str` | Citation: RFC, documented platform behavior, or Paxman policy. Non-empty for every rule except the two named dispatch invariants. |
 
 ### `VersionStamp`
 
@@ -89,7 +89,7 @@ The four-component version recorded on every artifact. Replay verifies all four.
 | `capabilities_hash` | `str` | SHA-256 of the sorted registered capability names. |
 | `configuration_version` | `str` | Currently `"0"`. Reserved for future configuration. |
 
-## Extension types
+## Extension Types
 
 Types you use when writing a custom capability.
 
@@ -113,11 +113,11 @@ The return value of a capability's `canonicalize()` method.
 |---|---|---|
 | `status` | `Status` | The outcome. |
 | `value` | `str \| None` | The canonical value. Required when `status is Status.CANONICALIZED`; otherwise `None`. |
-| `evidence` | `tuple[Evidence, ...]` | Ordered list of rules that fired. |
+| `evidence` | `tuple[Evidence, ...]` | Ordered list of rules that fired. Every entry's `provenance` is non-empty except the two named dispatch invariants. |
 
 ### `CapabilityRegistry`
 
-The default registry used by `paxman.canonicalize()`. You can also instantiate it directly for custom workflows.
+The default registry used by `paxman.canonicalize()`. You can also instantiate it directly for custom workflows. **The registry is mutable until you call `freeze()` on it.** `register()` and `load_builtins()` raise `FrozenRegistryError` after the freeze.
 
 | Method | Signature | Description |
 |---|---|---|
@@ -130,7 +130,7 @@ The default registry used by `paxman.canonicalize()`. You can also instantiate i
 
 `load_builtins` skips capabilities whose names are already registered (your registration wins; the built-in is skipped).
 
-## Where to go next
+## Where to Go Next
 
 - [API reference](api.md) — the public functions and full error hierarchy.
 - [Contracts reference](contracts.md) — the contract vocabulary in detail.

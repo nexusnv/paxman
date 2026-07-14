@@ -5,7 +5,7 @@ is small: no network I/O, no subprocess execution, no environment-variable
 reads, no filesystem access. The library is a pure function of
 `(input, contract, registered capabilities, configuration, Paxman version)`.
 
-## Reporting a vulnerability
+## Reporting a Vulnerability
 
 If you have found a security vulnerability in Paxman, please report it
 privately. Do not open a public issue.
@@ -21,7 +21,7 @@ If private advisory reporting is unavailable, contact the project
 maintainers through the channel listed in `pyproject.toml`
 (`[project] authors`) or the source-hosting platform's owner contact.
 
-## What to include
+## What to Include
 
 A useful security report includes:
 
@@ -34,7 +34,7 @@ A useful security report includes:
   (no custom capabilities registered, no `register_capability` calls
   in the reproducer).
 
-## What to expect
+## What to Expect
 
 - **Acknowledgement** within 7 days of the report.
 - **A status update** within 30 days describing the planned fix or the
@@ -42,7 +42,7 @@ A useful security report includes:
 - **A fix and a release** for confirmed vulnerabilities, with a CVE
   identifier when applicable.
 
-## Threat model
+## Threat Model
 
 Paxman's threat model is the threat model of a pure function:
 
@@ -66,7 +66,7 @@ Paxman's threat model is the threat model of a pure function:
   tampering. The replay check in `paxman.replay()` is the trust
   boundary; treat a failed replay as a security event.
 
-## What Paxman does not protect against
+## What Paxman Does Not Protect Against
 
 - Vulnerabilities in the runtime dependency `attrs`. Report those
   upstream.

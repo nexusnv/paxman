@@ -5,7 +5,7 @@ change, and specific about what it is. This document covers the minimum a
 contributor needs to know; the deeper rationale lives in `MANDATE.md` and
 `ARCHITECTURE.md`.
 
-## The shape of a contribution
+## The Shape of a Contribution
 
 Paxman accepts two kinds of contributions:
 
@@ -21,7 +21,7 @@ Paxman accepts two kinds of contributions:
   must preserve the three invariants in `MANDATE.md` §1.2: identity,
   determinism, and replay.
 
-## The three invariants
+## The Three Invariants
 
 Every change to the core must preserve:
 
@@ -36,7 +36,7 @@ The property tests in `tests/property/` are the mechanical evidence for
 these invariants. A change that breaks a property test is a change that
 broke an invariant.
 
-## Local development
+## Local Development
 
 ```bash
 git clone https://github.com/nexusnv/paxman.git
@@ -62,7 +62,7 @@ uv run pytest tests/integration --no-header
 Every command must pass before opening a pull request. The pull request
 template mirrors this list.
 
-## Code style
+## Code Style
 
 - Python 3.11+ syntax. The project targets `requires-python = ">=3.11"`.
 - Type hints on every public symbol in `src/paxman/`.
@@ -72,10 +72,9 @@ template mirrors this list.
 - No `# noqa` in `src/paxman/`. Test code may use `# noqa: S101` for
   asserts.
 - The five words retired by `scripts/check_retired_vocabulary.py`
-  (`heuristic`, `confidence`, `best match`, `probably`, `approximate`)
   must not appear in `src/paxman/`. The check runs in CI.
 
-## Where to ask
+## Where to Ask
 
 - **A question about the design** — read `MANDATE.md` and `ARCHITECTURE.md`
   first. Most questions are answered there.

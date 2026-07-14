@@ -1,4 +1,4 @@
-# Email capability
+# Email Capability
 
 The email capability is the only built-in capability shipped with Paxman v2.0.0. It canonicalizes strings that represent email addresses.
 
@@ -8,13 +8,13 @@ The email capability is the only built-in capability shipped with Paxman v2.0.0.
 
 **Contract factory:** `Email()`
 
-## What it does
+## What It Does
 
 The email capability rewrites a string into a single canonical email form. It does not interpret — it only rewrites representations of *known* email addresses into the chosen form.
 
 The capability is governed by the contract you pass to `paxman.canonicalize()`. The contract is a frozen value object built with `Email(...)`. See [Contracts](../../reference/contracts.md) for the full factory signature.
 
-## The contract fields
+## The Contract Fields
 
 Every field is a policy declaration. There is no auto-detection; the contract declares what canonical means, and the capability applies it.
 
@@ -27,11 +27,11 @@ Every field is a policy declaration. There is no auto-detection; the contract de
 
 The `kind` and `version` fields are fixed (`"canonical_email"` and `1` respectively). They are not part of the `Email()` factory signature.
 
-## The rules
+## The Rules
 
 Every transformation the capability performs is recorded as an `Evidence` entry on the artifact. Each entry has a `rule` name, a `detail` string, and a `provenance` citation.
 
-### Transforming rules (fire on success)
+### Transforming Rules (Fire on Success)
 
 These rules rewrite the input into the canonical form. They are recorded on the artifact in execution order.
 
@@ -44,7 +44,7 @@ These rules rewrite the input into the canonical form. They are recorded on the 
 | `stripped_dots_in_local_part` | `provider_aliases="gmail"` and dots in the local part were removed. | Google Help: dots don't matter in Gmail addresses |
 | `stripped_plus_tag` | `provider_aliases="gmail"` and a `+tag` suffix was stripped from the local part. | Google Help: Gmail +alias addressing |
 
-### Rejecting rules (fire on rejection)
+### Rejecting Rules (Fire on Rejection)
 
 These rules cause the capability to return `Status.INVALID` with a single evidence entry. The string is *not* canonicalized; the artifact holds no `value`.
 
@@ -60,17 +60,19 @@ These rules cause the capability to return `Status.INVALID` with a single eviden
 
 Two of the rejecting rules — `not_an_email_contract` and `not_a_string_value` — have empty citations. They are dispatch invariants: they describe a routing failure, not a canonical-form rule. The remaining rejecting rules all cite a specification.
 
-## The grammar gate
+## The Grammar Gate
 
 After all rewrites, the capability checks the result against the RFC grammar. Inputs that fail the gate return `Status.INVALID` with a `grammar_rejected` evidence entry.
 
 The local part must match RFC 5322 §3.2.3 `dot-atom`:
+
 - A run of `atext` characters, optionally separated by single dots.
 - No leading dot, no trailing dot, no consecutive dots.
-- The `atext` set is the RFC's ASCII atom-text class — letters, digits, and `!#$%&'*+-/=?^_`{|}~`.
+- The `atext` set is the RFC's ASCII atom-text class — letters, digits, and `!#$%&'*+-/=?^_` followed by a literal backtick and `{|}~`.
 - Quoted-string local parts (`"foo"@example.com`) are not accepted in v2.0.0.
 
 The domain must match RFC 5321 §3.4 + RFC 1035 §2.3.1:
+
 - One or more labels separated by single dots.
 - Each label is 1–63 characters, starts and ends with a letter or digit, interior characters may be letters, digits, or hyphens.
 - Total domain length is at most 253 characters.
@@ -78,9 +80,9 @@ The domain must match RFC 5321 §3.4 + RFC 1035 §2.3.1:
 
 Single-label domains like `user@localhost` are accepted under the v2.0.0 grammar gate.
 
-## Worked examples
+## Worked Examples
 
-### Example 1: A normal email
+### Example 1: A Normal Email
 
 ```python
 import paxman
@@ -93,7 +95,7 @@ result = paxman.canonicalize("User@Example.com", Email())
 - `result.value` is `"user@example.com"`
 - `result.evidence` is `(Evidence(rule="lowercased_local_part", ...), Evidence(rule="lowercased_domain", ...))`
 
-### Example 2: Gmail aliases
+### Example 2: Gmail Aliases
 
 ```python
 result = paxman.canonicalize(
@@ -104,9 +106,9 @@ result = paxman.canonicalize(
 
 - `result.status` is `Status.CANONICALIZED`
 - `result.value` is `"johndoe@gmail.com"`
-- `result.evidence` has four entries: `stripped_whitespace`, `lowercased_local_part`, `lowercased_domain`, `domain_synonym_gmail`, `stripped_dots_in_local_part`, `stripped_plus_tag` (in execution order)
+- `result.evidence` has six entries, in order: `stripped_whitespace`, `lowercased_local_part`, `lowercased_domain`, `domain_synonym_gmail`, `stripped_dots_in_local_part`, `stripped_plus_tag`
 
-### Example 3: Strict rejection
+### Example 3: Strict Rejection
 
 ```python
 result = paxman.canonicalize(
@@ -119,7 +121,7 @@ result = paxman.canonicalize(
 - `result.value` is `None`
 - `result.evidence` is `(Evidence(rule="strict_rejected_whitespace", ...),)`
 
-### Example 4: Grammar rejection
+### Example 4: Grammar Rejection
 
 ```python
 result = paxman.canonicalize("user@-bad.com", Email())

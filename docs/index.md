@@ -2,7 +2,7 @@
 
 Paxman is a deterministic canonicalization engine. It transforms equivalent representations of known information into a single canonical form. When the input does not contain enough information to determine a unique result, Paxman reports that fact rather than guessing.
 
-## What Paxman does
+## What Paxman Does
 
 You give Paxman an input and a contract. The contract declares what the canonical form must be. Paxman returns a single artifact with one of five outcomes:
 
@@ -14,14 +14,14 @@ You give Paxman an input and a contract. The contract declares what the canonica
 
 Every successful call returns an `ExecutionArtifact`. The artifact is immutable. You can rehydrate it byte-for-byte with `replay()` without calling the underlying transformation again.
 
-## What Paxman does not do
+## What Paxman Does Not Do
 
 - It does not guess. If the canonical form is not determined by the input and the contract, Paxman does not produce an output.
 - It does not call external services. There is no LLM path, no remote inference, no network I/O. Determinism is a property of the library, not a default you can opt out of.
 - It does not run in parallel. Each capability is invoked sequentially.
 - It does not improvise. A field the contract does not describe is left alone. A field the input cannot populate is reported as unresolvable.
 
-## Try it in five minutes
+## Try It in Five Minutes
 
 ```bash
 git clone https://github.com/nexusnv/paxman.git
@@ -34,7 +34,7 @@ The quickstart runs without any private-module imports and without a capability 
 
 See [Getting Started](getting-started/install.md) for the full walkthrough.
 
-## Where to go next
+## Where to Go Next
 
 - **New to Paxman** — start with [Getting Started](getting-started/install.md) and the [Quickstart walkthrough](getting-started/quickstart.md).
 - **Want to understand the design** — read [Concepts](concepts/canonicalization.md) in order. Start with "What canonicalization is" and end with "Why rules cite sources."

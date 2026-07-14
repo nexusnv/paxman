@@ -17,7 +17,7 @@ uv sync
 
 `uv sync` reads the project configuration and creates a virtual environment with Paxman and its (one) runtime dependency (`attrs`) installed in editable mode.
 
-## Verify the install
+## Verify the Install
 
 ```bash
 uv run python -c "import paxman; print(paxman.__version__)"

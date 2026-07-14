@@ -41,10 +41,10 @@
 ## Checklist
 
 - [ ] I have read
-      [`CONTRIBUTING.md`](./CONTRIBUTING.md) and
-      [`SECURITY.md`](./SECURITY.md).
+      [`CONTRIBUTING.md`](../CONTRIBUTING.md) and
+      [`SECURITY.md`](../SECURITY.md).
 - [ ] My code follows the project's style
-      ([`CONTRIBUTING.md`](./CONTRIBUTING.md) §Code style).
+      ([`CONTRIBUTING.md`](../CONTRIBUTING.md) §Code style).
 - [ ] I have added docstrings for every public symbol in `src/paxman/`.
 - [ ] I have added type hints on every public symbol in `src/paxman/`.
 - [ ] I have not added any `# type: ignore` or `as any`

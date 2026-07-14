@@ -28,7 +28,7 @@ SOFTWARE.
 
 ---
 
-## Third-party dependencies
+## Third-Party Dependencies
 
 Paxman v2.0.0 has one runtime dependency:
 
@@ -36,7 +36,7 @@ Paxman v2.0.0 has one runtime dependency:
 
 No other runtime dependencies. No network calls at canonicalize time. No bundled datasets.
 
-## What this means for you
+## What This Means for You
 
 You can:
 
@@ -51,7 +51,7 @@ You must:
 
 The software is provided "as is" — there is no warranty.
 
-## Where to go next
+## Where to Go Next
 
 - [Philosophy](philosophy.md) — the design decisions behind the library.
 - [Stability](stability.md) — the versioning and stability guarantees.

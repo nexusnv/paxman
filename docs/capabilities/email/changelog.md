@@ -1,8 +1,8 @@
-# Email capability — changelog
+# Email Capability — Changelog
 
 The email capability is versioned. Each entry below records a contract-version bump and what changed. The contract `version` field appears on every artifact, so any old artifact can be replayed against the rules that produced it.
 
-## v1 (current — v2.0.0 release)
+## v1 (Current — v2.0.0 Release)
 
 **Contract version:** `1`
 
@@ -30,4 +30,4 @@ The email capability is versioned. Each entry below records a contract-version b
 
 These are deferred to future versions.
 
-**Citation policy:** Every rule in the capability cites one of three sources — an RFC, a documented platform behavior (Google Help), or a Paxman policy. The complete rule→citation manifest is in the capability source. See the [Email capability spec](index.md#the-rules) for the rule table.
+**Citation policy:** Every rule in the capability cites one of three sources — an RFC, a documented platform behavior (Google Help), or a Paxman policy. The complete rule-to-citation manifest is in the capability source. See the [Email capability spec](index.md#the-rules) for the rule table.

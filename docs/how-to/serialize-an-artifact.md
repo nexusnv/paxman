@@ -1,8 +1,8 @@
-# Serialize an artifact
+# Serialize an Artifact
 
 `ExecutionArtifact` is a frozen value object. You can serialize it for storage (database, disk, message queue) and reconstruct it later. This page shows the recommended pattern.
 
-## The canonical byte form
+## The Canonical Byte Form
 
 The artifact has a `canonical_bytes()` method that returns a deterministic byte serialization:
 
@@ -59,112 +59,106 @@ Output for a `CANONICALIZED` email artifact:
 
 The `replay_hash` is *not* in the byte form. It is the hash *of* the byte form.
 
-## A full serialize / deserialize pattern
+## A Full Serialize / Deserialize Pattern
 
-Paxman does not ship a `from_bytes()` constructor. Reconstructing an artifact from its bytes requires re-canonicalizing and verifying the hash. The intended use is: store the bytes (or just the value + version stamp + evidence), and on read, recompute the artifact and verify.
+Paxman does not ship a `from_bytes()` constructor. The canonical byte form (above) *is* the authoritative serialization: it contains the status, value, evidence, contract, and version stamp, and its SHA-256 equals the `replay_hash`. The recommended pattern stores those bytes plus the `replay_hash`, and verifies integrity by recomputing the hash.
 
 ```python
-import hashlib
 import json
+import hashlib
 import paxman
-from paxman import Email, ExecutionArtifact, VersionStamp, Status, Evidence, CanonicalEmailContract
+from paxman import Email, CanonicalizationError
 
 
-def serialize_artifact(artifact: ExecutionArtifact) -> dict:
-    """Convert an artifact to a JSON-safe dict for storage."""
+def serialize_artifact(artifact) -> dict:
+    """Store the canonical bytes plus the replay hash.
+
+    canonical_bytes() is the authoritative serialization. Its SHA-256
+    equals replay_hash, so storing both lets a reader verify the record
+    was not tampered with without re-canonicalizing the input.
+    """
     return {
-        "status": artifact.status.value,
-        "value": artifact.value,
-        "evidence": [
-            {"rule": e.rule, "detail": e.detail, "provenance": e.provenance}
-            for e in artifact.evidence
-        ],
-        "contract": artifact.contract.as_dict(),
-        "version_stamp": {
-            "paxman_version": artifact.version_stamp.paxman_version,
-            "contract_version": artifact.version_stamp.contract_version,
-            "capabilities_hash": artifact.version_stamp.capabilities_hash,
-            "configuration_version": artifact.version_stamp.configuration_version,
-        },
+        "canonical_bytes": artifact.canonical_bytes().decode("utf-8"),
         "replay_hash": artifact.replay_hash,
     }
 
 
-def deserialize_artifact(stored: dict, contract) -> ExecutionArtifact:
-    """Reconstruct an artifact from a stored dict, verifying the replay_hash.
+def deserialize_artifact(stored: dict):
+    """Verify the stored record and return a usable artifact object.
 
-    Raises VersionMismatchError or CanonicalizationError on tampering.
+    Integrity is checked by recomputing SHA-256 of the stored canonical
+    bytes and comparing to the stored replay_hash (MANDATE Law 12). This
+    is a pure hash check — it does not re-canonicalize the input, so it
+    detects tampering with the value, evidence, contract, or version
+    stamp byte-for-byte.
+
+    To get a usable ExecutionArtifact back, re-canonicalize the canonical
+    value. The value, contract, and version stamp are deterministic and
+    match the stored record exactly. The evidence list reflects
+    canonicalizing the canonical value: transformation rules do not
+    re-fire, so it is a subset of the original evidence. If you need the
+    exact original evidence for audit, read it from the stored
+    canonical_bytes() JSON directly — it is already in there.
     """
-    # Re-canonicalize the original input to reconstruct the artifact.
-    # Note: this requires you to store the input alongside the artifact,
-    # or to canonicalize from the stored value (idempotence).
-    contract_obj = contract
-    if isinstance(contract, dict):
-        contract_obj = paxman.parse_contract(contract)
+    raw = stored["canonical_bytes"].encode("utf-8")
+    if hashlib.sha256(raw).hexdigest() != stored["replay_hash"]:
+        raise CanonicalizationError("artifact was tampered with")
 
-    # Replay the canonical value: idempotence says this gives back the
-    # same artifact (or a byte-equal one).
-    if stored["status"] != "canonicalized":
-        raise ValueError(f"cannot reconstruct non-canonicalized artifact: {stored['status']}")
-
-    artifact = paxman.canonicalize(stored["value"], contract_obj)
-    if artifact.replay_hash != stored["replay_hash"]:
-        raise paxman.CanonicalizationError("replay_hash mismatch — artifact was tampered with")
-    return artifact
+    record = json.loads(raw)
+    rehydrated = paxman.canonicalize(record["value"], paxman.parse_contract(record["contract"]))
+    assert rehydrated.value == record["value"]
+    assert rehydrated.contract.as_dict() == record["contract"]
+    assert rehydrated.version_stamp == paxman.VersionStamp(**record["version_stamp"])
+    return rehydrated
 ```
 
-The pattern works because of [idempotence](../concepts/the-three-invariants.md): `canonicalize(canonical_value) == canonical_value`. If you have the canonical value, you can re-canonicalize it and get the same artifact back. If the stored `replay_hash` does not match, the artifact was tampered with.
+The pattern works because `replay_hash` is defined as `SHA-256(canonical_bytes())`. Storing both and re-checking the hash is the same check `replay()` performs (MANDATE Law 12), and it does not depend on re-canonicalizing the input — which matters because re-canonicalizing a *canonical* value does **not** reproduce the original transformation evidence, and therefore produces a different `replay_hash`.
 
-## A simpler alternative: store only the canonical value
+## A Simpler Alternative: Store Only the Canonical Value
 
-For many use cases, you do not need to store the entire artifact. The canonical value plus the contract plus the version stamp is enough to reconstruct and verify:
+If you do not need the full record or the original evidence, store just the canonical value, the contract, and the version stamp:
 
 ```python
 import paxman
-from paxman import Email, ExecutionArtifact
+from paxman import Email
 
 result = paxman.canonicalize("User@Example.com", Email())
 
-# Store just what you need.
+# Store what you need to reconstruct and verify the canonical value.
 stored = {
     "value": result.value,
     "contract": result.contract.as_dict(),
-    "replay_hash": result.replay_hash,
+    "version_stamp": {
+        "paxman_version": result.version_stamp.paxman_version,
+        "contract_version": result.version_stamp.contract_version,
+        "capabilities_hash": result.version_stamp.capabilities_hash,
+        "configuration_version": result.version_stamp.configuration_version,
+    },
 }
 
-# Later: reconstruct and verify.
+# Later: reconstruct and verify the canonical value.
 contract = paxman.parse_contract(stored["contract"])
 rehydrated = paxman.canonicalize(stored["value"], contract)
-assert rehydrated.replay_hash == stored["replay_hash"]
+assert rehydrated.value == stored["value"]
+assert rehydrated.contract.as_dict() == stored["contract"]
+assert rehydrated.version_stamp == paxman.VersionStamp(**stored["version_stamp"])
 ```
 
-The evidence list is lost in this form. If you need the evidence for audit purposes, store it explicitly:
+This lighter form verifies the value, contract, and version stamp only. It does **not** preserve the original evidence list (re-canonicalizing a canonical value does not re-fire transformation rules), and it cannot verify the `replay_hash` — store the full canonical bytes (above) if you need evidence fidelity or replay-hash integrity.
 
-```python
-stored = {
-    "value": result.value,
-    "contract": result.contract.as_dict(),
-    "replay_hash": result.replay_hash,
-    "evidence": [
-        {"rule": e.rule, "detail": e.detail, "provenance": e.provenance}
-        for e in result.evidence
-    ],
-}
-```
-
-## Using a database
+## Using a Database
 
 The serialization pattern works with any key-value or document store. Store the dict as JSON, BSON, MessagePack, or whatever your stack uses. The `replay_hash` is a 64-character hex string; index on it if you need to look up artifacts by hash.
 
-When reading back, deserialize the dict, re-canonicalize the value, and verify the hash. If verification fails, the record is corrupt — do not trust its data.
+When reading back, deserialize the dict, re-canonicalize the value, and verify the full record. If verification fails, the record is corrupt — do not trust its data.
 
-## What not to do
+## What Not to Do
 
 - **Do not pickle artifacts.** Pickling a frozen attrs dataclass works, but it bypasses the deterministic byte form. Replay verifies the hash of `canonical_bytes()`, not the pickle bytes. A pickled artifact that has been mutated after construction would not be caught by pickle's checks (pickle deserializes whatever bytes you give it).
 - **Do not reconstruct the artifact by hand.** The `ExecutionArtifact` is `@attrs.frozen`; you can construct it with `attrs.evolve()` if you must, but always re-canonicalize and verify the hash. Hand-construction without verification loses the replay guarantee.
 - **Do not store the artifact as Python object only.** Storing the artifact as a Python object without serializing means it never leaves memory, and a process restart loses it. Serialize for any storage that survives a process boundary.
 
-## Where to go next
+## Where to Go Next
 
 - [Replay for verification](replay-for-verification.md) — verify an artifact after reconstruction.
 - [The three invariants](../concepts/the-three-invariants.md) — why idempotence makes this pattern work.

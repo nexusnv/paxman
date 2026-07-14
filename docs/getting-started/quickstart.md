@@ -2,7 +2,7 @@
 
 This walkthrough goes line by line through [`quickstart.py`](../../quickstart.py) at the root of the repository. After completing it, you will have used Paxman's three public verbs and seen the artifact format.
 
-## Run it
+## Run It
 
 From the repository root:
 
@@ -20,7 +20,7 @@ replay ok
 
 If you see that output, the install works and the artifact replays byte-for-byte. Move on to [Verify](verify.md) for what each line means.
 
-## The code, line by line
+## The Code, Line by Line
 
 ```python
 import paxman
@@ -67,9 +67,9 @@ print("replay ok")
 
 This property — that an artifact is independently verifiable without re-running the transformation — is one of the three guarantees Paxman makes. See [The three invariants](../concepts/the-three-invariants.md) for the full set.
 
-## What you have seen
+## What You Have Seen
 
-- The three public verbs: `paxman.canonicalize()`, `paxman.replay()`, and the contract factory `Email()`.
+- The three public verbs: `paxman.canonicalize()`, `paxman.replay()`, and `paxman.register_capability()`.
 - The five outcomes of a canonicalize call (you saw one of them: `CANONICALIZED`).
 - The evidence list and its `rule` / `detail` / `provenance` fields.
 - The replay guarantee, demonstrated by `assert rehydrated == result`.

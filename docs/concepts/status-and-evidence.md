@@ -1,8 +1,8 @@
-# Status and evidence
+# Status and Evidence
 
 Every `paxman.canonicalize()` call returns an `ExecutionArtifact`. The artifact has a `status` (one of five values) and a list of `evidence` entries. This page explains both.
 
-## The five outcomes
+## The Five Outcomes
 
 `Status` is an enum with five values. They are mutually exclusive; an artifact has exactly one.
 
@@ -18,7 +18,7 @@ These are **outcomes**, not exceptions. A canonicalize call that returns an arti
 
 For the distinction between outcomes and exceptions, see the [Error reference](../reference/errors.md). The short version: outcomes are returned on the artifact; exceptions are raised only when the call cannot proceed at all (broken contract, version mismatch, internal invariant violation, frozen registry after first use).
 
-## Reading the status
+## Reading the Status
 
 ```python
 import paxman
@@ -31,7 +31,7 @@ print(result.value)  # "user@example.com"
 
 `result.status` is a `Status` enum. Compare with `is` (or `==`). The five values are `Status.CANONICALIZED`, `Status.INVALID`, `Status.MISSING`, `Status.AMBIGUOUS`, and `Status.UNSUPPORTED`.
 
-## The evidence list
+## The Evidence List
 
 The artifact's `evidence` field is a tuple of `Evidence` entries. Each entry has three fields:
 
@@ -43,29 +43,29 @@ The artifact's `evidence` field is a tuple of `Evidence` entries. Each entry has
 
 The evidence list is ordered: rules are appended in the order they fired. A `CANONICALIZED` artifact's evidence tells you the sequence of transformations the capability applied. An `INVALID` artifact's evidence tells you which rule caused the rejection.
 
-## Why evidence instead of confidence scores
+## Why Evidence Instead of Numeric Scores
 
-Some libraries report a `confidence` score — a number between 0 and 1 that says "how sure am I?" Paxman does not do this. Two reasons:
+Some libraries report a numeric score — a value between 0 and 1 that says "how sure am I?" Paxman does not do this. Two reasons:
 
-1. **Confidence is opinion, not fact.** Where did `0.91` come from? Can it change? Why `0.91` and not `0.75`? Once subjective judgment enters, the result is no longer fully determined by the inputs.
-2. **Evidence is auditable.** A `rule` name and a `provenance` citation can be checked. A confidence score cannot. If a user disputes a canonical form, they can read the evidence, find the rule, look up the citation, and decide for themselves whether the rule applies.
+1. **A score is opinion, not fact.** Where did `0.91` come from? Can it change? Why `0.91` and not `0.75`? Once subjective judgment enters, the result is no longer fully determined by the inputs.
+2. **Evidence is auditable.** A `rule` name and a `provenance` citation can be checked. A numeric score cannot. If a user disputes a canonical form, they can read the evidence, find the rule, look up the citation, and decide for themselves whether the rule applies.
 
 This is why the artifact's `Status` is one of five discrete values, not a number. The library either canonicalized the input, or it reports *exactly why* it did not. There is no "sort of" outcome.
 
-## A worked example
+## A Worked Example
 
-For the input `"  John.Doe@Gmail.COM  "` under `Email(provider_aliases="gmail")`:
+For the input `"  John.Doe+Work@GoogleMail.COM  "` under `Email(provider_aliases="gmail")`:
 
 ```python
 result = paxman.canonicalize(
-    "  John.Doe@Gmail.COM  ",
+    "  John.Doe+Work@GoogleMail.COM  ",
     Email(provider_aliases="gmail"),
 )
 ```
 
 - `result.status` is `Status.CANONICALIZED`.
 - `result.value` is `"johndoe@gmail.com"`.
-- `result.evidence` has four entries, in order:
+- `result.evidence` has six entries, in order:
   1. `Evidence(rule="stripped_whitespace", detail="", provenance="RFC 5322 §2.1 + §3.6.3")`
   2. `Evidence(rule="lowercased_local_part", detail="", provenance="Paxman spec/email §1.3")`
   3. `Evidence(rule="lowercased_domain", detail="", provenance="RFC 5321 §2.4")`
@@ -84,11 +84,11 @@ For the input `"user with space@example.com"` under `Email(strict=True)`:
 
 One rule fired, the rejection rule, with a citation.
 
-## The full rule table for the email capability
+## The Full Rule Table for the Email Capability
 
 The complete list of rules the email capability can emit, with what triggers them, is in the [Email capability spec](../capabilities/email/index.md#the-rules).
 
-## Where to go next
+## Where to Go Next
 
 - [Why rules cite sources](why-rules-cite-sources.md) — the citation policy in detail.
 - [How-to: Interpret the five outcomes](../how-to/interpret-the-5-statuses.md) — the recommended if/elif pattern.

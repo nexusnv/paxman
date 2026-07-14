@@ -19,7 +19,7 @@ import pytest
 from hypothesis import given, settings
 
 import paxman
-from paxman import _orchestrator_runtime
+import paxman._orchestrator_runtime as _orchestrator_runtime
 from paxman._capabilities.builtins.uuid import UUIDCapability
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman._core.types import CapabilityResult, Status

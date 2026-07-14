@@ -12,21 +12,28 @@ Any other kind raises `UnsupportedContractError` (defined in
 
 from __future__ import annotations
 
-from paxman._contracts.contract import CanonicalEmailContract
+from paxman._contracts.contract import CanonicalEmailContract, CanonicalUUIDContract
 from paxman._core.classification import ValidationResult
 from paxman._errors import UnsupportedContractError
 
 
-def validate(value: str, contract: CanonicalEmailContract) -> ValidationResult:
+def validate(
+    value: str,
+    contract: CanonicalEmailContract | CanonicalUUIDContract,
+) -> ValidationResult:
     """Validate a canonical value against the contract.
 
     Raises `UnsupportedContractError` for unknown contract kinds. The
     orchestrator is responsible for catching that and mapping to
     `Status.UNSUPPORTED`.
     """
-    # v2.0.0: dispatch on type. The only supported kind is the email
-    # contract. A future v2.x that adds new kinds will replace this
+    # v2.0.0: dispatch on type. The supported kinds are the email and
+    # uuid contracts. A future v2.x that adds new kinds will replace this
     # with a Protocol-based dispatch table.
+    if isinstance(contract, CanonicalUUIDContract):
+        # The UUIDCapability has already validated the canonical form and
+        # the version policy; no further policy check is needed here.
+        return ValidationResult(is_valid=True)
     if not isinstance(contract, CanonicalEmailContract):
         raise UnsupportedContractError(
             f"validation does not support contract kind: {type(contract).__name__}"

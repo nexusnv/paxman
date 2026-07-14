@@ -49,7 +49,7 @@ def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
             f"paxman version mismatch: artifact is {artifact.version_stamp.paxman_version!r}, "
             f"current is {expected_paxman!r}"
         )
-    if artifact.version_stamp.contract_version != parsed_contract.version:
+    if artifact.version_stamp.contract_version != parsed_contract.version_field:
         raise VersionMismatchError(
             f"contract version mismatch: artifact is {artifact.version_stamp.contract_version}, "
             f"contract is {parsed_contract.version}"

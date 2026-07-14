@@ -31,6 +31,7 @@ class CanonicalEmailContract:
     strict: bool = False
     kind: str = "canonical_email"
     version: int = 1
+    version_field: int = 1
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract.

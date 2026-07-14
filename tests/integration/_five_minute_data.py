@@ -21,9 +21,14 @@ Construction rules (5 invalid):
 - 1 missing '@' sign: 'not.an.email'.
 - 1 empty local part: '@example.com'.
 - 1 empty domain part: 'user@'.
-- 1 non-ASCII character in local part: 'jöhn@example.com'.
+- 1 non-ASCII character in local part under strict=True:
+  'jöhn@example.com' with Email(strict=True).
 - 1 leading/trailing whitespace under strict=True: '  a@b.c  ' with
   Email(strict=True).
+
+NOTE: the non-ASCII case requires strict=True because the v2 EmailCapability
+only rejects non-ASCII when strict mode is active. Without strict mode,
+'jöhn@example.com' is accepted and lowercased (ö is already lowercase).
 
 The breakdown is 20+20+20+20+15 = 95 canonicalizable + 5 invalid = 100.
 """
@@ -141,14 +146,14 @@ INVALID: list[str] = [
     "not.an.email",        # missing '@' sign
     "@example.com",        # empty local part
     "user@",               # empty domain part
-    "jöhn@example.com",    # non-ASCII character in local part
 ]
 
 # Inputs that require a non-default contract form are kept separate so
-# the test can build the matching Email() for each. This one is the
-# strict=True whitespace rejection case.
+# the test can build the matching Email() for each. These use strict=True
+# to reject whitespace or non-ASCII characters.
 STRICT_INVALID: list[tuple[str, dict[str, object]]] = [
-    ("  a@b.c  ", {"strict": True}),
+    ("  a@b.c  ", {"strict": True}),         # whitespace under strict mode
+    ("jöhn@example.com", {"strict": True}),   # non-ASCII under strict mode
 ]
 
 

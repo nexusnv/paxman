@@ -5,7 +5,7 @@ Mandate: see MANDATE.md. Spec: see docs/superpowers/specs/.
 
 from __future__ import annotations
 
-from typing import Any as _Any
+from typing import Any
 
 __version__ = "0.0.0.dev0"
 
@@ -57,7 +57,7 @@ def register_capability(capability: Capability) -> None:
     _orchestrator_runtime.default_registry.register(capability)
 
 
-def __getattr__(name: str) -> _Any:
+def __getattr__(name: str) -> Any:
     """PEP 562 module-level attribute lookup (mandate §1.1, Law 8).
 
     The 'normalize' name does not exist on this module — Paxman

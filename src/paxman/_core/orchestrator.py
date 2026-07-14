@@ -69,6 +69,15 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
 
     registry = _orchestrator_runtime.default_registry
     if not registry.is_frozen:
+        # Lazy built-in loading (spec §2.4, MANDATE §4.3 + Law 8a).
+        # Runs BEFORE freeze so the capability set is fixed at resolve
+        # time (Law 1: the capability set is part of the determinism
+        # invariant). The import is inside this branch (not at module
+        # top) to keep 'import paxman' side-effect-free and to avoid a
+        # potential circular import between builtins.email and the
+        # contract module.
+        from paxman._capabilities.builtins import builtin_capabilities
+        registry.load_builtins(builtin_capabilities())
         registry.freeze()
 
     # Stage 1: inspect — parse the contract Dict DSL.

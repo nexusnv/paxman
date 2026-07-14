@@ -85,3 +85,25 @@ class TestDateCapability:
         r = _cap().canonicalize("03/04/25", _contract("US"))
         assert r.status is Status.AMBIGUOUS
         assert r.evidence[0].rule == "ambiguous_two_digit_year"
+
+    def test_rfc2822_date_only(self) -> None:
+        r = _cap().canonicalize("1 Jan 2025", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "2025-01-01"
+        assert r.evidence[0].rule == "parsed_rfc2822"
+
+    def test_rfc2822_datetime_with_zone(self) -> None:
+        r = _cap().canonicalize("Tue, 01 Jan 2025 12:00:00 +0000", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "2025-01-01T12:00:00Z"
+        assert r.evidence[-1].rule == "normalized_to_utc"
+
+    def test_rfc2822_datetime_with_named_zone(self) -> None:
+        r = _cap().canonicalize("01 Jan 2025 07:00:00 EST", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "2025-01-01T12:00:00Z"
+
+    def test_rfc2822_datetime_without_zone_is_ambiguous(self) -> None:
+        r = _cap().canonicalize("01 Jan 2025 12:00:00", _contract())
+        assert r.status is Status.AMBIGUOUS
+        assert r.evidence[0].rule == "ambiguous_naive_datetime"

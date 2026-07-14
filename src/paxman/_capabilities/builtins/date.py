@@ -15,6 +15,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from datetime import UTC, datetime
+from email.utils import parsedate_to_datetime
 from types import MappingProxyType
 
 from paxman._contracts.contract import CanonicalDateContract, Contract
@@ -29,6 +30,18 @@ _ISO_NAIVE_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+
 
 _NUMERIC_4YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})$")
 _NUMERIC_2YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{2})$")
+
+_RFC2822_TIME_RE = re.compile(r"\d{1,2}:\d{2}(:\d{2})?")
+_RFC2822_RE = re.compile(
+    r"^(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s*)?"
+    r"\d{1,2}\s+"
+    r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+"
+    r"\d{4}"
+    r"(?:\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s+(?:[+-]\d{4}|[A-Z]{1,4}))?"
+    r"|\s+\(?[A-Z]{2,4}\)?"
+    r"|\s+[A-Z]{1,3})?"
+    r"$"
+)
 
 _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
     {
@@ -255,6 +268,42 @@ class DateCapability:
                 status=Status.INVALID,
                 evidence=(_evidence("numeric_format_requires_us_or_eu_locale"),),
             )
+
+        # RFC 2822: "1 Jan 2025", "Tue, 01 Jan 2025 12:00:00 +0000"
+        if _RFC2822_RE.match(value):
+            has_time = bool(_RFC2822_TIME_RE.search(value))
+            if not has_time:
+                # Date-only RFC 2822: parsedate_to_datetime requires time,
+                # so fall back to strptime for the "D Mon YYYY" form.
+                try:
+                    parsed = datetime.strptime(value.strip(), "%d %b %Y")
+                except ValueError:
+                    parsed = None
+                if parsed is not None:
+                    return CapabilityResult(
+                        status=Status.CANONICALIZED,
+                        value=_render_date(parsed),
+                        evidence=(_evidence("parsed_rfc2822"),),
+                    )
+            else:
+                try:
+                    parsed = parsedate_to_datetime(value)
+                except (TypeError, ValueError):
+                    parsed = None
+                if parsed is not None:
+                    if parsed.tzinfo is None:
+                        return CapabilityResult(
+                            status=Status.AMBIGUOUS,
+                            evidence=(_evidence("ambiguous_naive_datetime"),),
+                        )
+                    return CapabilityResult(
+                        status=Status.CANONICALIZED,
+                        value=_render_datetime(parsed),
+                        evidence=(
+                            _evidence("parsed_rfc2822"),
+                            _evidence("normalized_to_utc"),
+                        ),
+                    )
 
         return CapabilityResult(
             status=Status.UNSUPPORTED,

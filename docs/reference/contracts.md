@@ -1,0 +1,164 @@
+# Reference: Contracts
+
+A contract declares *what* the canonical form is. It is the source of truth in Paxman.
+
+## The contract types in v2.0.0
+
+v2.0.0 ships exactly one contract kind: `canonical_email`. Future versions may add new kinds (Money, Date, etc.). The `Contract` type alias is currently bound to `CanonicalEmailContract`.
+
+## `CanonicalEmailContract`
+
+The frozen value object representing an email canonicalization policy.
+
+```python
+@attrs.frozen
+class CanonicalEmailContract:
+    lowercase: bool = True
+    strip_whitespace: bool = True
+    provider_aliases: Literal["none", "gmail"] = "none"
+    strict: bool = False
+    kind: str = "canonical_email"
+    version: int = 1
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `lowercase` | `bool` | `True` | Lowercase the local part and domain. |
+| `strip_whitespace` | `bool` | `True` | Strip leading/trailing ASCII whitespace. |
+| `provider_aliases` | `"none"` or `"gmail"` | `"none"` | Apply a provider's alias rules. Only `"gmail"` is supported in v2.0.0. |
+| `strict` | `bool` | `False` | Reject inputs with embedded whitespace or non-ASCII characters. |
+| `kind` | `str` | `"canonical_email"` | The contract kind discriminator. Fixed. |
+| `version` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
+
+The `kind` and `version` fields are fixed. They are not part of the `Email()` factory signature.
+
+## `Email()` — the factory
+
+```python
+def Email(
+    *,
+    strict: bool = False,
+    provider_aliases: Literal["none", "gmail"] = "none",
+    lowercase: bool = True,
+    strip_whitespace: bool = True,
+) -> CanonicalEmailContract
+```
+
+Domain-type sugar for declaring an email contract. Returns a `CanonicalEmailContract`. All arguments are keyword-only.
+
+**Example:**
+
+```python
+from paxman import Email
+
+contract = Email(provider_aliases="gmail", strict=True)
+```
+
+The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
+
+## `parse_contract()` — the Dict DSL parser
+
+```python
+def parse_contract(spec: Any) -> Contract
+```
+
+Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed `CanonicalEmailContract`.
+
+**Example:**
+
+```python
+import paxman
+
+contract = paxman.parse_contract({
+    "kind": "canonical_email",
+    "provider_aliases": "gmail",
+    "lowercase": True,
+    "strip_whitespace": True,
+    "strict": False,
+})
+```
+
+**Raises:** `ContractError` if the spec is malformed.
+
+`parse_contract` is a no-op for an already-parsed `CanonicalEmailContract` (the contract is the truth; an instance is its own best representation).
+
+## The Dict DSL
+
+The Dict DSL is the wire form of a contract. It is a dict with a `kind` discriminator and the contract's fields.
+
+```python
+{
+    "kind": "canonical_email",
+    "lowercase": True,
+    "strip_whitespace": True,
+    "provider_aliases": "none",
+    "strict": False,
+    "version": 1,
+}
+```
+
+| Field | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `kind` | `str` | Yes | — | Must be `"canonical_email"` in v2.0.0. Unknown kinds raise `ContractError`. |
+| `lowercase` | `bool` | No | `True` | Same as `CanonicalEmailContract.lowercase`. |
+| `strip_whitespace` | `bool` | No | `True` | Same as `CanonicalEmailContract.strip_whitespace`. |
+| `provider_aliases` | `"none"` or `"gmail"` | No | `"none"` | Same as `CanonicalEmailContract.provider_aliases`. |
+| `strict` | `bool` | No | `False` | Same as `CanonicalEmailContract.strict`. |
+| `version` | `int` | No | `1` | Same as `CanonicalEmailContract.version`. |
+
+Unknown `kind` values, missing `kind`, non-bool values for bool fields, and unknown `provider_aliases` values all raise `ContractError` at parse time.
+
+The Dict DSL is round-trip-safe: `parse_contract(contract.as_dict()) == contract` for any valid `CanonicalEmailContract`.
+
+## What a contract is not
+
+A contract is **not**:
+
+- A configuration file. Contracts are values, not files. Build them in code, pass them to `canonicalize()`.
+- A pipeline. A contract declares a target form, not a sequence of operations. The library's pipeline is fixed.
+- A plugin configuration. A contract does not say which capability to invoke. The resolver (the registry) decides based on what capabilities declare.
+- A regex. A contract is a typed value object. The input is the string; the contract is the policy.
+
+## Field semantics in detail
+
+### `lowercase`
+
+When `True`, the capability lowercases the local part and the domain. When `False`, the input case is preserved.
+
+- Lowercasing the **domain** is mandated by RFC 5321 §2.4 (domain is case-insensitive). This is non-controversial.
+- Lowercasing the **local part** is a Paxman policy that diverges from RFC 5321 §2.4 (the local part is technically case-sensitive). The capability cites the Paxman spec/email §1.3 for this rule. A user who needs RFC-strict behavior can build a different capability with `lowercase=False` or with a different `lowercased_local_part` rule.
+
+### `strip_whitespace`
+
+When `True`, the capability strips leading and trailing ASCII whitespace. When `False`, the input is canonicalized as-is.
+
+The whitespace stripped is the ASCII set (` `, `\t`, `\n`, `\r`, `\f`, `\v`). Unicode whitespace (e.g. U+00A0 NO-BREAK SPACE) is *not* stripped, even when this field is `True`. Inputs that contain only Unicode whitespace fall through to the grammar gate and are rejected (or, with `strict=True`, are rejected by the strict-mode check first).
+
+### `provider_aliases`
+
+Closed enum, two values:
+
+- `"none"` — preserve the input domain. Do not apply any provider-specific alias rules.
+- `"gmail"` — apply Gmail's documented alias rules:
+  - The domain `googlemail.com` is normalized to `gmail.com`.
+  - Dots in the local part are removed.
+  - A `+tag` suffix in the local part is stripped (e.g. `john+work@gmail.com` becomes `john@gmail.com`).
+
+The `"gmail"` value is based on Google's published help articles. The citations appear on the relevant evidence rules. See the [Email capability spec](../capabilities/email/index.md#the-rules) for the full rule table.
+
+### `strict`
+
+When `True`, the capability rejects inputs with:
+
+- Embedded whitespace (space, tab, newline) anywhere in the input.
+- Non-ASCII characters anywhere in the input.
+
+The check happens *before* any rewriting. A non-strict input that would canonicalize successfully is rejected under `strict=True` because the input itself is non-conforming.
+
+When `False` (the default), the capability accepts the input and applies the contract's rewriting rules. An input with embedded whitespace will be canonicalized (the whitespace is stripped); an input with non-ASCII characters will be canonicalized (the characters are preserved, then the grammar gate runs on the result).
+
+## Where to go next
+
+- [Concepts: Contracts](../concepts/contracts.md) — the conceptual background.
+- [Capability protocol reference](capability-protocol.md) — the SPI for custom capabilities.
+- [Email capability spec](../capabilities/email/index.md) — the full rule table for the shipped capability.

@@ -173,7 +173,7 @@ Domain-type sugar for declaring a UUID contract. Returns a `CanonicalUUIDContrac
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `version` | `"any"`, `"1"`, `"3"`, `"4"`, `"5"`, `"7"` | `"any"` | Which UUID version to accept. `"any"` accepts all five. A specific value rejects other versions with `Status.INVALID`. |
+| `version` | `"any"`, `"1"`, `"3"`, `"4"`, `"5"`, `"7"` | `"any"` | Which UUID version to accept. Under `version="any"` the capability validates only RFC 4122 §3 form — any version nibble (and any variant nibble) in canonical form is accepted verbatim. A specific value (e.g. `"4"`) adds an RFC 4122 §4.1.3 check that rejects other versions with `Status.INVALID`. |
 
 **Returns:** `CanonicalUUIDContract` — a frozen value object with the same field.
 

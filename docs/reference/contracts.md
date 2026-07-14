@@ -46,7 +46,7 @@ class CanonicalUUIDContract:
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `version` | `"any"`, `"1"`, `"3"`, `"4"`, `"5"`, `"7"` | `"any"` | Which UUID version(s) to accept. |
+| `version` | `"any"`, `"1"`, `"3"`, `"4"`, `"5"`, `"7"` | `"any"` | Which UUID version(s) to accept. Under `"any"` only RFC 4122 §3 form is validated, so any version/variant nibble in canonical form is accepted. A specific value adds an RFC 4122 §4.1.3 check that rejects other versions. |
 | `kind` | `str` | `"canonical_uuid"` | The contract kind discriminator. Fixed. |
 | `version_field` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
 

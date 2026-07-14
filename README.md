@@ -54,6 +54,19 @@ evidence: [('stripped_whitespace', ''), ('lowercased_local_part', ''), ('lowerca
 replay ok
 ```
 
+### Dates
+
+```python
+import paxman
+from paxman import Date
+
+result = paxman.canonicalize("03/04/2025", Date(locale="US"))
+print(result.status.name, "->", result.value)  # CANONICALIZED -> 2025-03-04
+
+result = paxman.canonicalize("2025-01-01T07:00:00-05:00", Date(locale="ISO"))
+print(result.value)  # 2025-01-01T12:00:00Z
+```
+
 Install with `git clone https://github.com/nexusnv/paxman.git && cd paxman && uv sync`, then `uv run python quickstart.py`.
 
 - `canonicalize(input_data, contract) -> ExecutionArtifact` — produce a canonical artifact.

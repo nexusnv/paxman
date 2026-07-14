@@ -48,6 +48,7 @@ class _StubContract:
 
     @property
     def version_field(self) -> int:
+        # Law 12: preserve the contract schema version for replayability.
         return self._version
 
     def as_dict(self) -> dict[str, object]:
@@ -194,6 +195,7 @@ def _build_artifact(
     """
     version_stamp = VersionStamp(
         paxman_version=_paxman_version.__version__,
+        # Law 12: stamp the contract schema version (not the capability policy).
         contract_version=parsed_contract.version_field,
         capabilities_hash=registry.capabilities_hash(),
         configuration_version="0",

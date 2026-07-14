@@ -21,7 +21,7 @@ class TestNormalizeTeachingError:
         # Access via getattr — never the literal paxman.normalize, which
         # would itself trip the grep-zero gate if it appeared in tests/.
         with pytest.raises(AttributeError) as exc_info:
-            getattr(paxman, "normalize")
+            getattr(paxman, "normalize")  # noqa: B009
         message = str(exc_info.value)
         assert "canonicalize" in message, (
             f"teaching error must mention canonicalize; got: {message!r}"
@@ -32,14 +32,14 @@ class TestNormalizeTeachingError:
         # 'paxman.normalize' must never appear inside it (criterion 7,
         # spec §2.1 grep-zero gate).
         with pytest.raises(AttributeError) as exc_info:
-            getattr(paxman, "normalize")
+            getattr(paxman, "normalize")  # noqa: B009
         assert "paxman.normalize" not in str(exc_info.value), (
             "teaching error message must not contain the substring 'paxman.normalize'"
         )
 
     def test_other_missing_name_raises_plain_attribute_error(self) -> None:
         with pytest.raises(AttributeError) as exc_info:
-            getattr(paxman, "definitely_not_a_function")
+            getattr(paxman, "definitely_not_a_function")  # noqa: B009
         message = str(exc_info.value)
         # Plain AttributeError, not a teaching message.
         assert "canonicalize" not in message

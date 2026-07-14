@@ -19,7 +19,6 @@ from paxman import Email, _orchestrator_runtime
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman._core.types import Status
 
-
 # Make the underscore-prefixed data module importable. pytest refuses
 # to collect modules named with leading underscores (e.g. _five_minute_data.py
 # is not discovered), so we add its directory to sys.path for the
@@ -54,9 +53,7 @@ class TestFiveMinute100Emails:
                     f"{result.status.name} with evidence "
                     f"{[(e.rule, e.detail) for e in result.evidence]}"
                 )
-        assert canonical_count == 95, (
-            f"expected 95 CANONICALIZED, got {canonical_count}"
-        )
+        assert canonical_count == 95, f"expected 95 CANONICALIZED, got {canonical_count}"
 
     def test_5_invalid(self) -> None:
         invalid_count = 0
@@ -72,9 +69,7 @@ class TestFiveMinute100Emails:
                     f"{contract!r}; got {result.status.name} with value "
                     f"{result.value!r}"
                 )
-        assert invalid_count == 5, (
-            f"expected 5 INVALID, got {invalid_count}"
-        )
+        assert invalid_count == 5, f"expected 5 INVALID, got {invalid_count}"
 
     def test_exactly_100_total(self) -> None:
         total = len(all_canonicalizable_emails()) + len(all_invalid_pairs())

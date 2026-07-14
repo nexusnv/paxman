@@ -4,7 +4,7 @@ A contract declares *what* the canonical form is. It is the source of truth in P
 
 ## The Contract Types in v2.0.0
 
-v2.0.0 ships exactly one contract kind: `canonical_email`. Future versions may add new kinds (Money, Date, etc.). The `Contract` type alias is currently bound to `CanonicalEmailContract`.
+v2.0.0 ships exactly two contract kinds: `canonical_email` and `canonical_uuid`. Future versions may add new kinds (Money, Date, etc.). The `Contract` type alias is the union of both frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract`.
 
 ## `CanonicalEmailContract`
 
@@ -91,7 +91,7 @@ The factory and the value object have the same field defaults. The factory does 
 def parse_contract(spec: Any) -> Contract
 ```
 
-Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed `CanonicalEmailContract`.
+Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract` or `CanonicalUUIDContract`).
 
 **Example:**
 
@@ -128,7 +128,7 @@ The Dict DSL is the wire form of a contract. It is a dict with a `kind` discrimi
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `kind` | `str` | Yes | — | Must be `"canonical_email"` in v2.0.0. Unknown kinds raise `ContractError`. |
+| `kind` | `str` | Yes | — | Must be a supported `kind`: `canonical_email` or `canonical_uuid` in v2.0.0. Unknown kinds raise `ContractError`. |
 | `lowercase` | `bool` | No | `True` | Same as `CanonicalEmailContract.lowercase`. |
 | `strip_whitespace` | `bool` | No | `True` | Same as `CanonicalEmailContract.strip_whitespace`. |
 | `provider_aliases` | `"none"` or `"gmail"` | No | `"none"` | Same as `CanonicalEmailContract.provider_aliases`. |

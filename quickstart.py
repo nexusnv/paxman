@@ -1,4 +1,4 @@
-"""5-Minute Promise quickstart — runnable on first clone (issue #137).
+"""5-Minute Promise quickstart — runnable on first clone.
 
 Verifies: git clone && uv sync && uv run python quickstart.py works
 without any private-module imports, without a register_capability call

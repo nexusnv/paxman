@@ -62,9 +62,8 @@ Install with `git clone https://github.com/nexusnv/paxman.git && cd paxman && uv
 
 ## Status
 
-v2 is in active development. The previous v1.x releases were retracted on 2026-07-12; see [`RETRACTION.md`](./RETRACTION.md) and the audit postmortem in [`.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md`](./.agents/PAXMAN-BRUTAL-HONESTY-POSTMORTEM.md).
+v2 is in active development.
 
-This branch is a fresh start. The working tree does not contain the v1.x implementation; that history is preserved in the git log on the `recovery/sprint-1-6` branch.
 
 ## Install
 

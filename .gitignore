@@ -24,6 +24,7 @@ kilo.md
 .windsurf/
 .continue/
 .playwright-cli/
+.superpowers/
 
 # --- Python build / runtime artifacts ---
 __pycache__/

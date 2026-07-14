@@ -117,7 +117,8 @@ If every step prints `ok` (or the expected output), the install is working.
 
 ## Known limitations
 
-v2.0.0-rc1 ships with one built-in capability (email). Other canonical
+v2.0.0-rc1 ships with two built-in capabilities: email_canonicalization
+and uuid_canonicalization. Other canonical
 types (date, money, URL, etc.) are not in this release candidate.
 
 The email capability is intentionally narrow in v2.0.0-rc1. It does not

@@ -16,9 +16,9 @@ from __future__ import annotations
 import pytest
 
 import paxman
+from paxman import Email, FrozenRegistryError, Status, _orchestrator_runtime
 from paxman._capabilities.builtins.email import EmailCapability
-from paxman._core.types import Status
-from paxman._errors import FrozenRegistryError
+from paxman._capabilities.registry import CapabilityRegistry
 
 
 @pytest.fixture(autouse=True)
@@ -32,12 +32,10 @@ def _fresh_empty_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     We use monkeypatch.setattr (NOT a hypothetical reset()/clear()
     method — none exists on CapabilityRegistry; spec §4.1).
     """
-    from paxman import _orchestrator_runtime
-    from paxman._capabilities.registry import CapabilityRegistry
-
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", CapabilityRegistry())
 
 
+@pytest.mark.integration
 class TestOrchestratorAutoLoads:
     def test_canonicalize_works_without_register_capability(self) -> None:
         """The novice did NOTHING. No register_capability call.
@@ -73,7 +71,6 @@ class TestOrchestratorAutoLoads:
 
     def test_works_with_email_factory_too(self) -> None:
         """Using the Email() factory as the contract also works."""
-        from paxman import Email
 
         result = paxman.canonicalize("  John.Doe@Example.COM  ", Email())
         assert result.status is Status.CANONICALIZED

@@ -52,7 +52,7 @@ def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
     if artifact.version_stamp.contract_version != parsed_contract.version_field:
         raise VersionMismatchError(
             f"contract version mismatch: artifact is {artifact.version_stamp.contract_version}, "
-            f"contract is {parsed_contract.version}"
+            f"contract is {parsed_contract.version_field}"
         )
 
     current_hash = _orchestrator_runtime.default_registry.capabilities_hash()

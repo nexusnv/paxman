@@ -10,7 +10,7 @@ from paxman._contracts.contract import parse_contract
 from paxman._core.artifact import ExecutionArtifact
 from paxman._core.replay import replay
 from paxman._core.types import Evidence, Status, VersionStamp
-from paxman._errors import VersionMismatchError
+from paxman._errors import CanonicalizationError, VersionMismatchError
 
 _EMPTY_REGISTRY_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
@@ -87,4 +87,17 @@ class TestReplay:
             )
         )
         with pytest.raises(VersionMismatchError):
+            replay(a, {"kind": "canonical_email"})
+
+    def test_replay_unparseable_contract_raises_version_mismatch(self) -> None:
+        a = _artifact()
+        # A contract the parser rejects maps to VersionMismatchError (Law 8).
+        with pytest.raises(VersionMismatchError):
+            replay(a, {"kind": "bogus"})
+
+    def test_replay_hash_mismatch_raises(self) -> None:
+        a = _artifact()
+        # Tamper the stored hash; replay must detect the forgery (Law 12).
+        object.__setattr__(a, "replay_hash", "tampered")
+        with pytest.raises(CanonicalizationError):
             replay(a, {"kind": "canonical_email"})

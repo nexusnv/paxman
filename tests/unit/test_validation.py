@@ -4,8 +4,20 @@ from __future__ import annotations
 
 from typing import Any, cast
 
+import pytest
+
 from paxman._contracts.contract import CanonicalEmailContract
 from paxman._core.validation import validate
+from paxman._errors import UnsupportedContractError
+
+
+class _UnsupportedContract:
+    """A contract kind that validation.py does not handle (forward-compat)."""
+
+    version_field = 1
+
+    def as_dict(self) -> dict[str, object]:
+        return {"kind": "canonical_widget"}
 
 
 def _contract(**overrides: object) -> CanonicalEmailContract:
@@ -41,3 +53,15 @@ class TestValidate:
 
     def test_domain_must_be_non_empty(self) -> None:
         assert validate("a@", _contract()).is_valid is False
+
+    def test_unsupported_contract_kind_raises(self) -> None:
+        # A contract that is neither email, uuid, nor date is unsupported.
+        with pytest.raises(UnsupportedContractError):
+            validate("x", cast(Any, _UnsupportedContract()))
+
+    def test_strict_mode_accepts_ascii(self) -> None:
+        assert validate("a@b.c", _contract(strict=True)).is_valid is True
+
+    def test_strict_mode_rejects_non_ascii(self) -> None:
+        # IDN/unicode local parts are out of scope in v2.0.0 (strict mode).
+        assert validate("café@b.c", _contract(strict=True)).is_valid is False

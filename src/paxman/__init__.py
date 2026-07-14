@@ -13,7 +13,9 @@ from paxman import _orchestrator_runtime
 from paxman._capabilities.protocol import Capability
 from paxman._capabilities.registry import CapabilityRegistry
 from paxman._contracts.contract import (
+    UUID,
     CanonicalEmailContract,
+    CanonicalUUIDContract,
     Contract,
     Email,
     parse_contract,
@@ -76,7 +78,9 @@ def __getattr__(name: str) -> Any:
 
 
 __all__ = [
+    "UUID",
     "CanonicalEmailContract",
+    "CanonicalUUIDContract",
     "CanonicalizationError",
     "Capability",
     "CapabilityRegistry",

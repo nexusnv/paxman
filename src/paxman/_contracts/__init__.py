@@ -16,13 +16,17 @@ that the orchestrator and capabilities consume.
 """
 
 from paxman._contracts.contract import (
+    UUID,
     CanonicalEmailContract,
+    CanonicalUUIDContract,
     Contract,
     parse_contract,
 )
 
 __all__ = [
+    "UUID",
     "CanonicalEmailContract",
+    "CanonicalUUIDContract",
     "Contract",
     "parse_contract",
 ]

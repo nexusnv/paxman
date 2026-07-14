@@ -57,6 +57,9 @@ def test_capabilities_hash_is_stable_across_calls(uuid_str: str, email: str) -> 
         uuid_artifact.version_stamp.capabilities_hash
         == email_artifact.version_stamp.capabilities_hash
     )
+    assert uuid_artifact.contract.kind == "canonical_uuid"
+    assert email_artifact.contract.kind == "canonical_email"
+    assert uuid_artifact.contract.kind != email_artifact.contract.kind
 
 
 def test_no_two_builtins_claim_the_same_pair() -> None:

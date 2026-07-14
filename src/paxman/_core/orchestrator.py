@@ -47,7 +47,7 @@ class _StubContract:
         self._version = 0
 
     @property
-    def version(self) -> int:
+    def version_field(self) -> int:
         return self._version
 
     def as_dict(self) -> dict[str, object]:
@@ -194,7 +194,7 @@ def _build_artifact(
     """
     version_stamp = VersionStamp(
         paxman_version=_paxman_version.__version__,
-        contract_version=parsed_contract.version,
+        contract_version=parsed_contract.version_field,
         capabilities_hash=registry.capabilities_hash(),
         configuration_version="0",
     )

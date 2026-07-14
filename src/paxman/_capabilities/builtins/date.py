@@ -307,8 +307,12 @@ class DateCapability:
             if not has_time:
                 # Date-only RFC 2822: parsedate_to_datetime requires time,
                 # so fall back to strptime for the "D Mon YYYY" form.
+                # Strip optional day-of-week prefix (e.g. "Tue, ") first.
+                date_part = re.sub(
+                    r"^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s*", "", value.strip()
+                )
                 try:
-                    parsed = datetime.strptime(value.strip(), "%d %b %Y")
+                    parsed = datetime.strptime(date_part, "%d %b %Y")
                 except ValueError:
                     parsed = None
                 if parsed is not None:

@@ -13,10 +13,12 @@ default_registry and matches.
 
 from __future__ import annotations
 
+import hashlib
+
 import pytest
 
 import paxman
-from paxman import Email, FrozenRegistryError, Status, _orchestrator_runtime
+from paxman import UUID, Email, FrozenRegistryError, Status, _orchestrator_runtime
 from paxman._capabilities.builtins.email import EmailCapability
 from paxman._capabilities.registry import CapabilityRegistry
 
@@ -75,3 +77,31 @@ class TestOrchestratorAutoLoads:
         result = paxman.canonicalize("  John.Doe@Example.COM  ", Email())
         assert result.status is Status.CANONICALIZED
         assert result.value == "john.doe@example.com"
+
+    def test_both_builtins_are_auto_loaded(self) -> None:
+        """After the first canonicalize, both built-ins have auto-loaded
+        into the default registry and the capabilities_hash is the digest
+        of the sorted capability names.
+        """
+        paxman.canonicalize("user@example.com", Email())
+
+        registry = _orchestrator_runtime.default_registry
+        assert "email_canonicalization" in registry._capabilities
+        assert "uuid_canonicalization" in registry._capabilities
+
+        expected_hash = hashlib.sha256(
+            "\n".join(sorted(registry._capabilities.keys())).encode("utf-8")
+        ).hexdigest()
+        assert registry.capabilities_hash() == expected_hash
+
+    def test_uuid_end_to_end_and_replay(self) -> None:
+        """Exercises the orchestrator + validation + replay fixes: a
+        canonical UUID is CANONICALIZED and replays byte-equal.
+        """
+        artifact = paxman.canonicalize("550e8400-e29b-41d4-a716-446655440000", UUID())
+        assert artifact.status is Status.CANONICALIZED
+        assert artifact.value == "550e8400-e29b-41d4-a716-446655440000"
+
+        rehydrated = paxman.replay(artifact, UUID())
+        assert rehydrated == artifact
+        assert rehydrated.canonical_bytes() == artifact.canonical_bytes()

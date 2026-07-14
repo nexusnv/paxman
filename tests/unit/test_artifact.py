@@ -9,7 +9,7 @@ from typing import Any
 import attrs
 import pytest
 
-from paxman._core.artifact import ExecutionArtifact
+from paxman._core.artifact import ExecutionArtifact, _ContractLike
 from paxman._core.types import (
     Evidence,
     Status,
@@ -116,3 +116,22 @@ class TestArtifactEquality:
         a1 = _make_artifact(status=Status.CANONICALIZED)
         a2 = _make_artifact(status=Status.INVALID, value=None)
         assert a1 != a2
+
+
+class _ConcreteContractLike(_ContractLike):
+    """Concrete (instantiable) subclass of the _ContractLike Protocol stub."""
+
+    kind: str = "canonical_email"
+
+
+class TestContractLikeProtocol:
+    def test_protocol_stub_methods_raise(self) -> None:
+        # The _ContractLike Protocol provides NotImplementedError bodies that
+        # exist only to satisfy the type checker; the real Contract overrides
+        # them. Assert the documented fallback behaviour via a concrete
+        # subclass (Protocols themselves are not directly instantiable).
+        proto = _ConcreteContractLike()
+        with pytest.raises(NotImplementedError):
+            proto.as_dict()
+        with pytest.raises(NotImplementedError):
+            _ = proto.version_field

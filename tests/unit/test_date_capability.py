@@ -157,6 +157,37 @@ class TestDateCapability:
         assert r.evidence[0].rule == "invalid_calendar_date"
 
 
+class TestSub1000YearCanonicalization:
+    """Years below AD 1000 must render with a 4-digit, zero-padded year.
+
+    glibc's strftime("%Y") drops zero-padding for years < 1000, which would
+    yield "1-01-01" instead of "0001-01-01" and break the YYYY-MM-DD form
+    and idempotence. Surfaced by the 100-input experiment (idempotence probe).
+    """
+
+    def test_sub_1000_year_is_zero_padded_date(self) -> None:
+        r = _cap().canonicalize("0001-01-01", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "0001-01-01"
+
+    def test_sub_1000_year_is_zero_padded_datetime(self) -> None:
+        r = _cap().canonicalize("0999-06-15T00:00:00Z", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "0999-06-15T00:00:00Z"
+
+    def test_year_999_is_zero_padded(self) -> None:
+        r = _cap().canonicalize("0999-12-31", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "0999-12-31"
+
+    def test_sub_1000_year_round_trips_idempotently(self) -> None:
+        r = _cap().canonicalize("0001-01-01", _contract())
+        assert r.status is Status.CANONICALIZED
+        r2 = _cap().canonicalize(r.value, _contract())
+        assert r2.status is Status.CANONICALIZED
+        assert r2.value == r.value
+
+
 class TestLaw14ProvenanceManifest:
     """Audit ``_RULE_PROVENANCE`` against the capability source (MANDATE §10.2)."""
 

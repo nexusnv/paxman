@@ -8,7 +8,9 @@ import attrs
 import pytest
 
 from paxman._contracts.contract import (
+    CanonicalDateContract,
     CanonicalEmailContract,
+    Date,
     parse_contract,
 )
 from paxman._errors import ContractError
@@ -76,3 +78,50 @@ class TestCanonicalEmailContract:
         a = parse_contract({"kind": "canonical_email", "provider_aliases": "gmail"})
         b = parse_contract({"kind": "canonical_email", "provider_aliases": "gmail"})
         assert a == b
+
+
+class TestParseCanonicalDate:
+    def test_date_factory_requires_locale(self) -> None:
+        # Law 7: no default locale / no auto_detect.
+        import inspect
+
+        sig = inspect.signature(Date)
+        assert "locale" in sig.parameters
+        assert sig.parameters["locale"].default is inspect.Parameter.empty
+
+    def test_minimal_factory(self) -> None:
+        c = Date(locale="ISO")
+        assert isinstance(c, CanonicalDateContract)
+        assert c.locale == "ISO"
+        assert c.kind == "canonical_date"
+        assert c.version_field == 1
+
+    def test_parse_contract_minimal_dict(self) -> None:
+        c = parse_contract({"kind": "canonical_date", "locale": "US"})
+        assert isinstance(c, CanonicalDateContract)
+        assert c.locale == "US"
+
+    def test_parse_contract_rejects_missing_locale(self) -> None:
+        with pytest.raises(ContractError):
+            parse_contract({"kind": "canonical_date"})
+
+    def test_parse_contract_rejects_invalid_locale(self) -> None:
+        with pytest.raises(ContractError):
+            parse_contract({"kind": "canonical_date", "locale": "MY"})
+
+    def test_as_dict_round_trip(self) -> None:
+        original = {"kind": "canonical_date", "locale": "EU"}
+        c = parse_contract(original)
+        d = c.as_dict()
+        assert d["kind"] == "canonical_date"
+        assert d["locale"] == "EU"
+        assert parse_contract(d) == c
+
+    def test_is_frozen(self) -> None:
+        c = parse_contract({"kind": "canonical_date", "locale": "ISO"})
+        with pytest.raises(attrs.exceptions.FrozenInstanceError):
+            c.locale = "US"  # type: ignore[misc]
+
+    def test_short_circuit_on_value_object(self) -> None:
+        c = Date(locale="ISO")
+        assert parse_contract(c) is c

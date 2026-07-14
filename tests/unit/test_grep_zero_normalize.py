@@ -18,11 +18,7 @@ import pathlib
 
 
 def _iter_python_files(root: pathlib.Path) -> list[pathlib.Path]:
-    return [
-        p
-        for p in root.rglob("*.py")
-        if "__pycache__" not in p.parts
-    ]
+    return [p for p in root.rglob("*.py") if "__pycache__" not in p.parts]
 
 
 def test_paxman_normalize_substring_absent_from_src() -> None:
@@ -33,6 +29,5 @@ def test_paxman_normalize_substring_absent_from_src() -> None:
         if "paxman.normalize" in text:
             offenders.append(str(path))
     assert not offenders, (
-        "the substring 'paxman.normalize' appears in these src files: "
-        + ", ".join(offenders)
+        "the substring 'paxman.normalize' appears in these src files: " + ", ".join(offenders)
     )

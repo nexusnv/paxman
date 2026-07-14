@@ -41,7 +41,7 @@ def _extract_readme_quickstart_block() -> str:
     assert block_start != -1, "no ```python block in Quickstart"
     block_end = readme.find("```", block_start + len("```python"))
     assert block_end != -1, "no closing ``` for the Quickstart code block"
-    block_content = readme[block_start + len("```python"):block_end]
+    block_content = readme[block_start + len("```python") : block_end]
     return block_content.strip("\n")
 
 
@@ -54,7 +54,11 @@ def _read_quickstart_file() -> str:
     # does. Removing the docstring lets the two be byte-equal.
     tree = ast.parse(qs)
     for node in tree.body:
-        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+        if (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        ):
             segment = ast.get_source_segment(qs, node)
             if segment is not None:
                 qs_no_doc = qs.replace(segment, "", 1).strip("\n")
@@ -82,12 +86,8 @@ class TestFiveMinutePromise:
         assert "CANONICALIZED ->" in captured.out, (
             f"expected 'CANONICALIZED ->' in output; got:\n{captured.out}"
         )
-        assert "evidence:" in captured.out, (
-            f"expected 'evidence:' in output; got:\n{captured.out}"
-        )
-        assert "replay ok" in captured.out, (
-            f"expected 'replay ok' in output; got:\n{captured.out}"
-        )
+        assert "evidence:" in captured.out, f"expected 'evidence:' in output; got:\n{captured.out}"
+        assert "replay ok" in captured.out, f"expected 'replay ok' in output; got:\n{captured.out}"
 
     def test_quickstart_artifact_round_trips_byte_equal(self) -> None:
         # Re-run the quickstart by import, then assert replay equality.

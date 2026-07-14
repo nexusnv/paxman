@@ -32,8 +32,8 @@ def _fresh_empty_registry(monkeypatch: pytest.MonkeyPatch) -> None:
     We use monkeypatch.setattr (NOT a hypothetical reset()/clear()
     method — none exists on CapabilityRegistry; spec §4.1).
     """
-    from paxman._capabilities.registry import CapabilityRegistry
     from paxman import _orchestrator_runtime
+    from paxman._capabilities.registry import CapabilityRegistry
 
     monkeypatch.setattr(_orchestrator_runtime, "default_registry", CapabilityRegistry())
 

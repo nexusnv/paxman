@@ -107,3 +107,22 @@ class TestDateCapability:
         r = _cap().canonicalize("01 Jan 2025 12:00:00", _contract())
         assert r.status is Status.AMBIGUOUS
         assert r.evidence[0].rule == "ambiguous_naive_datetime"
+
+    def test_unix_timestamp_integer(self) -> None:
+        r = _cap().canonicalize("1609459200", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "2021-01-01T00:00:00Z"
+        assert r.evidence[0].rule == "parsed_unix_timestamp"
+
+    def test_unix_timestamp_fractional(self) -> None:
+        r = _cap().canonicalize("1609459200.5", _contract())
+        assert r.value == "2021-01-01T00:00:00.500000Z"
+
+    def test_unix_timestamp_negative(self) -> None:
+        r = _cap().canonicalize("-2208988800", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "1900-01-01T00:00:00Z"
+
+    def test_compact_integer_is_not_a_timestamp(self) -> None:
+        r = _cap().canonicalize("20250101", _contract())
+        assert r.status is Status.UNSUPPORTED

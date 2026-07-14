@@ -31,6 +31,25 @@ _ISO_NAIVE_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+
 _NUMERIC_4YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})$")
 _NUMERIC_2YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{2})$")
 
+_UNIX_RE = re.compile(r"^-?\d+(\.\d+)?$")
+
+
+def _is_epoch(value: str) -> bool:
+    """A string is a Unix epoch timestamp when it is a negative integer
+    (always an epoch, never a compact date), a float (fractional seconds),
+    or a positive integer >= 1e9 seconds (year ~2001+). Shorter positive
+    bare integers are compact-date shapes (spec §2.2, out of scope) and are
+    deliberately NOT treated as epochs (Law 4 — do not guess intent).
+    This boundary is a declared Paxman policy (spec §11).
+    """
+    if not _UNIX_RE.match(value):
+        return False
+    if value.startswith("-"):
+        return True
+    if "." in value:
+        return True
+    return int(value) >= 1_000_000_000
+
 _RFC2822_TIME_RE = re.compile(r"\d{1,2}:\d{2}(:\d{2})?")
 _RFC2822_RE = re.compile(
     r"^(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s*)?"
@@ -188,6 +207,19 @@ class DateCapability:
             return CapabilityResult(
                 status=Status.MISSING,
                 evidence=(_evidence("empty_value"),),
+            )
+
+        # Unix epoch: integer or float seconds since 1970-01-01T00:00:00Z
+        if _is_epoch(value):
+            ts = float(value)
+            dt = datetime.fromtimestamp(ts, tz=UTC)
+            return CapabilityResult(
+                status=Status.CANONICALIZED,
+                value=_render_datetime(dt),
+                evidence=(
+                    _evidence("parsed_unix_timestamp"),
+                    _evidence("normalized_to_utc"),
+                ),
             )
 
         # ISO 8601 date: YYYY-MM-DD

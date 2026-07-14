@@ -27,9 +27,12 @@ class _ContractLike(Protocol):
 
     kind: str
 
-    def as_dict(self) -> dict[str, Any]: ...
+    def as_dict(self) -> dict[str, Any]:
+        raise NotImplementedError
+
     @property
-    def version_field(self) -> int: ...
+    def version_field(self) -> int:
+        raise NotImplementedError
 
 
 @attrs.frozen

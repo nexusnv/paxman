@@ -10,7 +10,7 @@ From this version onward, Paxman identifies as a **deterministic canonicalizatio
 
 - **Canonicalization, not normalization.** Normalization is a wider, fuzzier category that admits heuristics, scoring, and interpretation. Paxman does not interpret; it rewrites equivalent representations of *known* information into a single chosen form. Normalization can guess; canonicalization cannot.
 - **Canonicalization, not parsing.** A parser maps text → structured value against a grammar. Paxman operates on any representation of known information and produces a canonical form, not a syntax tree. Calling Paxman a parser mis-sets the expected input and output.
-- **Capabilities, not pipelines.** Users may contribute new deterministic capabilities; they may not redefine Paxman's pipeline. The pipeline is part of the promise.
+- **Deterministic capabilities, not pipelines.** Users may contribute new deterministic capabilities; they may not redefine Paxman's pipeline. The pipeline is part of the promise.
 - **Resolver, not planner.** "Planner" implies intelligence and strategy. Paxman discovers which capability explicitly declares that it canonicalizes the contract — a deterministic lookup, not a guess.
 
 The complete mandate — thirteen constitutional laws, the SPI rules, the vocabulary to retire, and the contributor litmus test — is recorded in [`MANDATE.md`](./MANDATE.md). That document supersedes the v1.x "contract-driven normalization" framing and is the boundary no future contributor may silently cross.
@@ -25,7 +25,7 @@ Paxman takes input that has many valid representations (free text, structured re
 
 - It does not guess. If the canonical form is not determined by the input and the contract, Paxman does not produce an output.
 - It does not call external services. There is no LLM path, no remote inference, no network I/O. Determinism is a property of the library, not a default you can opt out of.
-- It does not run in parallel. Capability invocation is sequential.
+- It does not run in parallel. Each capability is invoked sequentially.
 - It does not improvise. A field the contract does not describe is left alone. A field the input cannot populate is reported as unresolvable.
 
 ## Quickstart

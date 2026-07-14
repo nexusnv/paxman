@@ -18,7 +18,7 @@ from paxman._errors import ContractError
 
 @attrs.frozen
 class CanonicalEmailContract:
-    """The v1.0.0 email contract.
+    """The v2.0.0 email contract.
 
     Fields are policy declarations (mandate Law 7 — Explicit Over Clever).
     There is no `auto_detect`. There is no `infer_provider`. The caller
@@ -95,7 +95,7 @@ def Email(
     )
 
 
-# v1.0.0 has exactly one contract kind. New kinds bump the contract
+# v2.0.0 has exactly one contract kind. New kinds bump the contract
 # version and are added here.
 Contract = CanonicalEmailContract
 

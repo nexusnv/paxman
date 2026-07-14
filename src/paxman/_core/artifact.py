@@ -65,11 +65,17 @@ class ExecutionArtifact:
         `sort_keys=True` and no insignificant whitespace make the output
         byte-stable across runs; `ensure_ascii=False` preserves UTF-8
         characters (mandate Law 1 — same input -> same bytes).
+
+        Each `Evidence` entry serializes as a `(rule, detail, provenance)`
+        triple. The `provenance` field is included because Law 14 binds
+        canonical-form derivations to a citation; changing a citation
+        is a capability-version change, and Law 12 (Replayability)
+        requires the replay hash to reflect that.
         """
         payload = {
             "status": self.status.value,
             "value": self.value,
-            "evidence": [(e.rule, e.detail) for e in self.evidence],
+            "evidence": [(e.rule, e.detail, e.provenance) for e in self.evidence],
             "contract": self.contract.as_dict(),
             "version_stamp": {
                 "paxman_version": self.version_stamp.paxman_version,

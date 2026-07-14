@@ -25,13 +25,13 @@ class TestPublicAPI:
         assert paxman.__version__  # non-empty
 
     def test_no_unexpected_public_symbols(self) -> None:
-        # The v1.0.0 public surface is exactly the set below. Adding
+        # The v2.0.0 public surface is exactly the set below. Adding
         # to this set requires a design spec and an implementation
         # plan (mandate: one spec + one plan per change). The check
         # is exact (==) so a stray import is caught.
         #
         # 'Any' is a typing primitive leaked by the PEP 562 __getattr__
-        # return type. The v1.0.0 plan explicitly accepts this trade-off.
+        # return type. The v2.0.0 plan explicitly accepts this trade-off.
         expected = {
             "Any",
             "canonicalize",

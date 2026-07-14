@@ -4,7 +4,7 @@
 
 **Goal:** Ship a working Paxman v2 library, end-to-end, with email canonicalization as its first and only capability. `paxman.canonicalize(input, contract)` runs and returns a correct canonical form for a representative set of email inputs; `paxman.replay(artifact, contract)` is byte-equal to the original artifact without re-execution.
 
-**Architecture:** The pipeline from `PROPOSED_STRUCTURE.md` is realized as 12 source modules under `src/paxman/` (the canonical v1.0.0 layout from `PROPOSED_STRUCTURE.md` plus one additional internal helper, `_orchestrator_runtime.py`, that holds the default registry to break a circular import between the orchestrator and `paxman/__init__.py`), plus 5 `__init__.py` package markers (3 empty + 2 with content), for a total of 17 `.py` files. Plus a `tests/` tree with unit, property, and integration tests. The pipeline walks `inspect → resolve → execute → canonicalize → validate → classify`; the algorithm is owned by Paxman (mandate Law 6); users may register capabilities, not rearrange the pipeline. Artifact construction (the `ExecutionArtifact` and its `replay_hash`) is the final act of the `classify` stage — the `_build_artifact` helper is a private function inside `_core/orchestrator.py`, not a user-visible pipeline stage.
+**Architecture:** The pipeline from `PROPOSED_STRUCTURE.md` is realized as 12 source modules under `src/paxman/` (the canonical v2.0.0 layout from `PROPOSED_STRUCTURE.md` plus one additional internal helper, `_orchestrator_runtime.py`, that holds the default registry to break a circular import between the orchestrator and `paxman/__init__.py`), plus 5 `__init__.py` package markers (3 empty + 2 with content), for a total of 17 `.py` files. Plus a `tests/` tree with unit, property, and integration tests. The pipeline walks `inspect → resolve → execute → canonicalize → validate → classify`; the algorithm is owned by Paxman (mandate Law 6); users may register capabilities, not rearrange the pipeline. Artifact construction (the `ExecutionArtifact` and its `replay_hash`) is the final act of the `classify` stage — the `_build_artifact` helper is a private function inside `_core/orchestrator.py`, not a user-visible pipeline stage.
 
 **Tech Stack:** Python 3.11+ (target 3.13.5 locally), `attrs>=23.0` for frozen dataclasses, `pytest>=8.0` for unit/integration, `hypothesis>=6.0` for property tests, `hatchling` as build backend, `uv` for environment management. No runtime dependencies beyond the standard library + `attrs`.
 
@@ -335,7 +335,7 @@ class CapabilityResult:
     evidence: tuple[Evidence, ...] = ()
 
 
-# Closed enum for provider_aliases in the v1.0.0 contract (mandate §6
+# Closed enum for provider_aliases in the v2.0.0 contract (mandate §6
 # openness about deliberate scope).
 ProviderAliasesPolicy = Literal["none", "gmail"]
 ```
@@ -559,7 +559,7 @@ class ExecutionArtifact:
 
         Identical to the bytes used at construction time. Returned as a
         method (rather than cached) for simplicity; the cost is one
-        json.dumps per call, which is acceptable for v1.0.0.
+        json.dumps per call, which is acceptable for v2.0.0.
         """
         payload = {
             "status": self.status.value,
@@ -706,7 +706,7 @@ git commit -m "feat(core): classification — pure (capability_result, validatio
 - Create: `src/paxman/_core/validation.py`
 - Create: `tests/unit/test_validation.py`
 
-The validator for the email contract. For v1.0.0, this module is email-specific
+The validator for the email contract. For v2.0.0, this module is email-specific
 because there is only one contract kind. A future v2.x that adds new contract
 kinds will introduce a protocol here; for now, the dispatch is a `match`
 statement on `contract.kind`.
@@ -776,7 +776,7 @@ Mandate Law 4 (Canonicalize, Don't Interpret): validation is *policy
 checking*, not interpretation. It verifies that the canonical value
 satisfies the contract's strictness policy; it does not invent policies.
 
-For v1.0.0, only `kind == "canonical_email"` contracts are supported.
+For v2.0.0, only `kind == "canonical_email"` contracts are supported.
 Any other kind raises `UnsupportedContractError` (defined in
 `paxman._errors`); the orchestrator catches that and produces
 `Status.UNSUPPORTED` instead of letting the call fail.
@@ -795,7 +795,7 @@ def validate(value: str, contract: CanonicalEmailContract) -> ValidationResult:
     orchestrator is responsible for catching that and mapping to
     `Status.UNSUPPORTED`.
     """
-    # v1.0.0: dispatch on type. The only supported kind is the email
+    # v2.0.0: dispatch on type. The only supported kind is the email
     # contract. A future v2.x that adds new kinds will replace this
     # with a Protocol-based dispatch table.
     if not isinstance(contract, CanonicalEmailContract):
@@ -814,10 +814,10 @@ def validate(value: str, contract: CanonicalEmailContract) -> ValidationResult:
         # Strict mode: the local part must match a dot-atom production
         # (no spaces). The domain is checked by the @-sign + non-empty
         # check above; the dot-atom-domain check is intentionally loose
-        # in v1.0.0 (a single dot suffices).
+        # in v2.0.0 (a single dot suffices).
         if " " in local or " " in domain:
             return ValidationResult(is_valid=False)
-        # IDN/unicode is rejected in v1.0.0 (out of scope).
+        # IDN/unicode is rejected in v2.0.0 (out of scope).
         try:
             local.encode("ascii")
             domain.encode("ascii")
@@ -836,7 +836,7 @@ This is expected; this is why Task 6 follows immediately.
 
 ```bash
 git add src/paxman/_core/validation.py tests/unit/test_validation.py
-git commit -m "feat(core): validation gate (email policy check; one contract kind in v1.0.0)"
+git commit -m "feat(core): validation gate (email policy check; one contract kind in v2.0.0)"
 ```
 
 ---
@@ -957,7 +957,7 @@ from paxman._errors import ContractError
 
 @attrs.frozen
 class CanonicalEmailContract:
-    """The v1.0.0 email contract.
+    """The v2.0.0 email contract.
 
     Fields are policy declarations (mandate Law 7 — Explicit Over Clever).
     There is no `auto_detect`. There is no `infer_provider`. The caller
@@ -982,7 +982,7 @@ class CanonicalEmailContract:
         }
 
 
-# The closed union of supported contracts. v1.0.0 has exactly one kind.
+# The closed union of supported contracts. v2.0.0 has exactly one kind.
 Contract = Union[CanonicalEmailContract]
 
 _KIND_DISPATCH: dict[str, type[Contract]] = {  # type: ignore[valid-type]
@@ -1047,7 +1047,7 @@ def parse_contract(spec: Any) -> Contract:
 - [ ] **Step 6.4: Implement `src/paxman/_contracts/__init__.py`**
 
 ```python
-"""Contract adapters (v1.0.0: the Dict DSL only)."""
+"""Contract adapters (v2.0.0: the Dict DSL only)."""
 from paxman._contracts.contract import (
     CanonicalEmailContract,
     Contract,
@@ -1474,7 +1474,7 @@ git commit -m "feat(capabilities): CapabilityRegistry — resolver with register
 ```python
 """Tests for the EmailCapability.
 
-These tests assert the v1.0.0 default behaviour:
+These tests assert the v2.0.0 default behaviour:
 - Default: lowercase + strip whitespace, no provider rules.
 - `provider_aliases='gmail'`: strip +tag and dots for gmail.com / googlemail.com.
 - `strict=True`: reject non-RFC-5321 grammar (no spaces).
@@ -2509,7 +2509,7 @@ class TestPublicAPI:
         assert paxman.__version__  # non-empty
 
     def test_no_unexpected_public_symbols(self) -> None:
-        # The v1.0.0 public surface is exactly: __version__, canonicalize,
+        # The v2.0.0 public surface is exactly: __version__, canonicalize,
         # replay, register_capability, and the email capability shim.
         symbols = {
             n for n in dir(paxman)
@@ -2634,7 +2634,7 @@ __all__ = [
 Run: `uv run pytest -q`
 Expected: all tests pass. (Some property tests may surface a flaky
 generator input; the deadline=None + max_examples=50/30 caps make this
-extremely unlikely in v1.0.0.)
+extremely unlikely in v2.0.0.)
 
 - [ ] **Step 13.5: Commit**
 

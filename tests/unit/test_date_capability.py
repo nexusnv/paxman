@@ -33,3 +33,23 @@ class TestDateCapability:
         assert r.status is Status.CANONICALIZED
         assert r.value == "2025-01-01"
         assert r.evidence[0].rule == "parsed_iso_date"
+
+    def test_iso_datetime_with_z_canonicalizes_to_utc_z(self) -> None:
+        r = _cap().canonicalize("2025-01-01T12:00:00Z", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "2025-01-01T12:00:00Z"
+        assert r.evidence[-1].rule == "no_transformation_needed"
+
+    def test_iso_datetime_with_offset_normalized_to_utc_z(self) -> None:
+        r = _cap().canonicalize("2025-01-01T07:00:00-05:00", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "2025-01-01T12:00:00Z"
+
+    def test_iso_datetime_with_fractional_seconds(self) -> None:
+        r = _cap().canonicalize("2025-01-01T12:00:00.5Z", _contract())
+        assert r.value == "2025-01-01T12:00:00.500000Z"
+
+    def test_iso_datetime_without_zone_is_ambiguous(self) -> None:
+        r = _cap().canonicalize("2025-01-01T12:00:00", _contract())
+        assert r.status is Status.AMBIGUOUS
+        assert r.evidence[0].rule == "ambiguous_naive_datetime"

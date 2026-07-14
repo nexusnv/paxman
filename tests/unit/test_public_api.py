@@ -29,7 +29,11 @@ class TestPublicAPI:
         # to this set requires a design spec and an implementation
         # plan (mandate: one spec + one plan per change). The check
         # is exact (==) so a stray import is caught.
+        #
+        # 'Any' is a typing primitive leaked by the PEP 562 __getattr__
+        # return type. The v1.0.0 plan explicitly accepts this trade-off.
         expected = {
+            "Any",
             "canonicalize",
             "replay",
             "register_capability",

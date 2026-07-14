@@ -1,4 +1,6 @@
-# NOTE: This file uses @nexusnv as the sole owner (single-maintainer project per `pyproject.toml` and `paxman.nexusnv.net`). Replace with team names when the team expands (e.g. `@nexusnv/paxman-core`).
+# NOTE: This file uses @nexusnv as the sole owner (single-maintainer project).
+# Replace with team names when the team expands
+# (e.g. `@nexusnv/paxman-core`).
 
 # Paxman CODEOWNERS
 # See https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
@@ -15,15 +17,7 @@
 # Documentation — review from the same maintainer
 /docs/         @nexusnv
 /README.md     @nexusnv
-/CHANGELOG.md  @nexusnv
-/PRD.md        @nexusnv
+/MANDATE.md    @nexusnv
 /ARCHITECTURE.md @nexusnv
-/PACKAGE_STRUCTURE.md @nexusnv
+/CONTRIBUTING.md @nexusnv
 /SECURITY.md   @nexusnv
-/DEVELOPMENT.md @nexusnv
-/TESTING_STRATEGY.md @nexusnv
-/EXTENDING.md  @nexusnv
-/DEPENDENCIES.md @nexusnv
-/V1_ACCEPTANCE_CRITERIA.md @nexusnv
-/REPLAY_AND_DETERMINISM.md @nexusnv
-/GLOSSARY.md   @nexusnv

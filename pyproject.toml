@@ -33,7 +33,6 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/nexusnv/paxman"
 Issues = "https://github.com/nexusnv/paxman/issues"
-Retraction = "https://github.com/nexusnv/paxman/blob/main/RETRACTION.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/paxman"]

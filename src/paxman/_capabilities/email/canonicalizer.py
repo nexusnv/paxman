@@ -229,10 +229,12 @@ def generate_interpretations(
                 )
             )
         elif gid == "quoted_local_addr_spec":
-            local_quoted = rep.captures["local"]
-            domain = rep.captures["domain"]
-            local_without_quotes = local_quoted[1:-1]
-            value = f"{local_without_quotes}@{domain}"
+            # RFC 5322 §3.2.4 quoted-string local parts are out of v2.0.0 scope:
+            # we recognise the shape (Layer 1) but assign no meaning. Keep the
+            # raw quoted value so it fails the dot-atom atext gate in
+            # resolve_and_validate and is rejected with grammar_rejected,
+            # rather than silently lowercasing an out-of-scope form into a hit.
+            value = f"{rep.captures['local']}@{rep.captures['domain']}"
             candidates.append(_Candidate(value, "quoted_local_addr_spec", rep.source, ()))
     return candidates
 

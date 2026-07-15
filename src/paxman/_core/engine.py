@@ -182,6 +182,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
         status=final_status,
         value=capability_result.value if final_status is Status.CANONICALIZED else None,
         evidence=capability_result.evidence,
+        candidates=capability_result.candidates,
     )
 
 
@@ -192,6 +193,7 @@ def _build_artifact(
     status: Status,
     value: str | None,
     evidence: tuple[Evidence, ...],
+    candidates: tuple[str, ...] | None = None,
 ) -> ExecutionArtifact:
     """Construct an ExecutionArtifact with the current VersionStamp.
 
@@ -212,4 +214,5 @@ def _build_artifact(
         evidence=evidence,
         contract=parsed_contract,
         version_stamp=version_stamp,
+        candidates=candidates,
     )

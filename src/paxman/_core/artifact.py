@@ -54,6 +54,7 @@ class ExecutionArtifact:
     evidence: tuple[Evidence, ...]
     contract: _ContractLike
     version_stamp: VersionStamp
+    candidates: tuple[str, ...] | None = None
     replay_hash: str = attrs.field(init=False, eq=False)
 
     def __attrs_post_init__(self) -> None:
@@ -83,6 +84,7 @@ class ExecutionArtifact:
         payload = {
             "status": self.status.value,
             "value": self.value,
+            "candidates": self.candidates,
             "evidence": [(e.rule, e.detail, e.provenance) for e in self.evidence],
             "contract": self.contract.as_dict(),
             "version_stamp": {

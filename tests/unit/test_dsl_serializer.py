@@ -38,9 +38,12 @@ def test_serialize_date() -> None:
     c = Date(locale="ISO")
     d = serialize_contract(c)
     # Assert the complete serialized mapping, not just one field.
+    # language and two_digit_year are exposed per spec §3.
     assert d == {
         "kind": "canonical_date",
         "locale": "ISO",
+        "language": "en",
+        "two_digit_year": None,
         "version_field": 1,
     }
     # Round-trips back to an equivalent contract via parse_contract.

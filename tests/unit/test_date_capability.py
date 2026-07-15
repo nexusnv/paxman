@@ -67,10 +67,12 @@ class TestDateCapability:
         assert r.value == "2025-04-03"
         assert r.evidence[0].rule == "parsed_eu_numeric"
 
-    def test_numeric_under_iso_locale_is_invalid(self) -> None:
+    def test_numeric_under_iso_locale_is_ambiguous(self) -> None:
+        # Spec §3.3 / Flag A: ISO now enumerates BOTH MM/DD and DD/MM orderings,
+        # so 03/04/2025 admits two distinct calendar days -> AMBIGUOUS.
         r = _cap().canonicalize("03/04/2025", _contract("ISO"))
-        assert r.status is Status.INVALID
-        assert r.evidence[0].rule == "numeric_format_requires_us_or_eu_locale"
+        assert r.status is Status.AMBIGUOUS
+        assert r.evidence[0].rule == "ambiguous_ordering"
 
     def test_us_numeric_invalid_month_is_invalid(self) -> None:
         r = _cap().canonicalize("13/04/2025", _contract("US"))
@@ -131,12 +133,17 @@ class TestDateCapability:
         assert r.value == "1900-01-01T00:00:00Z"
 
     def test_compact_integer_is_not_a_timestamp(self) -> None:
+        # A compact integer that is not a recognised date shape is claimed but
+        # not recognised -> INVALID (Decision A), not UNSUPPORTED.
         r = _cap().canonicalize("20250101", _contract())
-        assert r.status is Status.UNSUPPORTED
+        assert r.status is Status.INVALID
+        assert r.evidence[0].rule == "unrecognized_format"
 
-    def test_unrecognized_format_is_unsupported(self) -> None:
+    def test_unrecognized_format_is_invalid(self) -> None:
+        # A string with no recognised date shape is claimed but not recognised
+        # -> INVALID (Decision A), not UNSUPPORTED.
         r = _cap().canonicalize("tomorrow", _contract())
-        assert r.status is Status.UNSUPPORTED
+        assert r.status is Status.INVALID
         assert r.evidence[0].rule == "unrecognized_format"
 
     def test_empty_value_is_missing(self) -> None:
@@ -149,7 +156,11 @@ class TestDateCapability:
         assert r.status is Status.MISSING
 
     def test_non_iso_slash_under_iso_is_invalid(self) -> None:
-        r = _cap().canonicalize("2025/01/01", _contract("ISO"))
+        # A slash form that names no calendar day is still INVALID under ISO
+        # (both MD and DM orderings are impossible). Note: a *year-first* slash
+        # such as "2025/01/01" is now a recognised grammar (numeric_slash_ymd)
+        # and canonicalizes; only slash forms with no valid reading stay INVALID.
+        r = _cap().canonicalize("32/01/2025", _contract("ISO"))
         assert r.status is Status.INVALID
 
     def test_invalid_iso_date_is_invalid(self) -> None:

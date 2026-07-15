@@ -16,8 +16,12 @@ import re
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 
+import attrs
+
 from paxman._capabilities.date.calendar import _valid_calendar_date
 from paxman._capabilities.date.contract import CanonicalDateContract
+from paxman._capabilities.date.grammar import _ORDINAL_WORDS, RecognizedRep, recognize
+from paxman._capabilities.date.i18n import MONTH_NAMES, WEEKDAY_NAMES
 from paxman._capabilities.date.parser import (
     _ISO_DATE_RE,
     _ISO_DATETIME_RE,
@@ -26,12 +30,12 @@ from paxman._capabilities.date.parser import (
     _NUMERIC_4YEAR_RE,
     _RFC2822_RE,
     _RFC2822_TIME_RE,
-    _SLASH_YEAR_FIRST_RE,
     _is_epoch,
 )
 from paxman._capabilities.date.rules import _evidence
 from paxman._capabilities.date.value import _render_date, _render_datetime
 from paxman._core.contracts import Contract
+from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
 
@@ -72,6 +76,384 @@ def _parse_rfc2822_date_only(date_part: str) -> datetime | None:
     if month is None or not _valid_calendar_date(year, month, day):
         return None
     return datetime(year, month, day)
+
+
+@attrs.frozen
+class _Candidate:
+    """A single enumerated reading of a date-shaped input.
+
+    ``year`` is the resolved 4-digit year (``None`` when the year is a 2-digit
+    value whose century is still ambiguous). ``yy`` is the raw 2-digit year
+    (``None`` for 4-digit years). ``century_ambiguous`` marks 2-digit years
+    with no declared ``two_digit_year`` policy. ``ordering`` is ``"MD"`` or
+    ``"DM"`` for numeric slash forms and ``None`` for text-month forms.
+    """
+
+    year: int | None
+    yy: int | None
+    month: int
+    day: int
+    century_ambiguous: bool
+    rule: str
+    ordering: str | None
+    weekday: int | None = None
+
+
+@attrs.frozen
+class _Survivor:
+    """A candidate that survived validation: a concrete calendar day."""
+
+    year: int
+    month: int
+    day: int
+    rule: str
+    ordering: str | None
+    century_ambiguous: bool
+
+
+# Text-month grammar ids recognised by the grammar layer (Layer 1). All of
+# these carry a 4-digit-or-2-digit year in the ``year`` capture group and a
+# numeric ``day`` capture; the resolver distinguishes them by length (spec §5
+# + §8). ``text_month_mdy_comma`` / ``text_month_dmy_era`` / ``text_month_dmy_mixedsep``
+# are coverage-gap closures that share the same (day, month, year) capture shape.
+_TEXT_MONTH_GRAMMARS = frozenset(
+    {
+        "text_month_dmy",
+        "text_month_dmy_dot",
+        "text_month_cm",
+        "text_month_dash",
+        "rfc2822_date",
+        "text_month_mdy_comma",
+        "text_month_dmy_era",
+        "text_month_dmy_mixedsep",
+    }
+)
+
+# Text-month grammar ids whose day arrives as a ``[DAY_IN_ORDINAL]`` capture
+# (numeric-with-suffix or word form) rather than a bare ``[DAY]``. The resolver
+# maps the ordinal capture to an integer day before the usual year-length
+# handling (spec §5 + §8).
+_TEXT_MONTH_ORDINAL_GRAMMARS = frozenset(
+    {"text_month_dmy_ord", "text_month_mdy_ord", "ordinal_of_month_nowkday"}
+)
+
+
+def _ordinal_to_int(token: str) -> int:
+    """Map a ``[DAY_IN_ORDINAL]`` capture to its day-of-month integer."""
+    lowered = token.lower()
+    if lowered in _ORDINAL_WORDS:
+        return _ORDINAL_WORDS[lowered]
+    # Numeric ordinal form, e.g. "3rd" / "21st".
+    match = re.match(r"(\d{1,2})", lowered)
+    assert match is not None
+    return int(match.group(1))
+
+
+def _orderings_for(locale: str) -> tuple[str, ...]:
+    """Numeric slash orderings permitted by the locale policy (spec §3.3)."""
+    if locale == "US":
+        return ("MD",)
+    if locale == "EU":
+        return ("DM",)
+    return ("MD", "DM")  # ISO enumerates both orderings
+
+
+def _interpretations_from_reps(
+    reps: list[RecognizedRep], contract: CanonicalDateContract
+) -> list[_Candidate]:
+    """Map grammar recognitions to candidate semantic values (resolver).
+
+    This is the resolver (Layer 2): it assigns meaning to the raw captures
+    produced by :func:`grammar.recognize` and enumerates every candidate
+    calendar day the declared policies permit. It preserves the existing
+    resolver semantics: month-name lookup via ``i18n.MONTH_NAMES[language]``
+    (no cross-language guess, Law 7), 2-digit-year day/year swap enumeration
+    for text-month forms, and locale-ordered numeric enumeration.
+    """
+    candidates: list[_Candidate] = []
+    table = MONTH_NAMES[contract.language]
+    weekday_table = WEEKDAY_NAMES[contract.language]
+    for rep in reps:
+        caps = rep.captures
+        gid = rep.grammar_id
+        if gid in _TEXT_MONTH_GRAMMARS:
+            day = int(caps["day"])
+            month = table.get(caps["month"].lower())
+            if month is None:
+                # Month name not in the declared language -> no cross-language
+                # guess (Law 7). This recognition yields no candidate.
+                continue
+            weekday = (
+                weekday_table.get(caps["weekday"].lower()) if "weekday" in caps else None
+            )
+            year_str = caps["year"]
+            if len(year_str) == 2:
+                # 2-digit year: the day/year assignment is ambiguous, so
+                # enumerate both (day=first/year=second and day=second/
+                # year=first). Each reading carries the raw 2-digit year and is
+                # century-expanded later (spec §5 + §8).
+                yy = int(year_str)
+                for d, y in ((day, yy), (yy, day)):
+                    candidates.append(
+                        _Candidate(
+                            year=None,
+                            yy=y,
+                            month=month,
+                            day=d,
+                            century_ambiguous=True,
+                            rule="parsed_text_month_date",
+                            ordering=None,
+                            weekday=weekday,
+                        )
+                    )
+            else:
+                candidates.append(
+                    _Candidate(
+                        year=int(year_str),
+                        yy=None,
+                        month=month,
+                        day=day,
+                        century_ambiguous=False,
+                        rule="parsed_text_month_date",
+                        ordering=None,
+                        weekday=weekday,
+                    )
+                )
+        elif gid == "numeric_slash":
+            a = int(caps["n1"])
+            b = int(caps["n2"])
+            y_str = caps["n3"]
+            yy = int(y_str) if len(y_str) == 2 else None
+            year = int(y_str) if len(y_str) == 4 else None
+            for ordering in _orderings_for(contract.locale):
+                month = a if ordering == "MD" else b
+                day = b if ordering == "MD" else a
+                candidates.append(
+                    _Candidate(
+                        year=year,
+                        yy=yy,
+                        month=month,
+                        day=day,
+                        century_ambiguous=(yy is not None),
+                        rule="parsed_numeric_date",
+                        ordering=ordering,
+                    )
+                )
+        elif gid == "ordinal_of_month":
+            day = _ordinal_to_int(caps["ordinal"])
+            month = table.get(caps["month"].lower())
+            if month is None:
+                continue
+            weekday = (
+                weekday_table.get(caps["weekday"].lower()) if "weekday" in caps else None
+            )
+            candidates.append(
+                _Candidate(
+                    year=int(caps["year"]),
+                    yy=None,
+                    month=month,
+                    day=day,
+                    century_ambiguous=False,
+                    rule="parsed_text_month_date",
+                    ordering=None,
+                    weekday=weekday,
+                )
+            )
+        elif gid in _TEXT_MONTH_ORDINAL_GRAMMARS:
+            # Ordinal day (numeric-with-suffix or word form) in either dmy or mdy
+            # position, with no weekday prefix. Same year-length handling as the
+            # text-month family (2-digit year -> day/year swap enumeration).
+            day = _ordinal_to_int(caps["ordinal"])
+            month = table.get(caps["month"].lower())
+            if month is None:
+                continue
+            year_str = caps["year"]
+            if len(year_str) == 2:
+                yy = int(year_str)
+                for d, y in ((day, yy), (yy, day)):
+                    candidates.append(
+                        _Candidate(
+                            year=None,
+                            yy=y,
+                            month=month,
+                            day=d,
+                            century_ambiguous=True,
+                            rule="parsed_text_month_date",
+                            ordering=None,
+                        )
+                    )
+            else:
+                candidates.append(
+                    _Candidate(
+                        year=int(year_str),
+                        yy=None,
+                        month=month,
+                        day=day,
+                        century_ambiguous=False,
+                        rule="parsed_text_month_date",
+                        ordering=None,
+                    )
+                )
+        elif gid == "numeric_slash_ymd":
+            # Year-first slash (ISO 8601 slash ordering): the year capture is
+            # exactly four digits (YEAR4 token), so there is no locale ordering
+            # enumeration and no century ambiguity — a single fixed Y/M/D
+            # reading.
+            candidates.append(
+                _Candidate(
+                    year=int(caps["year"]),
+                    yy=None,
+                    month=int(caps["month"]),
+                    day=int(caps["day"]),
+                    century_ambiguous=False,
+                    rule="parsed_text_month_date",
+                    ordering=None,
+                )
+            )
+        elif gid == "iso_date":
+            candidates.append(
+                _Candidate(
+                    year=int(caps["year"]),
+                    yy=None,
+                    month=int(caps["month"]),
+                    day=int(caps["day"]),
+                    century_ambiguous=False,
+                    rule="parsed_iso_date",
+                    ordering=None,
+                )
+            )
+    # Recognition is non-exclusive: an input may match several grammars (e.g.
+    # "16 July 2026" matches both text_month_dmy and rfc2822_date). Collapse
+    # duplicate candidates so identical readings do not masquerade as
+    # AMBIGUOUS (spec §2.4 — surface ambiguity only when readings genuinely
+    # differ).
+    seen: set[tuple[object, ...]] = set()
+    unique: list[_Candidate] = []
+    for candidate in candidates:
+        key = attrs.astuple(candidate)
+        if key not in seen:
+            seen.add(key)
+            unique.append(candidate)
+    return unique
+
+
+def generate_interpretations(value: str, contract: CanonicalDateContract) -> list[_Candidate]:
+    """Enumerate every candidate semantic value the input could name (spec §5).
+
+    The recognition front routes through :func:`grammar.recognize`, which
+    returns the raw captures of every grammar shape the input full-matches.
+    The resolver (:func:`_interpretations_from_reps`) assigns meaning to those
+    captures and enumerates every candidate calendar day the declared policies
+    permit.
+    """
+    reps = recognize(value, contract)
+    return _interpretations_from_reps(reps, contract)
+
+
+def _resolve_pivot_year(yy: int, policy: str) -> int:
+    """Apply a ``pivot:YYYY`` policy (spec §3.2 corrected).
+
+    The resolved year is ``(YYYY // 100) * 100 + YY`` — i.e. the century of
+    the pivot year, plus the 2-digit year. So ``pivot:2000`` maps ``26`` to
+    ``2026`` and ``25`` to ``2025`` (not the classic ``<70`` split).
+    """
+    pivot = int(policy.split(":", 1)[1])
+    return (pivot // 100) * 100 + yy
+
+
+def resolve_and_validate(
+    candidates: list[_Candidate], contract: CanonicalDateContract
+) -> tuple[list[_Survivor], set[str]]:
+    """Validate each candidate; drop those that name no calendar day (spec §6)."""
+    survivors: list[_Survivor] = []
+    drop_reasons: set[str] = set()
+    for c in candidates:
+        if c.century_ambiguous:
+            # Basic month/day sanity before century expansion.
+            if not (1 <= c.month <= 12) or not (1 <= c.day <= 31):
+                drop_reasons.add("invalid_calendar_date")
+                continue
+            if contract.two_digit_year in ("reject", "require_four_digit_year"):
+                drop_reasons.add("rejected_two_digit_year")
+                continue
+            yy = c.yy
+            assert yy is not None
+            if contract.two_digit_year is None:
+                # No policy -> expand across three centuries (spec §3.2).
+                years = [base + yy for base in (1900, 2000, 2100)]
+            else:
+                # pivot:YYYY -> a single resolved 4-digit year.
+                years = [_resolve_pivot_year(yy, contract.two_digit_year)]
+            for year in years:
+                if not _valid_calendar_date(year, c.month, c.day):
+                    continue
+                if (
+                    c.weekday is not None
+                    and datetime(year, c.month, c.day).weekday() != c.weekday
+                ):
+                    drop_reasons.add("weekday_contradicts_date")
+                    continue
+                survivors.append(_Survivor(year, c.month, c.day, c.rule, c.ordering, True))
+        else:
+            if not _valid_calendar_date(c.year, c.month, c.day):
+                drop_reasons.add("invalid_calendar_date")
+                continue
+            if (
+                c.weekday is not None
+                and datetime(c.year, c.month, c.day).weekday() != c.weekday
+            ):
+                drop_reasons.add("weekday_contradicts_date")
+                continue
+            survivors.append(_Survivor(c.year, c.month, c.day, c.rule, c.ordering, False))
+    return survivors, drop_reasons
+
+
+def classify(
+    candidates: list[_Candidate],
+    survivors: list[_Survivor],
+    drop_reasons: set[str],
+) -> tuple[Status, str | None, tuple[Evidence, ...], tuple[str, ...] | None]:
+    """Classify survivors into a canonicalization outcome (spec §7).
+
+    Returns a 4-tuple ``(status, value, evidence, candidates)``. The
+    ``candidates`` element is the sorted tuple of every surviving canonical
+    form when the outcome is ``AMBIGUOUS`` (spec §2.4 — surface the
+    ambiguity instead of guessing), and ``None`` otherwise.
+    """
+    if not candidates:
+        # No interpretation was recognised for this value (the grammar layer
+        # returned no shape match). The capability claimed the contract but
+        # could not recognise the value, so it is INVALID, not UNSUPPORTED
+        # (Decision A — UNSUPPORTED is reserved for non-string / wrong-contract
+        # inputs that were never this capability's to claim).
+        return Status.INVALID, None, (_evidence("unrecognized_format"),), None
+    if not survivors:
+        if "rejected_two_digit_year" in drop_reasons:
+            return Status.INVALID, None, (_evidence("rejected_two_digit_year"),), None
+        if "weekday_contradicts_date" in drop_reasons:
+            return Status.INVALID, None, (_evidence("weekday_contradicts_date"),), None
+        return Status.INVALID, None, (_evidence("invalid_calendar_date"),), None
+    if len(survivors) == 1:
+        s = survivors[0]
+        return (
+            Status.CANONICALIZED,
+            _render_date(datetime(s.year, s.month, s.day)),
+            (_evidence(s.rule),),
+            None,
+        )
+    # >1 survivor -> AMBIGUOUS (Don't Guess). Surface every candidate.
+    rules: list[str] = []
+    orderings = {s.ordering for s in survivors if s.ordering is not None}
+    if "MD" in orderings and "DM" in orderings:
+        rules.append("ambiguous_ordering")
+    if any(s.century_ambiguous for s in survivors):
+        rules.append("ambiguous_two_digit_year")
+    if not rules:
+        rules.append("ambiguous_ordering")
+    rendered = tuple(
+        sorted(_render_date(datetime(s.year, s.month, s.day)) for s in survivors)
+    )
+    return Status.AMBIGUOUS, None, tuple(_evidence(rule) for rule in rules), rendered
 
 
 class DateCapability:
@@ -124,13 +506,19 @@ class DateCapability:
             A ``CapabilityResult`` with the canonicalized value and evidence.
         """
         if not isinstance(contract, CanonicalDateContract):
+            # Genuine UNSUPPORTED: the contract was never a date contract, so
+            # this capability should not have claimed it (Decision A).
             return CapabilityResult(
-                status=Status.INVALID,
+                status=Status.UNSUPPORTED,
                 evidence=(_evidence("not_a_date_contract"),),
             )
         if not isinstance(value, str):
+            # Genuine UNSUPPORTED: a non-string value is not this capability's
+            # to claim (Decision A). UNSUPPORTED is reserved for non-string /
+            # wrong-contract inputs; a string the grammar cannot recognise is
+            # INVALID (see the enumeration fallback below).
             return CapabilityResult(
-                status=Status.INVALID,
+                status=Status.UNSUPPORTED,
                 evidence=(_evidence("not_a_string_value"),),
             )
         if not value.strip():
@@ -212,9 +600,51 @@ class DateCapability:
             m2 = _NUMERIC_2YEAR_RE.match(value)
             m4 = _NUMERIC_4YEAR_RE.match(value)
             if m2 and not m4:
+                a, b, _yy = m2.groups()
+                month = int(a) if contract.locale == "US" else int(b)
+                day = int(b) if contract.locale == "US" else int(a)
+                # Validate the month/day before reporting a century-ambiguous
+                # reading: a 2-digit year with an impossible month/day names no
+                # calendar day (spec §8, e.g. 16/07/26 under US -> INVALID).
+                if not (1 <= month <= 12) or not (1 <= day <= 31):
+                    return CapabilityResult(
+                        status=Status.INVALID,
+                        evidence=(_evidence("invalid_calendar_date"),),
+                    )
+                # Apply the declared century policy (spec §3.2) before falling
+                # back to the century-ambiguous AMBIGUOUS reading.
+                if contract.two_digit_year in ("reject", "require_four_digit_year"):
+                    return CapabilityResult(
+                        status=Status.INVALID,
+                        evidence=(_evidence("rejected_two_digit_year"),),
+                    )
+                if contract.two_digit_year is not None:
+                    # pivot:YYYY -> resolve a single century.
+                    year = _resolve_pivot_year(int(_yy), contract.two_digit_year)
+                    if not _valid_calendar_date(year, month, day):
+                        return CapabilityResult(
+                            status=Status.INVALID,
+                            evidence=(_evidence("invalid_calendar_date"),),
+                        )
+                    dt = datetime(year, month, day)
+                    rule = "parsed_us_numeric" if contract.locale == "US" else "parsed_eu_numeric"
+                    return CapabilityResult(
+                        status=Status.CANONICALIZED,
+                        value=_render_date(dt),
+                        evidence=(_evidence(rule),),
+                    )
+                # No declared policy -> the century is ambiguous. Surface every
+                # century-expanded reading as candidates (spec §2.4).
+                yy = int(_yy)
+                expanded: list[str] = []
+                for century in (1900, 2000, 2100):
+                    year = century + yy
+                    if _valid_calendar_date(year, month, day):
+                        expanded.append(_render_date(datetime(year, month, day)))
                 return CapabilityResult(
                     status=Status.AMBIGUOUS,
                     evidence=(_evidence("ambiguous_two_digit_year"),),
+                    candidates=tuple(sorted(expanded)),
                 )
             if m4:
                 a, b, y = m4.groups()
@@ -233,16 +663,6 @@ class DateCapability:
                     value=_render_date(dt),
                     evidence=(_evidence(rule),),
                 )
-
-        if contract.locale == "ISO" and (
-            _NUMERIC_4YEAR_RE.match(value)
-            or _NUMERIC_2YEAR_RE.match(value)
-            or _SLASH_YEAR_FIRST_RE.match(value)
-        ):
-            return CapabilityResult(
-                status=Status.INVALID,
-                evidence=(_evidence("numeric_format_requires_us_or_eu_locale"),),
-            )
 
         # RFC 2822: "1 Jan 2025", "Tue, 01 Jan 2025 12:00:00 +0000"
         if _RFC2822_RE.match(value):
@@ -284,7 +704,24 @@ class DateCapability:
                 ),
             )
 
+        # Enumeration pipeline: text-month + numeric slash forms. This replaces
+        # the old UNSUPPORTED fallback for date-shaped inputs (spec §2): every
+        # interpretation the declared policies permit is enumerated, validated,
+        # and classified (Don't Guess -> AMBIGUOUS when >1 survives).
+        #
+        # Recognition now routes through the grammar layer
+        # (:func:`grammar.recognize`); if it returns no shape match the value
+        # was claimed but not recognised, so the outcome is INVALID (Decision A
+        # — not UNSUPPORTED, which is reserved for non-string / wrong-contract).
+        candidates = generate_interpretations(value, contract)
+        if candidates:
+            survivors, drop_reasons = resolve_and_validate(candidates, contract)
+            status, rendered, evidence, cands = classify(candidates, survivors, drop_reasons)
+            return CapabilityResult(
+                status=status, value=rendered, evidence=evidence, candidates=cands
+            )
+
         return CapabilityResult(
-            status=Status.UNSUPPORTED,
+            status=Status.INVALID,
             evidence=(_evidence("unrecognized_format"),),
         )

@@ -38,3 +38,4 @@ class CapabilityResult:
     status: Status
     value: str | None = None
     evidence: tuple[Evidence, ...] = ()
+    candidates: tuple[str, ...] | None = None

@@ -24,7 +24,8 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "invalid_iso_format": "ISO 8601:2004 §5.2.1",
         "invalid_calendar_date": "ISO 8601:2004 (Gregorian calendar validity)",
         "ambiguous_two_digit_year": (
-            "ISO 8601:2004 (4-digit year required); Law 4 (century not uniquely determinable)"
+            "paxman spec/date (2-digit year with no `two_digit_year` century policy; "
+            "Don't Guess -> AMBIGUOUS)"
         ),
         "ambiguous_naive_datetime": "RFC 3339 §5.6 (unknown local offset convention)",
         "invalid_epoch_value": "POSIX/IEEE 1003.1 (epoch seconds out of representable range)",
@@ -37,6 +38,24 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "parsed_unix_timestamp": "POSIX/IEEE 1003.1 (epoch seconds) + RFC 3339",
         "normalized_to_utc": "RFC 3339 §4.1 (instant equivalence) + §4.2 (Z designator)",
         "no_transformation_needed": "ISO 8601:2004 §5.2.1 / RFC 3339 (input already canonical)",
+        # multilingual enumeration model (spec 2026-07-16-date-multilang; Law 14 #3)
+        "parsed_text_month_date": (
+            "paxman spec/date (full/abbrev month name in declared language; "
+            "Law 14 declared Paxman policy — no single RFC governs multilingual month names)"
+        ),
+        "parsed_numeric_date": (
+            "paxman spec/date (numeric slash form enumerated per locale ordering; "
+            "architectural discussion §2)"
+        ),
+        "ambiguous_ordering": (
+            "paxman spec/date (MM/DD and DD/MM both survive under locale=ISO; "
+            "Don't Guess -> AMBIGUOUS)"
+        ),
+        "rejected_two_digit_year": "paxman spec/date (`two_digit_year='reject'` policy)",
+        "weekday_contradicts_date": (
+            "paxman spec/date (semantic validation: weekday must match calendar; "
+            "architectural discussion §3 Stage 4)"
+        ),
     }
 )
 

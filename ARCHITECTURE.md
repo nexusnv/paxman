@@ -172,6 +172,17 @@ src/paxman/
 
 **Total: 42 Python source files across the packages above.**
 
+This shape is the concrete form of two mandate boundaries. **Mandate §4.4**
+(capabilities own domain knowledge): every domain's `contract.py`,
+`canonicalizer.py`, `parser.py`, and `rules.py` live under
+`paxman._capabilities.<domain>/`, never in core. **Mandate §5.5** (Contract
+Protocol vs Domain Contract): the **Paxman Contract Protocol** is
+`paxman._core.contracts` (structural only — names no domain; satisfies mandate
+Law 5), while the **Domain Contract** is the value object each capability owns
+in `paxman._capabilities.<domain>.contract` (`CanonicalEmailContract`,
+`CanonicalUUIDContract`, `CanonicalDateContract`). The core knows the
+protocol; the capability owns the policy.
+
 ### The Test Layout
 
 ```text
@@ -420,16 +431,26 @@ built-ins does this version ship?". The engine calls `builtin_capabilities()`
 and feeds the result to `registry.load_builtins(...)` lazily, on the first
 `canonicalize` call, never at `import paxman` time (mandate Law 8a).
 
-Each future built-in (e.g. a deferred `MoneyCapability`) grows as its own
-`_capabilities/<domain>/` package, pinning its contract `version` and adding
-a new `register_contract` branch — the same additive pattern the three
-shipped capabilities use.
+Each future built-in grows as its own `_capabilities/<domain>/` package,
+pinning its contract `version` and adding a new `register_contract` branch —
+the same additive pattern the three shipped capabilities use. (Money is the
+deliberate exception: it was reclassified as a *multi-field* canonicalization
+— a currency field plus a decimal field — and deferred past the v2 RC, rather
+than shipped as a single `MoneyCapability`. The `_capabilities/<domain>/`
+pattern still applies should it be scoped later; see mandate §5.5.)
 
 ### `_dsl/parser.py` + `_capabilities/<domain>/contract.py` — The One Contract Format
 
 The v2.0.0 contract vocabulary. The contract *kind* is dispatched by
 `_dsl/parser.parse_contract`, which routes each `kind` to a per-domain
 builder registered via `register_contract` (in `_registry/contract_registry.py`).
+`_registry/contract_registry.register_contract` is the registry that replaced
+the former central `_KIND_DISPATCH` dict and its per-kind `if` branches
+(mandate §6.5): the core no longer enumerates domains. The two layers from
+mandate §5.5 are concrete here — the **Paxman Contract Protocol**
+(`paxman._core.contracts`, structural, names no domain) vs the **Domain
+Contract** (the value object each capability owns in
+`paxman._capabilities.<domain>.contract`).
 Each domain owns its value object in `paxman._capabilities.<domain>.contract`
 (`CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`)
 plus the `Email()`, `UUID()`, `Date()` domain-type factories. The contract
@@ -450,9 +471,11 @@ can be expressed two equivalent ways (mandate §5):
    identity.
 
 Both forms resolve to the same `CanonicalEmailContract` value object that
-the engine and capabilities consume. Future contract kinds (Money,
-etc.) bump the contract `version` and add a new `register_contract` branch
-here.
+the engine and capabilities consume. Future contract kinds follow the same
+additive path: bump the contract `version` and add a new `register_contract`
+branch. Money is intentionally absent from this list — it was reclassified as
+a multi-field canonicalization (currency field + decimal field) and deferred
+past the v2 RC; it is not a single `MoneyCapability` (mandate §5.5).
 
 ### `_errors/` (exceptions.py) — Error Hierarchy
 

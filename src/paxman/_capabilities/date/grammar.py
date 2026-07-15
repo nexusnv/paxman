@@ -319,7 +319,7 @@ GRAMMARS: tuple[Grammar, ...] = (
     _make_grammar("text_month_dash", "CLDR month names", "[DAY]-[MONTH(lang)]-[YEAR]"),
     _make_grammar(
         "numeric_slash",
-        "paxman spec/date (numeric slash; RFC 5545 §3.3.10 order heuristic; "
+        "paxman spec/date (numeric slash; RFC 5545 §3.3.10 ordering rule; "
         "ambiguous when both orderings parse)",
         "[N1]/[N2]/[N3]",
         shape="numeric_triple",

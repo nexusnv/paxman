@@ -139,15 +139,51 @@ _TEXT_MONTH_ORDINAL_GRAMMARS = frozenset(
 )
 
 
+def _ordinal_suffix(num: int) -> str:
+    """The correct English ordinal suffix for ``num`` (1->st, 2->nd, 3->rd, else th)."""
+    if 11 <= num % 100 <= 13:
+        return "th"
+    return {1: "st", 2: "nd", 3: "rd"}.get(num % 10, "th")
+
+
+def _weekday_of_date(year: int, month: int, day: int) -> int:
+    """Pure day-of-week (Mon=0 .. Sun=6) via Zeller's congruence.
+
+    Replaces ``datetime(...).weekday()`` so the resolution path stays a pure
+    function of integer components (Law 8a — no datetime in the resolver).
+    """
+    if month < 3:
+        m, y = month + 12, year - 1
+    else:
+        m, y = month, year
+    k = y % 100
+    j = y // 100
+    h = (day + (13 * (m + 1)) // 5 + k + k // 4 + j // 4 + 5 * j) % 7
+    # Zeller's h: 0=Sat,1=Sun,2=Mon,...,6=Fri -> convert to Mon=0..Sun=6.
+    return (h + 5) % 7
+
+
+def _format_date(year: int, month: int, day: int) -> str:
+    """Render a calendar day as the canonical ``YYYY-MM-DD`` string (pure)."""
+    return f"{year:04d}-{month:02d}-{day:02d}"
+
+
 def _ordinal_to_int(token: str) -> int:
     """Map a ``[DAY_IN_ORDINAL]`` capture to its day-of-month integer."""
     lowered = token.lower()
     if lowered in _ORDINAL_WORDS:
         return _ORDINAL_WORDS[lowered]
-    # Numeric ordinal form, e.g. "3rd" / "21st".
-    match = re.match(r"(\d{1,2})", lowered)
-    assert match is not None
-    return int(match.group(1))
+    # Numeric ordinal form, e.g. "3rd" / "21st". The suffix must be the correct
+    # ordinal suffix for the value, so malformed forms such as "11st", "12nd",
+    # or "21th" are rejected (raise ValueError) instead of being silently
+    # canonicalized.
+    match = re.fullmatch(r"(\d{1,2})(st|nd|rd|th)", lowered)
+    if match is None:
+        raise ValueError(f"invalid ordinal token: {token!r}")
+    num = int(match.group(1))
+    if _ordinal_suffix(num) != match.group(2):
+        raise ValueError(f"invalid ordinal suffix in {token!r}")
+    return num
 
 
 def _orderings_for(locale: str) -> tuple[str, ...]:
@@ -179,12 +215,22 @@ def _interpretations_from_reps(
         gid = rep.grammar_id
         if gid in _TEXT_MONTH_GRAMMARS:
             day = int(caps["day"])
-            month = table.get(caps["month"].lower())
+            if gid == "rfc2822_date":
+                # RFC 2822 month/weekday names are always English (RFC 2822
+                # §3.3), independent of the contract language (Law 7 — no locale
+                # leak into canonicalization). Other text-month grammars resolve
+                # against the declared language.
+                month = MONTH_NAMES["en"].get(caps["month"].lower())
+                weekday = (
+                    WEEKDAY_NAMES["en"].get(caps["weekday"].lower()) if "weekday" in caps else None
+                )
+            else:
+                month = table.get(caps["month"].lower())
+                weekday = weekday_table.get(caps["weekday"].lower()) if "weekday" in caps else None
             if month is None:
-                # Month name not in the declared language -> no cross-language
+                # Month name not in the resolved language -> no cross-language
                 # guess (Law 7). This recognition yields no candidate.
                 continue
-            weekday = weekday_table.get(caps["weekday"].lower()) if "weekday" in caps else None
             year_str = caps["year"]
             if len(year_str) == 2:
                 # 2-digit year: the day/year assignment is ambiguous, so
@@ -239,7 +285,10 @@ def _interpretations_from_reps(
                     )
                 )
         elif gid == "ordinal_of_month":
-            day = _ordinal_to_int(caps["ordinal"])
+            try:
+                day = _ordinal_to_int(caps["ordinal"])
+            except ValueError:
+                continue
             month = table.get(caps["month"].lower())
             if month is None:
                 continue
@@ -280,7 +329,10 @@ def _interpretations_from_reps(
             # Ordinal day (numeric-with-suffix or word form) in either dmy or mdy
             # position, with no weekday prefix. Same year-length handling as the
             # text-month family (2-digit year -> day/year swap enumeration).
-            day = _ordinal_to_int(caps["ordinal"])
+            try:
+                day = _ordinal_to_int(caps["ordinal"])
+            except ValueError:
+                continue
             month = table.get(caps["month"].lower())
             if month is None:
                 continue
@@ -404,7 +456,7 @@ def resolve_and_validate(
             for year in years:
                 if not _valid_calendar_date(year, c.month, c.day):
                     continue
-                if c.weekday is not None and datetime(year, c.month, c.day).weekday() != c.weekday:
+                if c.weekday is not None and _weekday_of_date(year, c.month, c.day) != c.weekday:
                     drop_reasons.add("weekday_contradicts_date")
                     continue
                 survivors.append(_Survivor(year, c.month, c.day, c.rule, c.ordering, True))
@@ -412,7 +464,7 @@ def resolve_and_validate(
             if not _valid_calendar_date(c.year, c.month, c.day):
                 drop_reasons.add("invalid_calendar_date")
                 continue
-            if c.weekday is not None and datetime(c.year, c.month, c.day).weekday() != c.weekday:
+            if c.weekday is not None and _weekday_of_date(c.year, c.month, c.day) != c.weekday:
                 drop_reasons.add("weekday_contradicts_date")
                 continue
             survivors.append(_Survivor(c.year, c.month, c.day, c.rule, c.ordering, False))
@@ -459,7 +511,7 @@ def classify(
         s = survivors[0]
         return (
             Status.CANONICALIZED,
-            _render_date(datetime(s.year, s.month, s.day)),
+            _format_date(s.year, s.month, s.day),
             (_evidence(s.rule),),
             None,
         )
@@ -472,7 +524,7 @@ def classify(
         rules.append("ambiguous_two_digit_year")
     if not rules:
         rules.append("ambiguous_ordering")
-    rendered = tuple(sorted(_render_date(datetime(s.year, s.month, s.day)) for s in survivors))
+    rendered = tuple(sorted(_format_date(s.year, s.month, s.day) for s in survivors))
     return Status.AMBIGUOUS, None, tuple(_evidence(rule) for rule in rules), rendered
 
 

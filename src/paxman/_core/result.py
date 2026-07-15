@@ -40,5 +40,10 @@ class CapabilityResult:
     evidence: tuple[Evidence, ...] = ()
     candidates: tuple[str, ...] | None = None
     # When status is AMBIGUOUS, the sorted tuple of every surviving canonical
-    # form (YYYY-MM-DD). Surfaces the ambiguity explicitly instead of guessing
-    # (Law 3 — Never Guess); None for CANONICALIZED / INVALID / UNSUPPORTED.
+    # form (YYYY-MM-DD), exposing the ambiguity instead of guessing
+    # (Law 3 — Never Guess). It is set ONLY for AMBIGUOUS outcomes that enumerate
+    # finite calendar-day alternatives (e.g. MM/DD vs DD/MM, or century-expanded
+    # 2-digit years). AMBIGUOUS outcomes whose ambiguity is not about enumerated
+    # days (e.g. a naive datetime) carry candidates=None. For every non-AMBIGUOUS
+    # status (CANONICALIZED / INVALID / UNSUPPORTED / MISSING) candidates is
+    # always None. The engine enforces this contract in _build_artifact.

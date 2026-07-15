@@ -176,13 +176,14 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
     # Stage 6: classify.
     final_status = classify(capability_result, validation)
 
+    # Contract (result.py): candidates are exclusive to AMBIGUOUS; drop otherwise.
     return _build_artifact(
         registry=registry,
         parsed_contract=parsed_contract,
         status=final_status,
         value=capability_result.value if final_status is Status.CANONICALIZED else None,
         evidence=capability_result.evidence,
-        candidates=capability_result.candidates,
+        candidates=capability_result.candidates if final_status is Status.AMBIGUOUS else None,
     )
 
 

@@ -117,9 +117,7 @@ class TestProvenanceAndIdempotence:
             ("16 Julai 2026", "ms"),
         ],
     )
-    def test_five_canonicalized_forms_are_idempotent(
-        self, value: str, language: str
-    ) -> None:
+    def test_five_canonicalized_forms_are_idempotent(self, value: str, language: str) -> None:
         first = _cap().canonicalize(value, Date(locale="ISO", language=language))
         assert first.status is Status.CANONICALIZED
         second = _cap().canonicalize(first.value, Date(locale="ISO", language=language))
@@ -138,17 +136,13 @@ class TestTwoDigitYearPolicy:
     def test_pivot_policy_resolves_single_century(self) -> None:
         # Spec §3.2 corrected: year = (YYYY // 100) * 100 + YY. pivot:2000
         # -> base 2000, so 25 -> 2025.
-        r = _cap().canonicalize(
-            "03/04/25", Date(locale="US", two_digit_year="pivot:2000")
-        )
+        r = _cap().canonicalize("03/04/25", Date(locale="US", two_digit_year="pivot:2000"))
         assert r.status is Status.CANONICALIZED
         assert r.value == "2025-03-04"
 
     def test_pivot_policy_resolves_upper_century(self) -> None:
         # pivot:2000 -> base 2000, so 70 -> 2070 (not the classic <70 split).
-        r = _cap().canonicalize(
-            "03/04/70", Date(locale="US", two_digit_year="pivot:2000")
-        )
+        r = _cap().canonicalize("03/04/70", Date(locale="US", two_digit_year="pivot:2000"))
         assert r.status is Status.CANONICALIZED
         assert r.value == "2070-03-04"
 
@@ -159,9 +153,7 @@ class TestAmbiguousSurfacesCandidates:
     def test_text_month_two_digit_year_both_assignments(self) -> None:
         # Spec §5 + §8: "25 July 26" under pivot:2000 enumerates both
         # (day, year) assignments -> 2026-07-25 and 2025-07-26.
-        r = _cap().canonicalize(
-            "25 July 26", Date(locale="ISO", two_digit_year="pivot:2000")
-        )
+        r = _cap().canonicalize("25 July 26", Date(locale="ISO", two_digit_year="pivot:2000"))
         assert r.status is Status.AMBIGUOUS
         assert r.value is None
         assert r.candidates == ("2025-07-26", "2026-07-25")
@@ -244,9 +236,7 @@ class TestNewGrammarCoverageClosures:
         # ``invalid_calendar_date`` path. "Saturday" matches two of the six
         # enumerated candidates (July 3 1926 and a July 26), so the outcome
         # is AMBIGUOUS.
-        r = _cap().canonicalize(
-            "Saturday, the 3rd of July, 26", Date(locale="ISO", language="en")
-        )
+        r = _cap().canonicalize("Saturday, the 3rd of July, 26", Date(locale="ISO", language="en"))
         assert r.status is Status.AMBIGUOUS
         assert r.candidates is not None
         assert "1926-07-03" in r.candidates

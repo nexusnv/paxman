@@ -80,9 +80,7 @@ class TestEndToEnd:
         assert art.value == "azahari@gmail.com"
 
     def test_verbal_at_dot_canonicalization(self) -> None:
-        art = paxman.canonicalize(
-            "azahari at gmail dot com", {"kind": "canonical_email"}
-        )
+        art = paxman.canonicalize("azahari at gmail dot com", {"kind": "canonical_email"})
         assert art.status is Status.CANONICALIZED
         assert art.value == "azahari@gmail.com"
 

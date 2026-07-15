@@ -4,7 +4,8 @@ Mandate Law 4 (Canonicalize, Don't Interpret): validation is *policy
 checking*, not interpretation. It verifies that the canonical value
 satisfies the contract's strictness policy; it does not invent policies.
 
-For v2.0.0, only `kind == "canonical_email"` contracts are supported.
+For v2.0.0, the supported kinds are `canonical_email`,
+`canonical_uuid`, and `canonical_date`.
 Any other kind raises `UnsupportedContractError` (defined in
 `paxman._errors`); the orchestrator catches that and produces
 `Status.UNSUPPORTED` instead of letting the call fail.
@@ -29,8 +30,8 @@ def validate(
     orchestrator is responsible for catching that and mapping to
     `Status.UNSUPPORTED`.
     """
-    # v2.0.0: dispatch on type. The supported kinds are the email and
-    # uuid contracts. A future v2.x that adds new kinds will replace this
+    # v2.0.0: dispatch on type. The supported kinds are the email,
+    # uuid, and date contracts. A future v2.x that adds new kinds will replace this
     # with a Protocol-based dispatch table.
     if isinstance(contract, CanonicalUUIDContract):
         # The UUIDCapability has already validated the canonical form and

@@ -1,6 +1,11 @@
 """Email surface-grammar helpers (RFC 5322 / RFC 5321 / RFC 1035).
 
 Moved VERBATIM from `paxman._capabilities.builtins.email`.
+
+Mandate Law 4 (capability boundaries): these helpers encode the exact
+surface grammar the EmailCapability accepts; they never orchestrate.
+Mandate Law 8a (pure functions): each helper is a deterministic
+predicate over a string with no side effects and no hidden state.
 """
 
 import re
@@ -45,7 +50,10 @@ def _validate_dot_atom_local(local: str) -> bool:
     - consecutive dots
     - any character that is not atext and not `.`
     - quoted-string local parts (RFC 5322 §3.2.4)
-    - internal whitespace, parentheses, comments, slashes
+    - internal whitespace, parentheses, comments
+
+    Note: the ``/`` (slash) character IS part of the ``atext`` set
+    (RFC 5322 §3.2.3), so it is accepted, not rejected.
     """
     if not local:
         return False

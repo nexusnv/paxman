@@ -35,6 +35,44 @@ from paxman._core.contracts import Contract
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
 
+# RFC 2822 §3.3 month abbreviations are always English; we map them
+# explicitly instead of `datetime.strptime("%b")` because `%b` is
+# locale-dependent (mandate Law 7: locale must not leak into
+# canonicalization). This keeps the date-only RFC 2822 path
+# deterministic regardless of the process locale.
+_RFC2822_MONTHS: dict[str, int] = {
+    "jan": 1,
+    "feb": 2,
+    "mar": 3,
+    "apr": 4,
+    "may": 5,
+    "jun": 6,
+    "jul": 7,
+    "aug": 8,
+    "sep": 9,
+    "oct": 10,
+    "nov": 11,
+    "dec": 12,
+}
+
+
+def _parse_rfc2822_date_only(date_part: str) -> datetime | None:
+    """Locale-independent parse of the RFC 2822 date-only ``D Mon YYYY`` form.
+
+    Returns a ``datetime`` on success or ``None`` when the form is
+    malformed, the month is unknown, or the calendar date is invalid
+    (the caller maps ``None`` to ``Status.INVALID``).
+    """
+    match = re.match(r"^\s*(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})\s*$", date_part)
+    if match is None:
+        return None
+    day = int(match.group(1))
+    month = _RFC2822_MONTHS.get(match.group(2).lower())
+    year = int(match.group(3))
+    if month is None or not _valid_calendar_date(year, month, day):
+        return None
+    return datetime(year, month, day)
+
 
 class DateCapability:
     """A pure deterministic transformation that canonicalizes dates.
@@ -211,12 +249,11 @@ class DateCapability:
             has_time = bool(_RFC2822_TIME_RE.search(value))
             if not has_time:
                 # Date-only RFC 2822: parsedate_to_datetime requires time,
-                # so fall back to strptime for the "D Mon YYYY" form.
-                # Strip optional day-of-week prefix (e.g. "Tue, ") first.
+                # so use the locale-independent helper for the "D Mon YYYY"
+                # form. Strip optional day-of-week prefix (e.g. "Tue, ") first.
                 date_part = re.sub(r"^(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s*", "", value.strip())
-                try:
-                    parsed = datetime.strptime(date_part, "%d %b %Y")
-                except ValueError:
+                parsed = _parse_rfc2822_date_only(date_part)
+                if parsed is None:
                     return CapabilityResult(
                         status=Status.INVALID,
                         evidence=(_evidence("invalid_calendar_date"),),

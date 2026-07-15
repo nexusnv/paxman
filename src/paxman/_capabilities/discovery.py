@@ -5,6 +5,11 @@ in the registry skips capabilities whose names are already registered,
 so a user can override any built-in by registering their own
 implementation before the first canonicalize call.
 
+This explicit, deterministic discovery upholds Mandate Law 1
+(determinism — the built-in set is fixed and known) and Law 6
+(pipeline boundaries — discovery is part of the pipeline Paxman
+owns, not user-redefinable).
+
 Migrated from `paxman._capabilities.builtins.discovery` as part of the
 additive architecture migration into `paxman._capabilities`.
 """

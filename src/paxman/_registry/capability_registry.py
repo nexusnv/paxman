@@ -24,6 +24,10 @@ import hashlib
 
 from paxman._capabilities.protocol import Capability
 from paxman._core.contracts import Contract
+
+# Law 1 (determinism): the frozen-registry invariant makes the
+# capability set part of the determinism contract. Law 6 (pipeline
+# boundaries): the registry is the resolver the orchestrator owns.
 from paxman._errors import ConfigurationError, FrozenRegistryError
 
 

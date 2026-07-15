@@ -14,7 +14,8 @@ The pipeline walks six stages:
 
 The orchestrator is pure: same input, contract, frozen registry, and
 Paxman version -> same artifact (mandate Law 1). It is the only
-place that produces ExecutionArtifacts.
+place that produces ExecutionArtifacts. Mandate Law 6 (pipeline
+boundaries): users contribute capabilities, never the pipeline itself.
 
 This module is `paxman._core.engine` (renamed from `paxman._core.orchestrator`
 in the additive architecture migration); the import paths it uses now point
@@ -156,9 +157,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
         # assert) is used so the invariant holds even under `python -O`,
         # where asserts are stripped.
         if capability_result.value is None:
-            raise CanonicalizationError(
-                "CANONICALIZED capability result must carry a value"
-            )
+            raise CanonicalizationError("CANONICALIZED capability result must carry a value")
         try:
             validation = validate_value(capability_result.value, parsed_contract)
         except UnsupportedContractError:

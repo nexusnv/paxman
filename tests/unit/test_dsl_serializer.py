@@ -8,6 +8,7 @@ from paxman._dsl.serializer import serialize_contract
 def test_serialize_email() -> None:
     c = Email(provider_aliases="gmail")
     d = serialize_contract(c)
+    # Assert the complete serialized mapping, not just one field.
     assert d == {
         "kind": "canonical_email",
         "lowercase": True,
@@ -16,10 +17,21 @@ def test_serialize_email() -> None:
         "strict": False,
         "version": 1,
     }
+    # Round-trips back to an equivalent contract via parse_contract.
+    assert parse_contract(d) == c
 
 
 def test_serialize_uuid() -> None:
-    assert serialize_contract(UUID(version="4"))["version"] == "4"
+    c = UUID(version="4")
+    d = serialize_contract(c)
+    # Assert the complete serialized mapping, not just the version field.
+    assert d == {
+        "kind": "canonical_uuid",
+        "version": "4",
+        "version_field": 1,
+    }
+    # Round-trips back to an equivalent contract via parse_contract.
+    assert parse_contract(d) == c
 
 
 def test_serialize_date() -> None:

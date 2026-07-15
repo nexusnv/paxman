@@ -13,11 +13,18 @@ class Evidence:
     **where the canonical form came from** (mandate Law 14). The
     `provenance` field carries a human-readable citation to one of the
     three Law 14 sources: an authoritative spec, a documented platform
-    behavior, or a declared Paxman policy. Two dispatch-invariant rules
-    (`not_an_email_contract`, `not_a_string_value`) are allow-listed
-    with empty `provenance` because they describe a routing failure,
-    not a canonical-form rule (see `docs/superpowers/specs/
-    2026-07-13-email-canonicalization-design.md` §7.2).
+    behavior, or a declared Paxman policy. A small set of routing/
+    dispatch failures are allow-listed with empty `provenance` because
+    they describe a routing failure, not a canonical-form rule
+    (Law 14 §3.6):
+      - capability dispatch invariants (declared in each domain's
+        `rules.py`): `not_a_date_contract`, `not_a_string_value`,
+        `empty_value`, `unrecognized_format`, `not_an_email_contract`,
+        `not_a_uuid_contract`;
+      - orchestrator routing failures (emitted by `engine.py`):
+        `unparseable_contract`, `no_capability_claims`,
+        `multiple_claimants`, `validation_unsupported_contract`.
+    Every other fired rule MUST carry a non-empty citation.
     """
 
     rule: str

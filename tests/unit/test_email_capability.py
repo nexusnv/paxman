@@ -298,8 +298,6 @@ class TestLaw14ProvenanceManifest:
             for ev in r.evidence:
                 fired.add(ev.rule)
         # Also exercise the two dispatch-invariant paths directly.
-        from paxman._capabilities.email.contract import CanonicalEmailContract
-
         not_contract: Contract = cast(Contract, "not_a_contract")
         r1 = c.canonicalize("a@b.c", not_contract)
         r2 = c.canonicalize(object(), cast(Contract, CanonicalEmailContract()))

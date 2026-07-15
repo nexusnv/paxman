@@ -145,7 +145,7 @@ class TestOrdinalGrammar:
         reps = recognize("Thursday, the 3rd of July, 2026", _contract())
         rep = _rep_by_id(reps, "ordinal_of_month")
         assert rep is not None
-        assert rep.source == "natural language"
+        assert rep.source == "paxman spec/date (ordinal day form, natural language)"
         assert rep.captures == {
             "weekday": "Thursday",
             "ordinal": "3rd",
@@ -227,7 +227,7 @@ class TestOrdinalOfMonthNoWkdayGrammar:
         reps = recognize("the 3rd of July, 2026", _contract())
         rep = _rep_by_id(reps, "ordinal_of_month_nowkday")
         assert rep is not None
-        assert rep.source == "natural language"
+        assert rep.source == "paxman spec/date (ordinal day form, natural language)"
         assert rep.captures == {"ordinal": "3rd", "month": "July", "year": "2026"}
 
     def test_does_not_match_without_leading_the(self) -> None:

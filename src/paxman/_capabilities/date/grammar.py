@@ -80,7 +80,7 @@ class RecognizedRep:
 # The combined numeric triple token (slash-separated). Handled as a unit so
 # the three numeric groups are named n1/n2/n3 and tagged shape="numeric_triple".
 _NUMERIC_TRIPLE = "[N1]/[N2]/[N3]"
-_NUMERIC_TRIPLE_RE = r"(?P<n1>\d{1,2})/(?P<n2>\d{1,2})/(?P<n3>\d{2,4})"
+_NUMERIC_TRIPLE_RE = r"(?P<n1>\d{1,2})/(?P<n2>\d{1,2})/(?P<n3>\d{2}(?:\d{2})?)"
 
 # Ordinal day words -> int. This dict is the single source of truth: the
 # resolver maps these words to their integer day (see _ordinal_to_int), and
@@ -181,24 +181,33 @@ def _compile_token(token: str, language: str) -> tuple[str, str, str]:
 _ESCAPE_SPECIAL = set(".+()[]{}|^$\\")
 
 
-def _escape_literal(literal: str) -> str:
-    """Escape a literal separator run, treating spaces as flexible whitespace.
+def _escape_literal(literal: str, flexible_ws: bool = False) -> str:
+    """Escape a literal separator run.
 
-    Whitespace runs become ``\\s*`` (flexible, collapsed). Non-whitespace atoms
-    are escaped (regex-special chars except ``?``/``*``) and wrapped with
-    ``\\s*`` so separators tolerate flexible surrounding whitespace — a literal
-    ``.`` becomes ``\\s*\\.\\s*`` (matching ``". "`` or ``"."``) and ``,?``
-    becomes ``\\s*,?\\s*`` (an optional comma). The ``?`` quantifier is left
-    live (see ``_ESCAPE_SPECIAL``).
+    Whitespace explicitly present in the pattern becomes a *required* ``\\s+``
+    separator by default, so adjacent grammar fields cannot run together
+    (e.g. ``[DAY] [MONTH]`` will not match ``16July2026``). When ``flexible_ws``
+    is True (used where the preceding grammar token is optional, so the field
+    may be absent), the whitespace is a flexible ``\\s*`` instead — otherwise a
+    required gap would demand a separator even when the field is missing (e.g.
+    the optional weekday in ``rfc2822_date`` would reject ``"16 July 2026"``).
+
+    Non-whitespace atoms are escaped (regex-special chars except ``?``/``*``)
+    and wrapped with flexible ``\\s*`` so punctuation separators tolerate
+    variable surrounding whitespace — a literal ``.`` becomes ``\\s*\\.\\s*``
+    (matching ``". "`` or ``"."``) and ``,?`` becomes ``\\s*,?\\s*`` (an
+    optional comma). The ``?`` quantifier is left live (see
+    ``_ESCAPE_SPECIAL``).
     """
     if not literal:
         return ""
     out: list[str] = []
+    ws = r"\s*" if flexible_ws else r"\s+"
     i = 0
     n = len(literal)
     while i < n:
         if literal[i].isspace():
-            out.append(r"\s*")
+            out.append(ws)
             while i < n and literal[i].isspace():
                 i += 1
             continue
@@ -263,18 +272,26 @@ def compile_grammar(pattern: str, language: str) -> re.Pattern[str]:
     parts: list[str] = []
     token_re = re.compile(r"\[([^\]]+)\](\?)?")
     pos = 0
+    prev_optional: bool | None = None  # None = no preceding token yet
     for match in token_re.finditer(pattern):
         literal = pattern[pos : match.start()]
         if literal:
-            parts.append(_escape_literal(literal))
+            # A required separator (\\s+) only makes sense between two fields
+            # that are both present. If the preceding token is optional (or
+            # there is no preceding token), the gap stays flexible (\\s*) so the
+            # separator is not demanded when the field is absent.
+            flexible = prev_optional is not False
+            parts.append(_escape_literal(literal, flexible_ws=flexible))
         token = match.group(1)
         optional = match.group(2)
         _group_name, group_re, _role_key = _compile_token(token, language)
         parts.append(rf"(?:{group_re})?" if optional else group_re)
+        prev_optional = optional is not None
         pos = match.end()
     trailing = pattern[pos:]
     if trailing:
-        parts.append(_escape_literal(trailing))
+        flexible = prev_optional is not False
+        parts.append(_escape_literal(trailing, flexible_ws=flexible))
     # Leading/trailing whitespace is tolerated; fullmatch still requires the
     # whole string to be consumed.
     return re.compile(r"\s*" + "".join(parts) + r"\s*", re.IGNORECASE)
@@ -300,7 +317,13 @@ GRAMMARS: tuple[Grammar, ...] = (
     _make_grammar("text_month_dmy_dot", "CLDR month names", "[DAY].[MONTH(lang)] [YEAR]"),
     _make_grammar("text_month_cm", "CLDR month names", "[MONTH(lang)], [DAY] [YEAR]"),
     _make_grammar("text_month_dash", "CLDR month names", "[DAY]-[MONTH(lang)]-[YEAR]"),
-    _make_grammar("numeric_slash", "colloquial", "[N1]/[N2]/[N3]", shape="numeric_triple"),
+    _make_grammar(
+        "numeric_slash",
+        "paxman spec/date (numeric slash; RFC 5545 §3.3.10 order heuristic; "
+        "ambiguous when both orderings parse)",
+        "[N1]/[N2]/[N3]",
+        shape="numeric_triple",
+    ),
     _make_grammar(
         "rfc2822_date",
         "RFC 2822 §3.3",
@@ -308,7 +331,7 @@ GRAMMARS: tuple[Grammar, ...] = (
     ),
     _make_grammar(
         "ordinal_of_month",
-        "natural language",
+        "paxman spec/date (ordinal day form, natural language)",
         "[DAY_OF_THE_WEEK(lang)]?, the [DAY_IN_ORDINAL] of [MONTH(lang)], [YEAR]",
     ),
     # --- Coverage-gap closures (7 new productions) ---
@@ -319,7 +342,7 @@ GRAMMARS: tuple[Grammar, ...] = (
     ),
     _make_grammar(
         "ordinal_of_month_nowkday",
-        "natural language",
+        "paxman spec/date (ordinal day form, natural language)",
         "the [DAY_IN_ORDINAL] of [MONTH(lang)], [YEAR]",
     ),
     _make_grammar(
@@ -355,20 +378,6 @@ GRAMMARS: tuple[Grammar, ...] = (
 )
 
 
-_COMPILE_CACHE: dict[tuple[str, str], re.Pattern[str]] = {}
-
-
-def _compile_cached(pattern: str, language: str) -> re.Pattern[str]:
-    """Compile (and cache) a grammar pattern for a specific language."""
-    key = (pattern, language)
-    cached = _COMPILE_CACHE.get(key)
-    if cached is not None:
-        return cached
-    compiled = compile_grammar(pattern, language)
-    _COMPILE_CACHE[key] = compiled
-    return compiled
-
-
 def recognize(value: str, contract: object) -> list[RecognizedRep]:
     """Recognise every grammar shape the input full-matches.
 
@@ -395,7 +404,7 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
     reps: list[RecognizedRep] = []
     for grammar in GRAMMARS:
         try:
-            rx = _compile_cached(grammar.pattern, language)
+            rx = compile_grammar(grammar.pattern, language)
         except ValueError:
             # Unsupported language for this grammar's (lang) tokens -> no match.
             continue

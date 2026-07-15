@@ -12,8 +12,8 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-from paxman._contracts.contract import Contract
-from paxman._core.types import CapabilityResult
+from paxman._core.contracts import Contract
+from paxman._core.result import CapabilityResult
 
 
 @runtime_checkable

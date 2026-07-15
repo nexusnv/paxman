@@ -15,7 +15,7 @@ import attrs
 import pytest
 
 from paxman import Email
-from paxman._contracts.contract import CanonicalEmailContract
+from paxman._capabilities.email.contract import CanonicalEmailContract
 
 
 class TestEmailFactory:

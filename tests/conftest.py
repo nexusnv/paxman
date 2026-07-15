@@ -13,6 +13,6 @@ def fresh_registry() -> object:
     in the paxman package at collection time (per-task fixture
     isolation, not a load-ordering requirement).
     """
-    from paxman._capabilities.registry import CapabilityRegistry
+    from paxman._registry.capability_registry import CapabilityRegistry
 
     return CapabilityRegistry()

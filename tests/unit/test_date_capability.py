@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from paxman import Status
-from paxman._capabilities.builtins.date import _RULE_PROVENANCE, DateCapability
-from paxman._contracts.contract import CanonicalDateContract, Contract
+from paxman._capabilities.date import _RULE_PROVENANCE, DateCapability
+from paxman._capabilities.date.contract import CanonicalDateContract
+from paxman._core.contracts import Contract
 
 
 def _cap() -> DateCapability:

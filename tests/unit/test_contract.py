@@ -7,12 +7,12 @@ from typing import Any, cast
 import attrs
 import pytest
 
-from paxman._contracts.contract import (
+from paxman._capabilities.date.contract import (
     CanonicalDateContract,
-    CanonicalEmailContract,
     Date,
-    parse_contract,
 )
+from paxman._capabilities.email.contract import CanonicalEmailContract
+from paxman._dsl.parser import parse_contract
 from paxman._errors import ContractError
 
 

@@ -20,8 +20,8 @@ import pytest
 
 import paxman
 from paxman import Email, _orchestrator_runtime
-from paxman._capabilities.registry import CapabilityRegistry
-from paxman._core.types import Status
+from paxman._core.status import Status
+from paxman._registry.capability_registry import CapabilityRegistry
 
 # ---------------------------------------------------------------------------
 # Deterministic 100-email dataset (inlined as a one-off local fixture).

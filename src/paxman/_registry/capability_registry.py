@@ -23,7 +23,7 @@ from __future__ import annotations
 import hashlib
 
 from paxman._capabilities.protocol import Capability
-from paxman._contracts.contract import Contract
+from paxman._core.contracts import Contract
 from paxman._errors import ConfigurationError, FrozenRegistryError
 
 

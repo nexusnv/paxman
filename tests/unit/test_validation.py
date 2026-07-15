@@ -6,7 +6,7 @@ from typing import Any, cast
 
 import pytest
 
-from paxman._contracts.contract import CanonicalEmailContract
+from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._core.validation import validate
 from paxman._errors import UnsupportedContractError
 

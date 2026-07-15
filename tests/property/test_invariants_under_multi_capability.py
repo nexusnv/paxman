@@ -20,9 +20,10 @@ from hypothesis import given, settings
 
 import paxman
 import paxman._orchestrator_runtime as _orchestrator_runtime
-from paxman._capabilities.builtins.uuid import UUIDCapability
-from paxman._capabilities.registry import CapabilityRegistry
-from paxman._core.types import CapabilityResult, Status
+from paxman._capabilities.uuid import UUIDCapability
+from paxman._core.result import CapabilityResult
+from paxman._core.status import Status
+from paxman._registry.capability_registry import CapabilityRegistry
 
 # Strategy: any well-formed 36-char UUID (str(uuid.UUID(...)) is the
 # RFC 4122 §3 canonical lowercase hyphenated form).
@@ -72,11 +73,9 @@ def test_capabilities_hash_is_stable_across_calls(uuid_str: str, email: str) -> 
 def test_no_two_builtins_claim_the_same_pair() -> None:
     """The AMBIGUOUS invariant for the built-in set: for every
     (contract, value) pair, at most one built-in claims it."""
-    from paxman._capabilities.builtins.email import EmailCapability
-    from paxman._contracts.contract import (
-        CanonicalEmailContract,
-        CanonicalUUIDContract,
-    )
+    from paxman._capabilities.email import EmailCapability
+    from paxman._capabilities.email.contract import CanonicalEmailContract
+    from paxman._capabilities.uuid.contract import CanonicalUUIDContract
 
     email_cap = EmailCapability()
     uuid_cap = UUIDCapability()

@@ -12,7 +12,9 @@ from typing import Any, Protocol
 
 import attrs
 
-from paxman._core.types import Evidence, Status, VersionStamp
+from paxman._core.provenance import Evidence
+from paxman._core.result import VersionStamp
+from paxman._core.status import Status
 
 
 class _ContractLike(Protocol):

@@ -67,8 +67,8 @@ class TestPublicAPI:
 
     def test_canonicalize_end_to_end(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from paxman import _orchestrator_runtime
-        from paxman._capabilities.builtins.email import EmailCapability
-        from paxman._capabilities.registry import CapabilityRegistry
+        from paxman._capabilities.email import EmailCapability
+        from paxman._registry.capability_registry import CapabilityRegistry
 
         r = CapabilityRegistry()
         r.register(EmailCapability())
@@ -80,8 +80,8 @@ class TestPublicAPI:
 
     def test_replay_end_to_end(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from paxman import _orchestrator_runtime
-        from paxman._capabilities.builtins.email import EmailCapability
-        from paxman._capabilities.registry import CapabilityRegistry
+        from paxman._capabilities.email import EmailCapability
+        from paxman._registry.capability_registry import CapabilityRegistry
 
         r = CapabilityRegistry()
         r.register(EmailCapability())

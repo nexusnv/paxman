@@ -10,12 +10,12 @@ hidden state).
 
 from __future__ import annotations
 
-from paxman._capabilities.builtins.date import DateCapability
-from paxman._capabilities.builtins.discovery import builtin_capabilities
-from paxman._capabilities.builtins.email import EmailCapability
-from paxman._capabilities.builtins.uuid import UUIDCapability
-from paxman._capabilities.registry import CapabilityRegistry
-from paxman._contracts.contract import CanonicalEmailContract
+from paxman._capabilities.date import DateCapability
+from paxman._capabilities.discovery import builtin_capabilities
+from paxman._capabilities.email import EmailCapability
+from paxman._capabilities.email.contract import CanonicalEmailContract
+from paxman._capabilities.uuid import UUIDCapability
+from paxman._registry.capability_registry import CapabilityRegistry
 
 
 class TestBuiltinCapabilities:

@@ -12,9 +12,10 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from paxman._capabilities.builtins.email import _RULE_PROVENANCE, EmailCapability
-from paxman._contracts.contract import CanonicalEmailContract, Contract
-from paxman._core.types import Status
+from paxman._capabilities.email import _RULE_PROVENANCE, EmailCapability
+from paxman._capabilities.email.contract import CanonicalEmailContract
+from paxman._core.contracts import Contract
+from paxman._core.status import Status
 
 
 def _cap() -> EmailCapability:
@@ -297,7 +298,7 @@ class TestLaw14ProvenanceManifest:
             for ev in r.evidence:
                 fired.add(ev.rule)
         # Also exercise the two dispatch-invariant paths directly.
-        from paxman._contracts.contract import CanonicalEmailContract
+        from paxman._capabilities.email.contract import CanonicalEmailContract
 
         not_contract: Contract = cast(Contract, "not_a_contract")
         r1 = c.canonicalize("a@b.c", not_contract)

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import pytest
 
-from paxman._capabilities.builtins.email import EmailCapability
-from paxman._capabilities.registry import CapabilityRegistry
-from paxman._core.orchestrator import canonicalize
-from paxman._core.types import Status
+from paxman._capabilities.email import EmailCapability
+from paxman._core.engine import canonicalize
+from paxman._core.status import Status
+from paxman._registry.capability_registry import CapabilityRegistry
 
 
 def _setup_email_registry() -> CapabilityRegistry:
@@ -47,10 +47,10 @@ class TestOrchestrator:
 
     def test_canonicalize_ambiguous_yields_ambiguous(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from paxman import _orchestrator_runtime
-        from paxman._contracts.contract import Contract
+        from paxman._core.contracts import Contract
 
         # Two capabilities both claim the same pair.
-        from paxman._core.types import CapabilityResult
+        from paxman._core.result import CapabilityResult
 
         class _A:
             name: str = "A"

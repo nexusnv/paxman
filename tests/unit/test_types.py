@@ -6,12 +6,12 @@ import enum
 
 import attrs
 
-from paxman._core.types import (
+from paxman._core.provenance import Evidence
+from paxman._core.result import (
     CapabilityResult,
-    Evidence,
-    Status,
     VersionStamp,
 )
+from paxman._core.status import Status
 
 
 class TestStatus:

@@ -18,8 +18,8 @@ from typing import Any
 
 import paxman as _paxman_version
 from paxman import _orchestrator_runtime
-from paxman._contracts.contract import parse_contract
 from paxman._core.artifact import ExecutionArtifact
+from paxman._dsl.parser import parse_contract
 from paxman._errors import (
     CanonicalizationError,
     ContractError,

@@ -13,163 +13,27 @@ Mandate alignment:
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
-from types import MappingProxyType
 
-from paxman._contracts.contract import CanonicalDateContract, Contract
-from paxman._core.types import CapabilityResult, Evidence, Status
-
-_ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-
-_ISO_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$")
-_ISO_NAIVE_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$")
-
-_NUMERIC_4YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})$")
-_NUMERIC_2YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{2})$")
-_SLASH_YEAR_FIRST_RE = re.compile(r"^\d{4}/\d{2}/\d{2}$")
-
-_UNIX_RE = re.compile(r"^-?\d+(\.\d+)?$")
-
-
-def _is_epoch(value: str) -> bool:
-    """A string is a Unix epoch timestamp when it is a negative integer
-    (always an epoch, never a compact date), a float (fractional seconds),
-    or a positive integer >= 1e9 seconds (year ~2001+). Shorter positive
-    bare integers are compact-date shapes (spec §2.2, out of scope) and are
-    deliberately NOT treated as epochs (Law 4 — do not guess intent).
-    This boundary is a declared Paxman policy (spec §11).
-
-    Edge case (declared policy, spec §2.2/§11): a 10+ digit bare integer such
-    as ``2025010101`` is >= 1e9 and is therefore read as an epoch. Compact-date
-    shapes longer than 9 digits are out of scope; this is a deliberate,
-    documented boundary rather than a guess.
-    """
-    if not _UNIX_RE.match(value):
-        return False
-    if value.startswith("-"):
-        return True
-    if "." in value:
-        return True
-    return int(value) >= 1_000_000_000
-
-
-_RFC2822_TIME_RE = re.compile(r"\d{1,2}:\d{2}(:\d{2})?")
-_RFC2822_RE = re.compile(
-    r"^(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun),?\s*)?"
-    r"\d{1,2}\s+"
-    r"(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+"
-    r"\d{4}"
-    r"(?:\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s+(?:[+-]\d{4}|[A-Z]{1,4}))?"
-    r"|\s+\(?[A-Z]{2,4}\)?"
-    r"|\s+[A-Z]{1,3})?"
-    r"$"
+from paxman._capabilities.date.calendar import _valid_calendar_date
+from paxman._capabilities.date.contract import CanonicalDateContract
+from paxman._capabilities.date.parser import (
+    _ISO_DATE_RE,
+    _ISO_DATETIME_RE,
+    _ISO_NAIVE_DATETIME_RE,
+    _NUMERIC_2YEAR_RE,
+    _NUMERIC_4YEAR_RE,
+    _RFC2822_RE,
+    _RFC2822_TIME_RE,
+    _SLASH_YEAR_FIRST_RE,
+    _is_epoch,
 )
-
-_RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
-    {
-        # dispatch invariants (no provenance — Law 14 §3.6 allow-list)
-        "not_a_date_contract": "",
-        "not_a_string_value": "",
-        "empty_value": "",
-        "unrecognized_format": "",
-        # rejecting rules
-        "numeric_format_requires_us_or_eu_locale": (
-            "paxman spec/date (ISO locale rejects slash forms; Law 7)"
-        ),
-        "invalid_iso_format": "ISO 8601:2004 §5.2.1",
-        "invalid_calendar_date": "ISO 8601:2004 (Gregorian calendar validity)",
-        "ambiguous_two_digit_year": (
-            "ISO 8601:2004 (4-digit year required); Law 4 (century not uniquely determinable)"
-        ),
-        "ambiguous_naive_datetime": "RFC 3339 §5.6 (unknown local offset convention)",
-        "invalid_epoch_value": "POSIX/IEEE 1003.1 (epoch seconds out of representable range)",
-        # transforming rules (success path)
-        "parsed_iso_date": "ISO 8601:2004 §5.2.1",
-        "parsed_iso_datetime": "RFC 3339",
-        "parsed_us_numeric": "paxman spec/date (US MM/DD/YYYY reading)",
-        "parsed_eu_numeric": "paxman spec/date (EU DD/MM/YYYY reading)",
-        "parsed_rfc2822": "RFC 2822 §3.3",
-        "parsed_unix_timestamp": "POSIX/IEEE 1003.1 (epoch seconds) + RFC 3339",
-        "normalized_to_utc": "RFC 3339 §4.1 (instant equivalence) + §4.2 (Z designator)",
-        "no_transformation_needed": "ISO 8601:2004 §5.2.1 / RFC 3339 (input already canonical)",
-    }
-)
-
-
-def _evidence(rule: str, detail: str = "") -> Evidence:
-    """Build an Evidence node for the given rule.
-
-    Args:
-        rule: The rule name; must be a key in ``_RULE_PROVENANCE``.
-        detail: Optional human-readable detail string.
-
-    Returns:
-        An ``Evidence`` instance with provenance resolved from the map.
-    """
-    return Evidence(rule=rule, detail=detail, provenance=_RULE_PROVENANCE[rule])
-
-
-def _render_date(dt: datetime) -> str:
-    """Render a date-only canonical string ``YYYY-MM-DD``.
-
-    Args:
-        dt: A datetime whose date portion is rendered.
-
-    Returns:
-        The ISO 8601 date string.
-
-    Note: ``dt.strftime("%Y")`` does NOT zero-pad years below 1000 on
-    glibc (it yields ``"1"`` for year 1, not ``"0001"``), which would
-    violate the ``YYYY-MM-DD`` canonical form and break idempotence for
-    AD 1-999. Format the year explicitly.
-    """
-    return f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}"
-
-
-def _render_datetime(dt: datetime) -> str:
-    """Render a datetime in RFC 3339 UTC canonical form.
-
-    Always normalises to UTC and appends the ``Z`` designator.
-    Microseconds are included only when non-zero (RFC 3339 §5.6
-    allows optional fractional seconds).
-
-    Args:
-        dt: A timezone-aware datetime.
-
-    Returns:
-        The RFC 3339 canonical string.
-    """
-    dt = dt.astimezone(UTC)
-    # Format the year explicitly: strftime("%Y") drops zero-padding below
-    # AD 1000 on glibc, which would break the RFC 3339 canonical form.
-    base = (
-        f"{dt.year:04d}-{dt.month:02d}-{dt.day:02d}T{dt.hour:02d}:{dt.minute:02d}:{dt.second:02d}"
-    )
-    if dt.microsecond:
-        base += f".{dt.microsecond:06d}"
-    return base + "Z"
-
-
-def _valid_calendar_date(year: int, month: int, day: int) -> bool:
-    """Check that (year, month, day) is a valid Gregorian calendar date.
-
-    Args:
-        year: Four-digit year.
-        month: 1-12.
-        day: 1-31.
-
-    Returns:
-        ``True`` if the date exists in the Gregorian calendar.
-    """
-    if month < 1 or month > 12 or day < 1:
-        return False
-    try:
-        datetime(year, month, day)
-        return True
-    except ValueError:
-        return False
+from paxman._capabilities.date.rules import _evidence
+from paxman._capabilities.date.value import _render_date, _render_datetime
+from paxman._core.contracts import Contract
+from paxman._core.result import CapabilityResult
+from paxman._core.status import Status
 
 
 class DateCapability:

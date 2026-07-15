@@ -12,11 +12,9 @@ Any other kind raises `UnsupportedContractError` (defined in
 
 from __future__ import annotations
 
-from paxman._contracts.contract import (
-    CanonicalDateContract,
-    CanonicalEmailContract,
-    CanonicalUUIDContract,
-)
+from paxman._capabilities.date.contract import CanonicalDateContract
+from paxman._capabilities.email.contract import CanonicalEmailContract
+from paxman._capabilities.uuid.contract import CanonicalUUIDContract
 from paxman._core.classification import ValidationResult
 from paxman._errors import UnsupportedContractError
 

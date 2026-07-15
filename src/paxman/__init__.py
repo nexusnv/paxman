@@ -10,28 +10,18 @@ from typing import Any
 __version__ = "0.0.0.dev0"
 
 from paxman import _orchestrator_runtime
+from paxman._capabilities.date.contract import CanonicalDateContract, Date
+from paxman._capabilities.email.contract import CanonicalEmailContract, Email
 from paxman._capabilities.protocol import Capability
-from paxman._capabilities.registry import CapabilityRegistry
-from paxman._contracts.contract import (
-    UUID,
-    CanonicalDateContract,
-    CanonicalEmailContract,
-    CanonicalUUIDContract,
-    Contract,
-    Date,
-    Email,
-    parse_contract,
-)
+from paxman._capabilities.uuid.contract import UUID, CanonicalUUIDContract
 from paxman._core.artifact import ExecutionArtifact
 from paxman._core.classification import ValidationResult
-from paxman._core.orchestrator import canonicalize as _canonicalize
+from paxman._core.engine import canonicalize as _canonicalize
+from paxman._core.provenance import Evidence
 from paxman._core.replay import replay as _replay
-from paxman._core.types import (
-    CapabilityResult,
-    Evidence,
-    Status,
-    VersionStamp,
-)
+from paxman._core.result import CapabilityResult, VersionStamp
+from paxman._core.status import Status
+from paxman._dsl.parser import parse_contract
 from paxman._errors import (
     CanonicalizationError,
     ConfigurationError,
@@ -41,6 +31,13 @@ from paxman._errors import (
     UnsupportedContractError,
     VersionMismatchError,
 )
+from paxman._registry.capability_registry import CapabilityRegistry
+
+# Public `Contract` union of concrete value objects (mandate Law 5). The
+# structural `Contract` Protocol of the same name lives in
+# `paxman._core.contracts`; this union is what the DSL parser returns and
+# what callers hold.
+Contract = CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract
 
 
 def canonicalize(input_data: object, contract: object) -> ExecutionArtifact:

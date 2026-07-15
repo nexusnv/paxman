@@ -8,8 +8,6 @@ calls the orchestrator and exposes the user-facing
 
 from __future__ import annotations
 
-from paxman._capabilities.registry import CapabilityRegistry
+from paxman._registry.capability_registry import CapabilityRegistry
 
-# The default, module-level registry. Frozen implicitly on the first
-# canonicalize call (see _core/orchestrator.py).
 default_registry: CapabilityRegistry = CapabilityRegistry()

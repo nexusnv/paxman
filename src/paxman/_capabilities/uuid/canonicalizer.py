@@ -16,44 +16,12 @@ Mandate alignment:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from types import MappingProxyType
-
-from paxman._contracts.contract import CanonicalUUIDContract, Contract
-from paxman._core.types import CapabilityResult, Evidence, Status
-
-# The canonical form has 36 chars total: 32 hex + 4 hyphens at positions
-# 8, 13, 18, 23 (counting from 0). The first hex digit of the third
-# group is the version-nibble (RFC 4122 §4.1.3).
-CANONICAL_LENGTH = 36
-HYPHEN_POSITIONS = frozenset({8, 13, 18, 23})
-CANONICAL_CHARS = frozenset("0123456789abcdef-")
-
-
-_RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
-    {
-        # --- dispatch invariants (no provenance — Law 14 allow-list) ---
-        "not_a_uuid_contract": "",
-        "not_a_string_value": "",
-        # --- rejecting rules (authoritative spec) ---
-        "not_canonical_form": (
-            "RFC 4122 §3 (the canonical form is 36 chars; 8-4-4-4-12 grouping; lowercase hex)"
-        ),
-        "version_mismatch": "RFC 4122 §4.1.3 (version field encoding)",
-        # --- transforming rule (success path) ---
-        "no_transformation_needed": "RFC 4122 §3 (the canonical form is X; X was provided)",
-    }
-)
-
-
-def _evidence(rule: str, detail: str = "") -> Evidence:
-    """Build an `Evidence` pulling the Law 14 provenance citation from
-    the `_RULE_PROVENANCE` manifest.
-
-    A rule with no manifest entry raises `KeyError`, surfacing a
-    missing citation at the exact site where the rule is emitted.
-    """
-    return Evidence(rule=rule, detail=detail, provenance=_RULE_PROVENANCE[rule])
+from paxman._capabilities.uuid.contract import CanonicalUUIDContract
+from paxman._capabilities.uuid.parser import CANONICAL_CHARS, CANONICAL_LENGTH, HYPHEN_POSITIONS
+from paxman._capabilities.uuid.rules import _evidence
+from paxman._core.contracts import Contract
+from paxman._core.result import CapabilityResult
+from paxman._core.status import Status
 
 
 class UUIDCapability:

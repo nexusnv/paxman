@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 
 import paxman
-from paxman._capabilities.builtins.date import DateCapability
-from paxman._capabilities.registry import CapabilityRegistry
+from paxman._capabilities.date import DateCapability
+from paxman._registry.capability_registry import CapabilityRegistry
 
 
 @pytest.fixture(autouse=True)
@@ -42,8 +42,8 @@ def test_date_capability_is_the_only_date_claimant() -> None:
     # (email, uuid, date) -- not an isolated date-only registry -- so we
     # actually prove email/uuid do not erroneously claim a date contract.
     from paxman import Email
-    from paxman._capabilities.builtins.discovery import builtin_capabilities
-    from paxman._capabilities.registry import CapabilityRegistry
+    from paxman._capabilities.discovery import builtin_capabilities
+    from paxman._registry.capability_registry import CapabilityRegistry
 
     registry = CapabilityRegistry()
     for cap in builtin_capabilities():

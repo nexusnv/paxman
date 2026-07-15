@@ -4,9 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
+from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._capabilities.protocol import Capability
-from paxman._contracts.contract import CanonicalEmailContract, Contract
-from paxman._core.types import CapabilityResult, Status
+from paxman._core.contracts import Contract
+from paxman._core.result import CapabilityResult
+from paxman._core.status import Status
 
 
 class _Good:

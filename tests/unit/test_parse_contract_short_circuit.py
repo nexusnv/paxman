@@ -11,7 +11,8 @@ from __future__ import annotations
 import pytest
 
 from paxman import Email
-from paxman._contracts.contract import CanonicalEmailContract, parse_contract
+from paxman._capabilities.email.contract import CanonicalEmailContract
+from paxman._dsl.parser import parse_contract
 from paxman._errors import ContractError
 
 

@@ -6,7 +6,11 @@ import typing
 
 import pytest
 
-from paxman._contracts.contract import UUID, CanonicalUUIDContract, parse_contract
+from paxman._capabilities.uuid.contract import (
+    UUID,
+    CanonicalUUIDContract,
+)
+from paxman._dsl.parser import parse_contract
 from paxman._errors import ContractError
 
 

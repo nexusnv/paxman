@@ -16,8 +16,9 @@ from __future__ import annotations
 from typing import cast
 
 from paxman import Status
-from paxman._capabilities.builtins.uuid import _RULE_PROVENANCE, UUIDCapability
-from paxman._contracts.contract import CanonicalUUIDContract, Contract
+from paxman._capabilities.uuid import _RULE_PROVENANCE, UUIDCapability
+from paxman._capabilities.uuid.contract import CanonicalUUIDContract
+from paxman._core.contracts import Contract
 
 V4_CANONICAL = "550e8400-e29b-41d4-a716-446655440000"  # index 14 char = '4'
 V1_CANONICAL = "e034b584-7d89-11ed-a1eb-0242ac120002"  # index 14 char = '1'

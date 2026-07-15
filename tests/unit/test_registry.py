@@ -11,10 +11,12 @@ from typing import Any
 
 import pytest
 
-from paxman._capabilities.registry import CapabilityRegistry
-from paxman._contracts.contract import CanonicalEmailContract, parse_contract
-from paxman._core.types import CapabilityResult, Status
+from paxman._capabilities.email.contract import CanonicalEmailContract
+from paxman._core.result import CapabilityResult
+from paxman._core.status import Status
+from paxman._dsl.parser import parse_contract
 from paxman._errors import ConfigurationError, FrozenRegistryError
+from paxman._registry.capability_registry import CapabilityRegistry
 
 
 class _AlwaysTrue:

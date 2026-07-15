@@ -7,9 +7,10 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from paxman import _orchestrator_runtime
-from paxman._capabilities.registry import CapabilityRegistry
-from paxman._core.orchestrator import canonicalize
-from paxman._core.types import CapabilityResult, Status
+from paxman._core.engine import canonicalize
+from paxman._core.result import CapabilityResult
+from paxman._core.status import Status
+from paxman._registry.capability_registry import CapabilityRegistry
 
 
 class _A:

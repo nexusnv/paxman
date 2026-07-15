@@ -10,11 +10,9 @@ import attrs
 import pytest
 
 from paxman._core.artifact import ExecutionArtifact, _ContractLike
-from paxman._core.types import (
-    Evidence,
-    Status,
-    VersionStamp,
-)
+from paxman._core.provenance import Evidence
+from paxman._core.result import VersionStamp
+from paxman._core.status import Status
 
 
 class _FakeContract:

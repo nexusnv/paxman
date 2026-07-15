@@ -19,8 +19,8 @@ import pytest
 
 import paxman
 from paxman import UUID, Email, FrozenRegistryError, Status, _orchestrator_runtime
-from paxman._capabilities.builtins.email import EmailCapability
-from paxman._capabilities.registry import CapabilityRegistry
+from paxman._capabilities.email import EmailCapability
+from paxman._registry.capability_registry import CapabilityRegistry
 
 
 @pytest.fixture(autouse=True)

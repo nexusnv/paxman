@@ -15,6 +15,10 @@ The pipeline walks six stages:
 The orchestrator is pure: same input, contract, frozen registry, and
 Paxman version -> same artifact (mandate Law 1). It is the only
 place that produces ExecutionArtifacts.
+
+This module is `paxman._core.engine` (renamed from `paxman._core.orchestrator`
+in the additive architecture migration); the import paths it uses now point
+at the capability-owned packages and the `_dsl` parser registry.
 """
 
 from __future__ import annotations
@@ -22,13 +26,16 @@ from __future__ import annotations
 from typing import Any
 
 import paxman as _paxman_version  # used to read __version__
-from paxman._capabilities.registry import CapabilityRegistry
-from paxman._contracts.contract import parse_contract
+from paxman._capabilities.discovery import builtin_capabilities
 from paxman._core.artifact import ExecutionArtifact, _ContractLike
 from paxman._core.classification import ValidationResult, classify
-from paxman._core.types import Evidence, Status, VersionStamp
+from paxman._core.provenance import Evidence
+from paxman._core.result import VersionStamp
+from paxman._core.status import Status
 from paxman._core.validation import validate as validate_value
+from paxman._dsl.parser import parse_contract
 from paxman._errors import ContractError, UnsupportedContractError
+from paxman._registry.capability_registry import CapabilityRegistry
 
 
 class _StubContract:
@@ -75,10 +82,8 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
         # time (Law 1: the capability set is part of the determinism
         # invariant). The import is inside this branch (not at module
         # top) to keep 'import paxman' side-effect-free and to avoid a
-        # potential circular import between builtins.email and the
-        # contract module.
-        from paxman._capabilities.builtins.discovery import builtin_capabilities
-
+        # potential circular import between the capability packages and
+        # the contract module.
         registry.load_builtins(builtin_capabilities())
         registry.freeze()
 

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from paxman._core.classification import ValidationResult, classify
-from paxman._core.types import CapabilityResult, Status
+from paxman._core.result import CapabilityResult
+from paxman._core.status import Status
 
 
 class TestClassify:

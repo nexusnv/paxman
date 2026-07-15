@@ -30,9 +30,9 @@ makes each one mechanically enforceable.
 
 | Invariant | Enforced by |
 |---|---|
-| **Identity** — only canonicalize; never interpret, infer, or orchestrate. | `_capabilities/protocol.py` forbids control-flow verbs; the orchestrator is one module, not a graph; no `_planner/`, `_executor/`, `_reconciler/` directories exist. |
-| **Determinism** — same `input`, `contract`, `capabilities`, `configuration`, `version` → same artifact. | `_core/orchestrator.py` is pure; `_capabilities/registry.py` freezes the capability set on the first `canonicalize` call so the set is fixed before the first execution. |
-| **Replay** — `replay(artifact, contract) == artifact` byte-for-byte, without re-execution. | `_core/replay.py` is its own module, given first-class architectural weight (see below); `_core/artifact.py` is immutable (Law 13); `_core/types.py` carries the leaf value objects and the `VersionStamp`. |
+| **Identity** — only canonicalize; never interpret, infer, or orchestrate. | `_capabilities/protocol.py` forbids control-flow verbs; the engine is one module (`_core/engine.py`), not a graph; no `_planner/`, `_executor/`, `_reconciler/` directories exist. |
+| **Determinism** — same `input`, `contract`, `capabilities`, `configuration`, `version` → same artifact. | `_core/engine.py` is pure; `_registry/capability_registry.py` freezes the capability set on the first `canonicalize` call so the set is fixed before the first execution. |
+| **Replay** — `replay(artifact, contract) == artifact` byte-for-byte, without re-execution. | `_core/replay.py` is its own module, given first-class architectural weight (see below); `_core/artifact.py` is immutable (Law 13); the leaf value objects (`Status`, `Evidence`, `VersionStamp`, `CapabilityResult`) live in `_core/status.py`, `_core/provenance.py`, and `_core/result.py`. |
 
 A contributor who proposes a directory that does not serve one of these
 three invariants must explain, in their PR description, which invariant it
@@ -49,10 +49,10 @@ stage of it; they may not rearrange the rest.
 Input
   │
   ▼
-Contract inspection          ← _contracts/contract.py
+Contract inspection          ← _dsl/parser.py (parse_contract)
   │
   ▼
-Capability discovery         ← _capabilities/registry.py (resolver, not planner)
+Capability discovery         ← _registry/capability_registry.py (resolver, not planner)
   │
   ▼
 Capability execution         ← _capabilities/protocol.py (the SPI)
@@ -62,7 +62,7 @@ Validation                   ← _core/validation.py (post-capability policy gat
   │
   ▼
 Classification               ← _core/classification.py (deterministic mapping
-  │                            to Status, which lives in _core/types.py)
+  │                            to Status, which lives in _core/status.py)
   │   ├── CANONICALIZED
   │   ├── INVALID
   │   ├── AMBIGUOUS
@@ -72,7 +72,7 @@ Classification               ← _core/classification.py (deterministic mapping
 ExecutionArtifact            ← _core/artifact.py (immutable, per Law 13)
 ```
 
-The orchestrator that walks this pipeline lives in `_core/orchestrator.py`.
+The engine that walks this pipeline lives in `_core/engine.py`.
 The pipeline is split into separate modules for maintainability, *not* for
 extensibility: every `_core/` module remains internal (leading underscore),
 is not exported, and cannot be swapped by the user. Splitting the pipeline
@@ -118,35 +118,59 @@ from paxman import (
 src/paxman/
 ├── __init__.py                 # the public surface above
 ├── _orchestrator_runtime.py    # the module-level default registry holder
-├── _errors.py                  # the exception hierarchy
-│
+├── _errors/                    # the exception hierarchy (package)
+│   ├── __init__.py             #   re-exports the exception vocabulary
+│   └── exceptions.py           #   PaxmanError + sub-hierarchies
 ├── _core/                      # the algorithm Paxman owns (Law 6)
-│   ├── __init__.py             # package marker (empty)
-│   ├── orchestrator.py         # the pipeline: inspect → resolve → execute
-│   │                           #   → canonicalize → validate → classify
-│   ├── validation.py           # post-capability policy gate
-│   ├── classification.py       # the classify() function + ValidationResult
-│   ├── artifact.py             # ExecutionArtifact (immutable, Law 13)
-│   ├── replay.py               # byte-equal rehydration (first-class module)
-│   └── types.py                # Status, Evidence, VersionStamp,
-│                               # CapabilityResult, ProviderAliasesPolicy
-│
+│   ├── __init__.py             #   package marker (empty)
+│   ├── engine.py               #   the pipeline: inspect → resolve → execute
+│   │                           #     → canonicalize → validate → classify
+│   ├── validation.py           #   post-capability policy gate
+│   ├── classification.py       #   the classify() function + ValidationResult
+│   ├── artifact.py             #   ExecutionArtifact (immutable, Law 13)
+│   ├── replay.py               #   byte-equal rehydration (first-class module)
+│   ├── provenance.py           #   Evidence + _RULE_PROVENANCE manifest
+│   ├── result.py               #   CapabilityResult, VersionStamp
+│   ├── status.py               #   Status enum (five outcomes)
+│   └── contracts.py            #   the structural Contract Protocol
+├── _registry/                  # the two registries (resolver + dispatch)
+│   ├── __init__.py             #   package marker (empty)
+│   ├── capability_registry.py  #   CapabilityRegistry — the resolver/dispatcher
+│   └── contract_registry.py    #   kind → builder dispatch for parse_contract
 ├── _capabilities/              # the SPI — the only extension point
-│   ├── __init__.py             # package marker (empty)
-│   ├── protocol.py             # Capability Protocol (Law 8a: pure)
-│   ├── registry.py             # CapabilityRegistry — the resolver/dispatcher
-│   └── builtins/               # built-in capabilities
-│       ├── __init__.py         #   namespace marker (deliberately empty)
-│       ├── discovery.py        #   builtin_capabilities() — the source of truth
-│       └── email.py            #   EmailCapability (the shipped built-in)
-│
-└── _contracts/                 # contract adapters (kept minimal)
-    ├── __init__.py             #   re-exports for the contract vocabulary
-    └── contract.py             #   CanonicalEmailContract, Email(),
-                                #   parse_contract()
+│   ├── __init__.py             #   re-exports domain contract vocabulary
+│   ├── protocol.py             #   Capability Protocol (Law 8a: pure)
+│   ├── discovery.py            #   builtin_capabilities() — source of truth
+│   ├── email/                  #   EmailCapability (shipped built-in)
+│   │   ├── __init__.py         #     re-exports CanonicalEmailContract, Email
+│   │   ├── contract.py         #     CanonicalEmailContract + Email()
+│   │   ├── canonicalizer.py    #     EmailCapability (the SPI implementation)
+│   │   ├── parser.py           #     email-specific parsing helpers
+│   │   └── rules.py            #     _RULE_PROVENANCE + fired-rule records
+│   ├── uuid/                   #   UUIDCapability (shipped built-in)
+│   │   ├── __init__.py
+│   │   ├── contract.py         #     CanonicalUUIDContract + UUID()
+│   │   ├── canonicalizer.py    #     UUIDCapability
+│   │   ├── parser.py
+│   │   └── rules.py
+│   └── date/                   #   DateCapability (shipped built-in)
+│       ├── __init__.py
+│       ├── contract.py         #     CanonicalDateContract + Date()
+│       ├── canonicalizer.py    #     DateCapability
+│       ├── parser.py
+│       ├── rules.py
+│       ├── value.py            #     date value objects
+│       └── calendar.py         #     calendar / locale helpers
+├── _dsl/                       # the contract DSL (Dict ↔ value object)
+│   ├── __init__.py             #   re-exports parse_contract
+│   ├── parser.py               #   parse_contract — kind dispatch
+│   └── serializer.py           #   contract → Dict DSL (as_dict round-trip)
+└── _types/                     # shared leaf types (domain-free)
+    ├── __init__.py             #   package marker (empty)
+    └── common.py               #   ProviderAliasesPolicy, etc.
 ```
 
-**Total: 18 Python source files (16 with content, 2 empty package markers).**
+**Total: 42 Python source files across the packages above.**
 
 ### The Test Layout
 
@@ -185,9 +209,9 @@ at the bottom makes `paxman.normalize` raise a teaching `AttributeError`
 A 15-line module that owns the module-level `default_registry: CapabilityRegistry`
 instance. It exists in its own module so `paxman.canonicalize` and
 `paxman.register_capability` can both refer to the same registry without a
-circular import between `paxman/__init__.py` and `_core/orchestrator.py`.
+circular import between `paxman/__init__.py` and `_core/engine.py`.
 
-### `_core/orchestrator.py` — The Pipeline (Paxman Owns It)
+### `_core/engine.py` — The Pipeline (Paxman Owns It)
 
 One orchestrator. It walks the stages in §"The pipeline Paxman owns" and
 returns an `ExecutionArtifact`. It is deterministic (Law 1): once the
@@ -231,7 +255,7 @@ The deterministic function that maps `(capability_result, validation)` to a
 capability claimed the pair and they disagree, the orchestrator yields
 `Status.AMBIGUOUS` (mandate Law 4 and §5.4) *before* the classifier runs.
 
-The `Status` enum itself lives in `_core/types.py`, not here. This module
+The `Status` enum itself lives in `_core/status.py`, not here. This module
 also carries the `ValidationResult` value object (the verdict of the
 validation step).
 
@@ -285,15 +309,19 @@ raises `VersionMismatchError`. The conservative default is to raise on any
 mismatch; a future permissive variant (allow replay if the relevant
 version-stamp component is byte-identical) is not yet implemented.
 
-### `_core/types.py` — Leaf Value Objects
+### `_core/status.py`, `_core/provenance.py`, `_core/result.py`, `_types/common.py` — Leaf Value Objects
 
 The smallest units of state Paxman manipulates, and the boundary at which
 mandate Laws 1, 2, 9, 12, and 14 are enforced. All are frozen `attrs`
-dataclasses or `enum.Enum`. They are re-exported from `paxman.__init__` as
-type vocabulary, but most end users will not instantiate them directly —
-the orchestrator and the capability interface produce them.
+dataclasses or `enum.Enum`, split across domain-free modules: `Status` in
+`_core/status.py`, `Evidence` and the `_RULE_PROVENANCE` manifest in
+`_core/provenance.py`, `CapabilityResult` and `VersionStamp` in
+`_core/result.py`, and shared closed enums such as `ProviderAliasesPolicy`
+in `_types/common.py`. They are re-exported from `paxman.__init__` as type
+vocabulary, but most end users will not instantiate them directly — the
+engine and the capability interface produce them.
 
-The module carries:
+The modules carry:
 
 - `Status` — the five mutually-exclusive outcomes (`CANONICALIZED`,
   `INVALID`, `MISSING`, `AMBIGUOUS`, `UNSUPPORTED`).
@@ -337,9 +365,12 @@ versioned, immutable dataset that is recorded on the artifact's evidence
 then it is *not* a network call — it is a lookup whose version is part of
 the artifact. That is allowed; the un-versioned network call is not.
 
-### `_capabilities/registry.py` — The Resolver / Dispatcher
+### `_registry/capability_registry.py` — The Resolver / Dispatcher
 
-This is the replacement for the legacy "planner." The registry holds
+This is the replacement for the legacy "planner." (The contract-side
+dispatch — mapping each contract `kind` to its builder — lives separately in
+`_registry/contract_registry.py` and is used by `_dsl/parser.parse_contract`.)
+The registry holds
 capabilities; on each canonicalization call, the orchestrator asks the
 registry *"which capability explicitly declares that it canonicalizes this
 contract for this value?"* — and the registry returns the *full set* of
@@ -374,29 +405,35 @@ orchestrator classifies the outcome as `Status.AMBIGUOUS` (mandate Law 4
 and §5.4) rather than choosing one. If zero capabilities claim it, the
 orchestrator classifies as `UNSUPPORTED`.
 
-### `_capabilities/builtins/` — Built-In Capabilities
+### `_capabilities/{email,uuid,date}/` — Built-In Capabilities
 
-Ships one built-in today: `EmailCapability`, in `email.py`. The discovery
-helper that lists every built-in lives in `discovery.py`. The package
-marker `__init__.py` is intentionally empty so that
-`paxman._capabilities.builtins` is a namespace only — there are no
-import-time side effects (mandate Law 8a).
+Ships three built-ins today: `EmailCapability`, `UUIDCapability`, and
+`DateCapability`. Each owns its domain under `paxman._capabilities.<domain>`
+(`contract.py`, `canonicalizer.py`, `parser.py`, `rules.py`, plus `value.py`
+and `calendar.py` for dates). Each capability package self-registers its
+contract builder via `register_contract` so `_dsl/parser.parse_contract`
+can dispatch on the contract `kind` without the engine knowing the domain.
 
-`discovery.py` is the single source of truth for "what built-ins does this
-version ship?". The orchestrator calls `builtin_capabilities()` and feeds
-the result to `registry.load_builtins(...)` lazily, on the first
-`canonicalize` call, never at `import paxman` time.
+The discovery helper `builtin_capabilities()` lives in
+`paxman._capabilities.discovery` and is the single source of truth for "what
+built-ins does this version ship?". The engine calls `builtin_capabilities()`
+and feeds the result to `registry.load_builtins(...)` lazily, on the first
+`canonicalize` call, never at `import paxman` time (mandate Law 8a).
 
-Each future built-in (`DateCapability`, `MoneyCapability`, etc.) grows
-here as its own module. The directory's import path is stable from day
-one, even when the directory contains only the one built-in the v2.0.0
-release ships.
+Each future built-in (e.g. a deferred `MoneyCapability`) grows as its own
+`_capabilities/<domain>/` package, pinning its contract `version` and adding
+a new `register_contract` branch — the same additive pattern the three
+shipped capabilities use.
 
-### `_contracts/contract.py` — The One Contract Format
+### `_dsl/parser.py` + `_capabilities/<domain>/contract.py` — The One Contract Format
 
-The v2.0.0 contract vocabulary. Lives in one file, named `contract.py` —
-not `dict_dsl.py` — *for the concept, not the in-memory shape*. The
-contract can be expressed two equivalent ways (mandate §5):
+The v2.0.0 contract vocabulary. The contract *kind* is dispatched by
+`_dsl/parser.parse_contract`, which routes each `kind` to a per-domain
+builder registered via `register_contract` (in `_registry/contract_registry.py`).
+Each domain owns its value object in `paxman._capabilities.<domain>.contract`
+(`CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`)
+plus the `Email()`, `UUID()`, `Date()` domain-type factories. The contract
+can be expressed two equivalent ways (mandate §5):
 
 1. **Dict DSL** — `{"kind": "canonical_email", "lowercase": True, ...}`.
    The `kind` discriminator is the wire form; an unknown `kind` raises
@@ -409,11 +446,11 @@ contract can be expressed two equivalent ways (mandate §5):
    identity.
 
 Both forms resolve to the same `CanonicalEmailContract` value object that
-the orchestrator and capabilities consume. Future contract kinds (Money,
-Date, etc.) bump the contract `version` and add a new dispatch branch
+the engine and capabilities consume. Future contract kinds (Money,
+etc.) bump the contract `version` and add a new `register_contract` branch
 here.
 
-### `_errors.py` — Error Hierarchy
+### `_errors/` (exceptions.py) — Error Hierarchy
 
 `PaxmanError` (base), with two parallel sub-hierarchies:
 
@@ -457,7 +494,7 @@ the legacy architecture. The mandate adds two further refusals.
 | `src/paxman/reconciler/` (reconciler, confidence, conflict, merge) | The "reconciler picks between multiple candidates" model is gone (mandate Law 4). If there is ambiguity, Paxman returns `Status.AMBIGUOUS`, not a chosen candidate. |
 | `src/paxman/capabilities/inference.py` (the stub) | The LLM stub is deleted. Paxman does not pretend to have inference (mandate Law 3). |
 | `src/paxman/providers/` (the provider SPI work) | Paxman has no provider model. The SPI is for an LLM; Paxman has no LLM. The Paxman SPI is for *capabilities*, not for *inference providers*. |
-| `src/paxman/executor/` (executor, field_runner, budget_tracker) | There is nothing to execute beyond the pipeline. The canonicalization step is one function call owned by `_core/orchestrator.py`. |
+| `src/paxman/executor/` (executor, field_runner, budget_tracker) | There is nothing to execute beyond the pipeline. The canonicalization step is one function call owned by `_core/engine.py`. |
 | `src/paxman/budget.py`, `src/paxman/policy.py` | There is no budget. There is no policy. Determinism is unconditional (mandate Law 1). |
 | `src/paxman/artifact/` (artifact, replay, _hash, statistics) | The artifact is the result. There is one canonical artifact schema, in `_core/artifact.py`, and it is immutable (mandate Law 13). |
 | `tests/integration/`, `tests/property/`, `tests/unit/`, `tests/fixtures/`, `tests/public_api/`, `tests/benchmark/` | Tests are tests. The 5-layer test-data model is gone. Paxman has three directories. |

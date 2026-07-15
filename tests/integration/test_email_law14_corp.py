@@ -687,11 +687,17 @@ _INVALID: list[_Entry] = [
 # --- 9 user-experiment permissiveness cases (Law 14 recalibration) ---
 _PERMISSIVENESS: list[_Entry] = [
     _Entry(
-        "user @example.com", {}, Status.CANONICALIZED, "user@example.com",
+        "user @example.com",
+        {},
+        Status.CANONICALIZED,
+        "user@example.com",
         frozenset({"collapsed_internal_whitespace"}),
     ),
     _Entry(
-        "user@ example.com", {}, Status.CANONICALIZED, "user@example.com",
+        "user@ example.com",
+        {},
+        Status.CANONICALIZED,
+        "user@example.com",
         frozenset({"collapsed_internal_whitespace"}),
     ),
     _Entry("user..name@example.com", {}, Status.INVALID, None, frozenset({"grammar_rejected"})),
@@ -790,11 +796,7 @@ _RECOGNITION_LAYER: list[_Entry] = [
 ]
 
 _ALL_ENTRIES: list[_Entry] = (
-    _CANONICALIZABLE
-    + _INVALID
-    + _PERMISSIVENESS
-    + _GRAMMAR_BOUNDARY
-    + _RECOGNITION_LAYER
+    _CANONICALIZABLE + _INVALID + _PERMISSIVENESS + _GRAMMAR_BOUNDARY + _RECOGNITION_LAYER
 )
 
 

@@ -91,7 +91,7 @@ GRAMMARS: tuple[Grammar, ...] = (
     _make_grammar(
         "verbal_at_dot_addr_spec",
         "spoken-form email obfuscation ('at'→@, 'dot'→.)",
-        r"^(?P<local>[A-Za-z0-9._%+\-]+)\s+at\s+(?P<mid>[A-Za-z0-9\-]+)\s+dot\s+(?P<tld>[A-Za-z]{2,})$",
+        r"^(?P<local>[A-Za-z0-9._%+\-]+)[\s\-]+at[\s\-]+(?P<mid>[A-Za-z0-9.\-]+)[\s\-]+dot[\s\-]+(?P<tld>[A-Za-z]{2,})$",
     ),
     _make_grammar(
         "quoted_local_addr_spec",

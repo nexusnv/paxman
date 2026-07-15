@@ -686,15 +686,21 @@ _INVALID: list[_Entry] = [
 
 # --- 9 user-experiment permissiveness cases (Law 14 recalibration) ---
 _PERMISSIVENESS: list[_Entry] = [
-    _Entry("user @example.com", {}, Status.INVALID, None, frozenset({"grammar_rejected"})),
-    _Entry("user@ example.com", {}, Status.INVALID, None, frozenset({"grammar_rejected"})),
+    _Entry(
+        "user @example.com", {}, Status.CANONICALIZED, "user@example.com",
+        frozenset({"collapsed_internal_whitespace"}),
+    ),
+    _Entry(
+        "user@ example.com", {}, Status.CANONICALIZED, "user@example.com",
+        frozenset({"collapsed_internal_whitespace"}),
+    ),
     _Entry("user..name@example.com", {}, Status.INVALID, None, frozenset({"grammar_rejected"})),
     _Entry("user@[127.0.0.300]", {}, Status.INVALID, None, frozenset({"grammar_rejected"})),
     _Entry("user@[127.0.0.1", {}, Status.INVALID, None, frozenset({"grammar_rejected"})),
     _Entry("(comment)user@example.com", {}, Status.INVALID, None, frozenset({"grammar_rejected"})),
     _Entry("user@example.com/", {}, Status.INVALID, None, frozenset({"grammar_rejected"})),
     _Entry(
-        "user@example.com@example.com", {}, Status.INVALID, None, frozenset({"grammar_rejected"})
+        "user@example.com@example.com", {}, Status.INVALID, None, frozenset({"unrecognized_format"})
     ),
     _Entry("user@-domain.com", {}, Status.INVALID, None, frozenset({"grammar_rejected"})),
 ]
@@ -735,7 +741,7 @@ _GRAMMAR_BOUNDARY: list[_Entry] = [
         {},
         Status.INVALID,
         None,
-        frozenset({"grammar_rejected", "lowercased_domain"}),
+        frozenset({"grammar_rejected"}),
     ),
     # Unicode local part — grammar_rejected (non-atext)
     _Entry("ü@ser.de", {}, Status.INVALID, None, frozenset({"grammar_rejected"})),
@@ -755,7 +761,41 @@ _GRAMMAR_BOUNDARY: list[_Entry] = [
     ),
 ]
 
-_ALL_ENTRIES: list[_Entry] = _CANONICALIZABLE + _INVALID + _PERMISSIVENESS + _GRAMMAR_BOUNDARY
+# --- recognition-layer cases (grammar + resolver + validation) ---
+_RECOGNITION_LAYER: list[_Entry] = [
+    # ws_padded grammar: internal whitespace around @ / . collapses.
+    _Entry(
+        "azahari @ gmail.com",
+        {},
+        Status.CANONICALIZED,
+        "azahari@gmail.com",
+        frozenset({"collapsed_internal_whitespace"}),
+    ),
+    # verbal 'at'/'dot' obfuscation deobfuscated to a canonical mailbox.
+    _Entry(
+        "azahari at gmail dot com",
+        {},
+        Status.CANONICALIZED,
+        "azahari@gmail.com",
+        frozenset({"deobfuscated_verbal_at_dot"}),
+    ),
+    # Gmail provider-equivalence yields two valid forms -> AMBIGUOUS.
+    _Entry(
+        "john.doe@gmail.com",
+        {},
+        Status.AMBIGUOUS,
+        None,
+        frozenset({"ambiguous_provider_equivalence"}),
+    ),
+]
+
+_ALL_ENTRIES: list[_Entry] = (
+    _CANONICALIZABLE
+    + _INVALID
+    + _PERMISSIVENESS
+    + _GRAMMAR_BOUNDARY
+    + _RECOGNITION_LAYER
+)
 
 
 @pytest.fixture(autouse=True)

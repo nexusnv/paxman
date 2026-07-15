@@ -73,3 +73,24 @@ class TestEndToEnd:
     def test_strict_mode_rejects_embedded_space(self) -> None:
         art = paxman.canonicalize("a b@c.d", {"kind": "canonical_email", "strict": True})
         assert art.status is Status.INVALID
+
+    def test_ws_padded_canonicalization(self) -> None:
+        art = paxman.canonicalize("azahari @ gmail.com", {"kind": "canonical_email"})
+        assert art.status is Status.CANONICALIZED
+        assert art.value == "azahari@gmail.com"
+
+    def test_verbal_at_dot_canonicalization(self) -> None:
+        art = paxman.canonicalize(
+            "azahari at gmail dot com", {"kind": "canonical_email"}
+        )
+        assert art.status is Status.CANONICALIZED
+        assert art.value == "azahari@gmail.com"
+
+    def test_ambiguous_gmail_surfaces_candidates(self) -> None:
+        art = paxman.canonicalize(
+            "john.doe@gmail.com",
+            {"kind": "canonical_email", "provider_aliases": "none"},
+        )
+        assert art.status is Status.AMBIGUOUS
+        assert art.candidates is not None
+        assert set(art.candidates) == {"john.doe@gmail.com", "johndoe@gmail.com"}

@@ -350,6 +350,11 @@ GRAMMARS: tuple[Grammar, ...] = (
         "CLDR month names",
         "[DAY]-[MONTH(lang)] [YEAR]",
     ),
+    _make_grammar(
+        "text_month_mdy_slash",
+        "CLDR month names",
+        "[MONTH(lang)]/[DAY] [YEAR]",
+    ),
 )
 
 

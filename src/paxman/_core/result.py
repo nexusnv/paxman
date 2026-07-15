@@ -39,3 +39,6 @@ class CapabilityResult:
     value: str | None = None
     evidence: tuple[Evidence, ...] = ()
     candidates: tuple[str, ...] | None = None
+    # When status is AMBIGUOUS, the sorted tuple of every surviving canonical
+    # form (YYYY-MM-DD). Surfaces the ambiguity explicitly instead of guessing
+    # (Law 3 — Never Guess); None for CANONICALIZED / INVALID / UNSUPPORTED.

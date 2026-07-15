@@ -47,6 +47,10 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
             "paxman spec/date (numeric slash form enumerated per locale ordering; "
             "architectural discussion §2)"
         ),
+        "parsed_numeric_ymd_date": (
+            "paxman spec/date (year-first numeric slash, ISO 8601 slash ordering; "
+            "fixed Y/M/D reading — no locale ordering enumeration)"
+        ),
         "ambiguous_ordering": (
             "paxman spec/date (MM/DD and DD/MM both survive under locale=ISO; "
             "Don't Guess -> AMBIGUOUS)"

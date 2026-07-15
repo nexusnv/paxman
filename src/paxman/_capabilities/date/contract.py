@@ -65,7 +65,9 @@ def Date(
     ``"en"``); ``two_digit_year`` selects the century policy (default ``None``,
     i.e. Don't Guess -> AMBIGUOUS for 2-digit years).
     """
-    return CanonicalDateContract(locale=locale, language=language, two_digit_year=two_digit_year)
+    return _build_date(
+        {"locale": locale, "language": language, "two_digit_year": two_digit_year}
+    )
 
 
 def _validate_two_digit_year(policy: TwoDigitYearPolicy | None) -> None:
@@ -76,12 +78,12 @@ def _validate_two_digit_year(policy: TwoDigitYearPolicy | None) -> None:
         return
     if isinstance(policy, str) and policy.startswith("pivot:"):
         pivot_str = policy.split(":", 1)[1]
-        try:
-            int(pivot_str)
-        except ValueError as exc:
+        # Strictly a 4-digit year: reject signs, leading zeros tricks,
+        # underscores, and wrong lengths at contract-build time.
+        if not (pivot_str.isdigit() and len(pivot_str) == 4):
             raise ContractError(
                 f"invalid two_digit_year pivot: {policy!r}; expected 'pivot:YYYY'"
-            ) from exc
+            )
         return
     raise ContractError(
         f"invalid two_digit_year: {policy!r}; "

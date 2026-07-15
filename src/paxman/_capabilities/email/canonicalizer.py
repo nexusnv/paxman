@@ -10,13 +10,27 @@ Mandate Laws 4, 5, 7, 8, 8a, 11, 14:
   independent implementations must produce the same value.
 - Law 14: every transformation rule has provenance. The rule→citation
   manifest is `_RULE_PROVENANCE`; `Evidence.provenance` is populated
-  from it. See `docs/superpowers/specs/
-  2026-07-13-email-canonicalization-design.md` §7 for the rule-by-rule
-  audit.
+  from it.
+
+Architecture (recognition → resolver → validation → classify)
+------------------------------------------------------------
+The capability is split into four deterministic stages, mirroring the
+date capability:
+
+1. ``grammar.recognize`` (Layer 1) maps the raw input to the set of
+   grammar shapes it could name, producing only RAW string captures.
+2. ``generate_interpretations`` (resolver) assigns meaning to those
+   captures and enumerates candidate canonical forms (including gmail
+   provider-equivalence).
+3. ``resolve_and_validate`` validates each candidate against the
+   RFC 5322 §3.2.3 dot-atom local part and RFC 5321 §3.4 + RFC 1035
+   §2.3.1 dot-atom domain grammar, dropping those that name no valid
+   mailbox.
+4. ``classify`` maps the surviving candidates to a canonicalization
+   outcome (CANONICALIZED / AMBIGUOUS / INVALID), never guessing.
 
 Surface-grammar gate
----------------------
-
+--------------------
 Pre-Law 14, the capability silently accepted any string with one `@`
 and non-empty local+domain parts as `CANONICALIZED`. The user-experiment
 report (2026-07-14) surfaced this as silent canonical-form invention for
@@ -34,7 +48,12 @@ fail this gate; v2.x may extend the gate to admit them.
 
 from __future__ import annotations
 
+import re
+
+import attrs
+
 from paxman._capabilities.email.contract import CanonicalEmailContract
+from paxman._capabilities.email.grammar import recognize
 from paxman._capabilities.email.parser import _validate_dot_atom_domain, _validate_dot_atom_local
 from paxman._capabilities.email.rules import _evidence
 from paxman._core.contracts import Contract
@@ -42,13 +61,234 @@ from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
 
-_GMAIL_DOMAINS = frozenset({"gmail.com", "googlemail.com"})
+_GMAIL_SUFFIX = "gmail.com"
 
-# Spec §1.3 step 1: "Strip leading and trailing ASCII whitespace."
-# str.strip() also trims Unicode whitespace (e.g. U+00A0 NO-BREAK SPACE,
-# U+2009 THIN SPACE) which the spec does not authorise; the explicit
-# ASCII-only set is the contract.
-_ASCII_WHITESPACE = " \t\n\r\f\v"
+
+@attrs.frozen
+class _Candidate:
+    """A single enumerated reading of an email-shaped input.
+
+    ``value`` is the fully-reconstructed candidate mailbox
+    (``local@domain``). ``rule`` / ``source`` carry the originating
+    grammar's id and Law-14 provenance. ``evidence`` is the tuple of
+    ``Evidence`` accumulated for the transformations that produced this
+    candidate (lowercasing, provider-equivalence, etc.).
+    """
+
+    value: str
+    rule: str
+    source: str
+    evidence: tuple[Evidence, ...]
+
+
+@attrs.frozen
+class _Survivor:
+    """A candidate that survived validation: a concrete valid mailbox."""
+
+    value: str
+    rule: str
+    source: str
+    evidence: tuple[Evidence, ...]
+
+
+def _is_gmail_family(domain: str) -> bool:
+    """True when ``domain`` is a Gmail-family domain (case-insensitive).
+
+    Covers the exact ``gmail.com`` / ``googlemail.com`` domains and any
+    ``*.gmail.com`` subdomain (e.g. ``foo.gmail.com``).
+    """
+    d = domain.lower()
+    return d == _GMAIL_SUFFIX or d == "googlemail.com" or d.endswith(".gmail.com")
+
+
+def _lowercase_evidence(
+    local: str, domain: str, contract: CanonicalEmailContract
+) -> tuple[str, str, tuple[Evidence, ...]]:
+    """Apply the contract's lowercase policy, returning the lowercased
+    local/domain plus any accumulated evidence.
+    """
+    if not contract.lowercase:
+        return local, domain, ()
+    new_local = local.lower()
+    new_domain = domain.lower()
+    ev: tuple[Evidence, ...] = ()
+    if new_local != local:
+        ev = (*ev, _evidence("lowercased_local_part"))
+    if new_domain != domain:
+        ev = (*ev, _evidence("lowercased_domain"))
+    return new_local, new_domain, ev
+
+
+def provider_equivalence(
+    local: str,
+    domain: str,
+    contract: CanonicalEmailContract,
+    base_evidence: tuple[Evidence, ...],
+    rule: str,
+    source: str,
+) -> list[_Candidate]:
+    """Enumerate provider-equivalence candidates for a (local, domain) pair.
+
+    For Gmail-family domains, the contract's ``provider_aliases`` policy
+    decides whether to emit only the Gmail-canonical form (``"gmail"``) or
+    both the literal form and the Gmail-canonical form (``"none"``).
+    """
+    if _is_gmail_family(domain):
+        gmail_local = local.replace(".", "")
+        dot_ev = (_evidence("stripped_dots_in_local_part"),) if "." in local else ()
+        if "+" in gmail_local:
+            gmail_local = gmail_local.split("+", 1)[0]
+            tag_ev = (_evidence("stripped_plus_tag"),)
+        else:
+            tag_ev = ()
+        gmail_domain = _GMAIL_SUFFIX
+        syn_ev = (_evidence("domain_synonym_gmail"),) if domain != gmail_domain else ()
+        if contract.provider_aliases == "gmail":
+            return [
+                _Candidate(
+                    f"{gmail_local}@{gmail_domain}",
+                    rule,
+                    source,
+                    base_evidence + syn_ev + dot_ev + tag_ev,
+                )
+            ]
+        if contract.provider_aliases == "none":
+            return [
+                _Candidate(f"{local}@{domain}", rule, source, base_evidence),
+                _Candidate(
+                    f"{gmail_local}@{gmail_domain}",
+                    rule,
+                    source,
+                    base_evidence + syn_ev + dot_ev + tag_ev,
+                ),
+            ]
+    return [_Candidate(f"{local}@{domain}", rule, source, base_evidence)]
+
+
+def generate_interpretations(
+    reps: list[object], contract: CanonicalEmailContract
+) -> list[_Candidate]:
+    """Map grammar recognitions to candidate canonical forms (resolver).
+
+    Assigns meaning to the raw captures produced by
+    :func:`grammar.recognize` and enumerates every candidate mailbox the
+    declared policies permit (including Gmail provider-equivalence).
+    """
+    from paxman._capabilities.email.grammar import RecognizedRep
+
+    candidates: list[_Candidate] = []
+    for rep in reps:
+        assert isinstance(rep, RecognizedRep)
+        gid = rep.grammar_id
+        if gid == "addr_spec":
+            local = rep.captures["local"]
+            domain = rep.captures["domain"]
+            local, domain, ev = _lowercase_evidence(local, domain, contract)
+            candidates.extend(
+                provider_equivalence(local, domain, contract, ev, "addr_spec", rep.source)
+            )
+        elif gid == "ws_padded_addr_spec":
+            local = rep.captures["local"]
+            domain = rep.captures["domain"]
+            if contract.strip_whitespace:
+                raw = f"{local}@{domain}"
+                collapsed = re.sub(r"\s*([@.])\s*", r"\1", raw)
+                ws_ev: tuple[Evidence, ...] = ()
+                if collapsed != raw:
+                    ws_ev = (_evidence("collapsed_internal_whitespace"),)
+                local, _, domain = collapsed.partition("@")
+                local, domain, lower_ev = _lowercase_evidence(local, domain, contract)
+                ws_ev = (*ws_ev, *lower_ev)
+                candidates.extend(
+                    provider_equivalence(
+                        local, domain, contract, ws_ev, "ws_padded_addr_spec", rep.source
+                    )
+                )
+            else:
+                # Leave internal whitespace; the candidate will fail the
+                # dot-atom gate in resolve_and_validate and be dropped.
+                local, domain, ev = _lowercase_evidence(local, domain, contract)
+                candidates.extend(
+                    provider_equivalence(
+                        local, domain, contract, ev, "ws_padded_addr_spec", rep.source
+                    )
+                )
+        elif gid == "verbal_at_dot_addr_spec":
+            local = rep.captures["local"]
+            mid = rep.captures["mid"]
+            tld = rep.captures["tld"]
+            reconstructed = f"{local}@{mid}.{tld}"
+            ev = (_evidence("deobfuscated_verbal_at_dot"),)
+            local, domain, lower_ev = _lowercase_evidence(
+                *reconstructed.partition("@")[0::2], contract
+            )
+            ev = (*ev, *lower_ev)
+            candidates.extend(
+                provider_equivalence(
+                    local, domain, contract, ev, "verbal_at_dot_addr_spec", rep.source
+                )
+            )
+        elif gid == "quoted_local_addr_spec":
+            local_quoted = rep.captures["local"]
+            domain = rep.captures["domain"]
+            local_without_quotes = local_quoted[1:-1]
+            value = f"{local_without_quotes}@{domain}"
+            candidates.append(_Candidate(value, "quoted_local_addr_spec", rep.source, ()))
+    return candidates
+
+
+def resolve_and_validate(
+    candidates: list[_Candidate], contract: CanonicalEmailContract
+) -> tuple[list[_Survivor], list[str]]:
+    """Validate each candidate; drop those that name no valid mailbox."""
+    survivors: list[_Survivor] = []
+    drop_reasons: list[str] = []
+    for c in candidates:
+        local, _, domain = c.value.partition("@")
+        if not _validate_dot_atom_local(local) or not _validate_dot_atom_domain(domain):
+            drop_reasons.append("grammar_rejected")
+            continue
+        survivors.append(_Survivor(c.value, c.rule, c.source, c.evidence))
+    return survivors, drop_reasons
+
+
+def classify(
+    candidates: list[_Candidate],
+    survivors: list[_Survivor],
+    drop_reasons: list[str],
+) -> tuple[Status, str | None, tuple[Evidence, ...], tuple[str, ...] | None]:
+    """Classify survivors into a canonicalization outcome.
+
+    Returns a 4-tuple ``(status, value, evidence, candidates)``. The
+    ``candidates`` element is the sorted tuple of every surviving canonical
+    form when the outcome is ``AMBIGUOUS`` (surface the ambiguity instead
+    of guessing), and ``None`` otherwise.
+    """
+    # Collapse survivors that resolve to the same canonical string so
+    # identical readings do not masquerade as AMBIGUOUS (spec §2.4 — surface
+    # ambiguity only when readings genuinely differ).
+    seen: set[str] = set()
+    unique: list[_Survivor] = []
+    for survivor in survivors:
+        if survivor.value not in seen:
+            seen.add(survivor.value)
+            unique.append(survivor)
+    survivors = unique
+
+    if not candidates:
+        return Status.INVALID, None, (_evidence("unrecognized_format"),), None
+    if not survivors:
+        return Status.INVALID, None, (_evidence("grammar_rejected"),), None
+    if len(survivors) == 1:
+        s = survivors[0]
+        return Status.CANONICALIZED, s.value, s.evidence, None
+    # >1 survivor -> AMBIGUOUS (Don't Guess). Surface every candidate.
+    return (
+        Status.AMBIGUOUS,
+        None,
+        (_evidence("ambiguous_provider_equivalence"),),
+        tuple(sorted({s.value for s in survivors})),
+    )
 
 
 class EmailCapability:
@@ -88,7 +328,7 @@ class EmailCapability:
         # Strict-mode grammar check happens FIRST so a non-grammar input
         # is rejected before any rewriting (no partial canonicalization).
         if contract.strict:
-            if " " in value or "\t" in value or "\n" in value:
+            if re.search(r"\s", value):
                 return CapabilityResult(
                     status=Status.INVALID,
                     evidence=(_evidence("strict_rejected_whitespace"),),
@@ -101,67 +341,39 @@ class EmailCapability:
                     evidence=(_evidence("strict_rejected_non_ascii"),),
                 )
 
-        if "@" not in value:
-            return CapabilityResult(status=Status.INVALID, evidence=(_evidence("missing_at_sign"),))
-        local, _, domain = value.partition("@")
-        if not local or not domain:
-            return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("empty_local_or_domain"),)
-            )
-
-        evidence: list[Evidence] = []
-
-        # 1. Strip ASCII whitespace (spec §1.3 step 1).
+        # Step 1 (spec §1.3): strip leading/trailing ASCII whitespace.
+        stripped_evidence: tuple[Evidence, ...] = ()
         if contract.strip_whitespace:
-            stripped = value.strip(_ASCII_WHITESPACE)
+            stripped = value.strip()
             if stripped != value:
-                evidence.append(_evidence("stripped_whitespace"))
+                stripped_evidence = (_evidence("stripped_whitespace"),)
                 value = stripped
-            # Re-parse after stripping (the @ position may have moved).
+
+        # Step 2: require an '@' with non-empty local and domain parts.
+        if "@" in value:
             local, _, domain = value.partition("@")
+            if not local or not domain:
+                return CapabilityResult(
+                    status=Status.INVALID, evidence=(_evidence("empty_local_or_domain"),)
+                )
 
-        # 2. Lowercase.
-        if contract.lowercase:
-            new_local = local.lower()
-            new_domain = domain.lower()
-            if new_local != local:
-                evidence.append(_evidence("lowercased_local_part"))
-            if new_domain != domain:
-                evidence.append(_evidence("lowercased_domain"))
-            local = new_local
-            domain = new_domain
-
-        # 3. Provider aliases (gmail). The casefold comparison makes the
-        # Gmail rule trigger regardless of `lowercase`; the domain is
-        # then normalized to its canonical-case form (`gmail.com`).
-        if contract.provider_aliases == "gmail" and domain.casefold() in _GMAIL_DOMAINS:
-            if domain != "gmail.com":
-                evidence.append(_evidence("domain_synonym_gmail", detail=f"{domain} -> gmail.com"))
-            domain = "gmail.com"
-            # Strip dots in the local part.
-            new_local = local.replace(".", "")
-            if new_local != local:
-                evidence.append(_evidence("stripped_dots_in_local_part"))
-                local = new_local
-            # Strip +tag.
-            if "+" in local:
-                evidence.append(_evidence("stripped_plus_tag"))
-                local = local.split("+", 1)[0]
-
-        # 4. Surface-grammar gate (RFC 5322 §3.2.3 + RFC 5321 §3.4 +
-        # RFC 1035 §2.3.1). Run AFTER rewrites because gmail dot-stripping
-        # or +tag-stripping would otherwise be rejected as non-dot-atom
-        # locally (e.g. `..@gmail.com` would fail before stripping).
-        # Idempotence is preserved: a canonical dot-atom email passes
-        # the gate trivially on re-canonicalize.
-        if not _validate_dot_atom_local(local) or not _validate_dot_atom_domain(domain):
-            evidence.append(_evidence("grammar_rejected"))
+        # Step 3: recognition layer (Layer 1).
+        reps = recognize(value, contract)
+        if not reps:
+            if "@" not in value:
+                return CapabilityResult(
+                    status=Status.INVALID, evidence=(_evidence("missing_at_sign"),)
+                )
             return CapabilityResult(
-                status=Status.INVALID,
-                evidence=tuple(evidence),
+                status=Status.INVALID, evidence=(_evidence("unrecognized_format"),)
             )
 
-        canonical = f"{local}@{domain}"
+        # Step 4: resolver + validation + classify.
+        cands = generate_interpretations(reps, contract)
+        survs, drops = resolve_and_validate(cands, contract)
+        status, rendered, evidence, cands_out = classify(cands, survs, drops)
+        if stripped_evidence:
+            evidence = stripped_evidence + evidence
         return CapabilityResult(
-            status=Status.CANONICALIZED, value=canonical, evidence=tuple(evidence)
+            status=status, value=rendered, evidence=evidence, candidates=cands_out
         )

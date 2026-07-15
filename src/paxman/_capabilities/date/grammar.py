@@ -82,8 +82,11 @@ class RecognizedRep:
 _NUMERIC_TRIPLE = "[N1]/[N2]/[N3]"
 _NUMERIC_TRIPLE_RE = r"(?P<n1>\d{1,2})/(?P<n2>\d{1,2})/(?P<n3>\d{2,4})"
 
-# Ordinal day words -> int (resolver maps these). The numeric form
-# ``\d{1,2}(?:st|nd|rd|th)`` is also accepted and resolved by the resolver.
+# Ordinal day words -> int. This dict is the single source of truth: the
+# resolver maps these words to their integer day (see _ordinal_to_int), and
+# _ORDINAL_RE below is derived from its keys so the grammar regex never
+# duplicates the word list. The numeric ordinal form ``\d{1,2}(?:st|nd|rd|th)``
+# is also accepted and resolved by the resolver.
 _ORDINAL_WORDS: Mapping[str, int] = {
     "first": 1,
     "second": 2,
@@ -99,11 +102,7 @@ _ORDINAL_WORDS: Mapping[str, int] = {
     "twelfth": 12,
 }
 
-_ORDINAL_RE = (
-    r"\d{1,2}(?:st|nd|rd|th)"
-    r"|first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth"
-    r"|eleventh|twelfth"
-)
+_ORDINAL_RE = r"\d{1,2}(?:st|nd|rd|th)|" + "|".join(re.escape(word) for word in _ORDINAL_WORDS)
 
 
 def _month_alternation(language: str) -> str:
@@ -281,9 +280,7 @@ def compile_grammar(pattern: str, language: str) -> re.Pattern[str]:
     return re.compile(r"\s*" + "".join(parts) + r"\s*", re.IGNORECASE)
 
 
-def _make_grammar(
-    id: str, source: str, pattern: str, shape: str | None = None
-) -> Grammar:
+def _make_grammar(id: str, source: str, pattern: str, shape: str | None = None) -> Grammar:
     """Construct a :class:`Grammar` (compiled for the default language ``en``)."""
     return Grammar(
         id=id,
@@ -406,9 +403,5 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
         if match is None:
             continue
         captures = {k: v for k, v in match.groupdict().items() if v is not None}
-        reps.append(
-            RecognizedRep(
-                grammar_id=grammar.id, source=grammar.source, captures=captures
-            )
-        )
+        reps.append(RecognizedRep(grammar_id=grammar.id, source=grammar.source, captures=captures))
     return reps

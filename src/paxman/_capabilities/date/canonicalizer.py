@@ -184,9 +184,7 @@ def _interpretations_from_reps(
                 # Month name not in the declared language -> no cross-language
                 # guess (Law 7). This recognition yields no candidate.
                 continue
-            weekday = (
-                weekday_table.get(caps["weekday"].lower()) if "weekday" in caps else None
-            )
+            weekday = weekday_table.get(caps["weekday"].lower()) if "weekday" in caps else None
             year_str = caps["year"]
             if len(year_str) == 2:
                 # 2-digit year: the day/year assignment is ambiguous, so
@@ -245,9 +243,7 @@ def _interpretations_from_reps(
             month = table.get(caps["month"].lower())
             if month is None:
                 continue
-            weekday = (
-                weekday_table.get(caps["weekday"].lower()) if "weekday" in caps else None
-            )
+            weekday = weekday_table.get(caps["weekday"].lower()) if "weekday" in caps else None
             year_str = caps["year"]
             if len(year_str) == 2:
                 # 2-digit year with no century policy -> enumerate the day/year
@@ -408,10 +404,7 @@ def resolve_and_validate(
             for year in years:
                 if not _valid_calendar_date(year, c.month, c.day):
                     continue
-                if (
-                    c.weekday is not None
-                    and datetime(year, c.month, c.day).weekday() != c.weekday
-                ):
+                if c.weekday is not None and datetime(year, c.month, c.day).weekday() != c.weekday:
                     drop_reasons.add("weekday_contradicts_date")
                     continue
                 survivors.append(_Survivor(year, c.month, c.day, c.rule, c.ordering, True))
@@ -419,10 +412,7 @@ def resolve_and_validate(
             if not _valid_calendar_date(c.year, c.month, c.day):
                 drop_reasons.add("invalid_calendar_date")
                 continue
-            if (
-                c.weekday is not None
-                and datetime(c.year, c.month, c.day).weekday() != c.weekday
-            ):
+            if c.weekday is not None and datetime(c.year, c.month, c.day).weekday() != c.weekday:
                 drop_reasons.add("weekday_contradicts_date")
                 continue
             survivors.append(_Survivor(c.year, c.month, c.day, c.rule, c.ordering, False))
@@ -482,9 +472,7 @@ def classify(
         rules.append("ambiguous_two_digit_year")
     if not rules:
         rules.append("ambiguous_ordering")
-    rendered = tuple(
-        sorted(_render_date(datetime(s.year, s.month, s.day)) for s in survivors)
-    )
+    rendered = tuple(sorted(_render_date(datetime(s.year, s.month, s.day)) for s in survivors))
     return Status.AMBIGUOUS, None, tuple(_evidence(rule) for rule in rules), rendered
 
 

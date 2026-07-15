@@ -145,17 +145,70 @@ class TestEmailCapability:
                 continue
             assert ev.provenance != "", f"Law 14 violation: rule {ev.rule!r} has empty provenance"
 
-    def test_grammar_rejects_internal_whitespace_in_local_part(self) -> None:
+    def test_ws_padded_collapses_internal_whitespace_in_local_part(self) -> None:
         c = _cap()
         r = c.canonicalize("user @example.com", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "user@example.com"
+        assert "collapsed_internal_whitespace" in {e.rule for e in r.evidence}
+
+    def test_ws_padded_internal_whitespace_rejected_when_strip_disabled(self) -> None:
+        c = _cap()
+        r = c.canonicalize("user @example.com", _contract(strip_whitespace=False))
         assert r.status is Status.INVALID
         assert "grammar_rejected" in {e.rule for e in r.evidence}
 
-    def test_grammar_rejects_whitespace_in_domain(self) -> None:
+    def test_ws_padded_collapses_whitespace_in_domain(self) -> None:
         c = _cap()
         r = c.canonicalize("user@ example.com", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "user@example.com"
+        assert "collapsed_internal_whitespace" in {e.rule for e in r.evidence}
+
+    def test_ws_padded_whitespace_in_domain_rejected_when_strip_disabled(self) -> None:
+        c = _cap()
+        r = c.canonicalize("user@ example.com", _contract(strip_whitespace=False))
         assert r.status is Status.INVALID
         assert "grammar_rejected" in {e.rule for e in r.evidence}
+
+    def test_ws_padded_canonicalizes_azahari_gmail(self) -> None:
+        c = _cap()
+        r = c.canonicalize("azahari @ gmail.com", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "azahari@gmail.com"
+
+    def test_verbal_at_dot_canonicalizes_azahari_gmail(self) -> None:
+        c = _cap()
+        r = c.canonicalize("azahari at gmail dot com", _contract())
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "azahari@gmail.com"
+
+    def test_ambiguous_gmail_equivalence_none_policy(self) -> None:
+        c = _cap()
+        r = c.canonicalize("john.doe@gmail.com", _contract(provider_aliases="none"))
+        assert r.status is Status.AMBIGUOUS
+        assert r.candidates is not None
+        assert set(r.candidates) == {"john.doe@gmail.com", "johndoe@gmail.com"}
+
+    def test_ambiguous_gmail_equivalence_gmail_policy(self) -> None:
+        c = _cap()
+        r = c.canonicalize("john.doe@gmail.com", _contract(provider_aliases="gmail"))
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "johndoe@gmail.com"
+
+    def test_ambiguous_verbal_at_dot_none_policy(self) -> None:
+        c = _cap()
+        r = c.canonicalize("john.doe at gmail dot com", _contract(provider_aliases="none"))
+        assert r.status is Status.AMBIGUOUS
+        assert r.candidates is not None
+        assert set(r.candidates) == {"john.doe@gmail.com", "johndoe@gmail.com"}
+
+    def test_ambiguous_googlemail_none_policy(self) -> None:
+        c = _cap()
+        r = c.canonicalize("user@googlemail.com", _contract(provider_aliases="none"))
+        assert r.status is Status.AMBIGUOUS
+        assert r.candidates is not None
+        assert set(r.candidates) == {"user@googlemail.com", "user@gmail.com"}
 
     def test_grammar_rejects_consecutive_dots_in_local_part(self) -> None:
         c = _cap()
@@ -191,7 +244,7 @@ class TestEmailCapability:
         c = _cap()
         r = c.canonicalize("user@example.com@example.com", _contract())
         assert r.status is Status.INVALID
-        assert "grammar_rejected" in {e.rule for e in r.evidence}
+        assert "unrecognized_format" in {e.rule for e in r.evidence}
 
     def test_grammar_rejects_leading_dash_in_domain(self) -> None:
         c = _cap()

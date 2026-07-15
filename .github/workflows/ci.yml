@@ -176,12 +176,17 @@ jobs:
   # ---------------------------------------------------------------------------
   # ---------------------------------------------------------------------------
   # Coverage gate (per-subpackage, ≥90% each)
-  # Every top-level first-party package under src/paxman
-  # (_capabilities, _contracts, _core) must independently maintain at least
-  # 90% line coverage. We run the unit suite once to produce a single
-  # .coverage data file, then assert each subpackage's coverage with
-  # `coverage report --fail-under=90 --include=...`. A subpackage below 90%
-  # makes that report step exit non-zero and fails the job.
+  # Every top-level first-party package under src/paxman must independently
+  # maintain at least 90% line coverage. After the v2 architecture refactor
+  # (domain-free core + per-capability packages), the first-party packages are
+  # _capabilities, _core, _dsl, _registry, _types, _errors. The former
+  # _contracts package was dissolved: contracts now live in
+  # _capabilities/<domain>/contract.py and _core/contracts.py, both covered by
+  # their respective package globs.
+  # We run the unit suite once to produce a single .coverage data file, then
+  # assert each package's coverage with `coverage report --fail-under=90
+  # --include=...`. A package below 90% makes that report step exit non-zero
+  # and fails the job.
   # A global threshold is deliberately NOT used: it would let a
   # well-covered package subsidize a poorly-covered one.
   # ---------------------------------------------------------------------------
@@ -215,13 +220,15 @@ jobs:
       - name: Coverage gate — per-subpackage ≥90%
         run: |
           set +e
-          uv run coverage report --fail-under=90 --include="*/paxman/_capabilities/*"
-          rc1=$?
-          uv run coverage report --fail-under=90 --include="*/paxman/_contracts/*"
-          rc2=$?
-          uv run coverage report --fail-under=90 --include="*/paxman/_core/*"
-          rc3=$?
-          if [ "$rc1" -ne 0 ] || [ "$rc2" -ne 0 ] || [ "$rc3" -ne 0 ]; then
+          failed=0
+          for pkg in _capabilities _core _dsl _registry _types _errors; do
+            uv run coverage report --fail-under=90 --include="*/paxman/$pkg/*"
+            if [ $? -ne 0 ]; then
+              echo "::error::Subpackage $pkg is below the 90% coverage gate."
+              failed=1
+            fi
+          done
+          if [ "$failed" -ne 0 ]; then
             echo "::error::One or more subpackages are below the 90% coverage gate."
             exit 1
           fi

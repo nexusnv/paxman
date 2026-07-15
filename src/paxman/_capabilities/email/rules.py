@@ -48,6 +48,17 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
             "Google Help: dots don't matter in Gmail addresses (retrieved 2026-07-14)"
         ),
         "stripped_plus_tag": ("Google Help: Gmail +alias addressing (retrieved 2026-07-14)"),
+        # --- recognition-layer transformations (authoritative spec) ---
+        "collapsed_internal_whitespace": (
+            "RFC 5322 §1.3 (internal whitespace tolerated for obfuscation)"
+        ),
+        "deobfuscated_verbal_at_dot": ("spoken-form email obfuscation ('at'→@, 'dot'→.)"),
+        # --- recognition-layer ambiguity (declared Paxman policy) ---
+        "ambiguous_provider_equivalence": (
+            "gmail provider-equivalence yields multiple valid forms"
+        ),
+        # --- recognition-layer rejection (authoritative spec) ---
+        "unrecognized_format": "input matched no email grammar",
     }
 )
 

@@ -90,5 +90,8 @@ class TestEndToEnd:
             {"kind": "canonical_email", "provider_aliases": "none"},
         )
         assert art.status is Status.AMBIGUOUS
-        assert art.candidates is not None
-        assert set(art.candidates) == {"john.doe@gmail.com", "johndoe@gmail.com"}
+        assert art.candidates == ("john.doe@gmail.com", "johndoe@gmail.com")
+        # Replay must reproduce the artifact byte-for-byte (Replay invariant).
+        rehydrated = paxman.replay(art, {"kind": "canonical_email", "provider_aliases": "none"})
+        assert rehydrated == art
+        assert rehydrated.canonical_bytes() == art.canonical_bytes()

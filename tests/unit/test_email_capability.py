@@ -284,6 +284,24 @@ class TestEmailCapability:
         assert r.status is Status.INVALID
         assert "grammar_rejected" in {e.rule for e in r.evidence}
 
+    def test_gmail_subdomain_is_not_collapsed_into_gmail_com(self) -> None:
+        # A tenant subdomain like foo.gmail.com is a distinct identity and
+        # must not be rewritten to gmail.com (Identity invariant).
+        c = _cap()
+        for alias in ("gmail", "none"):
+            r = c.canonicalize("user@foo.gmail.com", _contract(provider_aliases=alias))
+            assert r.status is Status.CANONICALIZED
+            assert r.value == "user@foo.gmail.com"
+
+    def test_dot_invalid_local_is_rejected_not_repaired(self) -> None:
+        # Leading/trailing/consecutive dots make the local part invalid; the
+        # Gmail dot-equivalence must not repair it into a valid address.
+        c = _cap()
+        for bad in (".john.doe.@gmail.com", "john..doe@gmail.com", ".a@gmail.com"):
+            for alias in ("gmail", "none"):
+                r = c.canonicalize(bad, _contract(provider_aliases=alias))
+                assert r.status is Status.INVALID, (bad, alias, r.status)
+
     def test_grammar_accepts_single_label_domain(self) -> None:
         # RFC 1035 §2.3.1: a single label is valid.
         c = _cap()

@@ -35,7 +35,7 @@ class TestGrammarCatalogue:
 
     def test_grammars_is_non_empty_tuple_of_grammar(self) -> None:
         assert isinstance(GRAMMARS, tuple)
-        assert len(GRAMMARS) == 15
+        assert len(GRAMMARS) == 16
         for grammar in GRAMMARS:
             assert isinstance(grammar, Grammar)
             assert grammar.id
@@ -308,3 +308,17 @@ class TestTextMonthDmyMixedsepGrammar:
         # The dash between day and month is required; a space must not match.
         reps = recognize("16 Jul 2026", _contract())
         assert _rep_by_id(reps, "text_month_dmy_mixedsep") is None
+
+
+class TestTextMonthMdySlashGrammar:
+    def test_matches_and_yields_raw_captures(self) -> None:
+        reps = recognize("July/16 2026", _contract())
+        rep = _rep_by_id(reps, "text_month_mdy_slash")
+        assert rep is not None
+        assert rep.source == "CLDR month names"
+        assert rep.captures == {"month": "July", "day": "16", "year": "2026"}
+
+    def test_does_not_match_dash_separator(self) -> None:
+        # The slash between month and day is required; a dash must not match.
+        reps = recognize("July-16 2026", _contract())
+        assert _rep_by_id(reps, "text_month_mdy_slash") is None

@@ -414,7 +414,7 @@ core ends up owning domain knowledge (§4.4).
 **Paxman Contract Protocol** — owned by core. What can plug into Paxman:
 
 - `Contract` (the abstract interface a domain contract satisfies)
-- `CanonicalizationResult` / `ExecutionArtifact`
+- `CapabilityResult` / `ExecutionArtifact`
 - `Provenance`
 
 The core defines *how a contract participates in the engine*. It does not
@@ -893,10 +893,10 @@ participates in a network protocol) but only *provenance* for dates (a date
 need not satisfy RFC 2822 to name a unique calendar day). Which role a
 standard plays depends on the domain; see §4.4.
 
-**Principle 3 — Determinism means proving uniqueness, not choosing the most
-likely answer.**
+**Principle 3 — Determinism means proving uniqueness, not selecting a single value.**
+
 This restates Law 1 and Law 4: when more than one fact is possible, report
-`Ambiguous`; never pick the probable one.
+`Ambiguous`; never select a single candidate.
 
 **Principle 4 — The core engine should not own domain knowledge.**
 Domain tables, grammars, and policies belong to capabilities (§4.4). The core
@@ -913,7 +913,7 @@ self-discovery (§6.5) is the mechanism that keeps this true.
 These six principles, together with the fourteen laws, point to the intended
 long-term shape of Paxman:
 
-```
+```text
 Small deterministic core
         +
 Capability-owned canonicalizers

@@ -194,9 +194,9 @@ class TestAmbiguousSurfacesCandidates:
         ],
     )
     def test_non_ambiguous_results_have_no_candidates(
-        self, value: str, contract: object
+        self, value: str, contract: CanonicalDateContract
     ) -> None:
-        r = _cap().canonicalize(value, contract)  # type: ignore[arg-type]
+        r = _cap().canonicalize(value, contract)
         assert r.candidates is None
 
 
@@ -212,6 +212,7 @@ class TestNewGrammarCoverageClosures:
             ("16 July 2026 AD", "en", "2026-07-16"),
             ("July 16th, 2026", "en", "2026-07-16"),
             ("16-Jul 2026", "en", "2026-07-16"),
+            ("July/16 2026", "en", "2026-07-16"),
         ],
     )
     def test_text_month_closures_canonicalize(
@@ -228,7 +229,27 @@ class TestNewGrammarCoverageClosures:
         r = _cap().canonicalize("2026/07/16", Date(locale="ISO"))
         assert r.status is Status.CANONICALIZED
         assert r.value == "2026-07-16"
-        assert r.evidence[0].rule == "parsed_text_month_date"
+        assert r.evidence[0].rule == "parsed_numeric_ymd_date"
+
+    def test_ordering_collapse_canonicalizes(self) -> None:
+        # 07/07/2026 reads as 2026-07-07 under both MM/DD and DD/MM, so the
+        # two orderings collapse to one date -> CANONICALIZED (not AMBIGUOUS).
+        r = _cap().canonicalize("07/07/2026", Date(locale="ISO"))
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "2026-07-07"
+
+    def test_weekday_ordinal_two_digit_year_ambiguous(self) -> None:
+        # A 2-digit year with a weekday prefix must still enumerate
+        # (AMBIGUOUS), not be dropped to INVALID via the old
+        # ``invalid_calendar_date`` path. "Saturday" matches two of the six
+        # enumerated candidates (July 3 1926 and a July 26), so the outcome
+        # is AMBIGUOUS.
+        r = _cap().canonicalize(
+            "Saturday, the 3rd of July, 26", Date(locale="ISO", language="en")
+        )
+        assert r.status is Status.AMBIGUOUS
+        assert r.candidates is not None
+        assert "1926-07-03" in r.candidates
 
 
 class TestContractValidation:
@@ -254,3 +275,8 @@ class TestContractValidation:
     def test_invalid_pivot_policy_rejected(self) -> None:
         with pytest.raises(ContractError):
             parse_contract({"kind": "canonical_date", "two_digit_year": "pivot:notanumber"})
+
+    def test_date_sugar_routes_through_validation(self) -> None:
+        # The Date() sugar must not bypass contract validation (coderabbit #14).
+        with pytest.raises(ContractError):
+            Date(two_digit_year="pivot:notanumber")

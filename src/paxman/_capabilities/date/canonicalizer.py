@@ -126,6 +126,7 @@ _TEXT_MONTH_GRAMMARS = frozenset(
         "text_month_mdy_comma",
         "text_month_dmy_era",
         "text_month_dmy_mixedsep",
+        "text_month_mdy_slash",
     }
 )
 
@@ -247,18 +248,38 @@ def _interpretations_from_reps(
             weekday = (
                 weekday_table.get(caps["weekday"].lower()) if "weekday" in caps else None
             )
-            candidates.append(
-                _Candidate(
-                    year=int(caps["year"]),
-                    yy=None,
-                    month=month,
-                    day=day,
-                    century_ambiguous=False,
-                    rule="parsed_text_month_date",
-                    ordering=None,
-                    weekday=weekday,
+            year_str = caps["year"]
+            if len(year_str) == 2:
+                # 2-digit year with no century policy -> enumerate the day/year
+                # swap (spec §5: Don't Guess). Mirrors the ordinal grammar
+                # family so weekday-prefixed forms stay consistent.
+                yy = int(year_str)
+                for d, y in ((day, yy), (yy, day)):
+                    candidates.append(
+                        _Candidate(
+                            year=None,
+                            yy=y,
+                            month=month,
+                            day=d,
+                            century_ambiguous=True,
+                            rule="parsed_text_month_date",
+                            ordering=None,
+                            weekday=weekday,
+                        )
+                    )
+            else:
+                candidates.append(
+                    _Candidate(
+                        year=int(year_str),
+                        yy=None,
+                        month=month,
+                        day=day,
+                        century_ambiguous=False,
+                        rule="parsed_text_month_date",
+                        ordering=None,
+                        weekday=weekday,
+                    )
                 )
-            )
         elif gid in _TEXT_MONTH_ORDINAL_GRAMMARS:
             # Ordinal day (numeric-with-suffix or word form) in either dmy or mdy
             # position, with no weekday prefix. Same year-length handling as the
@@ -306,7 +327,7 @@ def _interpretations_from_reps(
                     month=int(caps["month"]),
                     day=int(caps["day"]),
                     century_ambiguous=False,
-                    rule="parsed_text_month_date",
+                    rule="parsed_numeric_ymd_date",
                     ordering=None,
                 )
             )
@@ -405,7 +426,18 @@ def resolve_and_validate(
                 drop_reasons.add("weekday_contradicts_date")
                 continue
             survivors.append(_Survivor(c.year, c.month, c.day, c.rule, c.ordering, False))
-    return survivors, drop_reasons
+    # Collapse survivors that resolve to the same calendar day. Different
+    # orderings (MM/DD vs DD/MM) or century readings can yield the identical
+    # concrete date (e.g. 07/07/2026); once the day is known, "Don't Guess"
+    # is satisfied and the outcome is CANONICALIZED, not AMBIGUOUS (spec §5).
+    _seen_days: set[tuple[int, int, int]] = set()
+    _deduped: list[_Survivor] = []
+    for _s in survivors:
+        _day_key = (_s.year, _s.month, _s.day)
+        if _day_key not in _seen_days:
+            _seen_days.add(_day_key)
+            _deduped.append(_s)
+    return _deduped, drop_reasons
 
 
 def classify(
@@ -481,20 +513,28 @@ class DateCapability:
     def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
         """Canonicalize a date string according to the contract's locale policy.
 
-        The capability recognises five input families (spec §2.1); each is
-        matched by a deterministic predicate — never by guessing (Law 4):
+        The capability recognises several input families; each is matched by a
+        deterministic predicate — never by guessing (Law 4):
 
         * ISO 8601 date ``YYYY-MM-DD`` (all locales).
         * ISO 8601 date-time ``YYYY-MM-DDTHH:MM:SS[.ffffff][Z|±HH:MM]``; a
           datetime without a zone is reported ``AMBIGUOUS`` (RFC 3339 §5.6).
-        * US numeric ``MM/DD/YYYY`` (locale ``"US"``) / EU numeric
+        * Multilingual text-month dates, e.g. ``16 July 2026`` (en),
+          ``16. Juli 2026`` (de), ``16 Julai 2026`` (ms), ``July 16, 2026``,
+          ``the 3rd of July, 2026``, ``16 July 2026 AD`` — full or abbreviated
+          month names in the contract's declared ``language``.
+        * Ordinal forms (``16th July 2026``) and weekday-prefixed RFC 2822
+          forms (``Tue, 01 Jan 2025``).
+        * Numeric slash forms: US ``MM/DD/YYYY`` (locale ``"US"``) / EU
           ``DD/MM/YYYY`` (locale ``"EU"``); a 2-digit year is ``AMBIGUOUS``.
-        * RFC 2822 date-time (e.g. ``Tue, 01 Jan 2025 12:00:00 +0000``).
+          Year-first ``YYYY/MM/DD`` is a fixed Y/M/D reading accepted under
+          every locale (ISO 8601 slash ordering).
         * Unix epoch seconds (integer or float, rendered in UTC/Z).
 
-        ``locale="ISO"`` rejects slash forms with ``Status.INVALID``; ``"US"``
-        and ``"EU"`` additionally accept their numeric reading. The canonical
-        form is ``YYYY-MM-DD`` for dates and
+        ``locale="ISO"`` enumerates both MM/DD and DD/MM orderings for
+        ambiguous slash forms (so they report ``AMBIGUOUS`` rather than being
+        guessed); ``"US"`` and ``"EU"`` accept only their numeric reading. The
+        canonical form is ``YYYY-MM-DD`` for dates and
         ``YYYY-MM-DDTHH:MM:SS[.ffffff]Z`` for datetimes (RFC 3339, normalised
         to UTC).
 

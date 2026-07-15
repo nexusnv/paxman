@@ -94,11 +94,12 @@ class _Survivor:
 def _is_gmail_family(domain: str) -> bool:
     """True when ``domain`` is a Gmail-family domain (case-insensitive).
 
-    Covers the exact ``gmail.com`` / ``googlemail.com`` domains and any
-    ``*.gmail.com`` subdomain (e.g. ``foo.gmail.com``).
+    Covers only the exact ``gmail.com`` / ``googlemail.com`` domains.
+    Tenant subdomains such as ``foo.gmail.com`` are distinct identities and
+    must not be collapsed into ``gmail.com`` (Identity invariant).
     """
     d = domain.lower()
-    return d == _GMAIL_SUFFIX or d == "googlemail.com" or d.endswith(".gmail.com")
+    return d == _GMAIL_SUFFIX or d == "googlemail.com"
 
 
 def _lowercase_evidence(
@@ -134,6 +135,14 @@ def provider_equivalence(
     both the literal form and the Gmail-canonical form (``"none"``).
     """
     if _is_gmail_family(domain):
+        # Gmail treats dots in the local part as equivalent (john.doe ==
+        # johndoe), but only for a VALID dotted local. A dot-invalid local
+        # (leading/trailing/consecutive dots) is not a real Gmail address, so
+        # we must not repair it into one -- the literal candidate fails the
+        # dot-atom gate and the input is rejected (Identity: canonicalize
+        # only, never guess or normalize).
+        if not _validate_dot_atom_local(local):
+            return [_Candidate(f"{local}@{domain}", rule, source, base_evidence)]
         gmail_local = local.replace(".", "")
         dot_ev = (_evidence("stripped_dots_in_local_part"),) if "." in local else ()
         if "+" in gmail_local:
@@ -343,10 +352,13 @@ class EmailCapability:
                     evidence=(_evidence("strict_rejected_non_ascii"),),
                 )
 
-        # Step 1 (spec §1.3): strip leading/trailing ASCII whitespace.
+        # Step 1 (spec §1.3): strip leading/trailing ASCII whitespace only.
+        # Unicode whitespace (e.g. non-breaking space) is intentionally left
+        # intact so canonicalization stays deterministic across Python
+        # versions and RFC-correct.
         stripped_evidence: tuple[Evidence, ...] = ()
         if contract.strip_whitespace:
-            stripped = value.strip()
+            stripped = value.strip(" \t\r\n\f\v")
             if stripped != value:
                 stripped_evidence = (_evidence("stripped_whitespace"),)
                 value = stripped

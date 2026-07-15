@@ -3,6 +3,11 @@
 Verbatim move of the three constants from `paxman._capabilities.builtins.uuid`.
 The length/char/hyphen validation logic lives in `canonicalizer.py`; this
 module is constants-only so behavior stays identical.
+
+Mandate Law 1 (determinism): `CANONICAL_LENGTH` / `HYPHEN_POSITIONS` /
+`CANONICAL_CHARS` fix the canonical 8-4-4-4-12 form so two
+implementations agree. Mandate Law 2 (idempotence): re-canonicalizing an
+already-canonical value yields the same value.
 """
 
 from __future__ import annotations

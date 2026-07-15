@@ -12,6 +12,9 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
+# Law 4 (capability boundaries): a capability transforms (contract,
+# value); it does not orchestrate. Law 8a (pure functions):
+# canonicalize is a pure (value, contract) -> result transform.
 from paxman._core.contracts import Contract
 from paxman._core.result import CapabilityResult
 

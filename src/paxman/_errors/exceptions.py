@@ -49,12 +49,12 @@ class VersionMismatchError(CanonicalizationError):
     Status (replay either returns the artifact or raises)."""
 
 
-class FrozenRegistryError(CanonicalizationError):
+class FrozenRegistryError(PaxmanError):
     """A capability was registered after the registry was frozen. Raised
     by `paxman.register_capability` after the first canonicalize call."""
 
 
-class ConfigurationError(CanonicalizationError):
+class ConfigurationError(PaxmanError):
     """A capability is structurally invalid (missing `name`, missing
     methods, or duplicate registration). Raised at register time,
     before any canonicalize call."""

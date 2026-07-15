@@ -12,6 +12,9 @@ from typing import Any, Protocol
 
 import attrs
 
+# Law 13 (artifact immutability): the artifact is frozen; these fields
+# are set once at construction. Law 12 (replayability): the
+# version stamp + evidence hash make the artifact byte-replayable.
 from paxman._core.provenance import Evidence
 from paxman._core.result import VersionStamp
 from paxman._core.status import Status

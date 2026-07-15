@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import attrs
 
+# Law 8 (status vs exceptions): status is an outcome on a returned
+# artifact, never a raised exception.
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
 

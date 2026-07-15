@@ -129,7 +129,7 @@ src/paxman/
 │   ├── classification.py       #   the classify() function + ValidationResult
 │   ├── artifact.py             #   ExecutionArtifact (immutable, Law 13)
 │   ├── replay.py               #   byte-equal rehydration (first-class module)
-│   ├── provenance.py           #   Evidence + _RULE_PROVENANCE manifest
+│   ├── provenance.py           #   Evidence (provenance record); _RULE_PROVENANCE lives in each capability's rules.py
 │   ├── result.py               #   CapabilityResult, VersionStamp
 │   ├── status.py               #   Status enum (five outcomes)
 │   └── contracts.py            #   the structural Contract Protocol
@@ -146,19 +146,19 @@ src/paxman/
 │   │   ├── contract.py         #     CanonicalEmailContract + Email()
 │   │   ├── canonicalizer.py    #     EmailCapability (the SPI implementation)
 │   │   ├── parser.py           #     email-specific parsing helpers
-│   │   └── rules.py            #     _RULE_PROVENANCE + fired-rule records
+│   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 │   ├── uuid/                   #   UUIDCapability (shipped built-in)
 │   │   ├── __init__.py
 │   │   ├── contract.py         #     CanonicalUUIDContract + UUID()
 │   │   ├── canonicalizer.py    #     UUIDCapability
 │   │   ├── parser.py
-│   │   └── rules.py
+│   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 │   └── date/                   #   DateCapability (shipped built-in)
 │       ├── __init__.py
 │       ├── contract.py         #     CanonicalDateContract + Date()
 │       ├── canonicalizer.py    #     DateCapability
 │       ├── parser.py
-│       ├── rules.py
+│       ├── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 │       ├── value.py            #     date value objects
 │       └── calendar.py         #     calendar / locale helpers
 ├── _dsl/                       # the contract DSL (Dict ↔ value object)
@@ -436,9 +436,13 @@ plus the `Email()`, `UUID()`, `Date()` domain-type factories. The contract
 can be expressed two equivalent ways (mandate §5):
 
 1. **Dict DSL** — `{"kind": "canonical_email", "lowercase": True, ...}`.
-   The `kind` discriminator is the wire form; an unknown `kind` raises
-   `ContractError` at parse time, which the orchestrator maps to
-   `Status.UNSUPPORTED`.
+    The `kind` discriminator is the wire form. An unknown `kind` (or a
+    malformed spec) raises `ContractError` at parse time, but the
+    orchestrator *catches* that and returns `Status.UNSUPPORTED` — the
+    call never raises `ContractError` to the caller. So from the caller's
+    perspective an unsupported `kind` is a returned `Status`, not a raised
+    exception, unless a documented conversion path explicitly requires one at
+    the boundary.
 2. **Value-object / factory form** — `CanonicalEmailContract(...)` or the
    `Email(...)` domain-type factory. `parse_contract` short-circuits on an
    already-parsed `CanonicalEmailContract` (mandate Law 5 — the contract

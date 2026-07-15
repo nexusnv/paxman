@@ -81,13 +81,17 @@ class TestCanonicalEmailContract:
 
 
 class TestParseCanonicalDate:
-    def test_date_factory_requires_locale(self) -> None:
-        # Law 7: no default locale / no auto_detect.
+    def test_date_factory_defaults_locale_to_iso(self) -> None:
+        # Spec §3.3 / Flag B: a *provided* locale is honored exactly, but an
+        # *absent* locale defaults to "ISO" (a fixed default, not input
+        # inference -- Law 7).
         import inspect
 
         sig = inspect.signature(Date)
         assert "locale" in sig.parameters
-        assert sig.parameters["locale"].default is inspect.Parameter.empty
+        assert sig.parameters["locale"].default == "ISO"
+        # language also defaults (to "en").
+        assert sig.parameters["language"].default == "en"
 
     def test_minimal_factory(self) -> None:
         c = Date(locale="ISO")
@@ -101,9 +105,11 @@ class TestParseCanonicalDate:
         assert isinstance(c, CanonicalDateContract)
         assert c.locale == "US"
 
-    def test_parse_contract_rejects_missing_locale(self) -> None:
-        with pytest.raises(ContractError):
-            parse_contract({"kind": "canonical_date"})
+    def test_parse_contract_defaults_missing_locale_to_iso(self) -> None:
+        # Spec §3.3 / Flag B: an absent locale falls back to "ISO".
+        c = parse_contract({"kind": "canonical_date"})
+        assert isinstance(c, CanonicalDateContract)
+        assert c.locale == "ISO"
 
     def test_parse_contract_rejects_invalid_locale(self) -> None:
         with pytest.raises(ContractError):

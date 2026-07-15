@@ -8,8 +8,13 @@
 > Where this document conflicts with `README.md`,
 > [`PROPOSED_STRUCTURE.md`](./PROPOSED_STRUCTURE.md), an ADR, or any other
 > document, this document wins.
-
----
+>
+> **Last amended:** 2026-07-15 — semantic-equivalence clarification (§1.4),
+> capability ownership of domain knowledge (§4.4–§4.5), two-layer contract
+> model (§5.5), registry-based discovery (§6.5), and six Design Principles
+> (§7.15). No law was repealed; these make implicit boundaries explicit.
+>
+> ---
 
 ## 1. The Identity
 
@@ -92,6 +97,38 @@ of them in a different sense in code, comment, docstring, or ADR is wrong.
 | **capability result** | The internal value a capability returns from `canonicalize(value, contract)`. Carries the canonical value or a `Status` other than `Canonicalized`. |
 | **Paxman version** | The version string of the library itself. Part of the determinism and replay invariants. |
 | **contract version** | A version attached to a contract. Contracts evolve; replay across contract versions is governed by §"Decisions left to make." |
+
+### 1.4 Equivalence is semantic, not syntactic
+
+The word *equivalent* in this document is precise, and the precision matters.
+
+A naïve reading is: *two inputs are equivalent if they match the same standard
+grammar.* That reading is **rejected**. Matching a grammar proves only that two
+strings share syntax; it does not prove they name the same fact.
+
+The correct reading, which every law here protects:
+
+> Two representations are equivalent **iff** each deterministically expresses
+> the *same underlying fact* — without requiring inference, external context,
+> or a guess about intent.
+
+Consequences:
+
+- `"Thu, 16 Jul 2026"` (RFC 2822) and `"Thursday, 16 July 2026"` (not RFC
+  2822) are equivalent, because both prove the same calendar date
+  `2026-07-16`. They do **not** share a grammar; they share a *fact*.
+- `"User@Example.COM"` and `"user@example.com"` are equivalent because the
+  email standard deterministically licenses the lowercasing; the fact is the
+  same mailbox.
+- `"01/02/2026"` is **not** equivalent to either `2026-02-01` or
+  `2026-01-02` until the locale is known, because the input alone does not
+  deterministically fix the fact. It is reported `Ambiguous` (Law 4), not
+  guessed.
+
+Equivalence is therefore a property of *meaning under a contract*, not of
+*shape*. When two distinct syntactic forms converge on the same canonical
+value, the result is deterministic and welcome. When a single form admits
+more than one fact, the result is `Ambiguous`. This is Principle 1 (§7.15).
 
 ---
 
@@ -242,6 +279,54 @@ you supply a format string, not rewrite how datetime parsing works.
 
 > The extensibility point is the knowledge, not the control flow.
 
+### 4.4 Capabilities own domain knowledge
+
+The core owns the *execution model* — the pipeline (§4.2), resolution (§6),
+replay (Law 12), and evidence (Law 9). It does **not** own domain knowledge.
+
+Domain knowledge — the lookup tables, recognizers, grammars, value objects,
+and policy choices that decide *how* a specific kind of input is recognized
+and validated — belongs to the capability that canonicalizes that domain. For
+example, email is *protocol-oriented*: RFC 5321/5322 is its input grammar
+because email participates in a network protocol, so the email capability owns
+that grammar. Date is *value-oriented*: RFC 2822 is **not** its input grammar
+— a date need only deterministically name a calendar day — so the date
+standard is *provenance* (Law 14), not the recognizer's grammar. The core does
+not need to know which role a standard plays for which domain; the capability
+does.
+
+The core must never *become* the central repository for "what email/date/
+currency/phone/tax/unit means." If adding a new domain requires editing a core
+file that enumerates every domain, the architecture has regressed (Principle 4,
+§7.15).
+
+This refines Law 6. "Paxman owns the algorithm" means Paxman owns the
+*deterministic execution model*, not the *domain-specific recognition logic*.
+A capability may freely own whatever internal strategy it needs, so long as
+that strategy is deterministic and replayable (Law 8a).
+
+### 4.5 Internal strategy is capability-private
+
+Capabilities are not required to share an internal shape. A date capability
+may run a lexical classifier → grammar recognizer → semantic extractor →
+semantic validator → canonical renderer pipeline; a boolean capability may be
+a single lookup table; a UUID capability may be a pattern plus structural
+validation; a country capability may be an alias table. The common abstraction
+is small:
+
+```
+Input
+  ↓
+Canonicalizer
+  ↓
+Result
+```
+
+Paxman mandates only the *boundary* (the SPI, §5), not the *internals*. The
+lexer/parser/validator/renderer decomposition is an implementation detail of
+one domain, not a template forced on all of them. This is why Law 11 evaluates
+each abstraction against determinism, not against a uniform internal shape.
+
 ---
 
 ## 5. The SPI Rule
@@ -321,6 +406,45 @@ This invariant is enforced by Law 5 (the orchestrator never silently picks)
 and recorded on the artifact as evidence (Law 9 — *"two capabilities claimed
 this pair; classified Ambiguous"*).
 
+### 5.5 Contract Protocol vs Domain Contract
+
+The single word *contract* hides two distinct concepts. Conflating them is how
+core ends up owning domain knowledge (§4.4).
+
+**Paxman Contract Protocol** — owned by core. What can plug into Paxman:
+
+- `Contract` (the abstract interface a domain contract satisfies)
+- `CanonicalizationResult` / `ExecutionArtifact`
+- `Provenance`
+
+The core defines *how a contract participates in the engine*. It does not
+define what any specific domain means.
+
+**Domain Contract** — owned by the capability. What policy this capability
+applies:
+
+- Email: `lowercase=True`, `provider_aliases="gmail"`, `strict=False`
+- Date: `locale="ISO"`
+- UUID: `version="4"`
+
+The domain contract declares *what canonical form is required* and *what policy
+choices exist*. It is a **declarative DSL** — expressible both as Python
+(`Date(locale="ISO")`) and as the Dict DSL (`{"kind": "canonical_date",
+"locale": "ISO"}`). The contract is never the algorithm; it is the
+destination (Law 5). The capability decides *how* recognition, validation, and
+conversion happen.
+
+This is Principle 5 (§7.15): **contracts define policy; capabilities implement
+behavior.** Splitting the two layers is what lets a new domain be *additive*
+(Principle 6) — the capability supplies both its domain contract and its
+canonicalizer, and the core need not change.
+
+> Aside: `Money(currency="MYR")` appears elsewhere in this document as an
+> illustrative domain contract. The actual money canonicalization was
+> reclassified as a multi-field effort (currency field + decimal field) and is
+> deferred past the v2 RC; the example illustrates the *contract model*, not a
+> shipped built-in.
+
 ---
 
 ## 6. The Algorithm — Resolver, not Planner
@@ -378,6 +502,49 @@ does Paxman choose? A matching rule might say: *"Regex A matches → dispatch
 to ISO parser."* That is fine — because the regex itself is deterministic. It
 is a *matching rule*, not a heuristic in the soft sense. The position taken
 here is: *I'd almost stop calling that a heuristic. It's a matching rule.*
+
+### 6.5 Registry-based capability discovery
+
+Resolution must not depend on the core enumerating every domain. The former
+central dispatch
+
+```python
+_KIND_DISPATCH = {
+    "canonical_email": CanonicalEmailContract,
+    "canonical_uuid": CanonicalUUIDContract,
+    "canonical_date": CanonicalDateContract,
+}
+```
+
+was a scale liability: every new domain edited a core file, which violates
+Principle 4 (§7.15) and Principle 6 (§7.15). It has been **removed** — see
+`src/paxman/_registry/contract_registry.py`, whose header states it "replaces
+the former `_KIND_DISPATCH` dict and the per-kind `if` branches."
+
+The operative model is **self-registration**. Each capability registers its
+`kind` and its domain-contract builder with the contract registry at import
+time:
+
+```python
+register_contract("canonical_email", _build_email)
+register_contract("canonical_date", _build_date)
+```
+
+The core then performs only `kind → registry lookup → construct contract`. It
+no longer knows what email, date, or currency *means*. Discovery is additive:
+shipping a new capability never requires touching core, and Law 11 stays
+enforceable because the registry entry is itself a deterministic, auditable
+registration — not a hardcoded branch.
+
+This is the operational form of Principle 6: **new canonicalization domains
+should be additive, not require core modification.**
+
+The same principle holds at the capability layer. `CapabilityRegistry`
+(`src/paxman/_registry/capability_registry.py`) holds the capability set and
+freezes it on the first `canonicalize` call; new capabilities self-register via
+`register_capability` rather than being enumerated in a central list. The
+contract registry and the capability registry together are what keep Paxman's
+core domain-ignorant — which is exactly Principle 4 (§7.15).
 
 ---
 
@@ -707,6 +874,62 @@ This keeps Law 1 (Determinism) and Law 12 (Replayability) intact: an
 artifact's provenance is recorded on the artifact; the same artifact
 replayed tomorrow cites the same document, even if the document mutates.
 
+### 7.15 Design Principles
+
+The fourteen laws are the constitutional floor. The architecture discussion
+that refined this document surfaced six design principles that the laws
+protect and that guide *future* extension. They are not laws — they are the
+load-bearing intuitions a contributor should reach for when a law does not
+already decide the case.
+
+**Principle 1 — Semantic equivalence, not textual similarity.**
+Canonicalization is about whether two representations deterministically
+express the same *fact*, not whether they share syntax. See §1.4.
+
+**Principle 2 — Standards are provenance sources, not necessarily complete
+input grammars.**
+A standard such as RFC 2822 is the *input grammar* for email (email
+participates in a network protocol) but only *provenance* for dates (a date
+need not satisfy RFC 2822 to name a unique calendar day). Which role a
+standard plays depends on the domain; see §4.4.
+
+**Principle 3 — Determinism means proving uniqueness, not choosing the most
+likely answer.**
+This restates Law 1 and Law 4: when more than one fact is possible, report
+`Ambiguous`; never pick the probable one.
+
+**Principle 4 — The core engine should not own domain knowledge.**
+Domain tables, grammars, and policies belong to capabilities (§4.4). The core
+owns execution, lifecycle, the contract *protocol*, results, and tracing.
+
+**Principle 5 — Contracts define policy; capabilities implement behavior.**
+The two layers of *contract* are split in §5.5. The domain contract is a
+declarative DSL; the capability owns the algorithm that satisfies it.
+
+**Principle 6 — New domains are additive, not core-modifying.**
+Shipping a new canonicalization domain must not require editing core. Registry
+self-discovery (§6.5) is the mechanism that keeps this true.
+
+These six principles, together with the fourteen laws, point to the intended
+long-term shape of Paxman:
+
+```
+Small deterministic core
+        +
+Capability-owned canonicalizers
+        +
+Declarative contracts
+        +
+Registry-based discovery
+        +
+Explicit provenance and trace
+```
+
+Adding dates, currencies, tax codes, units of measure, addresses, or
+identifiers should make Paxman *broader*, never *larger internally*: the core
+remains a stable canonicalization kernel surrounded by specialized knowledge
+modules.
+
 ---
 
 ## 8. Versioned Contracts
@@ -827,3 +1050,16 @@ The constitutional framing — "laws, not ADRs" — is what makes Paxman
 resistant to the kind of silent invention that constitutional boundaries
 exist to prevent: a system can fail not because it lacked components, but
 because it lacked the laws to reject inventions.
+
+---
+
+On 2026-07-15, an architecture discussion refined the document with the
+semantic-equivalence clarification (§1.4), the capability ownership of domain
+knowledge (§4.4–§4.5), the two-layer contract model (§5.5), registry-based
+discovery (§6.5), and the six Design Principles (§7.15). None of these
+contradict the fourteen laws; they make explicit what the original
+conversation left implicit about *equivalence*, *where domain knowledge
+lives*, and *how new domains join without modifying core*. The discussion's
+date-pipeline example (lexer → grammar → recognizer → validator → renderer)
+is recorded as one *capability-private* strategy, not a mandated shape — see
+§4.5.

@@ -29,8 +29,8 @@ class VersionStamp:
 class CapabilityResult:
     """The value a capability returns from its canonicalize method.
 
-    `value` is required only when status is CANONICALIZED. The orchestrator
-    (src/paxman/_core/orchestrator.py) treats status other than
+    `value` is required only when status is CANONICALIZED. The engine
+    (src/paxman/_core/engine.py) treats status other than
     CANONICALIZED as the authoritative outcome and ignores `value` in
     those cases.
     """

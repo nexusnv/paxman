@@ -15,7 +15,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
-from paxman._errors import ContractError
+from paxman._errors import ConfigurationError, ContractError
 
 if TYPE_CHECKING:
     from paxman._capabilities.date.contract import CanonicalDateContract
@@ -37,7 +37,7 @@ _REGISTRY: dict[str, Builder] = {}
 def register_contract(kind: str, builder: Builder) -> None:
     """Register a builder for contract `kind`. Raises on duplicate kind."""
     if kind in _REGISTRY:
-        raise ContractError(f"contract kind already registered: {kind!r}")
+        raise ConfigurationError(f"contract kind already registered: {kind!r}")
     _REGISTRY[kind] = builder
 
 

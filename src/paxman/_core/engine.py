@@ -34,7 +34,7 @@ from paxman._core.result import VersionStamp
 from paxman._core.status import Status
 from paxman._core.validation import validate as validate_value
 from paxman._dsl.parser import parse_contract
-from paxman._errors import ContractError, UnsupportedContractError
+from paxman._errors import CanonicalizationError, ContractError, UnsupportedContractError
 from paxman._registry.capability_registry import CapabilityRegistry
 
 
@@ -152,11 +152,13 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
     if capability_result.status is Status.CANONICALIZED:
         # A CANONICALIZED capability result is required to carry a
         # non-None value (mandate Law 2 — the canonical value is the
-        # whole point of canonicalization). The assert narrows the
-        # static type from `str | None` to `str` for the validator.
-        assert capability_result.value is not None, (
-            "CANONICALIZED capability result must carry a value"
-        )
+        # whole point of canonicalization). An explicit check (not an
+        # assert) is used so the invariant holds even under `python -O`,
+        # where asserts are stripped.
+        if capability_result.value is None:
+            raise CanonicalizationError(
+                "CANONICALIZED capability result must carry a value"
+            )
         try:
             validation = validate_value(capability_result.value, parsed_contract)
         except UnsupportedContractError:

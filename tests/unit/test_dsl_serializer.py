@@ -1,6 +1,7 @@
 from paxman._capabilities.date.contract import Date
 from paxman._capabilities.email.contract import Email
 from paxman._capabilities.uuid.contract import UUID
+from paxman._dsl.parser import parse_contract
 from paxman._dsl.serializer import serialize_contract
 
 
@@ -22,4 +23,13 @@ def test_serialize_uuid() -> None:
 
 
 def test_serialize_date() -> None:
-    assert serialize_contract(Date(locale="ISO"))["locale"] == "ISO"
+    c = Date(locale="ISO")
+    d = serialize_contract(c)
+    # Assert the complete serialized mapping, not just one field.
+    assert d == {
+        "kind": "canonical_date",
+        "locale": "ISO",
+        "version_field": 1,
+    }
+    # Round-trips back to an equivalent contract via parse_contract.
+    assert parse_contract(d) == c

@@ -31,7 +31,7 @@ makes each one mechanically enforceable.
 | Invariant | Enforced by |
 |---|---|
 | **Identity** — only canonicalize; never interpret, infer, or orchestrate. | `_capabilities/protocol.py` forbids control-flow verbs; the engine is one module (`_core/engine.py`), not a graph; no `_planner/`, `_executor/`, `_reconciler/` directories exist. |
-| **Determinism** — same `input`, `contract`, `capabilities`, `configuration`, `version` → same artifact. | `_core/engine.py` is pure; `_registry/capability_registry.py` freezes the capability set on the first `canonicalize` call so the set is fixed before the first execution. |
+| **Determinism** — same `input`, `contract`, `capabilities`, `configuration`, `version` → same artifact. | `_core/engine.py` is deterministic once the registry is frozen; `_registry/capability_registry.py` freezes the capability set on the first `canonicalize` call so the set is fixed before the first execution (mandate Law 1). |
 | **Replay** — `replay(artifact, contract) == artifact` byte-for-byte, without re-execution. | `_core/replay.py` is its own module, given first-class architectural weight (see below); `_core/artifact.py` is immutable (Law 13); the leaf value objects (`Status`, `Evidence`, `VersionStamp`, `CapabilityResult`) live in `_core/status.py`, `_core/provenance.py`, and `_core/result.py`. |
 
 A contributor who proposes a directory that does not serve one of these

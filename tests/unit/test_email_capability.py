@@ -270,6 +270,14 @@ class TestEmailCapability:
         assert r.status is Status.INVALID
         assert "grammar_rejected" in {e.rule for e in r.evidence}
 
+    def test_quoted_local_without_internal_space_is_still_rejected(self) -> None:
+        # Guards the Oracle MUST-FIX: clean quoted locals are out-of-scope
+        # (rejected), never silently canonicalized or lowercase-bypassed.
+        c = _cap()
+        r = c.canonicalize('"User"@Example.COM', _contract())
+        assert r.status is Status.INVALID
+        assert "grammar_rejected" in {e.rule for e in r.evidence}
+
     def test_grammar_rejects_non_atext_in_local_part(self) -> None:
         c = _cap()
         r = c.canonicalize("user,name@example.com", _contract())

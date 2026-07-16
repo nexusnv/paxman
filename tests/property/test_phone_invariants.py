@@ -43,6 +43,25 @@ def test_idempotence(cc: str, national: str) -> None:
     assert second == first
 
 
+# Separated national form (resolver prepends the declared country code).
+# 7-15 digits so the body clears the grammar's minimum-length floor and the
+# E.164 validator (<=15 digits). Exercises the non-e164 branch of
+# generate_interpretations under replay.
+_sep = st.sampled_from([" ", "-", ".", "(", ")", "(", "-", " ", "."])
+_national_sep = st.integers(min_value=10**6, max_value=10**14 - 1).map(lambda n: str(n))
+
+
+@pytest.mark.property
+@settings(max_examples=50, deadline=None, derandomize=True)
+@given(national=_national_sep, sep1=_sep, sep2=_sep)
+def test_replay_separated_national(national: str, sep1: str, sep2: str) -> None:
+    s = f"{national[:3]}{sep1}{national[3:6]}{sep2}{national[6:]}"
+    art = paxman.canonicalize(s, Phone(country="US"))
+    assert art.status is Status.CANONICALIZED
+    rehydrated = paxman.replay(art, Phone(country="US"))
+    assert rehydrated == art
+
+
 @pytest.mark.property
 @settings(max_examples=50, deadline=None, derandomize=True)
 @given(value=st.text(min_size=1, max_size=40))

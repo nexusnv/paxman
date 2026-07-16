@@ -63,9 +63,12 @@ def generate_interpretations(
     for rep in reps:
         if rep.grammar_id == "e164":
             # Already global; reassemble (idempotent — reproduces input).
+            # ``cc_first`` is only the first digit of the country code; the
+            # remaining digits live in ``national``. Reassembling reproduces
+            # the original E.164 string byte-for-byte.
             candidates.append(
                 _Candidate(
-                    f"+{rep.captures['cc']}{rep.captures['national']}",
+                    f"+{rep.captures['cc_first']}{rep.captures['national']}",
                     "e164",
                     rep.source,
                     (_evidence("no_transformation_needed"),),
@@ -122,6 +125,14 @@ def classify(
     ``candidates`` element is the sorted tuple of every surviving canonical
     form when the outcome is ``AMBIGUOUS`` (surface the ambiguity instead of
     guessing), and ``None`` otherwise.
+
+    Note: for phone the three grammars are mutually exclusive by construction
+    (``e164`` requires a leading ``+``; ``national`` requires at least one
+    separator; ``digits_only`` requires no separator), so recognition yields
+    at most one ``RecognizedRep`` and therefore at most one canonical
+    survivor. The ``AMBIGUOUS`` branch is thus unreachable through the real
+    pipeline for v1 and is retained defensively for parity with the other
+    capabilities. Paxman never guesses between competing forms.
     """
     seen: set[str] = set()
     unique: list[_Survivor] = []

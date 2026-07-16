@@ -24,8 +24,12 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
             "RFC 3966 §3 / ITU-T E.164 (max 15 digits; country code first "
             "digit 1-9; national part non-empty)"
         ),
-        # --- transforming rule (success path) ---
+        # --- transforming rules (success path) ---
         "no_transformation_needed": ("RFC 3966 §3 (the input is already the global E.164 form)"),
+        "cc_prepended": (
+            "RFC 3966 §3 / ITU-T E.164 (national/digits-only form expanded to the "
+            "global +<cc><national> form by prepending the declared country code)"
+        ),
     }
 )
 

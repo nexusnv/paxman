@@ -87,19 +87,19 @@ def _make_grammar(id: str, source: str, pattern: str, shape: str | None = None) 
 GRAMMARS: tuple[Grammar, ...] = (
     _make_grammar(
         "e164",
-        "RFC 3966 §3 / ITU-T E.164 (global form: +<cc><national>)",
-        r"^\+(?P<cc_first>[0-9])(?P<national>\d+)$",
+        "RFC 3966 §3 / ITU-T E.164 (global form: +<cc><national>; ASCII digits only)",
+        r"^\+(?P<cc_first>[0-9])(?P<national>[0-9]+)$",
     ),
     _make_grammar(
         "national",
-        "ITU-T E.164 national-number pattern (separated form; requires >=7 digits)",
-        r"^(?P<national>(?=(?:\D*\d){7})[\d(][\d \-().]*[ \-().][\d \-().]*\d)$",
+        "ITU-T E.164 national-number pattern (separated form; requires >=7 ASCII digits)",
+        r"^(?P<national>(?=(?:[^0-9]*[0-9]){7})[0-9(][0-9 \-().]*[ \-().][0-9 \-().]*[0-9])$",
     ),
     _make_grammar(
         "digits_only",
-        "ITU-T E.164 (digits only, no separators; leading digit 1-9 so 00-prefixed "
-        "international strings are not matched)",
-        r"^(?P<national>[1-9]\d{6,14})$",
+        "ITU-T E.164 (ASCII digits only, no separators; leading digit 1-9 so "
+        "00-prefixed international strings are not matched)",
+        r"^(?P<national>[1-9][0-9]{6,14})$",
     ),
 )
 

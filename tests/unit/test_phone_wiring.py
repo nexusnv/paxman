@@ -1,3 +1,13 @@
+"""Wiring tests for the phone capability.
+
+These tests verify the constitutional guarantees the wiring must preserve:
+- Law 1 (Determinism): phone is part of the fixed, known built-in set.
+- Mandate §5.3 (user knowledge wins): the public surface re-exports Phone and
+  CanonicalPhoneContract, and the Contract union admits the phone contract.
+- Replay/registration integrity: a phone contract round-trips through the
+  public autoload path (builtin_capabilities -> load_builtins -> canonicalize).
+"""
+
 import paxman
 from paxman._capabilities.discovery import builtin_capabilities
 from paxman._capabilities.phone.contract import CanonicalPhoneContract, Phone

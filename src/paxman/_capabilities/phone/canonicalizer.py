@@ -82,7 +82,7 @@ def generate_interpretations(
                     f"+{cc}{national}",
                     rep.grammar_id,
                     rep.source,
-                    (),
+                    (_evidence("cc_prepended"),),
                 )
             )
     return candidates
@@ -101,7 +101,7 @@ def resolve_and_validate(
     drop_reasons: list[str] = []
     for c in candidates:
         body = c.value[1:]  # strip leading '+'
-        if not body or not body.isdigit():
+        if not body or not body.isascii() or not body.isdigit():
             drop_reasons.append("grammar_rejected")
             continue
         if len(body) > 15:

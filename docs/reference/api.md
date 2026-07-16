@@ -115,7 +115,7 @@ Parse a Dict DSL contract into a `Contract` value object. Also accepts an alread
 |---|---|---|
 | `spec` | `Any` | A dict with a `kind` discriminator, or an already-parsed contract. |
 
-**Returns:** `Contract` (the union `CanonicalEmailContract | CanonicalUUIDContract | CanonicalPhoneContract`).
+**Returns:** `Contract` (the union `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract`).
 
 **Raises:** `ContractError` if the spec is malformed (unknown `kind`, missing `kind`, wrong-type field, a `provider_aliases` value outside the closed set, or an invalid uuid version value for a `canonical_uuid` contract).
 
@@ -238,10 +238,10 @@ The frozen value object representing a phone canonicalization policy. Has an `as
 ### `Contract`
 
 ```python
-Contract = CanonicalEmailContract | CanonicalUUIDContract | CanonicalPhoneContract
+Contract = CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract
 ```
 
-The union of both frozen contract types; currently `CanonicalEmailContract | CanonicalUUIDContract | CanonicalPhoneContract`. Future versions may add new contract kinds.
+The union of the frozen contract types; currently `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract`. Future versions may add new contract kinds.
 
 ### `Capability`
 

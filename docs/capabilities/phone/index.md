@@ -32,7 +32,7 @@ used to expand national-format numbers. There is no region inference.
 | `(650) 253-0000` | `Phone(country="US")` | `+16502530000` |
 | `2079460000` | `Phone(country="GB")` | `+442079460000` |
 
-## Limitations (drift excluded by mandate)
+## Limitations (Drift Excluded by Mandate)
 
 - No region guessing / fuzzy matching (Law 3).
 - No carrier / line-type / geo interpretation (Law 4, Law 8a).

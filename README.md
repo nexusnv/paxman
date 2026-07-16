@@ -94,9 +94,9 @@ MIT. See [`LICENSE`](./LICENSE).
 
 ## Extending Paxman
 
-Paxman ships with five built-in capabilities: `email_canonicalization`,
+Paxman ships with six built-in capabilities: `email_canonicalization`,
 `uuid_canonicalization`, `date_canonicalization`, `phone_canonicalization`,
-and `url_canonicalization`. To register your own
+`url_canonicalization`, and `boolean_canonicalization`. To register your own
 custom deterministic capability (a new canonical type, or an alternative
 implementation of an existing one), use the SPI:
 

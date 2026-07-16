@@ -178,6 +178,12 @@ src/paxman/
 │       ├── canonicalizer.py    #     URLCapability
 │       ├── parser.py
 │       └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
+│   └── boolean/                #   BooleanCapability (shipped built-in)
+│       ├── __init__.py         #     re-exports Boolean, CanonicalBooleanContract, BooleanCapability, GRAMMARS, recognize, _RULE_PROVENANCE
+│       ├── contract.py         #     CanonicalBooleanContract + Boolean()
+│       ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
+│       ├── canonicalizer.py    #     BooleanCapability
+│       └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 ├── _dsl/                       # the contract DSL (Dict ↔ value object)
 │   ├── __init__.py             #   re-exports parse_contract
 │   ├── parser.py               #   parse_contract — kind dispatch
@@ -435,8 +441,8 @@ orchestrator classifies as `UNSUPPORTED`.
 
 ### `_capabilities/{email,uuid,date,phone,url}/` — Built-In Capabilities
 
-Ships five built-ins today: `EmailCapability`, `UUIDCapability`,
-`DateCapability`, `PhoneCapability`, and `URLCapability`. Each owns its domain under `paxman._capabilities.<domain>`
+Ships six built-ins today: `EmailCapability`, `UUIDCapability`,
+`DateCapability`, `PhoneCapability`, `URLCapability`, and `BooleanCapability`. Each owns its domain under `paxman._capabilities.<domain>`
 (`contract.py`, `grammar.py`, `canonicalizer.py`, `parser.py`, `rules.py`,
 plus `value.py` and `calendar.py` for dates). Each capability package
 self-registers its contract builder via `register_contract` so

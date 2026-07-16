@@ -28,7 +28,7 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         # --- ambiguity rule (recognition produced more than one survivor) ---
         "ambiguous_provider_equivalence": (
             "RFC 4122 §3 (more than one canonical reading survived validation; "
-            "Paxman surfaces the ambiguity rather than guessing)"
+            "Paxman surfaces the ambiguity rather than guessing) — Law 3 (never guess)"
         ),
         # --- transforming rule (success path) ---
         "no_transformation_needed": "RFC 4122 §3 (the canonical form is X; X was provided)",

@@ -1,6 +1,6 @@
 # Email Capability
 
-The email capability is the only built-in capability shipped with Paxman v2.0.0. It canonicalizes strings that represent email addresses.
+The email capability is a built-in capability shipped with Paxman v2.0.0. It canonicalizes strings that represent email addresses. It is built on the recognition Layer 1 architecture: a `grammar.py` recognition layer feeds a resolver/validator/classifier pipeline — the same shape used by the uuid and date capabilities.
 
 **Capability name:** `email_canonicalization`
 
@@ -57,8 +57,20 @@ These rules cause the capability to return `Status.INVALID` with a single eviden
 | `missing_at_sign` | The value does not contain `@`. | RFC 5322 §3.6 |
 | `empty_local_or_domain` | The local part or domain is empty. | RFC 5322 §3.6 |
 | `grammar_rejected` | After all rewrites, the result fails RFC 5322 §3.2.3 dot-atom (local part) or RFC 5321 §3.4 / RFC 1035 §2.3.1 (domain) grammar. | RFC 5322 §3.2.3 + RFC 5321 §3.4 + RFC 1035 §2.3.1 |
+| `unrecognized_format` | The input names no known email shape: it does not full-match any recognition grammar in `grammar.py` (e.g. it has an `@` but the local/domain parts are not a recognized shape). Distinct from `grammar_rejected`, which fires *after* a recognized shape is rewritten and still fails the dot-atom gate. | RFC 5322 §3.4.1 (addr-spec) |
 
 Two of the rejecting rules — `not_an_email_contract` and `not_a_string_value` — have empty citations. They are dispatch invariants: they describe a routing failure, not a canonical-form rule. The remaining rejecting rules all cite a specification.
+
+## The Grammar Gate (Recognition Layer 1)
+
+Before any rewriting, the capability runs `grammar.recognize` over the input. `grammar.py` declares four anchored recognition grammars, each carrying a Law-14 `source`:
+
+- `addr_spec` — RFC 5322 §3.4.1 `local@domain` (the canonical target shape).
+- `ws_padded_addr_spec` — internal whitespace tolerated (obfuscation tolerance), still an addr-spec shape.
+- `verbal_at_dot_addr_spec` — spoken "at"/"dot" obfuscation (`john at example dot com`).
+- `quoted_local_addr_spec` — RFC 5322 §3.2.4 quoted local part (recognized but out of v2.0.0 scope; kept raw so it fails the dot-atom gate).
+
+Recognition assigns **no meaning** — it returns only raw captures. If no grammar full-matches, the capability returns `Status.INVALID` with `unrecognized_format`. Otherwise the resolver (`generate_interpretations`) assigns meaning to the captures and enumerates candidate mailboxes, `resolve_and_validate` checks each against the dot-atom gate, and `classify` maps the survivors to a `Status` (surfacing `AMBIGUOUS` candidates rather than guessing).
 
 ## The Grammar Gate
 

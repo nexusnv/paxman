@@ -5,9 +5,8 @@
 > recorded here. Every architectural decision, every pull request, and every
 > new abstraction is evaluated against the principles in this document.
 >
-> Where this document conflicts with `README.md`,
-> [`PROPOSED_STRUCTURE.md`](./PROPOSED_STRUCTURE.md), an ADR, or any other
-> document, this document wins.
+> Where this document conflicts with `README.md`, `ARCHITECTURE.md`, an ADR,
+> or any other document, this document wins.
 >
 > **Last amended:** 2026-07-15 — semantic-equivalence clarification (§1.4),
 > capability ownership of domain knowledge (§4.4–§4.5), two-layer contract
@@ -677,8 +676,8 @@ Instead of returning a bare `failed`, Paxman classifies the failure into a
 A successfully-returned artifact with a non-`Canonicalized` `Status` is not
 an exception; it is a deterministic outcome. Exceptions are reserved for
 calls that *cannot proceed at all* (broken contract, version mismatch,
-internal invariant violation) and are governed by `PROPOSED_STRUCTURE.md`'s
-`_errors.py` hierarchy.
+internal invariant violation) and are governed by the `paxman._errors`
+package hierarchy.
 
 ### Law 8a — Capabilities Depend Only On Replayable Inputs
 
@@ -799,7 +798,7 @@ of them may be reassigned after construction.
 >    Account," retrieved 2026-07-14).
 > 3. **An explicitly declared Paxman policy** — cited by a Paxman document
 >    that records the decision (MANDATE.md section, an ADR, or the
->    capability's published spec under `docs/superpowers/specs/`).
+>    capability's published spec under `docs/capabilities/<domain>/index.md`).
 >
 > A rule with no provenance citation is, by construction, a rule without
 > an authority — which is precisely what Law 4 (Canonicalize, Don't
@@ -946,9 +945,8 @@ locale = "en-MY")`. Replay across that boundary is governed by two rules:
    (or equivalent) so that an artifact records not only the Paxman version
    and the capability set but also the contract version that produced it.
 2. **Replay against a different contract version is an open design decision.**
-   It is recorded in `PROPOSED_STRUCTURE.md` §"Decisions left to make." The
-   conservative default is to raise `VersionMismatchError`; a permissive
-   future option is to allow replay if the byte-equal contract is unchanged.
+    The conservative default is to raise `VersionMismatchError`; a permissive
+    future option is to allow replay if the byte-equal contract is unchanged.
 
 The principle behind both rules: an artifact is reproducible only if every
 input that shaped it — including the contract — is part of its evidence.
@@ -1038,13 +1036,12 @@ make explicit what the original conversation left implicit.
 Law 14 (Canonical Forms Have Provenance) was added on 2026-07-14, after a
 first-time-user experiment surfaced that the EmailCapability silently
 returned `CANONICALIZED` for malformed inputs (`user@example.com@example.com`,
-`user@-domain.com`, `user@[127.0.0.300]`, etc.). The existing thirteen laws
+`user@-domain.com`, `user@[127.0.0.300]`, etc.). The existing laws
 described *how* Paxman behaves (deterministically, no guessing,
-evidence-first) but none of them described *where canonical forms come from`.
+evidence-first) but none of them described *where canonical forms come from*.
 Law 14 closes that gap; it is the constitutional answer to silent
 canonical-form invention. The recalibration audit for the EmailCapability
-is recorded in
-[`docs/superpowers/specs/2026-07-13-email-canonicalization-design.md` §7](./docs/superpowers/specs/2026-07-13-email-canonicalization-design.md).
+is recorded in its capability spec under `docs/capabilities/email/index.md`.
 
 The constitutional framing — "laws, not ADRs" — is what makes Paxman
 resistant to the kind of silent invention that constitutional boundaries

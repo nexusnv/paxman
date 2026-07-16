@@ -20,6 +20,7 @@ from paxman._capabilities.date.canonicalizer import DateCapability
 from paxman._capabilities.email.canonicalizer import EmailCapability
 from paxman._capabilities.phone.canonicalizer import PhoneCapability
 from paxman._capabilities.protocol import Capability
+from paxman._capabilities.url.canonicalizer import URLCapability
 from paxman._capabilities.uuid.canonicalizer import UUIDCapability
 
 
@@ -39,4 +40,10 @@ def builtin_capabilities() -> list[Capability]:
     #   replay(byte-for-byte) holds across the whole built-in set.
     # - Mandate §5.3 (user knowledge wins): load_builtins skips names already
     #   registered, so a user can override any of these before first canonicalize.
-    return [EmailCapability(), UUIDCapability(), DateCapability(), PhoneCapability()]
+    return [
+        EmailCapability(),
+        UUIDCapability(),
+        DateCapability(),
+        PhoneCapability(),
+        URLCapability(),
+    ]

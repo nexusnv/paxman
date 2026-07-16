@@ -14,6 +14,7 @@ from paxman._capabilities.date.contract import CanonicalDateContract, Date
 from paxman._capabilities.email.contract import CanonicalEmailContract, Email
 from paxman._capabilities.phone.contract import CanonicalPhoneContract, Phone
 from paxman._capabilities.protocol import Capability
+from paxman._capabilities.url.contract import URL, CanonicalURLContract
 from paxman._capabilities.uuid.contract import UUID, CanonicalUUIDContract
 from paxman._core.artifact import ExecutionArtifact
 from paxman._core.classification import ValidationResult
@@ -39,7 +40,11 @@ from paxman._registry.capability_registry import CapabilityRegistry
 # `paxman._core.contracts`; this union is what the DSL parser returns and
 # what callers hold.
 Contract = (
-    CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract
+    CanonicalEmailContract
+    | CanonicalUUIDContract
+    | CanonicalDateContract
+    | CanonicalPhoneContract
+    | CanonicalURLContract
 )
 
 
@@ -80,10 +85,12 @@ def __getattr__(name: str) -> Any:
 
 
 __all__ = [
+    "URL",
     "UUID",
     "CanonicalDateContract",
     "CanonicalEmailContract",
     "CanonicalPhoneContract",
+    "CanonicalURLContract",
     "CanonicalUUIDContract",
     "CanonicalizationError",
     "Capability",

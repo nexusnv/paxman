@@ -142,20 +142,23 @@ src/paxman/
 │   ├── protocol.py             #   Capability Protocol (Law 8a: pure)
 │   ├── discovery.py            #   builtin_capabilities() — source of truth
 │   ├── email/                  #   EmailCapability (shipped built-in)
-│   │   ├── __init__.py         #     re-exports CanonicalEmailContract, Email
+│   │   ├── __init__.py         #     re-exports CanonicalEmailContract, Email, GRAMMARS, recognize
 │   │   ├── contract.py         #     CanonicalEmailContract + Email()
+│   │   ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
 │   │   ├── canonicalizer.py    #     EmailCapability (the SPI implementation)
 │   │   ├── parser.py           #     email-specific parsing helpers
 │   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 │   ├── uuid/                   #   UUIDCapability (shipped built-in)
-│   │   ├── __init__.py
+│   │   ├── __init__.py         #     re-exports CanonicalUUIDContract, UUID, GRAMMARS, recognize
 │   │   ├── contract.py         #     CanonicalUUIDContract + UUID()
+│   │   ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
 │   │   ├── canonicalizer.py    #     UUIDCapability
 │   │   ├── parser.py
 │   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 │   └── date/                   #   DateCapability (shipped built-in)
-│       ├── __init__.py
+│       ├── __init__.py         #     re-exports CanonicalDateContract, Date, GRAMMARS, recognize
 │       ├── contract.py         #     CanonicalDateContract + Date()
+│       ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
 │       ├── canonicalizer.py    #     DateCapability
 │       ├── parser.py
 │       ├── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
@@ -420,10 +423,32 @@ orchestrator classifies as `UNSUPPORTED`.
 
 Ships three built-ins today: `EmailCapability`, `UUIDCapability`, and
 `DateCapability`. Each owns its domain under `paxman._capabilities.<domain>`
-(`contract.py`, `canonicalizer.py`, `parser.py`, `rules.py`, plus `value.py`
-and `calendar.py` for dates). Each capability package self-registers its
-contract builder via `register_contract` so `_dsl/parser.parse_contract`
-can dispatch on the contract `kind` without the engine knowing the domain.
+(`contract.py`, `grammar.py`, `canonicalizer.py`, `parser.py`, `rules.py`,
+plus `value.py` and `calendar.py` for dates). Each capability package
+self-registers its contract builder via `register_contract` so
+`_dsl/parser.parse_contract` can dispatch on the contract `kind` without the
+engine knowing the domain.
+
+Each capability shares the same four-stage shape, split so that recognition
+is **separate from** resolution (mandate Law 14 — a rule must derive its
+canonical form from a cited source; recognition assigns no meaning):
+
+1. **`grammar.recognize` (Layer 1 — recognition).** Anchored grammars in
+   `grammar.py` full-match the raw input and return `RecognizedRep` objects
+   carrying only *raw string captures* and a Law-14 `source`. No semantic
+   meaning is assigned here. Email has four grammars (addr-spec, whitespace-
+   padded, verbal "at"/"dot", quoted-local); date has a bracket-notation
+   grammar set; uuid has one canonical-form grammar (RFC 4122 §3).
+2. **`generate_interpretations` (resolver).** Assigns meaning to the raw
+   captures and enumerates candidate canonical forms, applying the declared
+   contract policies (lowercasing, provider-equivalence, etc.).
+3. **`resolve_and_validate`.** Validates each candidate against the domain
+   grammar; drops those that name no valid value (email: RFC 5322 §3.2.3
+   dot-atom; uuid: RFC 4122 §3 form + version-nibble policy).
+4. **`classify`.** Maps survivors to a `Status` — `CANONICALIZED`,
+   `AMBIGUOUS` (when more than one candidate survives, the ambiguity is
+   surfaced, never guessed), or `INVALID` (a recognition miss yields
+   `unrecognized_format`; a validation failure yields `grammar_rejected`).
 
 The discovery helper `builtin_capabilities()` lives in
 `paxman._capabilities.discovery` and is the single source of truth for "what
@@ -528,9 +553,8 @@ the legacy architecture. The mandate adds two further refusals.
 | `examples/` (3 mini-packages) | Legacy examples demonstrated broken behavior. Paxman has no examples; the README is the example. |
 | `playground/` (Docker, Jupyter, notebooks) | Legacy notebooks demonstrated broken behavior. Paxman has no playground. |
 | `docs/adr/` (11 ADRs) | The ADRs describe a legacy architecture that does not exist in Paxman. New ADRs, when warranted, must be evaluated against the laws (mandate §10.3). |
-| `docs/concepts/`, `docs/reference/`, `docs/howto/`, `docs/specs/`, `docs/guides/`, `docs/contributing/`, `docs/security/`, `docs/operations/`, `docs/initiatives/`, `docs/superpowers/` | Diátaxis is a documentation framework for projects that have something to document. Paxman has not earned documentation yet. |
-| `docs/index.md` (the RTD landing page) | Paxman has no RTD site. |
-| `mkdocs.yml`, `.readthedocs.yaml` | Paxman has no docs site. |
+| `docs/` (legacy Diátaxis tree: `docs/reference/`, `docs/guides/`, `docs/superpowers/`, etc.) | The legacy docs described a different architecture. The current `docs/` tree (see `docs/index.md`) is the live documentation and is authoritative where it does not conflict with this document or the mandate. |
+| `mkdocs.yml`, `.readthedocs.yaml` | The docs site build config is out of scope for this architecture document; the `docs/` tree is plain Markdown consumed by the project's doc tooling. |
 | `scripts/` (`golden bootstrap`, `coverage check`, `fetch_test_data`, `benchmark_import_time`) | Scripts that are tied to legacy subsystems. The current `scripts/` directory holds only the static-analysis greps that enforce this architecture; the legacy bootstrap / fetch / benchmark scripts are gone. |
 | `Makefile` (236 lines, 47 targets) | Paxman has no Makefile. `uv run` is enough. |
 | `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, `AGENTS.md` | Stub files that referenced the legacy project structure. Paxman has no equivalent stubs. When `CONTRIBUTING.md` returns, its first sentence must be the closing mandate of the mandate: *"Paxman would rather reject a value than silently canonicalize it incorrectly"* (mandate §10.4). |

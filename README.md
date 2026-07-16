@@ -13,7 +13,7 @@ From this version onward, Paxman identifies as a **deterministic canonicalizatio
 - **Deterministic capabilities, not pipelines.** Users may contribute new deterministic capabilities; they may not redefine Paxman's pipeline. The pipeline is part of the promise.
 - **Resolver, not planner.** "Planner" implies intelligence and strategy. Paxman discovers which capability explicitly declares that it canonicalizes the contract — a deterministic lookup, not a guess.
 
-The complete mandate — thirteen constitutional laws, the SPI rules, the vocabulary to retire, and the contributor litmus test — is recorded in [`MANDATE.md`](./MANDATE.md). That document supersedes the v1.x "contract-driven normalization" framing and is the boundary no future contributor may silently cross.
+The complete mandate — fourteen constitutional laws, the SPI rules, the vocabulary to retire, and the contributor litmus test — is recorded in [`MANDATE.md`](./MANDATE.md). That document supersedes the v1.x "contract-driven normalization" framing and is the boundary no future contributor may silently cross.
 
 > Paxman would rather reject a value than silently canonicalize it incorrectly.
 
@@ -94,7 +94,8 @@ MIT. See [`LICENSE`](./LICENSE).
 
 ## Extending Paxman
 
-Paxman ships with a built-in email capability. To register your own
+Paxman ships with three built-in capabilities: `email_canonicalization`,
+`uuid_canonicalization`, and `date_canonicalization`. To register your own
 custom deterministic capability (a new canonical type, or an alternative
 implementation of an existing one), use the SPI:
 
@@ -123,7 +124,7 @@ Calling `register_capability` after the first canonicalize raises
 `FrozenRegistryError`.**
 
 The built-in `EmailCapability` lives at
-`paxman._capabilities.builtins.email.EmailCapability` (private module —
+`paxman._capabilities.email.EmailCapability` (private module —
 the import path is part of the SPI surface; user-facing vocabulary is
 `Email()`, not `EmailCapability()`). The built-in is auto-loaded on the
 first canonicalize; you do not need to register it yourself.

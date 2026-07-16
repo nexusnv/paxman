@@ -8,6 +8,9 @@ the email/date capabilities.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
+
 import attrs
 
 from paxman._capabilities.boolean.contract import CanonicalBooleanContract
@@ -18,23 +21,26 @@ from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
 
-# Token -> canonical mapping (declared Paxman policy, spec §3.2).
-_TOKEN_TO_CANONICAL: dict[str, str] = {
-    "true": "true",
-    "t": "true",
-    "yes": "true",
-    "y": "true",
-    "on": "true",
-    "enabled": "true",
-    "1": "true",
-    "false": "false",
-    "f": "false",
-    "no": "false",
-    "n": "false",
-    "off": "false",
-    "disabled": "false",
-    "0": "false",
-}
+# Token -> canonical mapping (declared Paxman policy, spec §3.2). Immutable so
+# the canonical vocabulary cannot be mutated at runtime (mandate Law 1).
+_TOKEN_TO_CANONICAL: Mapping[str, str] = MappingProxyType(
+    {
+        "true": "true",
+        "t": "true",
+        "yes": "true",
+        "y": "true",
+        "on": "true",
+        "enabled": "true",
+        "1": "true",
+        "false": "false",
+        "f": "false",
+        "no": "false",
+        "n": "false",
+        "off": "false",
+        "disabled": "false",
+        "0": "false",
+    }
+)
 _NUMERIC_TOKENS = frozenset({"1", "0"})
 
 

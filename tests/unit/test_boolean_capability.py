@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import cast
 
 from paxman._capabilities.boolean import _RULE_PROVENANCE, BooleanCapability
 from paxman._capabilities.boolean.contract import CanonicalBooleanContract
@@ -14,10 +14,17 @@ def _cap() -> BooleanCapability:
     return BooleanCapability()
 
 
-def _contract(**kw: object) -> CanonicalBooleanContract:
-    base: dict[str, object] = dict(accept_numeric=True, accept_words=True, case_sensitive=False)
-    base.update(kw)
-    return CanonicalBooleanContract(**cast(Any, base))
+def _contract(
+    *,
+    accept_numeric: bool = True,
+    accept_words: bool = True,
+    case_sensitive: bool = False,
+) -> CanonicalBooleanContract:
+    return CanonicalBooleanContract(
+        accept_numeric=accept_numeric,
+        accept_words=accept_words,
+        case_sensitive=case_sensitive,
+    )
 
 
 class TestBooleanCapability:

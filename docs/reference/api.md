@@ -115,7 +115,7 @@ Parse a Dict DSL contract into a `Contract` value object. Also accepts an alread
 |---|---|---|
 | `spec` | `Any` | A dict with a `kind` discriminator, or an already-parsed contract. |
 
-**Returns:** `Contract` (the union `CanonicalEmailContract | CanonicalUUIDContract`).
+**Returns:** `Contract` (the union `CanonicalEmailContract | CanonicalUUIDContract | CanonicalPhoneContract`).
 
 **Raises:** `ContractError` if the spec is malformed (unknown `kind`, missing `kind`, wrong-type field, a `provider_aliases` value outside the closed set, or an invalid uuid version value for a `canonical_uuid` contract).
 
@@ -179,6 +179,22 @@ Domain-type sugar for declaring a UUID contract. Returns a `CanonicalUUIDContrac
 
 See [Concepts: Contracts](../concepts/contracts.md) and the [UUID capability spec](../capabilities/uuid/index.md).
 
+### `Phone`
+
+```python
+def Phone(*, country: str = "US") -> CanonicalPhoneContract
+```
+
+Domain-type sugar for declaring a phone contract. Returns a `CanonicalPhoneContract` value object. Keyword-only arguments.
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `country` | `str` | `"US"` | ISO 3166-1 alpha-2 country code used to expand national-format numbers. |
+
+**Returns:** `CanonicalPhoneContract` — a frozen value object with the same field.
+
+See [Concepts: Contracts](../concepts/contracts.md) and the [Phone capability spec](../capabilities/phone/index.md).
+
 ### `CanonicalEmailContract`
 
 ```python
@@ -206,13 +222,26 @@ class CanonicalUUIDContract:
 
 The frozen value object representing a UUID canonicalization policy. Has an `as_dict()` method; `parse_contract` produces it from a dict, and the orchestrator uses `as_dict()` via the structural Protocol.
 
+### `Canonical Phone Contract`
+
+```python
+@attrs.frozen
+class CanonicalPhoneContract:
+    country: str = "US"
+    kind: str = "canonical_phone"
+    version: int = 1
+    version_field: int = 1
+```
+
+The frozen value object representing a phone canonicalization policy. Has an `as_dict()` method; `parse_contract` produces it from a dict, and the orchestrator uses `as_dict()` via the structural Protocol.
+
 ### `Contract`
 
 ```python
-Contract = CanonicalEmailContract | CanonicalUUIDContract
+Contract = CanonicalEmailContract | CanonicalUUIDContract | CanonicalPhoneContract
 ```
 
-The union of both frozen contract types; currently `CanonicalEmailContract | CanonicalUUIDContract`. Future versions may add new contract kinds.
+The union of both frozen contract types; currently `CanonicalEmailContract | CanonicalUUIDContract | CanonicalPhoneContract`. Future versions may add new contract kinds.
 
 ### `Capability`
 

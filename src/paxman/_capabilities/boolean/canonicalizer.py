@@ -92,6 +92,13 @@ def resolve_and_validate(
     survivors: list[_Survivor] = []
     drop_reasons: list[str] = []
     for c in candidates:
+        # An already-canonical input ("true"/"false") is always valid: it is
+        # the *result* of canonicalization, never a gated user token. Accepting
+        # it unconditionally preserves idempotence (mandate Law 2) even when
+        # the contract disables word or numeric inputs.
+        if c.token == c.value:
+            survivors.append(_Survivor(c.value, c.rule, c.source, c.evidence))
+            continue
         is_numeric = c.token in _NUMERIC_TOKENS
         if is_numeric and not contract.accept_numeric:
             drop_reasons.append("policy_disabled_token")

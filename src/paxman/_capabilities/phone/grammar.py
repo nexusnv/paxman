@@ -84,7 +84,7 @@ GRAMMARS: tuple[Grammar, ...] = (
     _make_grammar(
         "e164",
         "RFC 3966 §3 / ITU-T E.164 (global form: +<cc><national>)",
-        r"^\+(?P<cc>[1-9])(?P<national>\d{4,14})$",
+        r"^\+(?P<cc>[0-9])(?P<national>\d+)$",
     ),
     _make_grammar(
         "national",
@@ -93,8 +93,8 @@ GRAMMARS: tuple[Grammar, ...] = (
     ),
     _make_grammar(
         "digits_only",
-        "ITU-T E.164 (digits only, no separators)",
-        r"^(?P<national>\d{7,15})$",
+        "ITU-T E.164 (digits only, no separators; leading digit 1-9 so 00-prefixed international strings are not matched)",
+        r"^(?P<national>[1-9]\d{6,14})$",
     ),
 )
 

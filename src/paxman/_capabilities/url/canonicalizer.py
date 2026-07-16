@@ -68,8 +68,6 @@ def _remove_dot_segments(path: str) -> str:
         result = "/" + result
     elif path.startswith("/"):
         result = "/" + result
-    else:
-        result = result
     return result
 
 

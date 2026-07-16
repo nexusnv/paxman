@@ -17,7 +17,7 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "not_a_uuid_contract": "",
         "not_a_string_value": "",
         # --- rejecting rules (authoritative spec) ---
-        "not_canonical_form": (
+        "unrecognized_format": (
             "RFC 4122 §3 (the canonical form is 36 chars; 8-4-4-4-12 grouping; lowercase hex)"
         ),
         "version_mismatch": "RFC 4122 §4.1.3 (version field encoding)",

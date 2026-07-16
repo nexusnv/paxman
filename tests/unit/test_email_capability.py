@@ -171,6 +171,17 @@ class TestEmailCapability:
         assert r.status is Status.INVALID
         assert "grammar_rejected" in {e.rule for e in r.evidence}
 
+    def test_unicode_whitespace_is_not_collapsed(self) -> None:
+        # Non-breaking space (U+00A0) and other non-ASCII whitespace are not
+        # ASCII whitespace, so they must not be stripped or collapsed -- the
+        # input stays unrecognized (deterministic across Python versions).
+        c = _cap()
+        for ws in ("\u00a0", "\u200b", "\u2007"):
+            r = c.canonicalize(f"user{ws}@example.com", _contract())
+            assert r.status is Status.INVALID, (ws, r.status)
+            r2 = c.canonicalize(f"user @example.com{ws}", _contract())
+            assert r2.status is Status.INVALID, (ws, r2.status)
+
     def test_ws_padded_canonicalizes_azahari_gmail(self) -> None:
         c = _cap()
         r = c.canonicalize("azahari @ gmail.com", _contract())
@@ -187,8 +198,7 @@ class TestEmailCapability:
         c = _cap()
         r = c.canonicalize("john.doe@gmail.com", _contract(provider_aliases="none"))
         assert r.status is Status.AMBIGUOUS
-        assert r.candidates is not None
-        assert set(r.candidates) == {"john.doe@gmail.com", "johndoe@gmail.com"}
+        assert r.candidates == ("john.doe@gmail.com", "johndoe@gmail.com")
 
     def test_ambiguous_gmail_equivalence_gmail_policy(self) -> None:
         c = _cap()
@@ -200,15 +210,13 @@ class TestEmailCapability:
         c = _cap()
         r = c.canonicalize("john.doe at gmail dot com", _contract(provider_aliases="none"))
         assert r.status is Status.AMBIGUOUS
-        assert r.candidates is not None
-        assert set(r.candidates) == {"john.doe@gmail.com", "johndoe@gmail.com"}
+        assert r.candidates == ("john.doe@gmail.com", "johndoe@gmail.com")
 
     def test_ambiguous_googlemail_none_policy(self) -> None:
         c = _cap()
         r = c.canonicalize("user@googlemail.com", _contract(provider_aliases="none"))
         assert r.status is Status.AMBIGUOUS
-        assert r.candidates is not None
-        assert set(r.candidates) == {"user@googlemail.com", "user@gmail.com"}
+        assert r.candidates == ("user@gmail.com", "user@googlemail.com")
 
     def test_grammar_rejects_consecutive_dots_in_local_part(self) -> None:
         c = _cap()

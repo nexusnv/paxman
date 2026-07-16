@@ -201,7 +201,7 @@ def generate_interpretations(
             domain = rep.captures["domain"]
             if contract.strip_whitespace:
                 raw = f"{local}@{domain}"
-                collapsed = re.sub(r"\s*([@.])\s*", r"\1", raw)
+                collapsed = re.sub(r"[ \t\r\n\f\v]*([@.])[ \t\r\n\f\v]*", r"\1", raw)
                 ws_ev: tuple[Evidence, ...] = ()
                 if collapsed != raw:
                     ws_ev = (_evidence("collapsed_internal_whitespace"),)
@@ -293,11 +293,19 @@ def classify(
     if len(survivors) == 1:
         s = survivors[0]
         return Status.CANONICALIZED, s.value, s.evidence, None
-    # >1 survivor -> AMBIGUOUS (Don't Guess). Surface every candidate.
+    # >1 survivor -> AMBIGUOUS (Don't Guess). Surface every candidate and
+    # the union of each survivor's derivation evidence, then mark the
+    # ambiguity itself.
+    merged: list[Evidence] = []
+    for survivor in survivors:
+        for ev in survivor.evidence:
+            if ev not in merged:
+                merged.append(ev)
+    merged.append(_evidence("ambiguous_provider_equivalence"))
     return (
         Status.AMBIGUOUS,
         None,
-        (_evidence("ambiguous_provider_equivalence"),),
+        tuple(merged),
         tuple(sorted({s.value for s in survivors})),
     )
 

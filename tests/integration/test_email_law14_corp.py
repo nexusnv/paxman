@@ -786,12 +786,14 @@ _RECOGNITION_LAYER: list[_Entry] = [
         frozenset({"deobfuscated_verbal_at_dot"}),
     ),
     # Gmail provider-equivalence yields two valid forms -> AMBIGUOUS.
+    # Evidence unions both survivors' derivation rules (dot removal applies
+    # to the gmail-canonical form) plus the ambiguity marker.
     _Entry(
         "john.doe@gmail.com",
         {},
         Status.AMBIGUOUS,
         None,
-        frozenset({"ambiguous_provider_equivalence"}),
+        frozenset({"stripped_dots_in_local_part", "ambiguous_provider_equivalence"}),
     ),
 ]
 

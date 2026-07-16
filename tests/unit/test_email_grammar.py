@@ -45,9 +45,12 @@ class TestGrammarCatalogue:
         assert len(ids) == len(set(ids))
 
     def test_every_grammar_records_provenance_source(self) -> None:
-        # Law 14: every grammar carries a non-empty source.
+        # Law 14: every grammar carries a citation-backed source (an
+        # authoritative spec section, a documented provider behavior, or an
+        # explicit Paxman policy reference) — not a bare description.
         for grammar in GRAMMARS:
             assert grammar.source
+            assert any(token in grammar.source for token in ("RFC", "Paxman", "spec", "§"))
 
 
 class TestAddrSpecGrammar:
@@ -73,7 +76,9 @@ class TestWsPaddedAddrSpecGrammar:
         reps = recognize("azahari @ gmail.com", _contract())
         rep = _rep_by_id(reps, "ws_padded_addr_spec")
         assert rep is not None
-        assert rep.source == "RFC 5322 §3.4.1 + §1.3 (obfuscation tolerance)"
+        assert rep.source == (
+            "RFC 5322 §3.4.1 + §1.3/§3.2.2 (CFWS/whitespace tolerated; obfuscation tolerance)"
+        )
         assert rep.captures == {"local": "azahari ", "domain": " gmail.com"}
 
     def test_ws_padded_also_matches_clean_addr_spec(self) -> None:
@@ -92,7 +97,10 @@ class TestVerbalAtDotAddrSpecGrammar:
         reps = recognize("azahari at gmail dot com", _contract())
         rep = _rep_by_id(reps, "verbal_at_dot_addr_spec")
         assert rep is not None
-        assert rep.source == "spoken-form email obfuscation ('at'→@, 'dot'→.)"
+        assert rep.source == (
+            "RFC 5322 §3.4.1 (addr-spec is the canonical target) — Paxman "
+            "recognition grammar for spoken 'at'/'dot' obfuscation"
+        )
         assert rep.captures == {"local": "azahari", "mid": "gmail", "tld": "com"}
 
     def test_verbal_at_dot_does_not_match_clean_addr_spec(self) -> None:

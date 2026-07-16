@@ -85,13 +85,18 @@ GRAMMARS: tuple[Grammar, ...] = (
     ),
     _make_grammar(
         "ws_padded_addr_spec",
-        "RFC 5322 §3.4.1 + §1.3 (obfuscation tolerance)",
-        r"^(?P<local>[^\s@]+\s*)@(?P<domain>\s*[^\s@]+(?:\s*\.\s*[^\s@]+)*)$",
+        "RFC 5322 §3.4.1 + §1.3/§3.2.2 (CFWS/whitespace tolerated; obfuscation tolerance)",
+        r"^(?P<local>[^ \t\r\n\f\v@]+[ \t\r\n\f\v]*)@"
+        r"(?P<domain>[ \t\r\n\f\v]*[^ \t\r\n\f\v@]+"
+        r"(?:[ \t\r\n\f\v]*\.[ \t\r\n\f\v]*[^ \t\r\n\f\v@]+)*)$",
     ),
     _make_grammar(
         "verbal_at_dot_addr_spec",
-        "spoken-form email obfuscation ('at'→@, 'dot'→.)",
-        r"^(?P<local>[A-Za-z0-9._%+\-]+)[\s\-]+at[\s\-]+(?P<mid>[A-Za-z0-9.\-]+)[\s\-]+dot[\s\-]+(?P<tld>[A-Za-z]{2,})$",
+        "RFC 5322 §3.4.1 (addr-spec is the canonical target) — Paxman "
+        "recognition grammar for spoken 'at'/'dot' obfuscation",
+        r"^(?P<local>[A-Za-z0-9._%+\-]+)[ \t\r\n\f\v\-]+at[ \t\r\n\f\v\-]+"
+        r"(?P<mid>[A-Za-z0-9.\-]+)[ \t\r\n\f\v\-]+dot[ \t\r\n\f\v\-]+"
+        r"(?P<tld>[A-Za-z]{2,})$",
     ),
     _make_grammar(
         "quoted_local_addr_spec",

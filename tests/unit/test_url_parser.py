@@ -1,6 +1,6 @@
 import pytest
 
-from paxman._capabilities.url.parser import _SCHEME_TO_DEFAULT_PORT, default_port_for_scheme
+from paxman._capabilities.url.parser import default_port_for_scheme
 
 # Mandate laws touched (Law 1 determinism, Law 3 never-guess on unknown
 # schemes, Law 14 provenance for the IANA-derived default-port values):
@@ -9,7 +9,23 @@ from paxman._capabilities.url.parser import _SCHEME_TO_DEFAULT_PORT, default_por
 
 @pytest.mark.parametrize(
     ("scheme", "port"),
-    [(s, p) for s, p in _SCHEME_TO_DEFAULT_PORT.items()],
+    [
+        ("http", 80),
+        ("https", 443),
+        ("ftp", 21),
+        ("ftps", 990),
+        ("ws", 80),
+        ("wss", 443),
+        ("ntp", 123),
+        ("ldap", 389),
+        ("ldaps", 636),
+        ("telnet", 23),
+        ("smtp", 25),
+        ("pop", 110),
+        ("imap", 143),
+        ("rtsp", 554),
+        ("sftp", 22),
+    ],
 )
 def test_known_schemes(scheme: str, port: int):
     assert default_port_for_scheme(scheme) == port

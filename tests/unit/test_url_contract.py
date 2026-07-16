@@ -1,5 +1,11 @@
 import pytest
 
+# Mandate laws covered by this file:
+#   Law 5  (Contract declares *what*, not *how*): the URL contract exposes only
+#           policy fields (scheme_allow, strip_userinfo, whatwg, ...), never an
+#           algorithm.
+#   Law 12 (Replay): the contract carries a version_field consumed by replay; a
+#           contract without it cannot round-trip through parse_contract.
 from paxman._capabilities.url.contract import URL, _build_url
 from paxman._errors import ContractError
 

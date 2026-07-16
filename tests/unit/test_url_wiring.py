@@ -2,6 +2,11 @@ import paxman
 from paxman._capabilities.discovery import builtin_capabilities
 from paxman._capabilities.url.contract import CanonicalURLContract
 
+# Mandate laws covered by this file:
+#   Law 1  (Determinism): discovery yields the same capability set every process.
+#   Law 8a (Lazy registration): built-ins register on first canonicalize, not at import.
+#   Law 12 (Replay): a wired URL built-in supports canonicalize -> replay byte-equality.
+
 
 def test_url_in_builtins():
     names = [c.name for c in builtin_capabilities()]

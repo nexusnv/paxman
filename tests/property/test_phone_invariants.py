@@ -17,8 +17,8 @@ from paxman._core.status import Status
 # Strategy: valid E.164 bodies — cc 1-3 digits (first 1-9), national 4-12 digits.
 # Capped so cc_len + national_len <= 15 (max E.164 length), keeping every
 # generated string canonicalizable rather than rejected as INVALID.
-_cc = st.integers(min_value=1, max_value=999).map(lambda n: str(n))
-_national = st.integers(min_value=1000, max_value=10**11 - 1).map(lambda n: str(n))
+_cc = st.integers(min_value=1, max_value=999).map(str)
+_national = st.integers(min_value=1000, max_value=10**11 - 1).map(str)
 
 
 @pytest.mark.property
@@ -48,7 +48,7 @@ def test_idempotence(cc: str, national: str) -> None:
 # E.164 validator (<=15 digits). Exercises the non-e164 branch of
 # generate_interpretations under replay.
 _sep = st.sampled_from([" ", "-", ".", "(", ")", "(", "-", " ", "."])
-_national_sep = st.integers(min_value=10**6, max_value=10**14 - 1).map(lambda n: str(n))
+_national_sep = st.integers(min_value=10**6, max_value=10**14 - 1).map(str)
 
 
 @pytest.mark.property

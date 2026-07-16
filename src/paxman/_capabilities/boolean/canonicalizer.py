@@ -153,11 +153,31 @@ class BooleanCapability:
     name: str = "boolean_canonicalization"
 
     def can_handle(self, contract: Contract, value: object) -> bool:
+        """Declare whether this capability canonicalizes the (contract, value) pair.
+
+        Returns True only when the contract is a CanonicalBooleanContract and
+        the value is None or a str. None is accepted so that a missing value
+        routes to Status.MISSING (spec §3.3) rather than Status.UNSUPPORTED;
+        any other type is not claimed.
+        """
         return isinstance(contract, CanonicalBooleanContract) and (
             value is None or isinstance(value, str)
         )
 
     def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+        """Canonicalize a boolean-shaped input into "true" or "false".
+
+        The pipeline (recognition → resolver → validation → classify):
+        - a non-boolean contract returns INVALID (not_a_boolean_contract);
+        - a non-None/non-str value returns INVALID (not_a_string_value);
+        - None or whitespace-only input returns MISSING (missing_value);
+        - leading/trailing ASCII whitespace is trimmed (trimmed_whitespace);
+        - Layer 1 recognition matches the boolean token grammar; an unmatched
+          input returns INVALID (unrecognized_token);
+        - the resolver maps the token to its canonical form, policy validation
+          drops tokens disabled by accept_numeric/accept_words
+          (policy_disabled_token), and classify emits the final Status.
+        """
         if not isinstance(contract, CanonicalBooleanContract):
             return CapabilityResult(
                 status=Status.INVALID, evidence=(_evidence("not_a_boolean_contract"),)

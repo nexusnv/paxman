@@ -1,7 +1,8 @@
 """Property tests for phone canonicalization invariants.
 
-Proves Mandate Law 2 (replay byte-equal), idempotence, and that no two
-built-in capabilities silently claim the same (contract, value) pair.
+Proves Mandate Law 12 (Replayability — replay(artifact, contract) == artifact
+byte-for-byte), idempotence, and that no two built-in capabilities silently
+claim the same (contract, value) pair.
 """
 
 from __future__ import annotations
@@ -30,6 +31,7 @@ def test_replay_byte_equal(cc: str, national: str) -> None:
     assert art.status is Status.CANONICALIZED
     rehydrated = paxman.replay(art, Phone(country="US"))
     assert rehydrated == art
+    assert rehydrated.canonical_bytes() == art.canonical_bytes()
 
 
 @pytest.mark.property
@@ -60,6 +62,7 @@ def test_replay_separated_national(national: str, sep1: str, sep2: str) -> None:
     assert art.status is Status.CANONICALIZED
     rehydrated = paxman.replay(art, Phone(country="US"))
     assert rehydrated == art
+    assert rehydrated.canonical_bytes() == art.canonical_bytes()
 
 
 @pytest.mark.property

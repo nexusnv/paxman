@@ -47,3 +47,11 @@ def test_letter_string_rejected():
 def test_recognize_assigns_no_meaning():
     reps = recognize("+16502530000", CanonicalPhoneContract())
     assert set(reps[0].captures.keys()) == {"cc_first", "national"}
+
+
+def test_unicode_decimal_digits_rejected():
+    # Arabic-Indic digits (٠١٢٣٤٥٦٧) are Unicode decimal digits; \d would
+    # match them, but phone canonicalization is ASCII-only. Recognition must
+    # reject them so no Unicode digits leak into a canonical E.164 form.
+    assert recognize("١٢٣٤٥٦٧", CanonicalPhoneContract()) == []
+    assert recognize("+١٦٥٠٢٥٣٠٠٠٠", CanonicalPhoneContract()) == []

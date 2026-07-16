@@ -31,4 +31,12 @@ def builtin_capabilities() -> list[Capability]:
     new built-in here makes it auto-registered before the first
     canonicalize; the user does not need to register it themselves.
     """
+    # Governing laws for this wiring:
+    # - Law 1 (Determinism): the built-in set is fixed and known; the order
+    #   here is the deterministic registration order fed to load_builtins.
+    # - Law 12 (Replayability) + Law 14 (Evidence provenance): every built-in
+    #   contributes only deterministic, provenance-backed canonicalization so
+    #   replay(byte-for-byte) holds across the whole built-in set.
+    # - Mandate §5.3 (user knowledge wins): load_builtins skips names already
+    #   registered, so a user can override any of these before first canonicalize.
     return [EmailCapability(), UUIDCapability(), DateCapability(), PhoneCapability()]

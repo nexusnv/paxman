@@ -4,7 +4,7 @@ A contract declares *what* the canonical form is. It is the source of truth in P
 
 ## The Contract Types in v2.0.0
 
-v2.0.0 ships exactly three contract kinds: `canonical_email`, `canonical_uuid`, and `canonical_phone`. Future versions may add new kinds (Money, Date, etc.). The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalPhoneContract`.
+v2.0.0 ships four contract kinds: `canonical_email`, `canonical_uuid`, `canonical_date`, and `canonical_phone`. Future versions may add new kinds (Money, etc.). The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract`.
 
 ## `CanonicalEmailContract`
 
@@ -177,7 +177,7 @@ Unknown `kind` values, missing `kind`, non-bool values for bool fields, and unkn
 
 The Dict DSL is round-trip-safe: `parse_contract(contract.as_dict()) == contract` for any valid `CanonicalEmailContract`.
 
-### canonical_phone
+### Canonical Phone
 
 ```json
 {"kind": "canonical_phone", "country": "US"}

@@ -44,6 +44,7 @@ class TestPublicAPI:
             "CapabilityResult",
             "ValidationResult",
             "Contract",
+            "CanonicalBooleanContract",
             "CanonicalDateContract",
             "CanonicalEmailContract",
             "CanonicalPhoneContract",
@@ -64,6 +65,7 @@ class TestPublicAPI:
             "FrozenRegistryError",
             "UnsupportedContractError",
             "VersionMismatchError",
+            "Boolean",
             "annotations",
         }
         actual = {n for n in dir(paxman) if not n.startswith("_")}

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
@@ -37,6 +38,7 @@ def parse_contract(
     | CanonicalDateContract
     | CanonicalPhoneContract
     | CanonicalURLContract
+    | CanonicalBooleanContract
 ):
     """Parse a Dict DSL contract into a Contract value object.
 
@@ -58,6 +60,8 @@ def parse_contract(
     if isinstance(spec, CanonicalPhoneContract):
         return spec
     if isinstance(spec, CanonicalURLContract):
+        return spec
+    if isinstance(spec, CanonicalBooleanContract):
         return spec
 
     if not isinstance(spec, dict):

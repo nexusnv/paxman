@@ -4,7 +4,7 @@ A contract declares *what* the canonical form is. It is the source of truth in P
 
 ## The Contract Types in v2.0.0
 
-v2.0.0 ships exactly two contract kinds: `canonical_email` and `canonical_uuid`. Future versions may add new kinds (Money, Date, etc.). The `Contract` type alias is the union of both frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract`.
+v2.0.0 ships exactly three contract kinds: `canonical_email`, `canonical_uuid`, and `canonical_phone`. Future versions may add new kinds (Money, Date, etc.). The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalPhoneContract`.
 
 ## `CanonicalEmailContract`
 
@@ -50,6 +50,26 @@ class CanonicalUUIDContract:
 | `kind` | `str` | `"canonical_uuid"` | The contract kind discriminator. Fixed. |
 | `version_field` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
 
+## `Canonical Phone Contract`
+
+The frozen value object representing a phone canonicalization policy.
+
+```python
+@attrs.frozen
+class CanonicalPhoneContract:
+    country: str = "US"
+    kind: str = "canonical_phone"
+    version: int = 1
+    version_field: int = 1
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `country` | `str` | `"US"` | ISO 3166-1 alpha-2 country code used to expand national-format numbers. |
+| `kind` | `str` | `"canonical_phone"` | The contract kind discriminator. Fixed. |
+| `version` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
+| `version_field` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
+
 ## `UUID()` — The Factory
 
 ```python
@@ -85,13 +105,31 @@ contract = Email(provider_aliases="gmail", strict=True)
 
 The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
 
+## `Phone()` — The Factory
+
+```python
+def Phone(*, country: str = "US") -> CanonicalPhoneContract
+```
+
+Domain-type sugar for declaring a phone contract. Returns a `CanonicalPhoneContract`. All arguments are keyword-only.
+
+**Example:**
+
+```python
+from paxman import Phone
+
+contract = Phone(country="GB")
+```
+
+The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
+
 ## `parse_contract()` — The Dict DSL Parser
 
 ```python
 def parse_contract(spec: Any) -> Contract
 ```
 
-Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract` or `CanonicalUUIDContract`).
+Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract`, `CanonicalUUIDContract`, or `CanonicalPhoneContract`).
 
 **Example:**
 
@@ -109,7 +147,7 @@ contract = paxman.parse_contract({
 
 **Raises:** `ContractError` if the spec is malformed. `parse_contract()` runs at the call site, *before* capability dispatch, so a bad contract is a programming error caught at the call site, not a `Status` outcome on the artifact.
 
-`parse_contract` is a no-op for an already-parsed contract value object — both `CanonicalEmailContract` and `CanonicalUUIDContract` (the contract is the truth; an instance is its own best representation).
+`parse_contract` is a no-op for an already-parsed contract value object — `CanonicalEmailContract`, `CanonicalUUIDContract`, and `CanonicalPhoneContract` (the contract is the truth; an instance is its own best representation).
 
 ## The Dict DSL
 
@@ -128,7 +166,7 @@ The Dict DSL is the wire form of a contract. It is a dict with a `kind` discrimi
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `kind` | `str` | Yes | — | Must be a supported `kind`: `canonical_email` or `canonical_uuid` in v2.0.0. Unknown kinds raise `ContractError`. |
+| `kind` | `str` | Yes | — | Must be a supported `kind`: `canonical_email`, `canonical_uuid`, or `canonical_phone` in v2.0.0. Unknown kinds raise `ContractError`. |
 | `lowercase` | `bool` | No | `True` | Same as `CanonicalEmailContract.lowercase`. |
 | `strip_whitespace` | `bool` | No | `True` | Same as `CanonicalEmailContract.strip_whitespace`. |
 | `provider_aliases` | `"none"` or `"gmail"` | No | `"none"` | Same as `CanonicalEmailContract.provider_aliases`. |
@@ -138,6 +176,12 @@ The Dict DSL is the wire form of a contract. It is a dict with a `kind` discrimi
 Unknown `kind` values, missing `kind`, non-bool values for bool fields, and unknown `provider_aliases` values all raise `ContractError` at parse time.
 
 The Dict DSL is round-trip-safe: `parse_contract(contract.as_dict()) == contract` for any valid `CanonicalEmailContract`.
+
+### canonical_phone
+
+```json
+{"kind": "canonical_phone", "country": "US"}
+```
 
 ## What a Contract Is Not
 

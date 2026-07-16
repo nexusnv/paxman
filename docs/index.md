@@ -41,4 +41,4 @@ See [Getting Started](getting-started/install.md) for the full walkthrough.
 - **Have a specific task** — go to [How-to guides](how-to/canonicalize-a-value.md). One page per task.
 - **Looking up a function or type** — go to [Reference](reference/api.md).
 - **Extending Paxman with your own capability** — read [Concepts: Capabilities and the SPI](concepts/capabilities-and-spi.md), then the [how-to guide for writing a compliant capability](how-to/write-a-compliant-capability.md).
-- **Want to know what shipped** — see the [Email capability spec](capabilities/email/index.md) and the [UUID capability spec](capabilities/uuid/index.md), and their changelogs.
+- **Want to know what shipped** — see the [Email capability spec](capabilities/email/index.md), the [UUID capability spec](capabilities/uuid/index.md), and the [Phone capability spec](capabilities/phone/index.md), and their changelogs.

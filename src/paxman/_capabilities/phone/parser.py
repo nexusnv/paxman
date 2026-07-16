@@ -8,7 +8,7 @@ inference, no dataset. Extending the table is a capability-version bump
 
 from __future__ import annotations
 
-from typing import Mapping
+from collections.abc import Mapping
 
 from paxman._errors import ContractError
 
@@ -47,7 +47,6 @@ def _cc_for_country(country: str) -> str:
     cc = _COUNTRY_TO_CC.get(country.upper())
     if cc is None:
         raise ContractError(
-            f"unknown country code: {country!r}; "
-            f"supported: {sorted(_COUNTRY_TO_CC)}"
+            f"unknown country code: {country!r}; supported: {sorted(_COUNTRY_TO_CC)}"
         )
     return cc

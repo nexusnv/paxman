@@ -1,6 +1,6 @@
 import paxman
-from paxman._capabilities.phone.contract import CanonicalPhoneContract, Phone
 from paxman._capabilities.discovery import builtin_capabilities
+from paxman._capabilities.phone.contract import CanonicalPhoneContract, Phone
 
 
 def test_phone_in_builtins():

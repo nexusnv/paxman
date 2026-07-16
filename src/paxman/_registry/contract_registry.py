@@ -13,7 +13,7 @@ public `Contract` union of concrete contracts lives in `paxman.__init__`.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 from paxman._errors import ConfigurationError, ContractError
 
@@ -27,10 +27,11 @@ if TYPE_CHECKING:
 # imported under TYPE_CHECKING only so the registry stays domain-free at
 # runtime (the domain contract modules import this registry, so a runtime
 # import here would be a cycle).
-Builder = Callable[
-    [dict[str, Any]],
-    "CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract",
-]
+_BuilderResult: TypeAlias = (
+    "CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract"
+    " | CanonicalPhoneContract"
+)
+Builder = Callable[[dict[str, Any]], _BuilderResult]
 
 _REGISTRY: dict[str, Builder] = {}
 

@@ -14,7 +14,6 @@ import paxman
 from paxman import Phone
 from paxman._core.status import Status
 
-
 # Strategy: valid E.164 bodies — cc 1-3 digits (first 1-9), national 4-12 digits.
 # Capped so cc_len + national_len <= 15 (max E.164 length), keeping every
 # generated string canonicalizable rather than rejected as INVALID.

@@ -19,17 +19,13 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "not_a_phone_contract": "",
         "not_a_string_value": "",
         # --- rejecting rules (authoritative spec) ---
-        "unrecognized_format": (
-            "RFC 3966 §3 (the global E.164 form: +<cc><national>)"
-        ),
+        "unrecognized_format": ("RFC 3966 §3 (the global E.164 form: +<cc><national>)"),
         "grammar_rejected": (
             "RFC 3966 §3 / ITU-T E.164 (max 15 digits; country code first "
             "digit 1-9; national part non-empty)"
         ),
         # --- transforming rule (success path) ---
-        "no_transformation_needed": (
-            "RFC 3966 §3 (the input is already the global E.164 form)"
-        ),
+        "no_transformation_needed": ("RFC 3966 §3 (the input is already the global E.164 form)"),
     }
 )
 

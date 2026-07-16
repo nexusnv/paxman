@@ -1,9 +1,7 @@
 # tests/unit/test_phone_capability.py
-import pytest
 from paxman import canonicalize
 from paxman._capabilities.phone.canonicalizer import PhoneCapability
 from paxman._capabilities.phone.contract import CanonicalPhoneContract, Phone
-from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
 
 
@@ -82,3 +80,39 @@ def test_end_to_end_canonicalize():
     art = canonicalize("(650) 253-0000", Phone(country="US"))
     assert art.status is Status.CANONICALIZED
     assert art.value == "+16502530000"
+
+
+def test_non_phone_contract_defensive():
+    # Law 1 totality: capability must not crash on a wrong contract.
+    cap = PhoneCapability()
+    res = cap.canonicalize("+16502530000", object())
+    assert res.status is Status.INVALID
+    assert res.evidence[0].rule == "not_a_phone_contract"
+
+
+def test_classify_surfaces_ambiguity():
+    # Law 4: classifier must surface >1 distinct survivor as AMBIGUOUS.
+    from paxman._capabilities.phone.canonicalizer import _Survivor, classify
+
+    survivors = [
+        _Survivor("+16502530000", "e164", "src", ()),
+        _Survivor("+16502530001", "e164", "src", ()),
+    ]
+    status, value, _evidence, candidates = classify([object()], survivors, [])
+    assert status is Status.AMBIGUOUS
+    assert value is None
+    assert set(candidates) == {"+16502530000", "+16502530001"}
+
+
+def test_classify_collapses_identical_survivors():
+    # Identical canonical strings are not ambiguous.
+    from paxman._capabilities.phone.canonicalizer import _Survivor, classify
+
+    survivors = [
+        _Survivor("+16502530000", "e164", "src", ()),
+        _Survivor("+16502530000", "national", "src", ()),
+    ]
+    status, value, _evidence, candidates = classify([object()], survivors, [])
+    assert status is Status.CANONICALIZED
+    assert value == "+16502530000"
+    assert candidates is None

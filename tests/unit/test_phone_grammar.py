@@ -1,6 +1,6 @@
 # tests/unit/test_phone_grammar.py
-from paxman._capabilities.phone.grammar import GRAMMARS, recognize
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
+from paxman._capabilities.phone.grammar import recognize
 
 # NOTE: this test imports contract.py which does not exist yet; it will
 # fail until Task 3 lands. To run Task 2 in isolation, temporarily inline:

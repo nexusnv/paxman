@@ -1,5 +1,6 @@
 # tests/unit/test_phone_contract.py
 import pytest
+
 from paxman._capabilities.phone.contract import CanonicalPhoneContract, Phone
 from paxman._errors import ContractError
 

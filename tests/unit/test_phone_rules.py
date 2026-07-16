@@ -1,4 +1,4 @@
-from paxman._capabilities.phone.rules import _evidence, _RULE_PROVENANCE
+from paxman._capabilities.phone.rules import _RULE_PROVENANCE, _evidence
 
 
 def test_manifest_exhaustive_for_emitted_rules():

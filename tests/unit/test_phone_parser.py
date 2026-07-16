@@ -9,6 +9,7 @@ def test_known_countries():
 
 def test_unknown_country_raises():
     import pytest
+
     from paxman._errors import ContractError
 
     with pytest.raises(ContractError):

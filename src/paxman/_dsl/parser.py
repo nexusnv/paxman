@@ -31,10 +31,7 @@ from paxman._registry.contract_registry import get_builder
 def parse_contract(
     spec: Any,
 ) -> (
-    CanonicalEmailContract
-    | CanonicalUUIDContract
-    | CanonicalDateContract
-    | CanonicalPhoneContract
+    CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract
 ):
     """Parse a Dict DSL contract into a Contract value object.
 

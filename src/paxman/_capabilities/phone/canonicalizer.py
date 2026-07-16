@@ -8,18 +8,16 @@ resolve_and_validate (validator) -> classify.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
 
 import attrs
-
-from paxman._core.provenance import Evidence
-from paxman._core.result import CapabilityResult
-from paxman._core.status import Status
 
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
 from paxman._capabilities.phone.grammar import RecognizedRep, recognize
 from paxman._capabilities.phone.parser import _cc_for_country
 from paxman._capabilities.phone.rules import _evidence
+from paxman._core.provenance import Evidence
+from paxman._core.result import CapabilityResult
+from paxman._core.status import Status
 
 # Strip everything that is not a digit when expanding a national number.
 _NON_DIGIT = re.compile(r"\D")

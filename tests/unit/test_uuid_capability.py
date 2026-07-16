@@ -3,7 +3,7 @@
 These tests assert the v2.0.0 default behaviour:
 - The capability accepts ONLY the RFC 4122 §3 canonical 36-char form.
 - Alternative surface forms (32-hex, braced, URN, uppercase, padded)
-  are rejected with `Status.INVALID` + the `not_canonical_form` rule.
+  are rejected with `Status.INVALID` + the `unrecognized_format` rule.
 - The version policy filters by UUID version with `version_mismatch`.
 - Idempotent (mandate Law 2): a canonical input returns itself.
 - Pure function (mandate Law 8a).
@@ -60,31 +60,31 @@ class TestUUIDCapability:
         c = _cap()
         r = c.canonicalize("550e8400e29b41d4a716446655440000", _contract())
         assert r.status is Status.INVALID
-        assert r.evidence[0].rule == "not_canonical_form"
+        assert r.evidence[0].rule == "unrecognized_format"
 
     def test_canonicalize_rejects_braced_form(self) -> None:
         c = _cap()
         r = c.canonicalize("{550e8400-e29b-41d4-a716-446655440000}", _contract())
         assert r.status is Status.INVALID
-        assert r.evidence[0].rule == "not_canonical_form"
+        assert r.evidence[0].rule == "unrecognized_format"
 
     def test_canonicalize_rejects_urn_form(self) -> None:
         c = _cap()
         r = c.canonicalize("urn:uuid:550e8400-e29b-41d4-a716-446655440000", _contract())
         assert r.status is Status.INVALID
-        assert r.evidence[0].rule == "not_canonical_form"
+        assert r.evidence[0].rule == "unrecognized_format"
 
     def test_canonicalize_rejects_uppercase(self) -> None:
         c = _cap()
         r = c.canonicalize("550E8400-E29B-41D4-A716-446655440000", _contract())
         assert r.status is Status.INVALID
-        assert r.evidence[0].rule == "not_canonical_form"
+        assert r.evidence[0].rule == "unrecognized_format"
 
     def test_canonicalize_rejects_extra_whitespace(self) -> None:
         c = _cap()
         r = c.canonicalize(" 550e8400-e29b-41d4-a716-446655440000 ", _contract())
         assert r.status is Status.INVALID
-        assert r.evidence[0].rule == "not_canonical_form"
+        assert r.evidence[0].rule == "unrecognized_format"
 
     def test_canonicalize_rejects_version_mismatch(self) -> None:
         c = _cap()
@@ -111,13 +111,13 @@ class TestUUIDCapability:
 
     def test_canonicalize_rejects_non_hex_character(self) -> None:
         """Spec §9.1 case #11: a 36-char string with a non-hex character
-        (e.g. a trailing 'Z') is INVALID with not_canonical_form, even
+        (e.g. a trailing 'Z') is INVALID with unrecognized_format, even
         though its length and hyphen positions are otherwise canonical."""
         c = _cap()
         non_hex = "00000000-0000-0000-0000-00000000000Z"
         result = c.canonicalize(non_hex, _contract())
         assert result.status is Status.INVALID
-        assert result.evidence[0].rule == "not_canonical_form"
+        assert result.evidence[0].rule == "unrecognized_format"
 
     def test_every_evidence_rule_has_provenance_in_manifest(self) -> None:
         c = _cap()

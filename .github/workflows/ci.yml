@@ -191,7 +191,7 @@ jobs:
   # well-covered package subsidize a poorly-covered one.
   # ---------------------------------------------------------------------------
   coverage:
-    name: coverage gate (per-package ≥90%)
+    name: coverage + per-subsystem threshold
     runs-on: ubuntu-latest
 
     steps:
@@ -232,6 +232,88 @@ jobs:
             echo "::error::One or more subpackages are below the 90% coverage gate."
             exit 1
           fi
+
+  # ---------------------------------------------------------------------------
+  # Combined static gate: lint + format + typecheck + import parity.
+  # Matches the branch-protection required check
+  # "lint + format + typecheck + import". The four repo-parity scripts
+  # verify imports resolve, README↔quickstart parity, capability-section
+  # isolation, the paxman.normalize substring ban, and retired vocabulary.
+  # py3.12 only: these are static tools, not affected by Python version.
+  # ---------------------------------------------------------------------------
+  lint-format-typecheck-import:
+    name: lint + format + typecheck + import
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (frozen lockfile)
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Lint (ruff check)
+        run: uv run ruff check .
+
+      - name: Format check (ruff format --check)
+        run: uv run ruff format --check .
+
+      - name: Type check (mypy src/paxman)
+        run: uv run mypy src/paxman
+
+      - name: Static analysis (import / README↔quickstart parity / capability section / paxman.normalize substring / retired vocabulary)
+        run: |
+          uv run python scripts/check_readme_quickstart.py
+          uv run python scripts/check_capability_section_isolation.py
+          uv run python scripts/check_paxman_normalize_substring.py
+          uv run python scripts/check_retired_vocabulary.py
+
+  # ---------------------------------------------------------------------------
+  # Docstring coverage on the public API surface (src/paxman/__init__.py).
+  # Matches the branch-protection required check
+  # "interrogate - 100% docstring coverage on public surface".
+  # Scoped to the public surface only (see design spec); internal helpers are
+  # intentionally out of scope. py3.12 only.
+  # ---------------------------------------------------------------------------
+  interrogate:
+    name: interrogate - 100% docstring coverage on public surface
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (frozen lockfile)
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Docstring coverage (public surface)
+        run: uv run interrogate -c pyproject.toml src/paxman/__init__.py
 
   test-integration:
     name: integration tests (py3.12)

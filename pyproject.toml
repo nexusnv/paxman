@@ -44,6 +44,7 @@ dev = [
     "hypothesis>=6.156.6",
     "ruff>=0.15.21",
     "mypy>=2.3.0",
+    "interrogate>=1.7.0",
 ]
 
 # ---------------------------------------------------------------------------
@@ -136,4 +137,17 @@ warn_redundant_casts = true
 # through a single `_ContractLike` parameter; this is the intended
 # structural-typing pattern, not a bug.
 disable_error_code = ["assignment", "attr-defined", "arg-type"]
+
+# ---------------------------------------------------------------------------
+# interrogate — docstring coverage on the public API surface.
+# The project mandates a docstring on every public symbol in src/paxman
+# (see AGENTS.md / CODING_GUIDELINES.md). CI runs interrogate against
+# src/paxman/__init__.py (the public surface: canonicalize, replay,
+# register_capability, and the __all__ re-exports) and fails below 100%.
+# Scoped to __init__.py on the CLI so internal helpers are not in scope.
+# ---------------------------------------------------------------------------
+[tool.interrogate]
+fail-under = 100
+verbose = 1
+ignore-init-module = true
 

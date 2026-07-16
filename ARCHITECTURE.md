@@ -155,15 +155,22 @@ src/paxman/
 │   │   ├── canonicalizer.py    #     UUIDCapability
 │   │   ├── parser.py
 │   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
-│   └── date/                   #   DateCapability (shipped built-in)
-│       ├── __init__.py         #     re-exports CanonicalDateContract, Date, GRAMMARS, recognize
-│       ├── contract.py         #     CanonicalDateContract + Date()
-│       ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
-│       ├── canonicalizer.py    #     DateCapability
-│       ├── parser.py
-│       ├── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
-│       ├── value.py            #     date value objects
-│       └── calendar.py         #     calendar / locale helpers
+│   ├── date/                   #   DateCapability (shipped built-in)
+│   │   ├── __init__.py         #     re-exports CanonicalDateContract, Date, GRAMMARS, recognize
+│   │   ├── contract.py         #     CanonicalDateContract + Date()
+│   │   ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
+│   │   ├── canonicalizer.py    #     DateCapability
+│   │   ├── parser.py
+│   │   ├── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
+│   │   ├── value.py            #     date value objects
+│   │   └── calendar.py         #     calendar / locale helpers
+│   ├── phone/                  #   PhoneCapability (shipped built-in)
+│   │   ├── __init__.py         #     re-exports CanonicalPhoneContract, Phone, GRAMMARS, recognize
+│   │   ├── contract.py         #     CanonicalPhoneContract + Phone()
+│   │   ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
+│   │   ├── canonicalizer.py    #     PhoneCapability
+│   │   ├── parser.py
+│   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 │   └── url/                    #   URLCapability (shipped built-in)
 │       ├── __init__.py         #     re-exports CanonicalURLContract, URL, GRAMMARS, recognize
 │       ├── contract.py         #     CanonicalURLContract + URL()

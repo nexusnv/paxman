@@ -1,9 +1,11 @@
 # AGENTS.md
 
 Agent-focused guidance for working in this repository. Complements
-`README.md`, `MANDATE.md`, and `ARCHITECTURE.md`. The deeper constitutional
-rules (the thirteen laws, the three invariants, the SPI contract) live in
-those documents — read them before any non-trivial change.
+`README.md`, `MANDATE.md`, `ARCHITECTURE.md`, and `CODING_GUIDELINES.md`. The
+deeper constitutional rules (the thirteen laws, the three invariants, the SPI
+contract) live in those documents — read them before any non-trivial change.
+`CODING_GUIDELINES.md` summarizes the practical engineering practices and
+recurring review lessons; load it as context at the start of any agent session.
 
 ## Project Overview
 
@@ -174,5 +176,6 @@ src/paxman/
   intentionally allowed (structural `_ContractLike` Protocol + attrs). Don't
   "fix" these by adding `# type: ignore`; the config already permits them.
 - **Docs live in `docs/`** (`concepts/`, `how-to/`) and the constitutional docs
-  `MANDATE.md` / `ARCHITECTURE.md` at the root. Consult them before design
-  questions.
+  `MANDATE.md` / `ARCHITECTURE.md` at the root. `CODING_GUIDELINES.md` at
+  the root summarizes the practical engineering practices and recurring review
+  lessons. Consult them before design questions.

@@ -53,7 +53,7 @@ reviews:
 
         1. MANDATE.md is the constitutional boundary of Paxman (the 13 laws in §7 plus the three invariants in §1.2 and the
         formal canonicalization definition in §2). Every architectural decision, every pull request, and every new
-        abstraction is evaluated against it. Where MANDATE.md conflicts with README.md, PROPOSED_STRUCTURE.md, a design
+        abstraction is         evaluated against it. Where MANDATE.md conflicts with README.md, a design
         spec, an implementation plan, or any other document, MANDATE.md wins.
 
         2. MANDATE.md is amendable, not appendable. Adding a new law is an amendment to §7. A new amendment must (a) be
@@ -86,10 +86,10 @@ reviews:
 
         2. Capability purity (mandate Law 8a): a capability may only depend on inputs that are explicitly
         versioned and participate in replay. No `import requests`, no `import urllib`, no `open(`, no `os.`, no
-        `time.`, no `random.`, no `secrets.`, no `datetime.` (date canonicalization uses `datetime` but ONLY for
-        pure calendar math on already-parsed integers — flag any use that reads the wall clock or timezone DB),
-        no network calls, no filesystem reads, no environment lookups inside `src/paxman/_capabilities/`. Pure
-        functions of `(value, contract)` only. Flag any of these.
+        `time.`, no `random.`, no `secrets.`, no `datetime.` of any kind (a capability must not read the wall
+        clock, the timezone DB, or perform any calendar math), no network calls, no filesystem reads, no
+        environment lookups inside `src/paxman/_capabilities/`. Pure functions of `(value, contract)` only. Flag
+        any of these.
 
         3. Vocabulary (mandate §6.3): the words `heuristic`, `confidence`, `best match`, `probably`, and
         `approximate` are RETIRED. Their adopted replacements are `resolver`, `dispatcher`, `registry`, `matcher`,
@@ -150,8 +150,8 @@ reviews:
         3. Property tests: must use Hypothesis. The property tests in `tests/property/` are the
         mechanical evidence for MANDATE.md §1.2's three invariants and Laws 2, 12, 13 (e.g.
         `test_replay_invariant`, `test_idempotence_invariant`, `test_artifact_immutability_invariant`,
-        `test_canonicalization_invariant`, plus per-capability invariant tests). Flag any PR that drops or
-        weakens any of these.
+        `test_canonicalization_invariant`, `test_uniqueness_invariant`, plus per-capability invariant tests). Flag
+        any PR that drops or weakens any of these.
 
         4. Replay tests must verify byte-equality of the rehydrated artifact to the original
         (`assert rehydrated == artifact` AND `assert rehydrated.canonical_bytes() == art.canonical_bytes()`).
@@ -323,7 +323,7 @@ reviews:
         `src/paxman` are the build settings. Do not change them.
 
         4. There is no Makefile or pre-commit config in v2. The CI workflow (`.github/workflows/ci.yml`)
-        runs seven jobs: `unit tests` (matrix on py3.11/3.12/3.13), `lint` (ruff check + ruff format --check
+        runs six jobs: `unit tests` (matrix on py3.11/3.12/3.13), `lint` (ruff check + ruff format --check
         + repo-parity scripts on py3.12), `typecheck` (mypy on py3.12), `property tests` (Hypothesis on
         py3.12), `coverage gate` (per-subpackage ≥90% via coverage on py3.12), and `integration tests`
         (end-to-end on py3.12). A per-subpackage coverage gate IS enforced — new `_*` subpackages must

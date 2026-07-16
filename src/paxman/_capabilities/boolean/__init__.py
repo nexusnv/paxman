@@ -11,10 +11,10 @@ from paxman._capabilities.boolean.grammar import GRAMMARS, recognize
 from paxman._capabilities.boolean.rules import _RULE_PROVENANCE
 
 __all__ = [
+    "GRAMMARS",
+    "_RULE_PROVENANCE",
     "Boolean",
     "BooleanCapability",
-    "GRAMMARS",
     "CanonicalBooleanContract",
-    "_RULE_PROVENANCE",
     "recognize",
 ]

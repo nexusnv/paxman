@@ -6,7 +6,6 @@ from typing import Any, cast
 
 from paxman._capabilities.boolean import _RULE_PROVENANCE, BooleanCapability
 from paxman._capabilities.boolean.contract import CanonicalBooleanContract
-from paxman._capabilities.boolean.rules import _evidence
 from paxman._core.contracts import Contract
 from paxman._core.status import Status
 
@@ -16,9 +15,7 @@ def _cap() -> BooleanCapability:
 
 
 def _contract(**kw: object) -> CanonicalBooleanContract:
-    base: dict[str, object] = dict(
-        accept_numeric=True, accept_words=True, case_sensitive=False
-    )
+    base: dict[str, object] = dict(accept_numeric=True, accept_words=True, case_sensitive=False)
     base.update(kw)
     return CanonicalBooleanContract(**cast(Any, base))
 

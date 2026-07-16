@@ -71,7 +71,7 @@ uv run pytest tests/unit -k "test_lowercase" -q
 
 ## Testing Instructions
 
-```
+```text
 tests/
   unit/         # fast, isolated unit tests (the required core gate)
   property/     # Hypothesis property tests — evidence for the three invariants
@@ -134,10 +134,9 @@ src/paxman/
 - **Forbidden in `src/paxman/`:**
   - `# type: ignore` and `as any` (type-error suppression).
   - `# noqa` of any kind.
-  - The five words retired by `scripts/check_retired_vocabulary.py` (e.g.
-    `heuristic`, `normalize`-as-verb in capability context, `planner`,
-    `pipeline`-as-user-concept, `AI`/`LLM`). Check the script for the exact
-    list; it runs in CI and will fail the build.
+  - The words retired by `scripts/check_retired_vocabulary.py` (the exact
+    banned list lives in that script — do not re-list them here, or the words
+    risk re-entering `src/paxman/`). It runs in CI and will fail the build.
 - Test code may use `# noqa: S101` for asserts and `# noqa: B011` for
   `assertRaises(Exception)`.
 - `attrs` frozen dataclasses are the canonical value-type form. Prefer them

@@ -52,10 +52,15 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "collapsed_internal_whitespace": (
             "RFC 5322 §1.3 (internal whitespace tolerated for obfuscation)"
         ),
-        "deobfuscated_verbal_at_dot": ("spoken-form email obfuscation ('at'→@, 'dot'→.)"),
+        "deobfuscated_verbal_at_dot": (
+            "RFC 5322 §3.4.1 (addr-spec is the canonical target) — Paxman "
+            "recognition grammar deobfuscates spoken 'at'→@, 'dot'→. forms"
+        ),
         # --- recognition-layer ambiguity (declared Paxman policy) ---
         "ambiguous_provider_equivalence": (
-            "gmail provider-equivalence yields multiple valid forms"
+            "Gmail documented behavior (dots ignored in local part; "
+            "googlemail.com is a gmail.com alias) + Paxman policy: surface "
+            "ambiguity rather than guess (spec §2.4)"
         ),
         # --- recognition-layer rejection (authoritative spec) ---
         "unrecognized_format": "input matched no email grammar",

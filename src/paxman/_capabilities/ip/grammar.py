@@ -67,7 +67,7 @@ GRAMMARS: tuple[Grammar, ...] = (
     _make_grammar(
         "ip_ipv6",
         _GRAMMAR_SOURCE,
-        r"^(?P<addr>[0-9A-Fa-f:]+)$",
+        r"^(?P<addr>(?=[0-9A-Fa-f:.]*:[0-9A-Fa-f:.]*)[0-9A-Fa-f:.]+)$",
         shape="ipv6",
     ),
     _make_grammar(

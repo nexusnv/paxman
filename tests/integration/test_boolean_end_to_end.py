@@ -46,6 +46,7 @@ def test_replay_byte_equal() -> None:
     assert r.status is Status.CANONICALIZED
     rehydrated = replay(r, Boolean())
     assert rehydrated == r
+    assert rehydrated.canonical_bytes() == r.canonical_bytes()
 
 
 @pytest.mark.integration

@@ -61,8 +61,7 @@ def validate(
     if isinstance(contract, CanonicalBooleanContract):
         # The BooleanCapability has already validated the canonical form
         # ("true"/"false"); no further policy check is needed here
-        # (mandate Law 11 — delegating to the capability's prior validation
-        # upholds the no-silent-canonicalization guarantee).
+        # (same rationale as UUID/Date/Phone/URL above — Law 11).
         return ValidationResult(is_valid=True)
     if not isinstance(contract, CanonicalEmailContract):
         raise UnsupportedContractError(

@@ -6,8 +6,17 @@ from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 from paxman._capabilities.boolean.grammar import GRAMMARS, recognize
 
 
-def _contract(**kw: object) -> CanonicalBooleanContract:
-    return CanonicalBooleanContract(**kw)  # type: ignore[arg-type]
+def _contract(
+    *,
+    accept_numeric: bool = True,
+    accept_words: bool = True,
+    case_sensitive: bool = False,
+) -> CanonicalBooleanContract:
+    return CanonicalBooleanContract(
+        accept_numeric=accept_numeric,
+        accept_words=accept_words,
+        case_sensitive=case_sensitive,
+    )
 
 
 def test_recognize_true_default_case_insensitive() -> None:

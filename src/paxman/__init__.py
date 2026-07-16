@@ -13,6 +13,7 @@ from paxman import _orchestrator_runtime
 from paxman._capabilities.boolean.contract import Boolean, CanonicalBooleanContract
 from paxman._capabilities.date.contract import CanonicalDateContract, Date
 from paxman._capabilities.email.contract import CanonicalEmailContract, Email
+from paxman._capabilities.ip.contract import IP, CanonicalIPContract
 from paxman._capabilities.phone.contract import CanonicalPhoneContract, Phone
 from paxman._capabilities.protocol import Capability
 from paxman._capabilities.url.contract import URL, CanonicalURLContract
@@ -47,6 +48,7 @@ Contract = (
     | CanonicalPhoneContract
     | CanonicalURLContract
     | CanonicalBooleanContract
+    | CanonicalIPContract
 )
 
 
@@ -87,12 +89,14 @@ def __getattr__(name: str) -> Any:
 
 
 __all__ = [
+    "IP",
     "URL",
     "UUID",
     "Boolean",
     "CanonicalBooleanContract",
     "CanonicalDateContract",
     "CanonicalEmailContract",
+    "CanonicalIPContract",
     "CanonicalPhoneContract",
     "CanonicalURLContract",
     "CanonicalUUIDContract",

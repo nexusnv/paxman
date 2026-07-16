@@ -323,12 +323,15 @@ reviews:
         `src/paxman` are the build settings. Do not change them.
 
         4. There is no Makefile or pre-commit config in v2. The CI workflow (`.github/workflows/ci.yml`)
-        runs six jobs: `unit tests` (matrix on py3.11/3.12/3.13), `lint` (ruff check + ruff format --check
-        + repo-parity scripts on py3.12), `typecheck` (mypy on py3.12), `property tests` (Hypothesis on
-        py3.12), `coverage gate` (per-subpackage ≥90% via coverage on py3.12), and `integration tests`
-        (end-to-end on py3.12). A per-subpackage coverage gate IS enforced — new `_*` subpackages must
-        ship with tests keeping them ≥90%. Adding security scanning, pyright, interrogate, bandit,
-        pip-audit, import-linter, or a build-wheel job to CI requires a design spec.
+        runs eight jobs: `unit tests` (matrix on py3.11/3.12/3.13), `lint` (ruff check + ruff format
+        --check + repo-parity scripts on py3.12), `typecheck` (mypy on py3.12), `property tests` (Hypothesis
+        on py3.12), `coverage + per-subsystem threshold` (per-subpackage ≥90% via coverage on py3.12),
+        `integration tests` (end-to-end on py3.12), `lint + format + typecheck + import` (combined static
+        gate on py3.12), and `interrogate - 100% docstring coverage on public surface` (interrogate on
+        `src/paxman/__init__.py`, approved via `.superpowers/specs/2026-07-16-ci-static-docstring-gates-design.md`).
+        A per-subpackage coverage gate IS enforced — new `_*` subpackages must ship with tests keeping them
+        ≥90%. Adding security scanning, pyright, bandit, pip-audit, import-linter, or a build-wheel job to
+        CI requires a design spec.
 
         5. The package version is `0.0.0.dev0` until the first release; do not bump it without a release
         process being defined.

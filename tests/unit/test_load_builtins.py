@@ -10,6 +10,7 @@ hidden state).
 
 from __future__ import annotations
 
+from paxman._capabilities.boolean import BooleanCapability
 from paxman._capabilities.date import DateCapability
 from paxman._capabilities.discovery import builtin_capabilities
 from paxman._capabilities.email import EmailCapability
@@ -24,7 +25,7 @@ class TestBuiltinCapabilities:
     def test_returns_list_of_email_and_uuid_capabilities(self) -> None:
         result = builtin_capabilities()
         assert isinstance(result, list)
-        assert len(result) == 5
+        assert len(result) == 6
         names = {c.name for c in result}
         assert names == {
             "email_canonicalization",
@@ -32,12 +33,14 @@ class TestBuiltinCapabilities:
             "date_canonicalization",
             "phone_canonicalization",
             "url_canonicalization",
+            "boolean_canonicalization",
         }
         assert any(isinstance(c, EmailCapability) for c in result)
         assert any(isinstance(c, UUIDCapability) for c in result)
         assert any(isinstance(c, DateCapability) for c in result)
         assert any(isinstance(c, PhoneCapability) for c in result)
         assert any(isinstance(c, URLCapability) for c in result)
+        assert any(isinstance(c, BooleanCapability) for c in result)
 
     def test_returns_fresh_instances_on_each_call(self) -> None:
         # No shared mutable state across calls (Law 1, Law 8a).
@@ -51,6 +54,7 @@ class TestBuiltinCapabilities:
             "date_canonicalization",
             "phone_canonicalization",
             "url_canonicalization",
+            "boolean_canonicalization",
         ]
 
 
@@ -114,6 +118,7 @@ class TestLoadBuiltins:
         registry_b.register(DateCapability())
         registry_b.register(PhoneCapability())
         registry_b.register(URLCapability())
+        registry_b.register(BooleanCapability())
         registry_b.freeze()
 
         assert registry_a.capabilities_hash() == registry_b.capabilities_hash()
@@ -145,6 +150,7 @@ class TestLoadBuiltins:
         via_register.register(DateCapability())
         via_register.register(PhoneCapability())
         via_register.register(URLCapability())
+        via_register.register(BooleanCapability())
         via_register.freeze()
 
         assert via_load.capabilities_hash() == via_register.capabilities_hash()

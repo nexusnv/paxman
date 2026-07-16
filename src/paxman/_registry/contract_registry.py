@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from paxman._capabilities.date.contract import CanonicalDateContract
     from paxman._capabilities.email.contract import CanonicalEmailContract
     from paxman._capabilities.phone.contract import CanonicalPhoneContract
+    from paxman._capabilities.url.contract import CanonicalURLContract
     from paxman._capabilities.uuid.contract import CanonicalUUIDContract
 
 # The builder returns a concrete contract value object; the union is
@@ -29,7 +30,7 @@ if TYPE_CHECKING:
 # import here would be a cycle).
 _BuilderResult: TypeAlias = (
     "CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract"
-    " | CanonicalPhoneContract"
+    " | CanonicalPhoneContract | CanonicalURLContract"
 )
 Builder = Callable[[dict[str, Any]], _BuilderResult]
 

@@ -164,6 +164,13 @@ src/paxman/
 │       ├── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 │       ├── value.py            #     date value objects
 │       └── calendar.py         #     calendar / locale helpers
+│   └── url/                    #   URLCapability (shipped built-in)
+│       ├── __init__.py         #     re-exports CanonicalURLContract, URL, GRAMMARS, recognize
+│       ├── contract.py         #     CanonicalURLContract + URL()
+│       ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
+│       ├── canonicalizer.py    #     URLCapability
+│       ├── parser.py
+│       └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 ├── _dsl/                       # the contract DSL (Dict ↔ value object)
 │   ├── __init__.py             #   re-exports parse_contract
 │   ├── parser.py               #   parse_contract — kind dispatch
@@ -419,10 +426,10 @@ orchestrator classifies the outcome as `Status.AMBIGUOUS` (mandate Law 4
 and §5.4) rather than choosing one. If zero capabilities claim it, the
 orchestrator classifies as `UNSUPPORTED`.
 
-### `_capabilities/{email,uuid,date}/` — Built-In Capabilities
+### `_capabilities/{email,uuid,date,phone,url}/` — Built-In Capabilities
 
-Ships three built-ins today: `EmailCapability`, `UUIDCapability`, and
-`DateCapability`. Each owns its domain under `paxman._capabilities.<domain>`
+Ships five built-ins today: `EmailCapability`, `UUIDCapability`,
+`DateCapability`, `PhoneCapability`, and `URLCapability`. Each owns its domain under `paxman._capabilities.<domain>`
 (`contract.py`, `grammar.py`, `canonicalizer.py`, `parser.py`, `rules.py`,
 plus `value.py` and `calendar.py` for dates). Each capability package
 self-registers its contract builder via `register_contract` so
@@ -458,7 +465,7 @@ and feeds the result to `registry.load_builtins(...)` lazily, on the first
 
 Each future built-in grows as its own `_capabilities/<domain>/` package,
 pinning its contract `version` and adding a new `register_contract` branch —
-the same additive pattern the three shipped capabilities use. (Money is the
+the same additive pattern the five shipped capabilities use. (Money is the
 deliberate exception: it was reclassified as a *multi-field* canonicalization
 — a currency field plus a decimal field — and deferred past the v2 RC, rather
 than shipped as a single `MoneyCapability`. The `_capabilities/<domain>/`

@@ -4,7 +4,7 @@ A contract declares *what* the canonical form is. It is the source of truth in P
 
 ## The Contract Types in v2.0.0
 
-v2.0.0 ships four contract kinds: `canonical_email`, `canonical_uuid`, `canonical_date`, and `canonical_phone`. Future versions may add new kinds (Money, etc.). The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract`.
+v2.0.0 ships five contract kinds: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, and `canonical_url`. Future versions may add new kinds (Money, etc.). The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract | CanonicalURLContract`.
 
 ## `CanonicalEmailContract`
 
@@ -70,6 +70,34 @@ class CanonicalPhoneContract:
 | `version` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
 | `version_field` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
 
+## `Canonical URL Contract`
+
+The frozen value object representing a URL canonicalization policy.
+
+```python
+@attrs.frozen
+class CanonicalURLContract:
+    scheme_allow: tuple[str, ...] | None = None
+    strip_userinfo: bool = False
+    strip_fragment: bool = True
+    sort_query: bool = False
+    whatwg: bool = False
+    kind: str = "canonical_url"
+    version: int = 1
+    version_field: int = 1
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `scheme_allow` | `tuple[str, ...] \| None` | `None` | Allow-list of schemes. `None` means accept any scheme; a non-empty tuple rejects other schemes with `Status.UNSUPPORTED`. |
+| `strip_userinfo` | `bool` | `False` | Elide `userinfo@` from the authority. |
+| `strip_fragment` | `bool` | `True` | Drop the `#fragment` (default on). |
+| `sort_query` | `bool` | `False` | Sort query parameters by key. |
+| `whatwg` | `bool` | `False` | Opt into WHATWG URL Standard authority normalization (e.g. trailing-dot equivalence). |
+| `kind` | `str` | `"canonical_url"` | The contract kind discriminator. Fixed. |
+| `version` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
+| `version_field` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. |
+
 ## `UUID()` — The Factory
 
 ```python
@@ -123,13 +151,38 @@ contract = Phone(country="GB")
 
 The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
 
+## `URL()` — The Factory
+
+```python
+def URL(
+    *,
+    scheme_allow: tuple[str, ...] = (),
+    strip_userinfo: bool = False,
+    strip_fragment: bool = True,
+    sort_query: bool = False,
+    whatwg: bool = False,
+) -> CanonicalURLContract
+```
+
+Domain-type sugar for declaring a URL contract. Returns a `CanonicalURLContract`. All arguments are keyword-only.
+
+**Example:**
+
+```python
+from paxman import URL
+
+contract = URL(scheme_allow=("http", "https"), strip_fragment=False)
+```
+
+The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
+
 ## `parse_contract()` — The Dict DSL Parser
 
 ```python
 def parse_contract(spec: Any) -> Contract
 ```
 
-Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract`, `CanonicalUUIDContract`, or `CanonicalPhoneContract`).
+Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, or `CanonicalURLContract`).
 
 **Example:**
 
@@ -147,7 +200,7 @@ contract = paxman.parse_contract({
 
 **Raises:** `ContractError` if the spec is malformed. `parse_contract()` runs at the call site, *before* capability dispatch, so a bad contract is a programming error caught at the call site, not a `Status` outcome on the artifact.
 
-`parse_contract` is a no-op for an already-parsed contract value object — `CanonicalEmailContract`, `CanonicalUUIDContract`, and `CanonicalPhoneContract` (the contract is the truth; an instance is its own best representation).
+`parse_contract` is a no-op for an already-parsed contract value object — `CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, and `CanonicalURLContract` (the contract is the truth; an instance is its own best representation).
 
 ## The Dict DSL
 
@@ -166,7 +219,7 @@ The Dict DSL is the wire form of a contract. It is a dict with a `kind` discrimi
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `kind` | `str` | Yes | — | Must be a supported `kind`: `canonical_email`, `canonical_uuid`, or `canonical_phone` in v2.0.0. Unknown kinds raise `ContractError`. |
+| `kind` | `str` | Yes | — | Must be a supported `kind`: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, or `canonical_url` in v2.0.0. Unknown kinds raise `ContractError`. |
 | `lowercase` | `bool` | No | `True` | Same as `CanonicalEmailContract.lowercase`. |
 | `strip_whitespace` | `bool` | No | `True` | Same as `CanonicalEmailContract.strip_whitespace`. |
 | `provider_aliases` | `"none"` or `"gmail"` | No | `"none"` | Same as `CanonicalEmailContract.provider_aliases`. |

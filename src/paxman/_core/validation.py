@@ -16,6 +16,7 @@ from __future__ import annotations
 from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
+from paxman._capabilities.url.contract import CanonicalURLContract
 from paxman._capabilities.uuid.contract import CanonicalUUIDContract
 from paxman._core.classification import ValidationResult
 from paxman._errors import UnsupportedContractError
@@ -50,6 +51,11 @@ def validate(
         # The PhoneCapability has already validated the canonical form
         # against the E.164 global shape rule; no further policy check
         # is needed here (same rationale as UUID/Date above — Law 11).
+        return ValidationResult(is_valid=True)
+    if isinstance(contract, CanonicalURLContract):
+        # The URLCapability has already validated the canonical form;
+        # no further policy check is needed here (same rationale as
+        # UUID/Date/Phone above — Law 11).
         return ValidationResult(is_valid=True)
     if not isinstance(contract, CanonicalEmailContract):
         raise UnsupportedContractError(

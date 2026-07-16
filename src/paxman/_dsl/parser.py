@@ -18,6 +18,7 @@ from typing import Any
 from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
+from paxman._capabilities.url.contract import CanonicalURLContract
 from paxman._capabilities.uuid.contract import CanonicalUUIDContract
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import get_builder
@@ -31,7 +32,11 @@ from paxman._registry.contract_registry import get_builder
 def parse_contract(
     spec: Any,
 ) -> (
-    CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract
+    CanonicalEmailContract
+    | CanonicalUUIDContract
+    | CanonicalDateContract
+    | CanonicalPhoneContract
+    | CanonicalURLContract
 ):
     """Parse a Dict DSL contract into a Contract value object.
 
@@ -51,6 +56,8 @@ def parse_contract(
     if isinstance(spec, CanonicalDateContract):
         return spec
     if isinstance(spec, CanonicalPhoneContract):
+        return spec
+    if isinstance(spec, CanonicalURLContract):
         return spec
 
     if not isinstance(spec, dict):

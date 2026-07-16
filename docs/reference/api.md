@@ -195,6 +195,14 @@ Domain-type sugar for declaring a phone contract. Returns a `CanonicalPhoneContr
 
 See [Concepts: Contracts](../concepts/contracts.md) and the [Phone capability spec](../capabilities/phone/index.md).
 
+### `URL()` / `CanonicalURLContract`
+
+Declare a URL canonicalization contract. `URL()` accepts keyword-only
+policy levers (`scheme_allow`, `strip_userinfo`, `strip_fragment`,
+`sort_query`, `whatwg`). Default `strip_fragment=True`.
+
+See [Concepts: Contracts](../concepts/contracts.md) and the [URL capability spec](../capabilities/url/index.md).
+
 ### `CanonicalEmailContract`
 
 ```python
@@ -238,10 +246,10 @@ The frozen value object representing a phone canonicalization policy. Has an `as
 ### `Contract`
 
 ```python
-Contract = CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract
+Contract = CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract | CanonicalURLContract
 ```
 
-The union of the frozen contract types; currently `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract`. Future versions may add new contract kinds.
+The union of the frozen contract types; currently `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract | CanonicalURLContract`. Future versions may add new contract kinds.
 
 ### `Capability`
 

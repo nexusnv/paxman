@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ipaddress
 import re
 
 import attrs
@@ -11,6 +12,15 @@ from paxman._capabilities.url.rules import _evidence
 from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
+
+# Constitutional scope of this capability change (MANDATE.md):
+#   Law 1  (Determinism)        — canonicalize is a pure function of (value, contract).
+#   Law 2  (Idempotence)        — canonicalize(canonicalize(x)) == canonicalize(x).
+#   Law 3  (Never guess)        — ambiguous input yields Status.AMBIGUOUS, never a pick.
+#   Law 8a (Capability purity)  — no I/O, time, randomness, or network; (value, contract) only.
+#   Law 13 (Immutability)       — results are returned as frozen value objects.
+#   Law 14 (Provenance)         — every emitted rule cites a source via _RULE_PROVENANCE.
+# The dot-segment and authority normalizations below follow RFC 3986 §5.2.4 / §3.2.
 
 _PCT = re.compile(r"%([0-9a-fA-F]{2})")
 _UNRESERVED = set("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~")
@@ -44,31 +54,43 @@ def _decode_unreserved(s: str) -> str:
 
 
 def _remove_dot_segments(path: str) -> str:
-    # RFC 3986 §5.2.4 normative algorithm (segment-based, equivalent to the
-    # character-based pseudocode but robust against the "/." edge case where
-    # a leading slash must be preserved without duplication).
+    # RFC 3986 §5.2.4 input/output-buffer algorithm. Preserves empty
+    # segments and trailing slashes: //a stays //a, /a/ stays /a/,
+    # /a/. normalizes to /a/, /a/../ normalizes to /.
     if not path:
         return ""
-    segs = path.split("/")
-    out: list[str] = []
-    for seg in segs:
-        if seg == "." or seg == "":
-            # skip "." and empty (but keep an empty leading segment so an
-            # absolute path stays absolute)
-            if seg == "" and not out and path.startswith("/"):
-                continue
-            continue
-        if seg == "..":
-            if out:
-                out.pop()
-            continue
-        out.append(seg)
-    result = "/".join(out)
-    if path.startswith("/") and not result.startswith("/"):
-        result = "/" + result
-    elif path.startswith("/"):
-        result = "/" + result
-    return result
+    input_buffer = path
+    output_buffer = ""
+    while input_buffer:
+        if input_buffer.startswith("../"):
+            input_buffer = input_buffer[3:]
+        elif input_buffer.startswith("./"):
+            input_buffer = input_buffer[2:]
+        elif input_buffer.startswith("/./"):
+            input_buffer = "/" + input_buffer[3:]
+        elif input_buffer == "/.":
+            input_buffer = "/"
+        elif input_buffer.startswith("/../"):
+            input_buffer = "/" + input_buffer[4:]
+            output_buffer = output_buffer[: output_buffer.rfind("/")]
+        elif input_buffer == "/..":
+            input_buffer = "/"
+            output_buffer = output_buffer[: output_buffer.rfind("/")]
+        elif input_buffer == ".":
+            input_buffer = ""
+        elif input_buffer == "..":
+            input_buffer = ""
+        else:
+            if input_buffer.startswith("/"):
+                input_buffer = input_buffer[1:]
+                prefix, slash, rest = input_buffer.partition("/")
+                output_buffer += "/" + prefix
+                input_buffer = slash + rest
+            else:
+                prefix, slash, rest = input_buffer.partition("/")
+                output_buffer += prefix
+                input_buffer = slash + rest
+    return output_buffer
 
 
 def _sort_query(q: str) -> str:
@@ -99,12 +121,39 @@ def _validate_authority(host: str, port: str | None) -> bool:
     if not host:
         return False
     if host.startswith("[") and host.endswith("]"):
+        # Strict IPv6 literal: validate via the stdlib, which fully enforces
+        # RFC 4291 (rejects malformed forms such as "[:]" or "2001:db8:::1").
         inner = host[1:-1]
-        if not re.fullmatch(r"[0-9A-Fa-f:]+", inner):
+        if not _is_valid_ipv6(inner):
             return False
-    elif _SCHEME_RE.match(host) is None and not re.fullmatch(r"\d{1,3}(\.\d{1,3}){3}", host):
+    elif not _is_valid_reg_name(host) and not re.fullmatch(r"\d{1,3}(\.\d{1,3}){3}", host):
+        # Registered name (RFC 3986 §3.2.2, may be digit-leading like 3com.com)
+        # or IPv4. A scheme-like host (starts with a letter and matches the
+        # scheme production) is not a valid authority host.
         return False
-    if port is not None and not port.isdigit():
+    if port is not None:
+        if not port.isdigit():
+            return False
+        # Ports must be in the 0..65535 range (RFC 3986 §3.2.3).
+        if not (0 <= int(port) <= 65535):
+            return False
+    return True
+
+
+# RFC 3986 §3.2.2 reg-name: *( unreserved / pct-encoded / sub-delims / "." ).
+# Unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~"; sub-delims =
+# "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "=".
+_REG_NAME = re.compile(r"^[A-Za-z0-9\-._~!$&'()*+,;=]+$")
+
+
+def _is_valid_reg_name(host: str) -> bool:
+    return bool(_REG_NAME.match(host))
+
+
+def _is_valid_ipv6(inner: str) -> bool:
+    try:
+        ipaddress.IPv6Address(inner)
+    except ValueError:
         return False
     return True
 
@@ -147,20 +196,17 @@ def generate_interpretations(
                         host = host.replace("\\", "")
                         ev.append(_evidence("whatwg_backslash_coerce"))
             if port is not None:
-                # Only elide when the port is a well-formed integer. A
-                # non-numeric port (e.g. "xyz") cannot be a default port, so
-                # we leave it untouched and let _validate_authority reject it
-                # downstream. Guarding here prevents int(port) from raising
-                # inside the resolver (the same class of crash as the IPv6
-                # bracket split bug).
+                # Only elide when the port is a well-formed integer equal to the
+                # scheme default. A non-numeric or empty port (e.g. "xyz" or the
+                # explicitly-empty "http://host:/") is NOT elided; it is passed
+                # through to _validate_authority, which rejects it downstream.
+                # Guarding with isdigit() prevents int(port) from raising inside
+                # the resolver (the same class of crash as the IPv6 bracket bug).
                 if port.isdigit():
                     default = default_port_for_scheme(scheme) if scheme else None
-                    if port == "" or (default is not None and int(port) == default):
+                    if default is not None and int(port) == default:
                         port = None
                         ev.append(_evidence("elide_default_port"))
-                elif port == "":
-                    port = None
-                    ev.append(_evidence("elide_default_port"))
             rebuilt = host
             if userinfo:
                 rebuilt = userinfo + "@" + rebuilt
@@ -174,27 +220,45 @@ def generate_interpretations(
                 ev.append(_evidence("whatwg_backslash_coerce"))
                 path = path.replace("%2e", ".").replace("%2E", ".")
                 ev.append(_evidence("whatwg_pct_dot_in_path"))
-            path = _uppercase_pct_hex(path)
-            ev.append(_evidence("uppercase_pct_hex"))
-            path = _decode_unreserved(path)
-            ev.append(_evidence("decode_unreserved_pct"))
-            path = _remove_dot_segments(path)
-            ev.append(_evidence("remove_dot_segments"))
+            upper = _uppercase_pct_hex(path)
+            if upper != path:
+                path = upper
+                ev.append(_evidence("uppercase_pct_hex"))
+            decoded = _decode_unreserved(path)
+            if decoded != path:
+                path = decoded
+                ev.append(_evidence("decode_unreserved_pct"))
+            dots = _remove_dot_segments(path)
+            if dots != path:
+                path = dots
+                ev.append(_evidence("remove_dot_segments"))
 
         if authority and path == "":
             path = "/"
             ev.append(_evidence("empty_path_to_slash"))
 
         if query:
-            query = _uppercase_pct_hex(query)
-            query = _decode_unreserved(query)
+            q_upper = _uppercase_pct_hex(query)
+            if q_upper != query:
+                query = q_upper
+                ev.append(_evidence("uppercase_pct_hex"))
+            q_decoded = _decode_unreserved(query)
+            if q_decoded != query:
+                query = q_decoded
+                ev.append(_evidence("decode_unreserved_pct"))
             if contract.sort_query:
                 query = _sort_query(query)
                 ev.append(_evidence("sort_query"))
 
         if fragment:
-            fragment = _uppercase_pct_hex(fragment)
-            fragment = _decode_unreserved(fragment)
+            f_upper = _uppercase_pct_hex(fragment)
+            if f_upper != fragment:
+                fragment = f_upper
+                ev.append(_evidence("uppercase_pct_hex"))
+            f_decoded = _decode_unreserved(fragment)
+            if f_decoded != fragment:
+                fragment = f_decoded
+                ev.append(_evidence("decode_unreserved_pct"))
             if contract.strip_fragment:
                 fragment = ""
                 ev.append(_evidence("strip_fragment"))

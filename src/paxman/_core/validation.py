@@ -5,7 +5,7 @@ checking*, not interpretation. It verifies that the canonical value
 satisfies the contract's strictness policy; it does not invent policies.
 
 For v2.0.0, the supported kinds are `canonical_email`,
-`canonical_uuid`, and `canonical_date`.
+`canonical_uuid`, `canonical_date`, and `canonical_phone`.
 Any other kind raises `UnsupportedContractError` (defined in
 `paxman._errors`); the orchestrator catches that and produces
 `Status.UNSUPPORTED` instead of letting the call fail.

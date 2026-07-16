@@ -50,9 +50,13 @@ class RecognizedRep:
         source: The matching grammar's provenance (Law 14).
         raw: The full matched substring (``match.group(0)``).
         shape: The matching grammar's shape tag (may be ``None``).
-        captures: Raw string captures keyed by regex group name (``cc``, ``national``).
-            Only groups that participated in the match are present — recognition
-            assigns NO meaning.
+        captures: Raw string captures keyed by regex group name. For the ``e164``
+            grammar the groups are ``cc_first`` (the first digit of the country
+            code) and ``national`` (the remaining digits) — recognition assigns
+            NO meaning, so the full country code is not split out here; the
+            resolver reassembles ``+{cc_first}{national}`` which reproduces the
+            input byte-for-byte. Only groups that participated in the match are
+            present — recognition assigns NO meaning.
     """
 
     grammar_id: str
@@ -84,12 +88,12 @@ GRAMMARS: tuple[Grammar, ...] = (
     _make_grammar(
         "e164",
         "RFC 3966 §3 / ITU-T E.164 (global form: +<cc><national>)",
-        r"^\+(?P<cc>[0-9])(?P<national>\d+)$",
+        r"^\+(?P<cc_first>[0-9])(?P<national>\d+)$",
     ),
     _make_grammar(
         "national",
-        "ITU-T E.164 national-number pattern (separated national form; requires >=1 separator)",
-        r"^(?P<national>[\d(][\d \-().]*[ \-().][\d \-().]*\d)$",
+        "ITU-T E.164 national-number pattern (separated form; requires >=7 digits)",
+        r"^(?P<national>(?=(?:\D*\d){7})[\d(][\d \-().]*[ \-().][\d \-().]*\d)$",
     ),
     _make_grammar(
         "digits_only",

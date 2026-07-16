@@ -19,7 +19,7 @@ def test_e164_grammar():
     reps = recognize("+16502530000", CanonicalPhoneContract())
     assert len(reps) == 1
     assert reps[0].grammar_id == "e164"
-    assert reps[0].captures["cc"] == "1"
+    assert reps[0].captures["cc_first"] == "1"
     assert reps[0].captures["national"] == "6502530000"
     assert reps[0].source  # Law 14 provenance present
 
@@ -46,4 +46,4 @@ def test_letter_string_rejected():
 
 def test_recognize_assigns_no_meaning():
     reps = recognize("+16502530000", CanonicalPhoneContract())
-    assert set(reps[0].captures.keys()) == {"cc", "national"}
+    assert set(reps[0].captures.keys()) == {"cc_first", "national"}

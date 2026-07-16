@@ -20,7 +20,16 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "unrecognized_format": (
             "RFC 4122 §3 (the canonical form is 36 chars; 8-4-4-4-12 grouping; lowercase hex)"
         ),
+        "grammar_rejected": (
+            "RFC 4122 §3 (the value fails the canonical-form grammar: wrong length, "
+            "non-hex character, or hyphen in the wrong position)"
+        ),
         "version_mismatch": "RFC 4122 §4.1.3 (version field encoding)",
+        # --- ambiguity rule (recognition produced more than one survivor) ---
+        "ambiguous_provider_equivalence": (
+            "RFC 4122 §3 (more than one canonical reading survived validation; "
+            "Paxman surfaces the ambiguity rather than guessing)"
+        ),
         # --- transforming rule (success path) ---
         "no_transformation_needed": "RFC 4122 §3 (the canonical form is X; X was provided)",
     }

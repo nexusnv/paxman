@@ -61,7 +61,7 @@ These rules cause the capability to return `Status.INVALID` with a single eviden
 
 Two of the rejecting rules — `not_an_email_contract` and `not_a_string_value` — have empty citations. They are dispatch invariants: they describe a routing failure, not a canonical-form rule. The remaining rejecting rules all cite a specification.
 
-## The Grammar Gate (Recognition Layer 1)
+## Recognition Layer 1
 
 Before any rewriting, the capability runs `grammar.recognize` over the input. `grammar.py` declares four anchored recognition grammars, each carrying a Law-14 `source`:
 

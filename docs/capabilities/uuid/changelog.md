@@ -2,7 +2,7 @@
 
 The UUID capability is versioned. Each entry below records a contract-version bump and what changed. The contract `version` field appears on every artifact, so any old artifact can be replayed against the rules that produced it.
 
-## v2 (Current — grammar-layer refactor)
+## v2 (Current — Grammar-Layer Refactor)
 
 **Contract version:** `1`
 

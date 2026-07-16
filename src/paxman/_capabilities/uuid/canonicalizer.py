@@ -38,7 +38,7 @@ from __future__ import annotations
 import attrs
 
 from paxman._capabilities.uuid.contract import CanonicalUUIDContract
-from paxman._capabilities.uuid.grammar import recognize
+from paxman._capabilities.uuid.grammar import RecognizedRep, recognize
 from paxman._capabilities.uuid.parser import CANONICAL_CHARS, CANONICAL_LENGTH, HYPHEN_POSITIONS
 from paxman._capabilities.uuid.rules import _evidence
 from paxman._core.contracts import Contract
@@ -74,7 +74,7 @@ class _Survivor:
 
 
 def generate_interpretations(
-    reps: list[object], contract: CanonicalUUIDContract
+    reps: list[RecognizedRep], contract: CanonicalUUIDContract
 ) -> list[_Candidate]:
     """Map grammar recognitions to candidate canonical forms (resolver).
 
@@ -83,11 +83,8 @@ def generate_interpretations(
     form the declared policies permit. The recognised form is already
     canonical, so the only evidence is ``no_transformation_needed``.
     """
-    from paxman._capabilities.uuid.grammar import RecognizedRep
-
     candidates: list[_Candidate] = []
     for rep in reps:
-        assert isinstance(rep, RecognizedRep)
         gid = rep.grammar_id
         if gid == "canonical_uuid":
             candidates.append(

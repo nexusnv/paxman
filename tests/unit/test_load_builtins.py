@@ -14,6 +14,7 @@ from paxman._capabilities.date import DateCapability
 from paxman._capabilities.discovery import builtin_capabilities
 from paxman._capabilities.email import EmailCapability
 from paxman._capabilities.email.contract import CanonicalEmailContract
+from paxman._capabilities.phone import PhoneCapability
 from paxman._capabilities.uuid import UUIDCapability
 from paxman._registry.capability_registry import CapabilityRegistry
 
@@ -22,12 +23,18 @@ class TestBuiltinCapabilities:
     def test_returns_list_of_email_and_uuid_capabilities(self) -> None:
         result = builtin_capabilities()
         assert isinstance(result, list)
-        assert len(result) == 3
+        assert len(result) == 4
         names = {c.name for c in result}
-        assert names == {"email_canonicalization", "uuid_canonicalization", "date_canonicalization"}
+        assert names == {
+            "email_canonicalization",
+            "uuid_canonicalization",
+            "date_canonicalization",
+            "phone_canonicalization",
+        }
         assert any(isinstance(c, EmailCapability) for c in result)
         assert any(isinstance(c, UUIDCapability) for c in result)
         assert any(isinstance(c, DateCapability) for c in result)
+        assert any(isinstance(c, PhoneCapability) for c in result)
 
     def test_returns_fresh_instances_on_each_call(self) -> None:
         # No shared mutable state across calls (Law 1, Law 8a).
@@ -39,6 +46,7 @@ class TestBuiltinCapabilities:
             "email_canonicalization",
             "uuid_canonicalization",
             "date_canonicalization",
+            "phone_canonicalization",
         ]
 
 
@@ -100,6 +108,7 @@ class TestLoadBuiltins:
         registry_b.register(MyEmailCap())
         registry_b.register(UUIDCapability())
         registry_b.register(DateCapability())
+        registry_b.register(PhoneCapability())
         registry_b.freeze()
 
         assert registry_a.capabilities_hash() == registry_b.capabilities_hash()
@@ -129,6 +138,7 @@ class TestLoadBuiltins:
         via_register.register(EmailCapability())
         via_register.register(UUIDCapability())
         via_register.register(DateCapability())
+        via_register.register(PhoneCapability())
         via_register.freeze()
 
         assert via_load.capabilities_hash() == via_register.capabilities_hash()

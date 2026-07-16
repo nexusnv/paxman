@@ -12,6 +12,7 @@ __version__ = "0.0.0.dev0"
 from paxman import _orchestrator_runtime
 from paxman._capabilities.date.contract import CanonicalDateContract, Date
 from paxman._capabilities.email.contract import CanonicalEmailContract, Email
+from paxman._capabilities.phone.contract import CanonicalPhoneContract, Phone
 from paxman._capabilities.protocol import Capability
 from paxman._capabilities.uuid.contract import UUID, CanonicalUUIDContract
 from paxman._core.artifact import ExecutionArtifact
@@ -37,7 +38,9 @@ from paxman._registry.capability_registry import CapabilityRegistry
 # structural `Contract` Protocol of the same name lives in
 # `paxman._core.contracts`; this union is what the DSL parser returns and
 # what callers hold.
-Contract = CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract
+Contract = (
+    CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract
+)
 
 
 def canonicalize(input_data: object, contract: object) -> ExecutionArtifact:
@@ -80,6 +83,7 @@ __all__ = [
     "UUID",
     "CanonicalDateContract",
     "CanonicalEmailContract",
+    "CanonicalPhoneContract",
     "CanonicalUUIDContract",
     "CanonicalizationError",
     "Capability",
@@ -91,6 +95,7 @@ __all__ = [
     "Date",
     "Email",
     "Evidence",
+    "Phone",
     "ExecutionArtifact",
     "FrozenRegistryError",
     "PaxmanError",

@@ -4,8 +4,8 @@ Mandate Law 4 (Canonicalize, Don't Interpret): validation is *policy
 checking*, not interpretation. It verifies that the canonical value
 satisfies the contract's strictness policy; it does not invent policies.
 
-For v2.0.0, the supported kinds are `canonical_email`,
-`canonical_uuid`, `canonical_date`, and `canonical_phone`.
+For v2.0.0, the supported kinds are `canonical_email`, `canonical_uuid`,
+`canonical_date`, `canonical_phone`, `canonical_url`, and `canonical_boolean`.
 Any other kind raises `UnsupportedContractError` (defined in
 `paxman._errors`); the orchestrator catches that and produces
 `Status.UNSUPPORTED` instead of letting the call fail.

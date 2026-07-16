@@ -60,12 +60,11 @@ class _Survivor:
 
 
 def generate_interpretations(
-    reps: list[object], contract: CanonicalBooleanContract
+    reps: list[RecognizedRep], contract: CanonicalBooleanContract
 ) -> list[_Candidate]:
     """Map grammar recognitions to candidate canonical forms (resolver)."""
     candidates: list[_Candidate] = []
     for rep in reps:
-        assert isinstance(rep, RecognizedRep)
         token = rep.captures["token"].lower()
         canonical = _TOKEN_TO_CANONICAL[token]
         candidates.append(

@@ -12,10 +12,6 @@ from paxman._capabilities.money.grammar import (
 from paxman._errors import ContractError
 
 
-def _contract(**kw: object) -> object:
-    return Money(currency="MYR", **kw)  # type: ignore[arg-type]
-
-
 def test_recognize_symbol_present() -> None:
     c = Money(currency="MYR")
     parts = recognize_money("RM 12.50", c)
@@ -71,6 +67,14 @@ def test_recognize_disallow_code_rejected() -> None:
         recognize_money("USD 1.00", Money(currency="USD", allow_code=False))
 
 
+def test_recognize_symbol_ok_when_code_disallowed() -> None:
+    # Symbol is accepted even when codes are disallowed.
+    parts = recognize_money("RM 10.00", Money(currency="MYR", allow_code=False))
+    assert parts.symbol == "RM"
+    assert parts.code is None
+    assert parts.amount == "10.00"
+
+
 def test_recognize_unknown_symbol_rejected() -> None:
     # € is not the contract currency's symbol
     with pytest.raises(ContractError):
@@ -80,6 +84,12 @@ def test_recognize_unknown_symbol_rejected() -> None:
 def test_recognize_unknown_code_rejected() -> None:
     with pytest.raises(ContractError):
         recognize_money("EUR 10.00", Money(currency="MYR"))
+
+
+def test_recognize_arbitrary_three_letter_word_rejected() -> None:
+    # Any leading 3-letter token that is not the contract currency is rejected.
+    with pytest.raises(ContractError):
+        recognize_money("ABC 12.50", Money(currency="MYR"))
 
 
 def test_recognize_symbol_mismatch_rejected() -> None:

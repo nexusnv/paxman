@@ -165,12 +165,16 @@ def recognize_money(raw: str, contract: CanonicalMoneyContract) -> MoneyParts:
     amount = after_code.strip()
     if not amount or not re.search(r"[0-9]", amount):
         raise ContractError(f"no numeric amount found in {raw!r}")
+    # Centralize the sign: an inner sign (e.g. "RM -5.00") is combined with
+    # the outer sign so a negative is a negative regardless of placement (Q2=A).
+    inner_sign, amount = _split_sign(amount)
+    final_sign = "-" if (sign == "-" or inner_sign == "-") else ""
     return MoneyParts(
         currency=contract.currency,
         amount=amount,
         symbol=symbol,
         code=code,
-        sign=sign,
+        sign=final_sign,
     )
 
 
@@ -193,6 +197,24 @@ def _split_sign(text: str) -> tuple[str, str]:
     return "", t
 
 
+def _validate_thousands(segments: list[str], sep_name: str, raw: str) -> None:
+    """Reject ambiguous thousands grouping (mandate: never guess).
+
+    Every segment except possibly the first must be exactly 3 digits. The
+    first segment may be 1-3 digits. A segment that violates this is
+    ambiguous (Paxman must not guess the separator role) and is rejected.
+    """
+    for i, seg in enumerate(segments):
+        if not seg:
+            raise ContractError(f"ambiguous {sep_name} grouping in {raw!r}")
+        if i == 0:
+            if not (1 <= len(seg) <= 3) or not seg.isdigit():
+                raise ContractError(f"ambiguous {sep_name} grouping in {raw!r}")
+        else:
+            if len(seg) != 3 or not seg.isdigit():
+                raise ContractError(f"ambiguous {sep_name} grouping in {raw!r}")
+
+
 def parse_amount(amount: str, currency: str) -> str:
     """Parse a numeric amount string into the canonical decimal string (F1).
 
@@ -202,35 +224,63 @@ def parse_amount(amount: str, currency: str) -> str:
 
     Returns:
         Canonical decimal string via Decimal (exact, never float). Literal
-        decimal places are preserved (F1). Scientific notation is normalized
-        (Q3=A).
+        decimal places are preserved (F1) for plain AND scientific input, and
+        scientific notation is normalized to a plain decimal (Q3=A).
 
     Raises:
-        ContractError: if the amount is not a valid number.
+        ContractError: if the amount is not a valid number, or if a thousands
+        separator forms an ambiguous (non-3-digit) grouping.
     """
     comma_decimal = currency in _COMMA_DECIMAL_CURRENCIES
+
+    # Split off a scientific-notation exponent (Q3=A) so the mantissa's
+    # separators can be validated independently of the "E".
+    exponent_part = ""
+    base = amount
+    for _i, _ch in enumerate(amount):
+        if _ch in "eE":
+            base, exponent_part = amount[:_i], amount[_i:]
+            break
+
     if comma_decimal:
-        # "1.234,56" → "1234.56": remove dots (thousands), swap comma→dot.
-        cleaned = amount.replace(".", "").replace(",", ".")
+        # EUR etc.: DOT is the thousands sep, COMMA is the decimal sep.
+        if "," in base:
+            integer_part, _, frac_part = base.partition(",")
+            if not frac_part.isdigit():
+                raise ContractError(f"invalid amount {amount!r}")
+        else:
+            integer_part = base
+        if "." in integer_part:
+            _validate_thousands(integer_part.split("."), "thousands", amount)
+        cleaned = base.replace(".", "").replace(",", ".") + exponent_part
     else:
-        # "1,234.56" → "1234.56": remove commas (thousands).
-        cleaned = amount.replace(",", "")
+        # USD/MYR etc.: COMMA is the thousands sep, DOT is the decimal sep.
+        if "." in base:
+            integer_part, _, frac_part = base.partition(".")
+            if not frac_part.isdigit():
+                raise ContractError(f"invalid amount {amount!r}")
+        else:
+            integer_part = base
+        if "," in integer_part:
+            _validate_thousands(integer_part.split(","), "thousands", amount)
+        cleaned = base.replace(",", "") + exponent_part
     cleaned = cleaned.strip()
     if not cleaned:
         raise ContractError(f"empty amount in {amount!r}")
-    if cleaned.count(".") > 1:
-        raise ContractError(f"multiple decimal points in {amount!r}")
-    # Scientific notation (Q3=A): normalize to a plain decimal string.
-    if "e" in cleaned.lower():
-        try:
-            value = Decimal(cleaned)
-        except InvalidOperation as exc:
-            raise ContractError(f"invalid amount {amount!r}") from exc
-        if value == value.to_integral_value():
-            return str(value.to_integral_value())
-        return format(value, "f")
-    # Reject any non-numeric residue (letters, stray symbols).
-    if not re.fullmatch(r"[+-]?[0-9]+(\.[0-9]+)?", cleaned):
-        raise ContractError(f"invalid amount {amount!r}")
-    # F1 — literal decimal places preserved (no quantization/rounding).
-    return cleaned
+
+    # Parse exactly with Decimal (never float). Reject non-numeric residue.
+    try:
+        value = Decimal(cleaned)
+    except InvalidOperation as exc:
+        raise ContractError(f"invalid amount {amount!r}") from exc
+
+    # F1/Q3: preserve the literal fractional-digit count of the INPUT mantissa
+    # (not the post-exponent value) and always emit a plain decimal string
+    # (no "E"). E.g. "1.25E+2" keeps 2 places -> "125.00"; "1.5e3" -> "1500.0".
+    decimal_sep = "," if comma_decimal else "."
+    if decimal_sep in base:
+        mantissa_frac = len(base.rsplit(decimal_sep, 1)[1])
+    else:
+        mantissa_frac = 0
+    frac = mantissa_frac
+    return str(value.quantize(Decimal(1).scaleb(-frac)))

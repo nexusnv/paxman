@@ -61,7 +61,7 @@ def test_canonicalize_usd_comma_thousands() -> None:
 
 def test_canonicalize_scientific() -> None:
     res = _cap().canonicalize("1.25E+2", Money(currency="MYR"))
-    assert res.value == "MYR:125"
+    assert res.value == "MYR:125.00"
 
 
 def test_canonicalize_strips_spaces() -> None:
@@ -116,3 +116,8 @@ def test_canonicalize_trailing_sign() -> None:
     res = _cap().canonicalize("RM 5.00-", _contract())
     assert res.status.name == "CANONICALIZED"
     assert res.value == "MYR:-5.00"
+
+
+def test_canonicalize_scientific_preserves_decimals() -> None:
+    res = _cap().canonicalize("1.25E+2", Money(currency="MYR"))
+    assert res.value == "MYR:125.00"

@@ -20,6 +20,7 @@ from paxman._capabilities.boolean.canonicalizer import BooleanCapability
 from paxman._capabilities.date.canonicalizer import DateCapability
 from paxman._capabilities.email.canonicalizer import EmailCapability
 from paxman._capabilities.ip.canonicalizer import IPCapability
+from paxman._capabilities.money.canonicalizer import MoneyCapability
 from paxman._capabilities.phone.canonicalizer import PhoneCapability
 from paxman._capabilities.protocol import Capability
 from paxman._capabilities.url.canonicalizer import URLCapability
@@ -50,4 +51,5 @@ def builtin_capabilities() -> list[Capability]:
         URLCapability(),
         BooleanCapability(),
         IPCapability(),
+        MoneyCapability(),
     ]

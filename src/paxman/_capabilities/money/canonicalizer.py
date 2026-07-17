@@ -1,0 +1,89 @@
+# src/paxman/_capabilities/money/canonicalizer.py
+"""MoneyCapability: a built-in capability of Paxman v2.
+
+Mandate Laws 3, 5, 7, 8a, 11, 14. The currency is taken from the contract
+(Law 3 — Never Guess; Law 7 — Explicit Over Clever); the grammar only validates
+that any symbol/code present in the input matches the contract currency. The
+canonical form is "<ISO4217>:<amount>" where the amount is the canonical decimal
+string from `parse_amount` (F1 literal decimals, Q1/Q2/Q3 applied).
+"""
+
+from __future__ import annotations
+
+from paxman._capabilities.money.contract import CanonicalMoneyContract
+from paxman._capabilities.money.grammar import parse_amount, recognize_money
+from paxman._capabilities.money.rules import _evidence
+from paxman._core.contracts import Contract
+from paxman._core.result import CapabilityResult
+from paxman._core.status import Status
+from paxman._errors import ContractError
+
+
+class MoneyCapability:
+    """A pure deterministic transformation that canonicalizes money strings."""
+
+    name: str = "money_canonicalization"
+
+    def can_handle(self, contract: Contract, value: object) -> bool:
+        return isinstance(contract, CanonicalMoneyContract) and (
+            value is None or isinstance(value, str)
+        )
+
+    def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+        if not isinstance(contract, CanonicalMoneyContract):
+            return CapabilityResult(
+                status=Status.INVALID, evidence=(_evidence("not_a_money_contract"),)
+            )
+        if not (value is None or isinstance(value, str)):
+            return CapabilityResult(
+                status=Status.INVALID, evidence=(_evidence("not_a_string_value"),)
+            )
+
+        # Missing/whitespace-only value -> INVALID (spec: empty input rejected).
+        if value is None or value.strip(" \t\r\n\f\v") == "":
+            return CapabilityResult(status=Status.INVALID, evidence=(_evidence("missing_value"),))
+
+        # Track whether surrounding whitespace was stripped (record if changed).
+        stripped_evidence: tuple = ()
+        stripped = value.strip(" \t\r\n\f\v")
+        if stripped != value:
+            stripped_evidence = (_evidence("trimmed_whitespace"),)
+            value = stripped
+
+        # Recognition layer (Layer 1) — shape classification + symbol/code
+        # validation. A malformed or mismatched input raises ContractError here
+        # (never guessed) and is surfaced as INVALID.
+        try:
+            parts = recognize_money(value, contract)
+        except ContractError:
+            return CapabilityResult(
+                status=Status.INVALID, evidence=(_evidence("unrecognized_format"),)
+            )
+
+        # Parse the amount into the canonical decimal string (F1/Q1/Q2/Q3).
+        try:
+            parsed = parse_amount(parts.amount, contract.currency)
+        except ContractError:
+            return CapabilityResult(
+                status=Status.INVALID, evidence=(_evidence("unrecognized_format"),)
+            )
+
+        # Compose the canonical form "<ISO4217>:<sign><amount>".
+        canonical = f"{contract.currency}:{parts.sign}{parsed}"
+
+        evidence: list = list(stripped_evidence)
+        evidence.append(_evidence("currency_from_contract", f"currency={contract.currency}"))
+        if parts.symbol is not None:
+            evidence.append(_evidence("symbol_validated", f"symbol={parts.symbol}"))
+        if parts.code is not None:
+            evidence.append(_evidence("code_validated", f"code={parts.code}"))
+        if parts.sign:
+            evidence.append(_evidence("preserved_sign", f"sign={parts.sign}"))
+        evidence.append(_evidence("parsed_decimal", f"amount={parts.amount}"))
+        if "." in parts.amount or "e" in parts.amount.lower() or "E" in parts.amount:
+            evidence.append(_evidence("preserved_decimals", f"amount={parts.amount}"))
+        evidence.append(_evidence("canonical_form", f"{value!r} -> {canonical!r}"))
+
+        return CapabilityResult(
+            status=Status.CANONICALIZED, value=canonical, evidence=tuple(evidence)
+        )

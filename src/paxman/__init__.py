@@ -11,6 +11,7 @@ __version__ = "0.0.0.dev0"
 
 from paxman import _orchestrator_runtime
 from paxman._capabilities.boolean.contract import Boolean, CanonicalBooleanContract
+from paxman._capabilities.country.contract import Country, CanonicalCountryContract
 from paxman._capabilities.date.contract import CanonicalDateContract, Date
 from paxman._capabilities.email.contract import CanonicalEmailContract, Email
 from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract, Geolocation
@@ -49,10 +50,11 @@ Contract = (
     | CanonicalDateContract
     | CanonicalPhoneContract
     | CanonicalURLContract
-    | CanonicalBooleanContract
+    |     CanonicalBooleanContract
     | CanonicalIPContract
     | CanonicalMoneyContract
     | CanonicalGeolocationContract
+    | CanonicalCountryContract
 )
 
 
@@ -98,6 +100,7 @@ __all__ = [
     "UUID",
     "Boolean",
     "CanonicalBooleanContract",
+    "CanonicalCountryContract",
     "CanonicalDateContract",
     "CanonicalEmailContract",
     "CanonicalGeolocationContract",
@@ -108,6 +111,7 @@ __all__ = [
     "CanonicalUUIDContract",
     "CanonicalizationError",
     "Capability",
+    "Country",
     "CapabilityRegistry",
     "CapabilityResult",
     "ConfigurationError",

@@ -68,6 +68,8 @@ class TestPublicAPI:
             "UnsupportedContractError",
             "VersionMismatchError",
             "Boolean",
+            "Money",
+            "CanonicalMoneyContract",
             "annotations",
         }
         actual = {n for n in dir(paxman) if not n.startswith("_")}

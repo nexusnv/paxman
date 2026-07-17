@@ -6,11 +6,11 @@ The money capability is a built-in capability shipped with Paxman v2.0.0. It can
 
 **Contract kind:** `canonical_money`
 
-**Contract factory:** `Money()`
+**Contract factory:** `Money(currency="USD")`
 
 ## What It Does
 
-The money capability rewrites a string into a single canonical form. The capability is governed by the contract you pass to `paxman.canonicalize()`. The contract is a frozen value object built with `Money(...)`. See [Contracts](../../reference/contracts.md) for the full factory signature.
+The money capability rewrites a string into a single canonical form. The capability is governed by the contract you pass to `paxman.canonicalize()`. The contract is a frozen value object built with `Money(currency=...)`. See [Contracts](../../reference/contracts.md) for the full factory signature.
 
 ## The Rules
 
@@ -40,7 +40,7 @@ Before any rewriting, the capability runs `grammar.recognize` over the input. Re
 import paxman
 from paxman import Money, Status
 
-result = paxman.canonicalize("example_input", Money())
+result = paxman.canonicalize("USD 12.34", Money(currency="USD"))
 ```
 
 ## References

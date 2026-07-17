@@ -26,11 +26,26 @@ class MoneyCapability:
     name: str = "money_canonicalization"
 
     def can_handle(self, contract: Contract, value: object) -> bool:
+        """Return True if this capability canonicalizes the given contract.
+
+        Accepts a CanonicalMoneyContract with a string (or None) value.
+        """
         return isinstance(contract, CanonicalMoneyContract) and (
             value is None or isinstance(value, str)
         )
 
     def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+        """Canonicalize a money string into "<ISO4217>:<amount>".
+
+        Args:
+            value: The raw money string (or None).
+            contract: The CanonicalMoneyContract (currency required).
+
+        Returns:
+            A CapabilityResult with status CANONICALIZED and the canonical form,
+            or INVALID when the input cannot be deterministically resolved
+            (empty, malformed, or a symbol/code that does not match the contract).
+        """
         if not isinstance(contract, CanonicalMoneyContract):
             return CapabilityResult(
                 status=Status.INVALID, evidence=(_evidence("not_a_money_contract"),)

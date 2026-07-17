@@ -110,17 +110,21 @@ def Money(
         A frozen CanonicalMoneyContract instance.
 
     Raises:
-        ContractError: if `currency` is missing, not a 3-letter string, or not
-            a recognized ISO 4217 code.
+        ContractError: if `currency` is missing, not a 3-letter string, not a
+            recognized ISO 4217 code, or if a flag argument is not a bool.
     """
+    if not isinstance(currency, str):
+        raise ContractError(
+            f"currency must be a 3-letter ISO 4217 code, got {type(currency).__name__}"
+        )
     cur = currency.upper()
     if len(cur) != 3 or not cur.isalpha() or cur not in _ISO4217_CODES:
         raise ContractError(f"unknown ISO 4217 currency code: {currency!r}")
     return CanonicalMoneyContract(
         currency=cur,
-        allow_symbol=allow_symbol,
-        allow_code=allow_code,
-        strip_spaces=strip_spaces,
+        allow_symbol=_require_bool("allow_symbol", allow_symbol),
+        allow_code=_require_bool("allow_code", allow_code),
+        strip_spaces=_require_bool("strip_spaces", strip_spaces),
     )
 
 

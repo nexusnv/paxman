@@ -55,8 +55,32 @@ _ISO4217_CODES: frozenset[str] = frozenset(
         "ILS",
         "RON",
         "RUB",
+        "ISK",
+        "UAH",
     }
 )
+
+
+def _validate_currency(inst: object, attr: object, value: str) -> None:
+    """Attrs validator: currency must be a recognized 3-letter ISO 4217 code."""
+    if not isinstance(value, str) or len(value) != 3 or not value.isalpha():
+        raise ContractError(f"currency must be a 3-letter ISO 4217 code, got {value!r}")
+    if value.upper() not in _ISO4217_CODES:
+        raise ContractError(f"unknown ISO 4217 currency code: {value!r}")
+
+
+def _validate_bool(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: policy fields must be real bools (Law 7 — explicit)."""
+    if not isinstance(value, bool):
+        name = getattr(attr, "name", attr)
+        raise ContractError(f"contract field {name!r} must be a bool, got {type(value).__name__}")
+
+
+def _validate_v1(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: version fields must be int 1 (only v1 is supported)."""
+    if not isinstance(value, int) or isinstance(value, bool) or value != 1:
+        name = getattr(attr, "name", attr)
+        raise ContractError(f"contract field {name!r} must be int 1, got {value!r}")
 
 
 @attrs.frozen
@@ -65,16 +89,21 @@ class CanonicalMoneyContract:
 
     Fields are policy declarations (mandate Law 7 — Explicit Over Clever).
     `currency` is REQUIRED with no default: the capability must never guess the
-    currency (Law 3).
+    currency (Law 3). Validators enforce the invariants on every construction
+    path (factory, Dict DSL, and direct instantiation) so a broken contract
+    fails before canonicalization.
     """
 
-    currency: str
-    allow_symbol: bool = True
-    allow_code: bool = True
-    strip_spaces: bool = True
-    kind: str = "canonical_money"
-    version: int = 1
-    version_field: int = 1
+    currency: str = attrs.field(validator=_validate_currency)
+    allow_symbol: bool = attrs.field(default=True, validator=_validate_bool)
+    allow_code: bool = attrs.field(default=True, validator=_validate_bool)
+    strip_spaces: bool = attrs.field(default=True, validator=_validate_bool)
+    kind: str = attrs.field(
+        default="canonical_money",
+        validator=attrs.validators.matches_re(r"^canonical_money$"),
+    )
+    version: int = attrs.field(default=1, validator=_validate_v1)
+    version_field: int = attrs.field(default=1, validator=_validate_v1)
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""

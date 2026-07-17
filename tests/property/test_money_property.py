@@ -124,3 +124,21 @@ def test_identity_stable(pair: tuple[str, str]) -> None:
     r1 = canonicalize(amount, contract)
     r2 = canonicalize(amount, contract)
     assert r1.value == r2.value
+
+
+@pytest.mark.property
+@settings(derandomize=True)
+@given(pair=_amounts())
+def test_canonical_form_is_idempotent(pair: tuple[str, str]) -> None:
+    currency, amount = pair
+    contract = Money(currency=currency)
+    # Idempotence: the emitted canonical form must be a valid input, so
+    # canonicalize(canonicalize(x)) == canonicalize(x) in value (Law 1 / Law 2).
+    # The evidence trail can differ (a re-feed carries a code_validated rule
+    # that the plain input did not), but the canonical value is unchanged.
+    r1 = canonicalize(amount, contract)
+    assert r1.status is Status.CANONICALIZED
+    assert r1.value is not None
+    r2 = canonicalize(r1.value, contract)
+    assert r2.status is Status.CANONICALIZED
+    assert r2.value == r1.value

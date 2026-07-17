@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 from paxman import Money, canonicalize
 from paxman._capabilities.money.canonicalizer import MoneyCapability
 from paxman._capabilities.money.contract import CanonicalMoneyContract
@@ -11,8 +13,8 @@ def _cap() -> MoneyCapability:
     return MoneyCapability()
 
 
-def _contract(**kw: object) -> CanonicalMoneyContract:
-    return Money(currency="MYR", **kw)  # type: ignore[arg-type]
+def _contract(**kw: Any) -> CanonicalMoneyContract:
+    return Money(currency="MYR", **kw)
 
 
 def test_can_handle_true_for_money_contract() -> None:
@@ -85,12 +87,12 @@ def test_canonicalize_rejects_empty() -> None:
 
 
 def test_canonicalize_non_string_value() -> None:
-    res = _cap().canonicalize(1234, _contract())  # type: ignore[arg-type]
+    res = _cap().canonicalize(cast(Any, 1234), _contract())
     assert res.status.name == "INVALID"
 
 
 def test_canonicalize_not_a_money_contract() -> None:
-    res = _cap().canonicalize("RM 10.00", "not-a-contract")  # type: ignore[arg-type]
+    res = _cap().canonicalize("RM 10.00", cast(Any, "not-a-contract"))
     assert res.status.name == "INVALID"
 
 

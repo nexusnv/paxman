@@ -83,6 +83,7 @@ class MoneyParts:
     symbol: str | None = None
     code: str | None = None
     sign: str = ""
+    canonical: bool = False
 
 
 def _strip_amount_text(raw: str, contract: CanonicalMoneyContract) -> str:
@@ -117,19 +118,28 @@ def _detect_symbol(text: str, contract: CanonicalMoneyContract) -> tuple[str | N
     return None, text
 
 
-def _detect_code(text: str, contract: CanonicalMoneyContract) -> tuple[str | None, str]:
+def _detect_code(text: str, contract: CanonicalMoneyContract) -> tuple[str | None, str, bool]:
     """Detect a leading ISO code (3 letters); validate it matches contract.
+
+    Accepts the optional canonical ":" delimiter immediately after a matching
+    code so the emitted canonical form ("ISO4217:amount") is itself a valid
+    input (idempotence: canonicalize(canonicalize(x)) == canonicalize(x)).
 
     Returns (code_or_None, remaining_text). Raises ContractError on mismatch or
     when codes are disallowed.
     """
-    m = re.match(r"^\s*([A-Za-z]{3})\b\s*(.*)$", text, re.DOTALL)
+    # Match a 3-letter code optionally followed by the canonical ":" delimiter
+    # (e.g. "USD:12.50"). The delimiter is consumed only when present; when it
+    # is, the remainder is the canonical amount (always dot-decimal) and we
+    # signal that so the parser does not re-apply the currency's separator
+    # convention (idempotence: canonicalize(canonicalize(x)) == canonicalize(x)).
+    m = re.match(r"^\s*([A-Za-z]{3})(?::\s*)?(.*)$", text, re.DOTALL)
     if not m:
-        return None, text
+        return None, text, False
     candidate = m.group(1).upper()
     rest = m.group(2)
     if not re.fullmatch(r"[A-Z]{3}", candidate):
-        return None, text
+        return None, text, False
     # The contract currency is the ONLY valid code. Any other leading 3-letter
     # token is rejected — Paxman never guesses the currency (Law 3).
     if candidate != contract.currency:
@@ -138,7 +148,8 @@ def _detect_code(text: str, contract: CanonicalMoneyContract) -> tuple[str | Non
         )
     if not contract.allow_code:
         raise ContractError("currency code not allowed by contract")
-    return candidate, rest
+    canonical = bool(m.group(0)[: m.end(1) + 1].endswith(":"))
+    return candidate, rest, canonical
 
 
 def recognize_money(raw: str, contract: CanonicalMoneyContract) -> MoneyParts:
@@ -160,13 +171,18 @@ def recognize_money(raw: str, contract: CanonicalMoneyContract) -> MoneyParts:
     # runs on the unsigned remainder (Law 7 — Explicit Over Clever).
     sign, unsigned_text = _split_sign(text)
     symbol, after_sym = _detect_symbol(unsigned_text, contract)
-    code, after_code = _detect_code(after_sym, contract)
+    code, after_code, canonical = _detect_code(after_sym, contract)
     amount = after_code.strip()
     if not amount or not re.search(r"[0-9]", amount):
         raise ContractError(f"no numeric amount found in {raw!r}")
     # Centralize the sign: an inner sign (e.g. "RM -5.00") is combined with
     # the outer sign so a negative is a negative regardless of placement (Q2=A).
+    # A SECOND sign marker (e.g. "-12.50-", "+-12.50", "(-12.50)") is
+    # contradictory/ambiguous and must be rejected — Paxman never guesses among
+    # multiple interpretations (MANDATE: ambiguous input -> non-success).
     inner_sign, amount = _split_sign(amount)
+    if inner_sign != "" and sign != "":
+        raise ContractError(f"multiple/contradictory sign markers in {raw!r}")
     final_sign = "-" if (sign == "-" or inner_sign == "-") else ""
     return MoneyParts(
         currency=contract.currency,
@@ -174,6 +190,7 @@ def recognize_money(raw: str, contract: CanonicalMoneyContract) -> MoneyParts:
         symbol=symbol,
         code=code,
         sign=final_sign,
+        canonical=canonical,
     )
 
 
@@ -214,12 +231,17 @@ def _validate_thousands(segments: list[str], sep_name: str, raw: str) -> None:
                 raise ContractError(f"ambiguous {sep_name} grouping in {raw!r}")
 
 
-def parse_amount(amount: str, currency: str) -> str:
+def parse_amount(amount: str, currency: str, canonical: bool = False) -> str:
     """Parse a numeric amount string into the canonical decimal string (F1).
 
     Args:
         amount: The numeric portion (may contain thousands separators).
         currency: ISO 4217 code (drives the separator convention, Q1=A).
+        canonical: when True, `amount` is already in canonical dot-decimal
+            form (a re-feed of this capability's own output). Skip the currency
+            separator convention and parse the plain decimal directly so the
+            canonical form is idempotent
+            (canonicalize(canonicalize(x)) == canonicalize(x)).
 
     Returns:
         Canonical decimal string via Decimal (exact, never float). Literal
@@ -231,6 +253,19 @@ def parse_amount(amount: str, currency: str) -> str:
         separator forms an ambiguous (non-3-digit) grouping.
     """
     comma_decimal = currency in _COMMA_DECIMAL_CURRENCIES
+
+    if canonical:
+        # Re-feed of our own canonical output: always dot-decimal, no thousands
+        # separators, no currency-specific convention. Parse the exact decimal.
+        cleaned = amount.strip()
+        if not cleaned:
+            raise ContractError(f"empty amount in {amount!r}")
+        try:
+            value = Decimal(cleaned)
+        except InvalidOperation as exc:
+            raise ContractError(f"invalid amount {amount!r}") from exc
+        plain = format(value, "f")
+        return plain
 
     # Split off a scientific-notation exponent (Q3=A) so the mantissa's
     # separators can be validated independently of the "E". The mantissa is the

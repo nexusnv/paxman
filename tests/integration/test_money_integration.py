@@ -63,15 +63,19 @@ def test_eur_comma_decimal_end_to_end() -> None:
     artifact = canonicalize("1.234,56", Money(currency="EUR"))
     assert artifact.value == "EUR:1234.56"
     replayed = replay(artifact, Money(currency="EUR"))
-    assert replayed.value == "EUR:1234.56"
+    # Law 12 (Replayability): strict object AND byte equality.
+    assert replayed == artifact
+    assert replayed.canonical_bytes() == artifact.canonical_bytes()
 
 
 @pytest.mark.integration
 def test_invalid_input_is_reported_not_raised() -> None:
     artifact = canonicalize("€ 10.00", Money(currency="MYR"))
     assert artifact.status is Status.INVALID
-    # Replay of an INVALID artifact is still safe and equal.
-    assert replay(artifact, Money(currency="MYR")) == artifact
+    # Replay of an INVALID artifact is still safe and equal (Law 12).
+    replayed = replay(artifact, Money(currency="MYR"))
+    assert replayed == artifact
+    assert replayed.canonical_bytes() == artifact.canonical_bytes()
 
 
 @pytest.mark.integration
@@ -80,16 +84,12 @@ def test_evidence_cites_law_14_rules() -> None:
     rules = {e.rule for e in artifact.evidence}
     assert "currency_from_contract" in rules
     assert "canonical_form" in rules
-    # Every evidence carries provenance (Law 14).
+    # Every evidence carries provenance (Law 14), except the two dispatch
+    # invariants which are allow-listed with empty provenance (Law 14 §3.6).
     assert all(
         e.provenance
         for e in artifact.evidence
-        if e.rule
-        not in (
-            "not_a_money_contract",
-            "not_a_string_value",
-            "missing_value",
-        )
+        if e.rule not in ("not_a_money_contract", "not_a_string_value")
     )
 
 

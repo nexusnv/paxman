@@ -72,6 +72,20 @@ def _quantize(value: Decimal, precision: int) -> str:
     return str(quantized)
 
 
+# Minutes and seconds must each lie in [0, 60) (a value of 60 or more is a
+# rolled-over component, not a valid DMS field). The final lat/lon range check
+# alone does not catch this: 70 minutes yields 1.1667 degrees, which is still
+# inside [-90, 90] yet is not a valid DMS coordinate. Rejecting early keeps
+# canonicalization from silently normalizing a malformed input (Law 4).
+_DMS_MIN = Decimal(0)
+_DMS_MAX = Decimal(60)
+
+
+def _dms_component_valid(value: Decimal) -> bool:
+    """Return True when a DMS minute/second component is in [0, 60)."""
+    return _DMS_MIN <= value < _DMS_MAX
+
+
 def _axis_sign(letter: str | None, sign: str) -> int:
     """Resolve the sign of an axis from an explicit signal.
 
@@ -157,6 +171,13 @@ def generate_interpretations(
         d2 = _parse_number(caps["d2"])
         m2 = _parse_number(caps["m2"])
         sec2 = _parse_number(caps["s2"])
+        if not (
+            _dms_component_valid(m1)
+            and _dms_component_valid(sec1)
+            and _dms_component_valid(m2)
+            and _dms_component_valid(sec2)
+        ):
+            return []
         v1 = d1 + m1 / Decimal(60) + sec1 / Decimal(3600)
         v2 = d2 + m2 / Decimal(60) + sec2 / Decimal(3600)
         s1 = s2 = "+"
@@ -169,6 +190,8 @@ def generate_interpretations(
         # resulting magnitude is ALREADY signed, so the hemisphere signal is taken
         # from the degree sign but the magnitude must NOT be re-multiplied by
         # _axis_sign (that would double-apply the sign). See `_signs_in_magnitude`.
+        # Components may be negative (e.g. a negative seconds value) by design, so
+        # the [0, 60) minute/second bound below does NOT apply here.
         d1 = _parse_number(caps["d1"])
         m1 = _parse_number(caps["m1"])
         sec1 = _parse_number(caps["s1"])

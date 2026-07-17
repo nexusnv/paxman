@@ -67,6 +67,21 @@ class TestGeolocationCapability:
         assert "canonicalized_geolocation" in rules
         assert "hemisphere_resolved" in rules
 
+    def test_dms_minutes_seconds_out_of_range_is_invalid(self) -> None:
+        # Per the review, minutes/seconds must lie in [0, 60). A rolled-over
+        # component (e.g. 99 minutes) is a malformed DMS field, not a valid
+        # coordinate, and must be rejected rather than silently normalized
+        # (Law 4). The aggregate decimal stays in range, so only the explicit
+        # component check catches it.
+        for bad in ("40°99'46\"N 74°0'21\"W", "40°42'99\"N 74°0'21\"W", "40°0'0\"N 74°99'0\"W"):
+            r = _cap().canonicalize(bad, _contract())
+            assert r.status is Status.INVALID
+            assert "out_of_range" in {e.rule for e in r.evidence}
+        # Boundary 59 is accepted; 60 is rejected.
+        ok = _cap().canonicalize("40°59'59\"N 74°0'0\"W", _contract())
+        assert ok.status is Status.CANONICALIZED
+        assert ok.value == "40.999722,-74.000000"
+
     def test_idempotent_re_feed_of_canonical_form(self) -> None:
         # Under require_hemisphere=False the canonical decimal form re-feeds
         # deterministically (the canonical output is itself a valid input).

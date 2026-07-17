@@ -453,9 +453,10 @@ orchestrator classifies as `UNSUPPORTED`.
 
 ### `_capabilities/{email,uuid,date,phone,url,boolean,ip,money,geolocation}/` — Built-In Capabilities
 
-Ships nine built-ins today: `EmailCapability`, `UUIDCapability`,
+Ships ten built-ins today: `EmailCapability`, `UUIDCapability`,
 `DateCapability`, `PhoneCapability`, `URLCapability`, `BooleanCapability`,
-`IPCapability`, `MoneyCapability`, and `GeolocationCapability`. Each owns its domain under
+`IPCapability`, `MoneyCapability`, `GeolocationCapability`, and
+`CountryCapability`. Each owns its domain under
 `paxman._capabilities.<domain>` (`contract.py`, `grammar.py`, `canonicalizer.py`,
 `parser.py`, `rules.py`, plus `value.py` and `calendar.py` for dates). Each
 capability package self-registers its contract builder via `register_contract`

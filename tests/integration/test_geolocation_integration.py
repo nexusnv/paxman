@@ -98,9 +98,9 @@ def test_coordinate_order_lon_lat() -> None:
 
 @pytest.mark.integration
 def test_builtin_registration() -> None:
-    # Geolocation is the 9th built-in capability.
+    # Geolocation is a built-in capability (country is the 10th).
     caps = builtin_capabilities()
-    assert len(caps) == 9
+    assert len(caps) == 10
     names = {c.name for c in caps}
     assert "geolocation_canonicalization" in names
 

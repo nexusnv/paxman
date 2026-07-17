@@ -12,12 +12,12 @@ from __future__ import annotations
 import attrs
 
 from paxman._capabilities.country.contract import (
-    COUNTRY_TABLE_VERSION,
-    CanonicalCountryContract,
     _ALPHA2_CODES,
     _ALPHA3_TO_ALPHA2,
     _NAME_TO_ALPHA2,
     _SYNONYM_TO_ALPHA2,
+    COUNTRY_TABLE_VERSION,
+    CanonicalCountryContract,
 )
 from paxman._capabilities.country.grammar import RecognizedRep, recognize
 from paxman._capabilities.country.rules import _evidence
@@ -73,7 +73,9 @@ def generate_interpretations(
             return []
         code = _ALPHA3_TO_ALPHA2.get(token)
         if code is not None:
-            candidates.append(_mk(code, "canonicalized_country", "ISO 3166-1:2020 (alpha-3->alpha-2)"))
+            candidates.append(
+                _mk(code, "canonicalized_country", "ISO 3166-1:2020 (alpha-3->alpha-2)")
+            )
     # Synonym / name / extra-synonym fallback for tokens that are not valid
     # codes of their own shape (e.g. UK, U.S.A., America).
     if contract.allow_synonym:

@@ -42,7 +42,7 @@ def parse_contract(
     | CanonicalDateContract
     | CanonicalPhoneContract
     | CanonicalURLContract
-    |     CanonicalBooleanContract
+    | CanonicalBooleanContract
     | CanonicalIPContract
     | CanonicalMoneyContract
     | CanonicalGeolocationContract

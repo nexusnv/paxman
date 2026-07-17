@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from paxman import Country
 from paxman._capabilities.country.grammar import GRAMMARS, recognize
 

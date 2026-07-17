@@ -37,6 +37,5 @@ COUNTRY_POLICY_KIND_GATING: str = (
 # Empty / None input is MISSING. MANDATE Law 8 (fail informatively: the
 # contract requires a field the input does not provide).
 COUNTRY_POLICY_MISSING_VALUE: str = (
-    "paxman policy/country: empty/None input is MISSING "
-    "(MANDATE.md Law 8 — required value absent)"
+    "paxman policy/country: empty/None input is MISSING (MANDATE.md Law 8 — required value absent)"
 )

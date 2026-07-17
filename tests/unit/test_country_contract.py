@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from paxman import Country, CanonicalCountryContract, parse_contract
+from paxman import CanonicalCountryContract, Country, parse_contract
 from paxman._errors import ContractError
 
 
@@ -57,3 +57,27 @@ def test_as_dict_round_trip() -> None:
 
 def test_parse_contract_kind() -> None:
     assert parse_contract({"kind": "canonical_country"}) == CanonicalCountryContract()
+
+
+def test_build_country_extra_synonyms_round_trip() -> None:
+    spec = {
+        "kind": "canonical_country",
+        "extra_synonyms": {"freedonia": "US"},
+    }
+    c = parse_contract(spec)
+    assert c.extra_synonyms == {"freedonia": "US"}
+
+
+def test_build_country_rejects_bad_extra_synonym_target() -> None:
+    with pytest.raises(ContractError):
+        parse_contract({"kind": "canonical_country", "extra_synonyms": {"x": "ZZ"}})
+
+
+def test_build_country_rejects_non_bool_flag() -> None:
+    with pytest.raises(ContractError):
+        parse_contract({"kind": "canonical_country", "allow_alpha3": "yes"})
+
+
+def test_build_country_rejects_non_v1_version_field() -> None:
+    with pytest.raises(ContractError):
+        parse_contract({"kind": "canonical_country", "version_field": 2})

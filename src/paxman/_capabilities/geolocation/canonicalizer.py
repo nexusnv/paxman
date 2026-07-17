@@ -63,7 +63,13 @@ def _quantize(value: Decimal, precision: int) -> str:
         The quantized decimal string with exactly ``precision`` places.
     """
     exponent = Decimal(1).scaleb(-precision)
-    return str(value.quantize(exponent, rounding=ROUND_HALF_EVEN))
+    quantized = value.quantize(exponent, rounding=ROUND_HALF_EVEN)
+    # Decimal renders zero as scientific notation (e.g. "0E-7") above 6 places.
+    # The canonical form must stay fixed-point so it re-parses as a valid input
+    # (Law 2 idempotence / replay byte-equality). Force trailing-zero notation.
+    if quantized == 0:
+        return f"0.{'0' * precision}"
+    return str(quantized)
 
 
 def _axis_sign(letter: str | None, sign: str) -> int:
@@ -124,8 +130,22 @@ def generate_interpretations(
         evidence.append(_evidence("recognized_decimal_hemisphere"))
         h1 = caps.get("h1")
         h2 = caps.get("h2")
-        v1 = _parse_number(caps["a1"])
-        v2 = _parse_number(caps["a2"])
+        # The numeric body carries the magnitude; the hemisphere letter carries
+        # the sign. An explicit numeric sign AND a hemisphere letter both assert
+        # a sign, which is a conflicting input and must be rejected (Law 4),
+        # never silently resolved. The magnitude is taken as absolute; the
+        # letter sets the sign exactly once in Stage 5.
+        a1_sign, a1_body = _split_sign(caps["a1"])
+        a2_sign, a2_body = _split_sign(caps["a2"])
+        v1 = _parse_number(a1_body)
+        v2 = _parse_number(a2_body)
+        if h1 is not None and a1_sign != "+":
+            return []
+        if h2 is not None and a2_sign != "+":
+            return []
+        # The explicit numeric sign is redundant with a consistent letter; the
+        # letter alone drives the sign. Record it as "+" so Stage 5 does not
+        # double-apply the numeric sign.
         s1 = s2 = "+"
     elif shape == "geo_dms":
         evidence.append(_evidence("recognized_dms"))
@@ -257,31 +277,26 @@ def classify(
         # surface the ambiguity instead of guessing (Law 4).
         if rep.shape == "geo_decimal_pair" and contract.require_hemisphere:
             caps = rep.captures
-            a1 = _parse_number(_split_sign(caps["a1"])[1])
-            a2 = _parse_number(_split_sign(caps["a2"])[1])
+            a1_sign, a1_body = _split_sign(caps["a1"])
+            a2_sign, a2_body = _split_sign(caps["a2"])
+            a1 = _parse_number(a1_body)
+            a2 = _parse_number(a2_body)
+            # Map the two raw axes to (lat, lon) per the contract's input order.
             if contract.coordinate_order == "lon_lat":
-                lon, lat = a1, a2
+                lon, lon_sign, lat, lat_sign = a1, a1_sign, a2, a2_sign
             else:
-                lat, lon = a1, a2
+                lat, lat_sign, lon, lon_sign = a1, a1_sign, a2, a2_sign
             if _LAT_MIN <= lat <= _LAT_MAX and _LON_MIN <= lon <= _LON_MAX:
-                lat_pos = _quantize(lat, contract.precision)
-                lat_neg = _quantize(-lat, contract.precision)
-                lon_pos = _quantize(lon, contract.precision)
-                lon_neg = _quantize(-lon, contract.precision)
-                if contract.coordinate_order == "lon_lat":
-                    readings = (
-                        f"{lon_pos},{lat_pos}",
-                        f"{lon_pos},{lat_neg}",
-                        f"{lon_neg},{lat_pos}",
-                        f"{lon_neg},{lat_neg}",
-                    )
-                else:
-                    readings = (
-                        f"{lat_pos},{lon_pos}",
-                        f"{lat_pos},{lon_neg}",
-                        f"{lat_neg},{lon_pos}",
-                        f"{lat_neg},{lon_neg}",
-                    )
+                # An axis with an explicit sign is fixed; only an unsigned axis
+                # is ambiguous (Law 4 — never guess the missing sign). Each
+                # reading is emitted in canonical latitude,longitude order.
+                lat_vals = (lat,) if lat_sign != "+" else (lat, -lat)
+                lon_vals = (lon,) if lon_sign != "+" else (lon, -lon)
+                readings = tuple(
+                    f"{_quantize(lv, contract.precision)},{_quantize(lonv, contract.precision)}"
+                    for lv in lat_vals
+                    for lonv in lon_vals
+                )
                 return (
                     Status.AMBIGUOUS,
                     None,

@@ -40,6 +40,13 @@ def test_recognize_sign_parentheses() -> None:
     assert parts.amount == "5.00"
 
 
+def test_recognize_inner_sign_rm_minus() -> None:
+    parts = recognize_money("RM -5.00", Money(currency="MYR"))
+    assert parts.sign == "-"
+    assert parts.symbol == "RM"
+    assert parts.amount == "5.00"
+
+
 def test_recognize_no_symbol_no_code() -> None:
     parts = recognize_money("78.90", Money(currency="MYR"))
     assert parts.symbol is None
@@ -131,7 +138,7 @@ def test_parse_amount_exact_decimal() -> None:
 
 
 def test_parse_amount_scientific_normalized() -> None:
-    assert parse_amount("1.25E+2", "MYR") == "125"
+    assert parse_amount("1.25E+2", "MYR") == "125.00"
 
 
 def test_parse_amount_negative_preserved() -> None:
@@ -140,6 +147,24 @@ def test_parse_amount_negative_preserved() -> None:
 
 def test_parse_amount_comma_thousands_stripped() -> None:
     assert parse_amount("1,234.56", "MYR") == "1234.56"
+
+
+def test_parse_amount_scientific_preserves_decimals() -> None:
+    assert parse_amount("1.5e3", "MYR") == "1500.0"
+
+
+def test_parse_amount_comma_decimal_valid_grouping() -> None:
+    assert parse_amount("1.234,56", "EUR") == "1234.56"
+
+
+def test_parse_amount_comma_decimal_ambiguous_rejected() -> None:
+    with pytest.raises(ContractError):
+        parse_amount("12.34,56", "EUR")
+
+
+def test_parse_amount_dot_decimal_ambiguous_rejected() -> None:
+    with pytest.raises(ContractError):
+        parse_amount("12,34.56", "USD")
 
 
 def test_parse_amount_eur_comma_decimal() -> None:

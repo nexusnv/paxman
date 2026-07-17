@@ -14,10 +14,17 @@ def _cap() -> IPCapability:
     return IPCapability()
 
 
-def _contract(**kw: object) -> CanonicalIPContract:
-    base: dict[str, object] = dict(allow_ipv4=True, allow_ipv6=True, preserve_zone_id=True)
-    base.update(kw)
-    return CanonicalIPContract(**base)  # type: ignore[arg-type]
+def _contract(
+    *,
+    allow_ipv4: bool = True,
+    allow_ipv6: bool = True,
+    preserve_zone_id: bool = True,
+) -> CanonicalIPContract:
+    return CanonicalIPContract(
+        allow_ipv4=allow_ipv4,
+        allow_ipv6=allow_ipv6,
+        preserve_zone_id=preserve_zone_id,
+    )
 
 
 class TestIPCapability:
@@ -147,7 +154,7 @@ class TestLaw14ProvenanceManifest:
             r = c.canonicalize(value, contract)
             for ev in r.evidence:
                 fired.add(ev.rule)
-        not_contract: Contract = "not_a_contract"  # type: ignore[assignment]
+        not_contract = cast(Contract, "not_a_contract")
         r1 = c.canonicalize("2001:db8::1", not_contract)
         for ev in r1.evidence:
             fired.add(ev.rule)

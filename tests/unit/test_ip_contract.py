@@ -59,6 +59,21 @@ def test_invalid_bool_field_raises_contract_error() -> None:
         parse_contract({"kind": "canonical_ip", "allow_ipv4": 1})
 
 
+def test_unsupported_version_raises_contract_error() -> None:
+    with pytest.raises(ContractError):
+        parse_contract({"kind": "canonical_ip", "version": 2})
+
+
+def test_unsupported_version_field_raises_contract_error() -> None:
+    with pytest.raises(ContractError):
+        parse_contract({"kind": "canonical_ip", "version_field": 5})
+
+
+def test_non_int_version_raises_contract_error() -> None:
+    with pytest.raises(ContractError):
+        parse_contract({"kind": "canonical_ip", "version": "1"})
+
+
 def test_unknown_kind_raises_contract_error() -> None:
     with pytest.raises(ContractError):
         parse_contract({"kind": "canonical_bogus"})

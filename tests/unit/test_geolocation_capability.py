@@ -189,12 +189,13 @@ class TestGeolocationResolverEdgeCases:
 
     def test_lon_lat_ambiguous_candidates(self) -> None:
         # An unsigned decimal pair under a hemisphere-requiring lon_lat contract
-        # enumerates the four sign readings as AMBIGUOUS candidates.
+        # maps (lon, lat) = (40.7128, 74.0060); both axes unsigned -> two
+        # readings, emitted in canonical latitude,longitude order.
         r = _cap().canonicalize("40.7128, -74.0060", _contract(coordinate_order="lon_lat"))
         assert r.status is Status.AMBIGUOUS
         assert r.candidates is not None
-        assert "40.712800,74.006000" in r.candidates
-        assert "-40.712800,-74.006000" in r.candidates
+        assert "74.006000,40.712800" in r.candidates
+        assert "74.006000,-40.712800" in r.candidates
 
     def test_out_of_range_longitude_invalid(self) -> None:
         r = _cap().canonicalize("0.0, 200.0", _contract())

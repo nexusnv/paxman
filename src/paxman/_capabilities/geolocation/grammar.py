@@ -58,7 +58,9 @@ _GRAMMAR_SOURCE = "paxman spec/geolocation §3.1 (closed coordinate shape vocabu
 # leading/trailing whitespace around each token (handled by the resolver's
 # trim step). The resolver is the authority on validity (catches malformed
 # input as INVALID, never guessed). The parenthesized form reuses the same
-# named groups via a single alternation so group names are not redefined.
+# named groups via a single set of captures; the optional surrounding
+# parentheses are matched non-capturing and stripped by _split_sign during
+# resolution, so the group names are defined exactly once.
 _NUM = r"(?P<a1>[-+]?\d+(?:\.\d+)?)\s*,\s*(?P<a2>[-+]?\d+(?:\.\d+)?)"
 
 # Anchored shape classifiers. These only ROUTE to the resolver; the resolver
@@ -69,7 +71,12 @@ GRAMMARS: tuple[Grammar, ...] = (
     _make_grammar(
         "geo_decimal_pair",
         _GRAMMAR_SOURCE,
-        r"^(?:\(\s*)?" + _NUM + r"(?:\s*\))?$",
+        # Accept either a parenthesized pair "(lat, lon)" or a bare pair
+        # "lat, lon". The parentheses are optional and non-capturing; the
+        # opening paren stays attached to a1 so _split_sign can read it as a
+        # negative signal during resolution. A mismatched single delimiter
+        # (e.g. "(lat, lon") cannot fullmatch, so it is rejected as INVALID.
+        r"^\(?\s*" + _NUM + r"\s*\)?$",
         shape="geo_decimal_pair",
     ),
     _make_grammar(
@@ -80,12 +87,34 @@ GRAMMARS: tuple[Grammar, ...] = (
         shape="geo_decimal_hemi",
     ),
     _make_grammar(
+        "geo_decimal_hemi_lonlat",
+        _GRAMMAR_SOURCE,
+        # Longitude-first letter order (E/W then N/S) for coordinate_order="lon_lat".
+        # Captures keep h1 = first letter (longitude), h2 = second (latitude) so
+        # the resolver's coordinate_order swap maps them correctly.
+        r"^(?P<a1>[-+]?\d+(?:\.\d+)?)\s*(?P<h1>[EW])\s*"
+        r"(?P<a2>[-+]?\d+(?:\.\d+)?)\s*(?P<h2>[NS])$",
+        shape="geo_decimal_hemi",
+    ),
+    _make_grammar(
         "geo_dms",
         _GRAMMAR_SOURCE,
         r"^(?P<d1>\d+(?:\.\d+)?)\s*[°]\s*(?P<m1>\d+(?:\.\d+)?)\s*[']\s*"
         r'(?P<s1>\d+(?:\.\d+)?)\s*["°]\s*(?P<h1>[NS])\s*'
         r"(?P<d2>\d+(?:\.\d+)?)\s*[°]\s*(?P<m2>\d+(?:\.\d+)?)\s*[']\s*"
         r'(?P<s2>\d+(?:\.\d+)?)\s*["°]\s*(?P<h2>[EW])$',
+        shape="geo_dms",
+    ),
+    _make_grammar(
+        "geo_dms_lonlat",
+        _GRAMMAR_SOURCE,
+        # Longitude-first letter order (E/W then N/S) for coordinate_order="lon_lat".
+        # d1/m1/s1/h1 are longitude components; d2/m2/s2/h2 are latitude. The
+        # resolver's coordinate_order swap maps h1 (=E/W) to longitude correctly.
+        r"^(?P<d1>\d+(?:\.\d+)?)\s*[°]\s*(?P<m1>\d+(?:\.\d+)?)\s*[']\s*"
+        r'(?P<s1>\d+(?:\.\d+)?)\s*["°]\s*(?P<h1>[EW])\s*'
+        r"(?P<d2>\d+(?:\.\d+)?)\s*[°]\s*(?P<m2>\d+(?:\.\d+)?)\s*[']\s*"
+        r'(?P<s2>\d+(?:\.\d+)?)\s*["°]\s*(?P<h2>[NS])$',
         shape="geo_dms",
     ),
     _make_grammar(

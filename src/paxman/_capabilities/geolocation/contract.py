@@ -23,7 +23,10 @@ from paxman._registry.contract_registry import register_contract
 # of scope and must be declared explicitly by the caller, never guessed.
 _DATUMS: frozenset[str] = frozenset({"WGS84"})
 
-# The order in which latitude/longitude appear in the input and output.
+# The order in which latitude/longitude appear in the INPUT. This is a
+# caller-provided policy declaring how to read the input axes; it does NOT
+# affect the output. The canonicalizer always emits the canonical form as
+# "latitude,longitude" regardless of coordinate_order.
 _COORDINATE_ORDERS: frozenset[str] = frozenset({"lat_lon", "lon_lat"})
 
 # The only output format Paxman emits in v1. Decimal degrees is the canonical
@@ -138,8 +141,9 @@ def Geolocation(
     Args:
         datum: Geodetic datum of the coordinates. Only "WGS84" is supported in
             v1. Default "WGS84".
-        coordinate_order: Order of latitude/longitude in input and output. One
-            of "lat_lon" or "lon_lat". Default "lat_lon".
+        coordinate_order: Order of latitude/longitude in the INPUT only. One
+            of "lat_lon" or "lon_lat". The canonical output is always emitted as
+            "latitude,longitude" regardless of this setting. Default "lat_lon".
         require_hemisphere: Require an explicit hemisphere sign (or N/S/E/W) on
             each coordinate so the canonical form is unambiguous. Default True.
         output_format: Canonical output format. Only "decimal" (decimal degrees)

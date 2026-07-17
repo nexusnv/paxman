@@ -116,3 +116,140 @@ def test_resolver_duplicate_value_collapsed() -> None:
     cands = generate_interpretations(reps, Country())
     assert len(cands) == 1
     assert cands[0].value == "US"
+
+
+# --- Expansion tiers (T1 numeric, T2 expanded aliases, T3 CLDR, T4 historical) ---
+
+
+def test_numeric_padded() -> None:
+    r = canonicalize("840", Country())
+    assert r.status == Status.CANONICALIZED
+    assert r.value == "US"
+
+
+def test_numeric_unpadded() -> None:
+    r = canonicalize("4", Country())
+    assert r.status == Status.CANONICALIZED
+    assert r.value == "AF"
+
+
+def test_numeric_disabled() -> None:
+    r = canonicalize("840", Country(allow_numeric=False))
+    assert r.status == Status.INVALID
+
+
+def test_numeric_unknown() -> None:
+    # A 3-digit number that is not an ISO 3166-1 code.
+    r = canonicalize("123", Country())
+    assert r.status == Status.INVALID
+
+
+def test_full_alpha3() -> None:
+    # Spot-check codes across the expanded 249-entry table.
+    for a3, a2 in (("DEU", "DE"), ("ZWE", "ZW"), ("CZE", "CZ"), ("MMR", "MM")):
+        r = canonicalize(a3, Country())
+        assert r.status == Status.CANONICALIZED
+        assert r.value == a2
+
+
+def test_expanded_synonym() -> None:
+    r = canonicalize("Republic of Korea", Country())
+    assert r.status == Status.CANONICALIZED
+    assert r.value == "KR"
+    r = canonicalize("Russian Federation", Country())
+    assert r.status == Status.CANONICALIZED
+    assert r.value == "RU"
+
+
+def test_localized_names_opt_in() -> None:
+    # Off by default -> native-script token is not recognized.
+    r = canonicalize("日本", Country())
+    assert r.status == Status.INVALID
+    r = canonicalize("日本", Country(localized_names=True))
+    assert r.status == Status.CANONICALIZED
+    assert r.value == "JP"
+    r = canonicalize("ماليزيا", Country(localized_names=True))
+    assert r.status == Status.CANONICALIZED
+    assert r.value == "MY"
+
+
+def test_historical_names_opt_in() -> None:
+    r = canonicalize("Burma", Country())
+    assert r.status == Status.INVALID
+    r = canonicalize("Burma", Country(historical_names=True))
+    assert r.status == Status.CANONICALIZED
+    assert r.value == "MM"
+    r = canonicalize("Swaziland", Country(historical_names=True))
+    assert r.status == Status.CANONICALIZED
+    assert r.value == "SZ"
+
+
+def test_evidence_has_provenance_expanded() -> None:
+    for val, ctor in (
+        ("840", Country()),
+        ("日本", Country(localized_names=True)),
+        ("Burma", Country(historical_names=True)),
+    ):
+        r = canonicalize(val, ctor)
+        for ev in r.evidence:
+            assert ev.provenance, f"rule {ev.rule!r} missing provenance"
+
+
+# --- Law 15: cited named-entity source (ISO 3166-1:2020) adopted in full ---
+
+
+def test_full_iso3166_name_coverage() -> None:
+    # Every officially assigned alpha-2 code's ISO 3166-1:2020 short name
+    # must canonicalize (Law 15 — the cited enumeration is adopted in full).
+    from paxman._capabilities.country.contract import (
+        _ALPHA2_CODES,
+        _NAME_TO_ALPHA2,
+    )
+
+    # The table maps every assigned code to its alpha-2 (some codes appear
+    # under multiple keys, e.g. prior convenience aliases; the value set is
+    # what must cover the assigned codes).
+    covered = set(_NAME_TO_ALPHA2.values())
+    assert covered >= _ALPHA2_CODES
+    for code in sorted(_ALPHA2_CODES):
+        # Find the official-name key for this code (first match).
+        official = next(k for k, v in _NAME_TO_ALPHA2.items() if v == code)
+        r = canonicalize(official.title(), Country())
+        assert r.status == Status.CANONICALIZED, f"{official} -> {r.status}"
+        assert r.value == code
+
+
+def test_iso3166_long_official_forms() -> None:
+    # Long/constitutional official names that a curated subset would omit.
+    cases = {
+        "United Kingdom of Great Britain and Northern Ireland": "GB",
+        "Iran (Islamic Republic of)": "IR",
+        "Bolivia (Plurinational State of)": "BO",
+        "Venezuela (Bolivarian Republic of)": "VE",
+        "Korea (Democratic People's Republic of)": "KP",
+        "Lao People's Democratic Republic": "LA",
+        "United States of America": "US",
+        "Côte d'Ivoire": "CI",
+        "Réunion": "RE",
+        "Åland Islands": "AX",
+        "Curaçao": "CW",
+        "Sint Maarten (Dutch part)": "SX",
+    }
+    for name, code in cases.items():
+        r = canonicalize(name, Country())
+        assert r.status == Status.CANONICALIZED, f"{name} -> {r.status}"
+        assert r.value == code
+
+
+def test_prior_convenience_aliases_retained() -> None:
+    # Backward-compatible short aliases kept alongside the full enumeration.
+    for name, code in (
+        ("United States", "US"),
+        ("South Korea", "KR"),
+        ("Russia", "RU"),
+        ("Great Britain", "GB"),
+        ("Czech Republic", "CZ"),
+    ):
+        r = canonicalize(name, Country())
+        assert r.status == Status.CANONICALIZED
+        assert r.value == code

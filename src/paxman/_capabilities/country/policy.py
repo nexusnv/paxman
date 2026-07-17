@@ -26,12 +26,34 @@ COUNTRY_POLICY_EXTRA_SYNONYMS: str = (
     "table (MANDATE.md §5.3; Law 8a; spec/country §1.2)"
 )
 
-# Representation-kind gating (allow_alpha3 / allow_name / allow_synonym).
-# MANDATE Law 5 (contract declares policy, not how); Law 7 (explicit over
-# clever); spec/country §3.5.
+# Representation-kind gating (allow_alpha3 / allow_name / allow_synonym /
+# allow_numeric / localized_names / historical_names). MANDATE Law 5 (contract
+# declares policy, not how); Law 7 (explicit over clever); spec/country §3.5.
 COUNTRY_POLICY_KIND_GATING: str = (
     "paxman policy/country: contract flags gate representation kinds "
     "(MANDATE.md Law 5 + Law 7; spec/country §3.5)"
+)
+
+# ISO 3166-1 numeric (M49) recognition. MANDATE Law 5 (contract is truth) +
+# Law 8a (versioned dataset); spec/country §3.1.
+COUNTRY_POLICY_NUMERIC: str = (
+    "paxman policy/country: numeric (M49) codes are accepted when "
+    "allow_numeric is set (MANDATE.md Law 5; Law 8a; spec/country §3.1)"
+)
+
+# Unicode CLDR localized name recognition (opt-in). CLDR is a versioned
+# authoritative specification (Law 14 source #1); opt-in per Law 7 (data
+# footprint).
+COUNTRY_POLICY_LOCALIZED: str = (
+    "paxman policy/country: localized (CLDR) names accepted when "
+    "localized_names is set (Unicode CLDR; MANDATE.md Law 14 source #1)"
+)
+
+# Historical / deprecated name recognition (opt-in). Recorded Paxman policy
+# (Law 14 §826 bullet 3 — spec/country §3.4 historical map).
+COUNTRY_POLICY_HISTORICAL: str = (
+    "paxman policy/country: historical names accepted when historical_names "
+    "is set (recorded Paxman policy; spec/country §3.4)"
 )
 
 # Empty / None input is MISSING. MANDATE Law 8 (fail informatively: the

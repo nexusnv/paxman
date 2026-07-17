@@ -8,8 +8,11 @@ from types import MappingProxyType
 
 from paxman._capabilities.country.policy import (
     COUNTRY_POLICY_EXTRA_SYNONYMS,
+    COUNTRY_POLICY_HISTORICAL,
     COUNTRY_POLICY_KIND_GATING,
+    COUNTRY_POLICY_LOCALIZED,
     COUNTRY_POLICY_MISSING_VALUE,
+    COUNTRY_POLICY_NUMERIC,
     COUNTRY_POLICY_WHITESPACE_TRIM,
 )
 from paxman._core.provenance import Evidence
@@ -34,8 +37,12 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "trimmed_whitespace": COUNTRY_POLICY_WHITESPACE_TRIM,
         "recognized_alpha2": "ISO 3166-1:2020 (alpha-2 shape)",
         "recognized_alpha3": "ISO 3166-1:2020 (alpha-3 shape)",
+        "recognized_numeric": "ISO 3166-1:2020 (numeric shape)",
         "recognized_name": "ISO 3166-1:2020 (name shape)",
         "canonicalized_country": "ISO 3166-1:2020 (alpha-2 canonical form)",
+        "numeric_resolved": COUNTRY_POLICY_NUMERIC,
+        "localized_resolved": COUNTRY_POLICY_LOCALIZED,
+        "historical_resolved": COUNTRY_POLICY_HISTORICAL,
         "alias_resolved": (
             "paxman spec/country §3.3 (bundled alias table, COUNTRY_TABLE_VERSION=iso3166-1:2020)"
         ),

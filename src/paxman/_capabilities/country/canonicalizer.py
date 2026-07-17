@@ -14,8 +14,12 @@ import attrs
 from paxman._capabilities.country.contract import (
     _ALPHA2_CODES,
     _ALPHA3_TO_ALPHA2,
+    _HISTORICAL_TO_ALPHA2,
+    _LOCALIZED_TO_ALPHA2,
     _NAME_TO_ALPHA2,
+    _NUMERIC_TO_ALPHA2,
     _SYNONYM_TO_ALPHA2,
+    CLDR_VERSION,
     COUNTRY_TABLE_VERSION,
     CanonicalCountryContract,
 )
@@ -76,8 +80,17 @@ def generate_interpretations(
             candidates.append(
                 _mk(code, "canonicalized_country", "ISO 3166-1:2020 (alpha-3->alpha-2)")
             )
-    # Synonym / name / extra-synonym fallback for tokens that are not valid
-    # codes of their own shape (e.g. UK, U.S.A., America).
+    elif rep.shape == "numeric":
+        if not contract.allow_numeric:
+            return []
+        # Numeric codes are zero-padded to 3 digits in the table; also accept
+        # the unpadded form (e.g. "4" -> "004").
+        code = _NUMERIC_TO_ALPHA2.get(token.zfill(3))
+        if code is not None:
+            candidates.append(_mk(code, "numeric_resolved", "ISO 3166-1:2020 (numeric->alpha-2)"))
+    # Synonym / name / extra-synonym / localized / historical fallback for
+    # tokens that are not valid codes of their own shape (e.g. UK, U.S.A.,
+    # America, 马来西亚, Burma).
     if contract.allow_synonym:
         code = _SYNONYM_TO_ALPHA2.get(token)
         if code is not None:
@@ -88,6 +101,16 @@ def generate_interpretations(
         code = _NAME_TO_ALPHA2.get(token)
         if code is not None:
             candidates.append(_mk(code, "canonicalized_country", "ISO 3166-1:2020 (name->alpha-2)"))
+    if contract.localized_names:
+        code = _LOCALIZED_TO_ALPHA2.get(rep.captures.get("tok", rep.raw).strip())
+        if code is not None:
+            candidates.append(_mk(code, "localized_resolved", f"Unicode CLDR ({CLDR_VERSION})"))
+    if contract.historical_names:
+        code = _HISTORICAL_TO_ALPHA2.get(token)
+        if code is not None:
+            candidates.append(
+                _mk(code, "historical_resolved", "paxman policy/country: historical name map")
+            )
     extra = contract.extra_synonyms.get(token.lower())
     if extra is not None:
         candidates.append(

@@ -14,6 +14,7 @@ from paxman._capabilities.money.contract import CanonicalMoneyContract
 from paxman._capabilities.money.grammar import parse_amount, recognize_money
 from paxman._capabilities.money.rules import _evidence
 from paxman._core.contracts import Contract
+from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
 from paxman._errors import ContractError
@@ -71,7 +72,7 @@ class MoneyCapability:
         # Compose the canonical form "<ISO4217>:<sign><amount>".
         canonical = f"{contract.currency}:{parts.sign}{parsed}"
 
-        evidence: list = list(stripped_evidence)
+        evidence: list[Evidence] = list(stripped_evidence)
         evidence.append(_evidence("currency_from_contract", f"currency={contract.currency}"))
         if parts.symbol is not None:
             evidence.append(_evidence("symbol_validated", f"symbol={parts.symbol}"))

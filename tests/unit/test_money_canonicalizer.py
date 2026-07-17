@@ -104,3 +104,15 @@ def test_canonicalize_invalid_raises_no_exception_public_api() -> None:
     # Public API returns INVALID status, does not raise, for malformed input.
     res = canonicalize("€ 10.00", Money(currency="MYR"))
     assert res.status.name == "INVALID"
+
+
+def test_canonicalize_sign_before_symbol() -> None:
+    res = _cap().canonicalize("-RM 5.00", _contract())
+    assert res.status.name == "CANONICALIZED"
+    assert res.value == "MYR:-5.00"
+
+
+def test_canonicalize_trailing_sign() -> None:
+    res = _cap().canonicalize("RM 5.00-", _contract())
+    assert res.status.name == "CANONICALIZED"
+    assert res.value == "MYR:-5.00"

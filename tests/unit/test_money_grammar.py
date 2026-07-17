@@ -103,6 +103,29 @@ def test_recognize_whitespace_only_rejected() -> None:
         recognize_money("   ", Money(currency="MYR"))
 
 
+def test_recognize_sign_before_symbol() -> None:
+    parts = recognize_money("-RM 5.00", Money(currency="MYR"))
+    assert parts.sign == "-"
+    assert parts.symbol == "RM"
+    assert parts.amount == "5.00"
+
+
+def test_recognize_trailing_sign_rejected_or_accepted() -> None:
+    # Trailing minus is an unusual form; the canonicalizer must not produce
+    # garbage. After the fix it should be recognized as negative.
+    parts = recognize_money("RM 5.00-", Money(currency="MYR"))
+    assert parts.sign == "-"
+    assert parts.symbol == "RM"
+    assert parts.amount == "5.00"
+
+
+def test_recognize_parenthesized_with_symbol() -> None:
+    parts = recognize_money("($5.00)", Money(currency="USD"))
+    assert parts.sign == "-"
+    assert parts.symbol == "$"
+    assert parts.amount == "5.00"
+
+
 def test_parse_amount_exact_decimal() -> None:
     assert parse_amount("12.50", "MYR") == "12.50"
 

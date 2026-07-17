@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any, cast
+
 import pytest
 
 from paxman import CanonicalMoneyContract, Money, parse_contract
@@ -20,7 +22,7 @@ def test_defaults() -> None:
 
 def test_factory_requires_currency() -> None:
     with pytest.raises(TypeError):
-        Money()  # type: ignore[call-arg]
+        cast(Any, Money)()
 
 
 def test_factory_defaults_match_contract() -> None:

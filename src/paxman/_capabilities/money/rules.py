@@ -28,7 +28,9 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         # --- dispatch invariants (no provenance — Law 14 §3.6 allow-list) ---
         "not_a_money_contract": "",
         "not_a_string_value": "",
-        "missing_value": "",
+        # missing_value is a canonical-form rejection (empty input), not a
+        # routing failure, so it carries a real citation (Law 3 — Never Guess).
+        "missing_value": "money design spec (empty input rejected — Law 3 Never Guess)",
         # --- recognition / canonicalization (mandate laws + design spec) ---
         "currency_from_contract": "MANDATE Law 3 (Never Guess) + Law 7 (Explicit Over Clever)",
         "canonical_form": "money design spec M2 ('<ISO4217>:<amount>')",

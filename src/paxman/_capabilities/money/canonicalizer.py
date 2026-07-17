@@ -60,11 +60,16 @@ class MoneyCapability:
             return CapabilityResult(status=Status.INVALID, evidence=(_evidence("missing_value"),))
 
         # Track whether surrounding whitespace was stripped (record if changed).
+        # Only strip when the contract policy allows it (Law 7 — policy is the
+        # truth). When strip_spaces is False, preserve the original value and let
+        # the grammar reject surrounding whitespace without emitting
+        # trimmed_whitespace evidence for a transformation the contract forbids.
         stripped_evidence: tuple = ()
-        stripped = value.strip(" \t\r\n\f\v")
-        if stripped != value:
-            stripped_evidence = (_evidence("trimmed_whitespace"),)
-            value = stripped
+        if contract.strip_spaces:
+            stripped = value.strip(" \t\r\n\f\v")
+            if stripped != value:
+                stripped_evidence = (_evidence("trimmed_whitespace"),)
+                value = stripped
 
         # Recognition layer (Layer 1) — shape classification + symbol/code
         # validation. A malformed or mismatched input raises ContractError here
@@ -77,8 +82,10 @@ class MoneyCapability:
             )
 
         # Parse the amount into the canonical decimal string (F1/Q1/Q2/Q3).
+        # When the input was our own canonical form (re-feed), `parts.canonical`
+        # is True so the parser skips the currency separator convention.
         try:
-            parsed = parse_amount(parts.amount, contract.currency)
+            parsed = parse_amount(parts.amount, contract.currency, parts.canonical)
         except ContractError:
             return CapabilityResult(
                 status=Status.INVALID, evidence=(_evidence("unrecognized_format"),)

@@ -16,6 +16,7 @@ from paxman._capabilities.discovery import builtin_capabilities
 from paxman._capabilities.email import EmailCapability
 from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._capabilities.ip import IPCapability
+from paxman._capabilities.money.canonicalizer import MoneyCapability
 from paxman._capabilities.phone import PhoneCapability
 from paxman._capabilities.url import URLCapability
 from paxman._capabilities.uuid import UUIDCapability
@@ -26,7 +27,7 @@ class TestBuiltinCapabilities:
     def test_returns_all_builtin_capabilities(self) -> None:
         result = builtin_capabilities()
         assert isinstance(result, list)
-        assert len(result) == 7
+        assert len(result) == 8
         names = {c.name for c in result}
         assert names == {
             "email_canonicalization",
@@ -36,6 +37,7 @@ class TestBuiltinCapabilities:
             "url_canonicalization",
             "boolean_canonicalization",
             "ip_canonicalization",
+            "money_canonicalization",
         }
         assert any(isinstance(c, EmailCapability) for c in result)
         assert any(isinstance(c, UUIDCapability) for c in result)
@@ -59,6 +61,7 @@ class TestBuiltinCapabilities:
             "url_canonicalization",
             "boolean_canonicalization",
             "ip_canonicalization",
+            "money_canonicalization",
         ]
 
 
@@ -124,6 +127,7 @@ class TestLoadBuiltins:
         registry_b.register(URLCapability())
         registry_b.register(BooleanCapability())
         registry_b.register(IPCapability())
+        registry_b.register(MoneyCapability())
         registry_b.freeze()
 
         assert registry_a.capabilities_hash() == registry_b.capabilities_hash()
@@ -157,6 +161,7 @@ class TestLoadBuiltins:
         via_register.register(URLCapability())
         via_register.register(BooleanCapability())
         via_register.register(IPCapability())
+        via_register.register(MoneyCapability())
         via_register.freeze()
 
         assert via_load.capabilities_hash() == via_register.capabilities_hash()

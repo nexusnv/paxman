@@ -89,9 +89,17 @@ See the [How-to: Write a compliant capability](../how-to/write-a-compliant-capab
 
 ## What Comes in the Box
 
-Paxman v2.0.0 ships one built-in capability:
+Paxman v2.0.0 ships nine built-in capabilities:
 
 - `email_canonicalization` — see the [Email capability spec](../capabilities/email/index.md).
+- `uuid_canonicalization` — see the [UUID capability spec](../capabilities/uuid/index.md).
+- `phone_canonicalization` — see the [Phone capability spec](../capabilities/phone/index.md).
+- `url_canonicalization` — see the [URL capability spec](../capabilities/url/index.md).
+- `date_canonicalization` — see the [Date capability spec](../capabilities/date/index.md).
+- `boolean_canonicalization` — see the [Boolean capability spec](../capabilities/boolean/index.md).
+- `ip_canonicalization` — see the [IP capability spec](../capabilities/ip/index.md).
+- `money_canonicalization` — see the [Money capability spec](../capabilities/money/index.md).
+- `geolocation_canonicalization` — see the [Geolocation capability spec](../capabilities/geolocation/index.md).
 
 The built-in is auto-loaded on the first `canonicalize()` call. You do not need to register it yourself. If you register a capability named `email_canonicalization` before the first call, your registration wins; the built-in is skipped.
 

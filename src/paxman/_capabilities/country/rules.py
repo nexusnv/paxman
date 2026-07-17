@@ -7,6 +7,7 @@ from collections.abc import Mapping
 from types import MappingProxyType
 
 from paxman._capabilities.country.policy import (
+    COUNTRY_POLICY_CONVENIENCE_ALIASES,
     COUNTRY_POLICY_EXTRA_SYNONYMS,
     COUNTRY_POLICY_HISTORICAL,
     COUNTRY_POLICY_KIND_GATING,
@@ -44,7 +45,8 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "localized_resolved": COUNTRY_POLICY_LOCALIZED,
         "historical_resolved": COUNTRY_POLICY_HISTORICAL,
         "alias_resolved": (
-            "paxman spec/country §3.3 (bundled alias table, COUNTRY_TABLE_VERSION=iso3166-1:2020)"
+            "paxman spec/country §3.3 (bundled alias table, COUNTRY_TABLE_VERSION=iso3166-1:2020); "
+            "convenience aliases recorded per " + COUNTRY_POLICY_CONVENIENCE_ALIASES
         ),
         "extra_synonym_resolved": COUNTRY_POLICY_EXTRA_SYNONYMS,
         "policy_disabled_kind": COUNTRY_POLICY_KIND_GATING,

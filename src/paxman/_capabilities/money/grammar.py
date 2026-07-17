@@ -156,10 +156,13 @@ def recognize_money(raw: str, contract: CanonicalMoneyContract) -> MoneyParts:
         ContractError: on empty input, disallowed symbol/code, or mismatch.
     """
     text = _strip_amount_text(raw, contract)
-    symbol, after_sym = _detect_symbol(text, contract)
+    # Split the sign FIRST so a sign outside the symbol/code is handled
+    # correctly (e.g. "-RM 5.00" or "RM 5.00-"). Symbol/code detection then
+    # runs on the unsigned remainder (Law 7 — Explicit Over Clever).
+    sign, unsigned_text = _split_sign(text)
+    symbol, after_sym = _detect_symbol(unsigned_text, contract)
     code, after_code = _detect_code(after_sym, contract)
-    sign, amount_text = _split_sign(after_code)
-    amount = amount_text.strip()
+    amount = after_code.strip()
     if not amount or not re.search(r"[0-9]", amount):
         raise ContractError(f"no numeric amount found in {raw!r}")
     return MoneyParts(
@@ -172,10 +175,11 @@ def recognize_money(raw: str, contract: CanonicalMoneyContract) -> MoneyParts:
 
 
 def _split_sign(text: str) -> tuple[str, str]:
-    """Extract a leading +/- or parenthesized negative sign.
+    """Extract a leading +/-, trailing minus, or parenthesized negative sign.
 
-    Q2=A: negatives accepted. Parenthesized form "(12.50)" means negative.
-    Returns (sign, rest) where sign is "" or "-".
+    Q2=A: negatives accepted. Parenthesized form "(12.50)" means negative; a
+    trailing minus ("12.50-") is also a negative. Returns (sign, rest) where
+    sign is "" or "-".
     """
     t = text.strip()
     if t.startswith("(") and t.endswith(")"):
@@ -184,6 +188,8 @@ def _split_sign(text: str) -> tuple[str, str]:
         return "-", t[1:].strip()
     if t.startswith("+"):
         return "", t[1:].strip()
+    if t.endswith("-"):
+        return "-", t[:-1].strip()
     return "", t
 
 

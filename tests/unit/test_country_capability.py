@@ -88,13 +88,15 @@ def test_policy_disabled_synonym() -> None:
 
 
 def test_dispatch_invariants_direct() -> None:
+    from typing import cast
+
     from paxman._capabilities.country.canonicalizer import CountryCapability
 
     cap = CountryCapability()
     not_contract = cap.canonicalize("US", object())
     assert not_contract.status == Status.INVALID
     assert not_contract.evidence[0].rule == "not_a_country_contract"
-    not_str = cap.canonicalize(123, Country())  # type: ignore[arg-type]
+    not_str = cap.canonicalize(cast(str, 123), Country())
     assert not_str.status == Status.INVALID
     assert not_str.evidence[0].rule == "not_a_string_value"
 
@@ -113,9 +115,20 @@ def test_resolver_duplicate_value_collapsed() -> None:
 
     # "USA" resolves via both alpha-3 and the bundled synonym -> same code.
     reps = recognize("USA", Country())
-    cands = generate_interpretations(reps, Country())
+    cands, _drop_reasons = generate_interpretations(reps, Country())
     assert len(cands) == 1
     assert cands[0].value == "US"
+
+
+def test_policy_disabled_emits_correct_evidence() -> None:
+    """A recognized-but-policy-disabled shape emits policy_disabled_kind,
+    not the misleading unrecognized_format (CodeRabbit review finding)."""
+    r = canonicalize("USA", Country(allow_alpha3=False))
+    assert r.status == Status.INVALID
+    assert r.evidence[0].rule == "policy_disabled_kind"
+    r = canonicalize("840", Country(allow_numeric=False))
+    assert r.status == Status.INVALID
+    assert r.evidence[0].rule == "policy_disabled_kind"
 
 
 # --- Expansion tiers (T1 numeric, T2 expanded aliases, T3 CLDR, T4 historical) ---
@@ -208,12 +221,27 @@ def test_full_iso3166_name_coverage() -> None:
 
     # The table maps every assigned code to its alpha-2 (some codes appear
     # under multiple keys, e.g. prior convenience aliases; the value set is
-    # what must cover the assigned codes).
+    # what must cover the assigned codes). When picking the "official" name
+    # for each code, skip the known convenience aliases (the trailing entries
+    # that are NOT official ISO 3166-1 short names) so the test exercises
+    # the official name, not a shortcut alias.
+    _convenience_aliases = frozenset(
+        {
+            "CZECH REPUBLIC",
+            "GREAT BRITAIN",
+            "KOREA REPUBLIC",
+            "RUSSIA",
+            "SOUTH KOREA",
+            "UNITED KINGDOM",
+            "UNITED STATES",
+        }
+    )
     covered = set(_NAME_TO_ALPHA2.values())
     assert covered >= _ALPHA2_CODES
     for code in sorted(_ALPHA2_CODES):
-        # Find the official-name key for this code (first match).
-        official = next(k for k, v in _NAME_TO_ALPHA2.items() if v == code)
+        official = next(
+            k for k, v in _NAME_TO_ALPHA2.items() if v == code and k not in _convenience_aliases
+        )
         r = canonicalize(official.title(), Country())
         assert r.status == Status.CANONICALIZED, f"{official} -> {r.status}"
         assert r.value == code

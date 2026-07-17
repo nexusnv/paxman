@@ -59,14 +59,14 @@ GRAMMARS: tuple[Grammar, ...] = (
     # so the resolver routes it to the numeric table. The name grammar below is
     # narrowed to exclude pure-digit strings so a numeric token matches ONLY
     # this grammar (never both numeric and name).
-    _make_grammar("country_numeric", _GRAMMAR_SOURCE, r"^(?P<tok>\d{1,3})$", shape="numeric"),
+    _make_grammar("country_numeric", _GRAMMAR_SOURCE, r"^(?P<tok>[0-9]{1,3})$", shape="numeric"),
     # Name shape: any non-empty trimmed token that is not exactly 2 or 3 ASCII
     # letters and is not a pure-digit string (so alpha2/alpha3/numeric and name
     # are disjoint shapes).
     _make_grammar(
         "country_name",
         _GRAMMAR_SOURCE,
-        r"^(?!(?P<_only>[A-Za-z]{2,3})$)(?!\d+$)(?P<tok>.+)$",
+        r"^(?!(?P<_only>[A-Za-z]{2,3})$)(?![0-9]+$)(?P<tok>.+)$",
         shape="name",
     ),
 )

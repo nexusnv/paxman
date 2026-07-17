@@ -81,7 +81,8 @@ def validate(
     if isinstance(contract, CanonicalCountryContract):
         # The CountryCapability has already validated the canonical form
         # (ISO 3166-1 alpha-2); no further policy check is needed here
-        # (same rationale as UUID/Date/Phone/URL/IP/Money/Geolocation above — Law 11).
+        # (same rationale as UUID/Date/Phone/URL/IP/Money — Geolocation is
+        # handled below — Law 11).
         return ValidationResult(is_valid=True)
     if isinstance(contract, CanonicalGeolocationContract):
         # The GeolocationCapability has already validated the canonical form

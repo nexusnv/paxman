@@ -6,6 +6,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
+from paxman._capabilities._iso3166 import COUNTRY_TABLE_VERSION
 from paxman._capabilities.country.policy import (
     COUNTRY_POLICY_CONVENIENCE_ALIASES,
     COUNTRY_POLICY_EXTRA_SYNONYMS,
@@ -36,22 +37,26 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         ),
         # --- recognition / canonicalization (ISO 3166-1 + recorded policy) ---
         "trimmed_whitespace": COUNTRY_POLICY_WHITESPACE_TRIM,
-        "recognized_alpha2": "ISO 3166-1:2020 (alpha-2 shape)",
-        "recognized_alpha3": "ISO 3166-1:2020 (alpha-3 shape)",
-        "recognized_numeric": "ISO 3166-1:2020 (numeric shape)",
-        "recognized_name": "ISO 3166-1:2020 (name shape)",
-        "canonicalized_country": "ISO 3166-1:2020 (alpha-2 canonical form)",
+        "recognized_alpha2": f"ISO 3166-1:2020 (alpha-2 shape; {COUNTRY_TABLE_VERSION})",
+        "recognized_alpha3": f"ISO 3166-1:2020 (alpha-3 shape; {COUNTRY_TABLE_VERSION})",
+        "recognized_numeric": f"ISO 3166-1:2020 (numeric shape; {COUNTRY_TABLE_VERSION})",
+        "recognized_name": f"ISO 3166-1:2020 (name shape; {COUNTRY_TABLE_VERSION})",
+        "canonicalized_country": (
+            f"ISO 3166-1:2020 (alpha-2 canonical form; {COUNTRY_TABLE_VERSION})"
+        ),
         "numeric_resolved": COUNTRY_POLICY_NUMERIC,
         "localized_resolved": COUNTRY_POLICY_LOCALIZED,
         "historical_resolved": COUNTRY_POLICY_HISTORICAL,
         "alias_resolved": (
-            "paxman spec/country §3.3 (bundled alias table, COUNTRY_TABLE_VERSION=iso3166-1:2020); "
+            f"paxman spec/country §3.3 (bundled alias table, {COUNTRY_TABLE_VERSION}); "
             "convenience aliases recorded per " + COUNTRY_POLICY_CONVENIENCE_ALIASES
         ),
         "extra_synonym_resolved": COUNTRY_POLICY_EXTRA_SYNONYMS,
         "policy_disabled_kind": COUNTRY_POLICY_KIND_GATING,
         "missing_value": COUNTRY_POLICY_MISSING_VALUE,
-        "unrecognized_format": "ISO 3166-1:2020 (input is not a recognized country token)",
+        "unrecognized_format": (
+            f"ISO 3166-1:2020 (input is not a recognized country token; {COUNTRY_TABLE_VERSION})"
+        ),
     }
 )
 

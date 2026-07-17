@@ -74,13 +74,6 @@ _SYMBOL_TO_CODE: dict[str, str] = {
     "₴": "UAH",
 }
 
-# Code → symbol is just the reverse lookup convenience (may be empty).
-_CODE_TO_SYMBOL: dict[str, str] = {v: k for k, v in _SYMBOL_TO_CODE.items()}
-
-# A "pure amount" token before separator normalization. Captures optional
-# sign, digits, optional thousands separators, optional decimal part.
-_AMOUNT_RE = re.compile(r"^\s*([(+-]?)\s*([0-9][0-9.,\s]*?)\s*(?:\))?\s*$")
-
 
 @attrs.frozen
 class MoneyParts:
@@ -138,25 +131,12 @@ def _detect_code(text: str, contract: CanonicalMoneyContract) -> tuple[str | Non
     rest = m.group(2)
     if not re.fullmatch(r"[A-Z]{3}", candidate):
         return None, text
-    # Only treat as a code if it is a known ISO code AND matches contract.
+    # The contract currency is the ONLY valid code. Any other leading 3-letter
+    # token is rejected — Paxman never guesses the currency (Law 3).
     if candidate != contract.currency:
-        # A code that is not the contract currency is a hard mismatch.
-        if candidate in {
-            "MYR",
-            "USD",
-            "EUR",
-            "GBP",
-            "JPY",
-            "SGD",
-            "AUD",
-            "CAD",
-            "CHF",
-        }:
-            raise ContractError(
-                f"code {candidate!r} does not match contract currency {contract.currency!r}"
-            )
-        # Otherwise it's not a currency code; leave the text alone.
-        return None, text
+        raise ContractError(
+            f"code {candidate!r} does not match contract currency {contract.currency!r}"
+        )
     if not contract.allow_code:
         raise ContractError("currency code not allowed by contract")
     return candidate, rest

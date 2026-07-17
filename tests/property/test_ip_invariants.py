@@ -52,3 +52,4 @@ def test_replay_byte_equal(
     if result.status is Status.CANONICALIZED:
         rehydrated = replay(result, contract)
         assert rehydrated == result
+        assert rehydrated.canonical_bytes() == result.canonical_bytes()

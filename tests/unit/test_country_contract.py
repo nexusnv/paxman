@@ -41,18 +41,54 @@ def test_extra_synonyms_validation_rejects_bad_target() -> None:
 
 
 def test_as_dict_round_trip() -> None:
-    c = Country(allow_alpha3=False)
+    c = Country(allow_alpha3=False, allow_numeric=False, localized_names=True)
     spec = c.as_dict()
     assert spec == {
         "kind": "canonical_country",
         "allow_alpha3": False,
         "allow_name": True,
         "allow_synonym": True,
+        "allow_numeric": False,
+        "localized_names": True,
+        "historical_names": False,
         "extra_synonyms": {},
         "version": 1,
         "version_field": 1,
     }
     assert parse_contract(spec) == c
+
+
+def test_factory_new_flags_defaults() -> None:
+    c = Country()
+    assert c.allow_numeric is True
+    assert c.localized_names is False
+    assert c.historical_names is False
+
+
+def test_factory_new_flags_overrides() -> None:
+    c = Country(allow_numeric=False, localized_names=True, historical_names=True)
+    assert c.allow_numeric is False
+    assert c.localized_names is True
+    assert c.historical_names is True
+
+
+def test_parse_contract_new_flags() -> None:
+    c = parse_contract(
+        {
+            "kind": "canonical_country",
+            "allow_numeric": False,
+            "localized_names": True,
+            "historical_names": True,
+        }
+    )
+    assert c.allow_numeric is False
+    assert c.localized_names is True
+    assert c.historical_names is True
+
+
+def test_build_country_rejects_non_bool_new_flag() -> None:
+    with pytest.raises(ContractError):
+        parse_contract({"kind": "canonical_country", "allow_numeric": "yes"})
 
 
 def test_parse_contract_kind() -> None:

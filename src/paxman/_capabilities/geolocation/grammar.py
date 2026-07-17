@@ -57,10 +57,9 @@ _GRAMMAR_SOURCE = "paxman spec/geolocation §3.1 (closed coordinate shape vocabu
 # A numeric axis: optional sign, digits, optional decimal point. Tolerant of
 # leading/trailing whitespace around each token (handled by the resolver's
 # trim step). The resolver is the authority on validity (catches malformed
-# input as INVALID, never guessed). The parenthesized form reuses the same
-# named groups via a single set of captures; the optional surrounding
-# parentheses are matched non-capturing and stripped by _split_sign during
-# resolution, so the group names are defined exactly once.
+# input as INVALID, never guessed). The parenthesized pair form wraps the SAME
+# _NUM in a balanced "(...)" so the opening and closing delimiters must both be
+# present (a single delimiter cannot fullmatch and is rejected).
 _NUM = r"(?P<a1>[-+]?\d+(?:\.\d+)?)\s*,\s*(?P<a2>[-+]?\d+(?:\.\d+)?)"
 
 # Anchored shape classifiers. These only ROUTE to the resolver; the resolver
@@ -68,15 +67,20 @@ _NUM = r"(?P<a1>[-+]?\d+(?:\.\d+)?)\s*,\s*(?P<a2>[-+]?\d+(?:\.\d+)?)"
 # ranges. The patterns are intentionally permissive on the numeric body; the
 # resolver rejects malformed input as INVALID.
 GRAMMARS: tuple[Grammar, ...] = (
+    # geo_decimal_pair has TWO grammars sharing one shape: a bare pair and a
+    # fully parenthesized pair. Each defines the a1/a2 groups in its OWN
+    # pattern (not an alternation) so the names are not redefined. A single
+    # delimiter — "(lat, lon" or "lat, lon)" — matches neither and is rejected.
     _make_grammar(
         "geo_decimal_pair",
         _GRAMMAR_SOURCE,
-        # Accept either a parenthesized pair "(lat, lon)" or a bare pair
-        # "lat, lon". The parentheses are optional and non-capturing; the
-        # opening paren stays attached to a1 so _split_sign can read it as a
-        # negative signal during resolution. A mismatched single delimiter
-        # (e.g. "(lat, lon") cannot fullmatch, so it is rejected as INVALID.
-        r"^\(?\s*" + _NUM + r"\s*\)?$",
+        r"^\s*" + _NUM + r"\s*$",
+        shape="geo_decimal_pair",
+    ),
+    _make_grammar(
+        "geo_decimal_pair_paren",
+        _GRAMMAR_SOURCE,
+        r"^\(\s*" + _NUM + r"\s*\)$",
         shape="geo_decimal_pair",
     ),
     _make_grammar(

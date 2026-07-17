@@ -41,6 +41,24 @@ class TestIPCapability:
         r = _cap().canonicalize("192.168.001.001", _contract())
         assert r.status is Status.CANONICALIZED and r.value == "192.168.1.1"
 
+    def test_ipv4_all_octets_zero_padded(self) -> None:
+        r = _cap().canonicalize("001.002.003.004", _contract())
+        assert r.status is Status.CANONICALIZED and r.value == "1.2.3.4"
+
+    def test_ipv4_leading_zeros_decimal_not_octal(self) -> None:
+        r = _cap().canonicalize("192.168.08.001", _contract())
+        assert r.status is Status.CANONICALIZED and r.value == "192.168.8.1"
+        r = _cap().canonicalize("010.000.000.001", _contract())
+        assert r.status is Status.CANONICALIZED and r.value == "10.0.0.1"
+
+    def test_ipv4_zero_padded_edge_addresses(self) -> None:
+        assert _cap().canonicalize("000.000.000.000", _contract()).value == "0.0.0.0"
+        assert _cap().canonicalize("255.255.255.255", _contract()).value == "255.255.255.255"
+
+    def test_ipv4_out_of_range_octet_stays_invalid(self) -> None:
+        r = _cap().canonicalize("057.472.389.213", _contract())
+        assert r.status is Status.INVALID
+
     def test_ipv6_rfc5952_compression(self) -> None:
         r = _cap().canonicalize("2001:0DB8:0000:0000:0000:0000:0000:0001", _contract())
         assert r.status is Status.CANONICALIZED and r.value == "2001:db8::1"

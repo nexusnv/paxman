@@ -12,6 +12,7 @@ def test_end_to_end_name() -> None:
     assert result.value == "US"
     rehydrated = replay(result, Country())
     assert rehydrated == result
+    assert rehydrated.canonical_bytes() == result.canonical_bytes()
 
 
 def test_end_to_end_alpha3() -> None:

@@ -32,6 +32,10 @@ def test_replay_invariant(value: str) -> None:
     assert result.status == Status.CANONICALIZED
     rehydrated = replay(result, c)
     assert rehydrated == result
+    # Law 12 (Replayability): the rehydrated artifact must be byte-for-byte
+    # equal to the original, not just object-equal. canonical_bytes() is the
+    # deterministic serialization used for the replay_hash.
+    assert rehydrated.canonical_bytes() == result.canonical_bytes()
 
 
 @settings(derandomize=True, max_examples=50)
@@ -42,7 +46,7 @@ def test_artifact_immutable(value: str) -> None:
     c = Country()
     result = canonicalize(value, c)
     try:
-        result.status = Status.INVALID  # type: ignore[misc]
+        setattr(result, "status", Status.INVALID)  # noqa: B010 - testing frozen immutability
     except attrs.exceptions.FrozenInstanceError:
         pass
     else:
@@ -69,6 +73,7 @@ def test_numeric_axis_idempotent_replay(value: str) -> None:
     second = canonicalize(first.value, c)
     assert second.value == first.value
     assert replay(first, c) == first
+    assert replay(first, c).canonical_bytes() == first.canonical_bytes()
 
 
 @settings(derandomize=True, max_examples=50)
@@ -80,6 +85,7 @@ def test_localized_axis_idempotent_replay(value: str) -> None:
     second = canonicalize(first.value, c)
     assert second.value == first.value
     assert replay(first, c) == first
+    assert replay(first, c).canonical_bytes() == first.canonical_bytes()
 
 
 @settings(derandomize=True, max_examples=50)
@@ -91,3 +97,4 @@ def test_historical_axis_idempotent_replay(value: str) -> None:
     second = canonicalize(first.value, c)
     assert second.value == first.value
     assert replay(first, c) == first
+    assert replay(first, c).canonical_bytes() == first.canonical_bytes()

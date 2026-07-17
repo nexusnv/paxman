@@ -3,8 +3,24 @@
 This module is the date capability's *domain knowledge* (MANDATE Principle 4):
 it decides **how** month/weekday names map to numbers. It does **not** decide
 **which** language applies — that is the contract's ``language`` policy
-(MANDATE Principle 5). No single RFC governs multilingual month names, so the
-tables here are a declared Paxman policy (Law 14 source #3).
+(MANDATE Principle 5).
+
+Provenance note (MANDATE Law 14 / Law 15): the actual day and month *names*
+(e.g. the Malay words "Isnin", "Selasa", "Rabu", …) are NOT defined by ISO 639.
+ISO 639 is only a standard *encoding* for language identities (it says that the
+code ``ms`` denotes Malay); it does not specify what the Malay weekday names
+are. The name tables below are therefore declared Paxman policy (Law 14 source
+#3), not a citation of, nor a partial adoption of, the ISO 639 named-entity
+enumeration — so Law 15 does not apply to them.
+
+Supported languages are an expanding set (like a translation matrix): today
+``en``, ``de``, and ``ms`` are supported, with more to follow. Each supported
+language's vocabulary is embodied in FULL — if ``ms`` is supported, every Malay
+month and weekday name is present, never a curated subset. A *supported* language
+whose own vocabulary was only partially covered (e.g. ``ms`` recognizing only
+"Isnin" and "Selasa" while omitting the rest) would be a Law 15 subset violation
+and is deliberately not done; the supported-language set grows by adding whole
+languages, never by partially covering one.
 
 Keys are stored lower-cased; lookups lower-case the input token before
 resolution so matching is case-insensitive and locale-deterministic (Law 7:

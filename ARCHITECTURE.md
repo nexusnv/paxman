@@ -451,7 +451,7 @@ orchestrator classifies the outcome as `Status.AMBIGUOUS` (mandate Law 4
 and §5.4) rather than choosing one. If zero capabilities claim it, the
 orchestrator classifies as `UNSUPPORTED`.
 
-### `_capabilities/{email,uuid,date,phone,url,boolean,ip,money,geolocation}/` — Built-In Capabilities
+### `_capabilities/{email,uuid,date,phone,url,boolean,ip,money,geolocation,country}/` — Built-In Capabilities
 
 Ships ten built-ins today: `EmailCapability`, `UUIDCapability`,
 `DateCapability`, `PhoneCapability`, `URLCapability`, `BooleanCapability`,

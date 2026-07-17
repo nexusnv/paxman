@@ -949,7 +949,7 @@ change to be avoided.
 
 ### 7.15 Design Principles
 
-The fourteen laws are the constitutional floor. The architecture discussion
+The fifteen laws are the constitutional floor. The architecture discussion
 that refined this document surfaced six design principles that the laws
 protect and that guide *future* extension. They are not laws — they are the
 load-bearing intuitions a contributor should reach for when a law does not
@@ -983,7 +983,7 @@ declarative DSL; the capability owns the algorithm that satisfies it.
 Shipping a new canonicalization domain must not require editing core. Registry
 self-discovery (§6.5) is the mechanism that keeps this true.
 
-These six principles, together with the fourteen laws, point to the intended
+These six principles, together with the fifteen laws, point to the intended
 long-term shape of Paxman:
 
 ```text
@@ -1088,7 +1088,7 @@ a few" is a blocker.
 
 ### 10.3 For ADR authors
 
-A new ADR must declare which of the fourteen laws are relevant to it, and
+A new ADR must declare which of the fifteen laws are relevant to it, and
 must not violate any of them. If a proposed ADR would require violating a law,
 the ADR's first section must be a constitutional amendment argument, not a
 design argument. An ADR that introduces or changes a canonical-form rule must
@@ -1125,6 +1125,21 @@ evidence-first) but none of them described *where canonical forms come from*.
 Law 14 closes that gap; it is the constitutional answer to silent
 canonical-form invention. The recalibration audit for the EmailCapability
 is recorded in its capability spec under `docs/capabilities/email/index.md`.
+
+Law 15 (A Cited Source Is Adopted In Full, Or Not At All) was added on
+2026-07-18, after a review of the country capability found that the bundled
+ISO 3166-1 country table had been citing `ISO 3166-1:2020` as its
+provenance (satisfying Law 14) while including only a curated subset of
+the 249 officially assigned country names. Law 14 requires a *citation*;
+it does not require the cited enumeration to be *fully embodied*. That gap
+permits a capability to cite an authoritative named-entity source and
+silently omit some of its members — which, for sources that enumerate
+peoples, nations, currencies, or languages, is an appearance of editorial
+selection and a discrimination risk. Law 15 amends §7 (Law 14) by closing
+that gap: a capability that cites a named-entity source must adopt it in
+full or not cite it at all. The shared `_iso3166` module and the
+`_ISO4217_CODES` back-fill (money capability) are the concrete embodiments
+that brought the country, phone, and money capabilities into compliance.
 
 The constitutional framing — "laws, not ADRs" — is what makes Paxman
 resistant to the kind of silent invention that constitutional boundaries

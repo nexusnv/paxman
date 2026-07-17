@@ -15,7 +15,10 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Any
 
-from paxman._capabilities.money.contract import CanonicalMoneyContract
+from paxman._capabilities.money.contract import (
+    MONEY_TABLE_VERSION,
+    CanonicalMoneyContract,
+)
 from paxman._core.provenance import Evidence
 
 # Law 14 rule→provenance manifest. Dispatch invariants (not_a_money_contract,
@@ -32,13 +35,28 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         # routing failure, so it carries a real citation (Law 3 — Never Guess).
         "missing_value": "money design spec (empty input rejected — Law 3 Never Guess)",
         # --- recognition / canonicalization (mandate laws + design spec) ---
-        "currency_from_contract": "MANDATE Law 3 (Never Guess) + Law 7 (Explicit Over Clever)",
-        "canonical_form": "money design spec M2 ('<ISO4217>:<amount>')",
-        "symbol_validated": "money design spec Q-symbol (symbol must match contract currency)",
-        "code_validated": "money design spec Q-code (ISO code must match contract currency)",
+        "currency_from_contract": (
+            f"MANDATE Law 3 (Never Guess) + Law 7 (Explicit Over Clever); "
+            f"currency is an ISO 4217:2015 code ({MONEY_TABLE_VERSION})"
+        ),
+        "canonical_form": (
+            f"money design spec M2 ('<ISO4217>:<amount>'); currency is an "
+            f"ISO 4217:2015 code ({MONEY_TABLE_VERSION})"
+        ),
+        "symbol_validated": (
+            f"ISO 4217:2015 ({MONEY_TABLE_VERSION}); symbol recognized via "
+            f"the bundled symbol→code map and must match the contract currency"
+        ),
+        "code_validated": (
+            f"ISO 4217:2015 ({MONEY_TABLE_VERSION}); code must be a recognized "
+            f"ISO 4217 code and match the contract currency"
+        ),
         "trimmed_whitespace": "money design spec (strip_spaces policy)",
         "preserved_sign": "money design spec Q2=A (negatives preserved)",
-        "parsed_decimal": "money design spec Q1=A (Decimal, comma-decimal per currency)",
+        "parsed_decimal": (
+            "money design spec Q1=A (Decimal, comma-decimal per currency); "
+            "comma-decimal set is the ISO 4217-backed convention table"
+        ),
         "preserved_decimals": (
             "money design spec F1/Q3=A (no quantization; sci-notation normalized)"
         ),

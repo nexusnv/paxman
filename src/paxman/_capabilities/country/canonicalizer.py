@@ -62,7 +62,7 @@ class _Survivor:
 
 def generate_interpretations(
     reps: list[RecognizedRep], contract: CanonicalCountryContract
-) -> list[_Candidate]:
+) -> tuple[list[_Candidate], list[str]]:
     """Map grammar recognitions to candidate canonical forms (resolver).
 
     Looks the (uppercased) token up in the bundled ISO 3166-1 table, applying
@@ -75,17 +75,26 @@ def generate_interpretations(
     also appears as a bundled synonym (e.g. `USA`). Synonym/name lookup is a
     fallback for tokens that are not valid codes of their own shape (e.g. `UK`,
     a 2-letter synonym that is not a valid ISO alpha-2 code).
+
+    Returns:
+        A (candidates, drop_reasons) tuple. When a representation kind was
+        recognized but rejected by policy, drop_reasons contains
+        ``"policy_disabled_kind"`` so the caller can emit the documented
+        ``policy_disabled_kind`` evidence instead of the misleading
+        ``unrecognized_format``.
     """
     candidates: list[_Candidate] = []
+    drop_reasons: list[str] = []
     if not reps:
-        return candidates
+        return candidates, drop_reasons
     rep = reps[0]
     token = rep.captures.get("tok", rep.raw).strip().upper()
     if rep.shape == "alpha2" and token in _ALPHA2_CODES:
         candidates.append(_mk(token, "canonicalized_country", "ISO 3166-1:2020 (alpha-2)"))
     elif rep.shape == "alpha3":
         if not contract.allow_alpha3:
-            return []
+            drop_reasons.append("policy_disabled_kind")
+            return candidates, drop_reasons
         code = _ALPHA3_TO_ALPHA2.get(token)
         if code is not None:
             candidates.append(
@@ -93,7 +102,8 @@ def generate_interpretations(
             )
     elif rep.shape == "numeric":
         if not contract.allow_numeric:
-            return []
+            drop_reasons.append("policy_disabled_kind")
+            return candidates, drop_reasons
         # Numeric codes are zero-padded to 3 digits in the table; also accept
         # the unpadded form (e.g. "4" -> "004").
         code = _NUMERIC_TO_ALPHA2.get(token.zfill(3))
@@ -137,7 +147,7 @@ def generate_interpretations(
         if cand.value in seen:
             continue
         seen[cand.value] = cand
-    return list(seen.values())
+    return list(seen.values()), drop_reasons
 
 
 def _mk(value: str, rule: str, source: str) -> _Candidate:
@@ -231,8 +241,17 @@ class CountryCapability:
             )
 
         # Resolver (table lookup) + validation + classify.
-        cands = generate_interpretations(reps, contract)
+        cands, drop_reasons = generate_interpretations(reps, contract)
         if not cands:
+            # Distinguish policy-disabled from genuinely unrecognized: an
+            # alpha-3/numeric token that was recognized but rejected by
+            # contract policy emits ``policy_disabled_kind`` evidence (the
+            # documented behavior), not the misleading
+            # ``unrecognized_format``.
+            if "policy_disabled_kind" in drop_reasons:
+                return CapabilityResult(
+                    status=Status.INVALID, evidence=(_evidence("policy_disabled_kind"),)
+                )
             return CapabilityResult(
                 status=Status.INVALID, evidence=(_evidence("unrecognized_format"),)
             )

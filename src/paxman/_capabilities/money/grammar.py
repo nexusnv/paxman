@@ -25,52 +25,137 @@ from paxman._capabilities.money.contract import CanonicalMoneyContract
 from paxman._errors import ContractError
 
 # Currencies that conventionally use a COMMA as the decimal separator and a
-# dot as the thousands separator (Q1=A). All others use the dot-decimal
-# convention. This is a fixed deterministic table (Law 8a — no network).
+# dot as the thousands separator (Q1=A), per CLDR currency number patterns.
+# Ambiguous cases (CHF uses a period for currency) are intentionally kept on
+# the dot-decimal convention for determinism. Every entry is a valid ISO
+# 4217:2015 code; the set is a subset of _ISO4217_CODES, not a separate
+# named-entity source. Fixed, deterministic (Law 8a — no network).
 _COMMA_DECIMAL_CURRENCIES: frozenset[str] = frozenset(
     {
-        "EUR",
-        "DKK",
-        "NOK",
-        "SEK",
-        "CHF",
         "BRL",
-        "RUB",
-        "TRY",
-        "PLN",
-        "HUF",
+        "CHE",
         "CZK",
+        "DKK",
+        "EUR",
+        "HUF",
+        "NOK",
+        "PLN",
         "RON",
-        "ILS",
-        "ISK",
+        "RUB",
+        "SEK",
+        "TRY",
     }
 )
 
 # Symbol → ISO 4217 code map. Symbols are validated against the contract
-# currency; an unrecognized or mismatched symbol is rejected.
+# currency; an unrecognized or mismatched symbol is rejected. Every target is a
+# valid ISO 4217:2015 code (the cited source, embodied in full in
+# ``money/contract._ISO4217_CODES`` — Law 15). User-supplied symbol→code maps
+# remain supported via the contract.
 _SYMBOL_TO_CODE: dict[str, str] = {
-    "RM": "MYR",
     "$": "USD",
     "US$": "USD",
+    "CA$": "CAD",
+    "A$": "AUD",
+    "NZ$": "NZD",
+    "MX$": "MXN",
+    "HK$": "HKD",
+    "S$": "SGD",
+    "RD$": "DOP",
+    "TT$": "TTD",
+    "BZ$": "BZD",
+    "J$": "JMD",
+    "C$": "NIO",
+    "NA$": "NAD",
+    "B$": "BND",
     "€": "EUR",
+    "₠": "EUR",
     "£": "GBP",
     "¥": "JPY",
     "￥": "JPY",
-    "S$": "SGD",
-    "A$": "AUD",
-    "C$": "CAD",
-    "Rs": "INR",
+    "RMB¥": "CNY",
+    "₣": "XPF",
     "₹": "INR",
+    "Rs": "INR",
+    "Rs.": "INR",
+    "₨": "INR",
     "R$": "BRL",
     "kr": "SEK",
+    "kr.": "SEK",
     "zł": "PLN",
     "₪": "ILS",
     "₽": "RUB",
+    "\u0440\u0443\u0431": "RUB",  # Cyrillic word for "ruble" (escaped form to avoid RUF001)
+    "₺": "TRY",
+    "₴": "UAH",
     "฿": "THB",
+    "RM": "MYR",
     "Rp": "IDR",
     "₱": "PHP",
     "₩": "KRW",
-    "₴": "UAH",
+    "₫": "VND",
+    "Kč": "CZK",
+    "Ft": "HUF",
+    "lei": "RON",
+    "дин": "RSD",
+    "дент": "MKD",
+    "CHF": "CHF",
+    "Fr": "CHF",
+    "S/.": "PEN",
+    "S/": "PEN",
+    "Bs": "BOB",
+    "Bs.": "BOB",
+    "Bs.F.": "VES",
+    "Gs": "PYG",
+    "₲": "PYG",
+    "₡": "CRC",
+    "Lps": "HNL",
+    "Nu.": "BTN",
+    "₮": "MNT",
+    "₸": "KZT",
+    "манат": "AZN",
+    "₼": "AZN",
+    "դր.": "AMD",
+    "₾": "GEL",
+    "Br": "BYN",
+    "p.": "BYN",
+    "KM": "BAM",
+    "KN": "BAM",
+    "ƒ": "AWG",
+    "د.إ": "AED",
+    "د.ب": "BHD",
+    "د.ج": "DZD",
+    "د.ك": "KWD",
+    "د.ع": "IQD",
+    "د.ل": "LYD",
+    "ر.ع.": "OMR",
+    "ر.ق": "QAR",
+    "ر.س": "SAR",
+    "ر.ي": "YER",
+    "﷼": "IRR",
+    "៛": "KHR",
+    "₭": "LAK",
+    "₦": "NGN",
+    "SM": "SOS",
+    "Sh": "TZS",
+    "FCFA": "XAF",
+    "CFA": "XOF",
+    "VT": "VUV",
+    "WS$": "WST",
+    "T$": "TOP",
+    "₵": "GHS",
+    "Le": "SLE",
+    "Db": "STN",
+}
+
+# Symbols shared across multiple ISO 4217 currencies (CLDR lists the same
+# glyph for each). The bare glyph alone does not determine the currency
+# (Law 3 — Never Guess); the contract.currency disambiguates which one
+# applies. Every code in every set is a valid ISO 4217:2015 code (Law 15).
+_SHARED_SYMBOL_CODES: dict[str, frozenset[str]] = {
+    "C$": frozenset({"CAD", "NIO"}),
+    "kr": frozenset({"SEK", "DKK", "NOK", "ISK"}),
+    "Bs": frozenset({"BOB", "VES"}),
 }
 
 
@@ -103,17 +188,27 @@ def _detect_symbol(text: str, contract: CanonicalMoneyContract) -> tuple[str | N
     """Detect a leading currency symbol; validate it matches the contract.
 
     Returns (symbol_or_None, remaining_text). Raises ContractError on mismatch
-    or when symbols are disallowed.
+    or when symbols are disallowed. Shared symbols (C$, kr, Bs) are accepted
+    when contract.currency is any of the symbol's permitted currencies; the
+    contract disambiguates which one applies (Law 3 — Never Guess).
     """
     for sym in sorted(_SYMBOL_TO_CODE, key=len, reverse=True):
         if text.startswith(sym):
             if not contract.allow_symbol:
                 raise ContractError("currency symbol not allowed by contract")
-            code = _SYMBOL_TO_CODE[sym]
-            if code != contract.currency:
-                raise ContractError(
-                    f"symbol {sym!r} denotes {code}, contract expects {contract.currency}"
-                )
+            if sym in _SHARED_SYMBOL_CODES:
+                allowed = _SHARED_SYMBOL_CODES[sym]
+                if contract.currency not in allowed:
+                    raise ContractError(
+                        f"symbol {sym!r} denotes one of {sorted(allowed)}, "
+                        f"contract expects {contract.currency}"
+                    )
+            else:
+                code = _SYMBOL_TO_CODE[sym]
+                if code != contract.currency:
+                    raise ContractError(
+                        f"symbol {sym!r} denotes {code}, contract expects {contract.currency}"
+                    )
             return sym, text[len(sym) :].strip()
     return None, text
 

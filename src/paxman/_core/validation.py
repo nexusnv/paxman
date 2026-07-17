@@ -17,6 +17,7 @@ from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._capabilities.ip.contract import CanonicalIPContract
+from paxman._capabilities.money.contract import CanonicalMoneyContract
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
 from paxman._capabilities.url.contract import CanonicalURLContract
 from paxman._capabilities.uuid.contract import CanonicalUUIDContract
@@ -69,6 +70,11 @@ def validate(
         # (RFC 5952 / dotted-decimal); no further policy check is needed
         # here (mandate Law 11 — delegating to the capability's prior
         # validation upholds the no-silent-canonicalization guarantee).
+        return ValidationResult(is_valid=True)
+    if isinstance(contract, CanonicalMoneyContract):
+        # The MoneyCapability has already validated the canonical form
+        # ("<ISO4217>:<amount>"); no further policy check is needed here
+        # (same rationale as UUID/Date/Phone/URL/IP above — Law 11).
         return ValidationResult(is_valid=True)
     if not isinstance(contract, CanonicalEmailContract):
         raise UnsupportedContractError(

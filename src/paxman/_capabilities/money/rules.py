@@ -28,6 +28,7 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         # --- dispatch invariants (no provenance — Law 14 §3.6 allow-list) ---
         "not_a_money_contract": "",
         "not_a_string_value": "",
+        "missing_value": "",
         # --- recognition / canonicalization (mandate laws + design spec) ---
         "currency_from_contract": "MANDATE Law 3 (Never Guess) + Law 7 (Explicit Over Clever)",
         "canonical_form": "money design spec M2 ('<ISO4217>:<amount>')",
@@ -38,6 +39,10 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "parsed_decimal": "money design spec Q1=A (Decimal, comma-decimal per currency)",
         "preserved_decimals": (
             "money design spec F1/Q3=A (no quantization; sci-notation normalized)"
+        ),
+        "unrecognized_format": (
+            "money design spec (rejected: empty, malformed, or symbol/code "
+            "mismatch — Law 3 Never Guess)"
         ),
     }
 )

@@ -1,35 +1,63 @@
 # src/paxman/_capabilities/money/rules.py
-"""Money Law 14 rule manifest.
+"""Money Law 14 rule→provenance manifest + evidence helper.
 
-Mandate Law 14 requires every capability to document its canonicalization
-rules. This module returns a declarative, contract-aware manifest of the
-money canonicalization rules as a list of dicts. The manifest is plain data
-(no attrs, mirroring the IP sibling's manifest style) so it can be inspected,
-serialized, and asserted against without executing the canonicalizer.
+Mirrors the IP sibling convention: the authoritative Law 14 surface is the
+`_RULE_PROVENANCE` mapping (rule-name → provenance citation) plus the
+`_evidence` helper that the canonicalizer consumes. Every emitted `Evidence`
+carries a `provenance` citation sourced from `_RULE_PROVENANCE`. A separate
+`get_money_rules` summary artifact is provided for human-readable
+introspection (it is NOT the Law 14 surface).
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
 from typing import Any
 
 from paxman._capabilities.money.contract import CanonicalMoneyContract
+from paxman._core.provenance import Evidence
+
+# Law 14 rule→provenance manifest. Dispatch invariants (not_a_money_contract,
+# not_a_string_value) are allow-listed with empty provenance (Law 14 §3.6):
+# they describe a routing failure, not a canonical-form rule. Every
+# canonical-form rule cites an authoritative source (mandate law or the
+# approved money design spec).
+_RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
+    {
+        # --- dispatch invariants (no provenance — Law 14 §3.6 allow-list) ---
+        "not_a_money_contract": "",
+        "not_a_string_value": "",
+        # --- recognition / canonicalization (mandate laws + design spec) ---
+        "currency_from_contract": "MANDATE Law 3 (Never Guess) + Law 7 (Explicit Over Clever)",
+        "canonical_form": "money design spec M2 ('<ISO4217>:<amount>')",
+        "symbol_validated": "money design spec Q-symbol (symbol must match contract currency)",
+        "code_validated": "money design spec Q-code (ISO code must match contract currency)",
+        "trimmed_whitespace": "money design spec (strip_spaces policy)",
+        "preserved_sign": "money design spec Q2=A (negatives preserved)",
+        "parsed_decimal": "money design spec Q1=A (Decimal, comma-decimal per currency)",
+        "preserved_decimals": (
+            "money design spec F1/Q3=A (no quantization; sci-notation normalized)"
+        ),
+    }
+)
+
+
+def _evidence(rule: str, detail: str = "") -> Evidence:
+    """Build an `Evidence` pulling the Law 14 provenance from the manifest.
+
+    A rule with no manifest entry raises `KeyError` at the construction
+    site, surfacing a missing citation immediately.
+    """
+    return Evidence(rule=rule, detail=detail, provenance=_RULE_PROVENANCE[rule])
 
 
 def get_money_rules(contract: CanonicalMoneyContract) -> list[dict[str, Any]]:
-    """Return the Law 14 rule manifest for the money capability.
+    """Human-readable summary of the money canonicalization rules.
 
-    The manifest is a list of rule dicts, each with ``id``, ``summary``, and
-    ``deterministic`` keys. The summaries encode the locked money design
-    decisions and the two-part nature of money (currency + amount). Where a
-    rule depends on contract policy, the summary is rendered contract-aware.
-
-    Args:
-        contract: the money contract whose policy shapes the manifest.
-
-    Returns:
-        A list of exactly eight rule dicts, each ``deterministic`` set to True.
+    NOTE: this is an introspection/summary artifact. The authoritative Law 14
+    surface is `_RULE_PROVENANCE` + `_evidence`, consumed by the canonicalizer.
     """
-    currency = contract.currency
     symbol_policy = (
         "recognized only when allow_symbol is true"
         if contract.allow_symbol
@@ -44,9 +72,8 @@ def get_money_rules(contract: CanonicalMoneyContract) -> list[dict[str, Any]]:
         {
             "id": "M1",
             "summary": (
-                f"Currency is taken from the contract ({currency}); "
-                "Paxman never guesses it (Law 3 — Never Guess; "
-                "Law 7 — Explicit Over Clever)."
+                "Currency is taken from the contract; Paxman never guesses it "
+                "(Law 3 — Never Guess; Law 7 — Explicit Over Clever)."
             ),
             "deterministic": True,
         },

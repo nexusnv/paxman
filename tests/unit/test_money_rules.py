@@ -51,3 +51,23 @@ def test_rules_reflect_contract_policy() -> None:
     rules = get_money_rules(Money(currency="MYR", allow_symbol=False))
     joined = " ".join(r["summary"] for r in rules)
     assert "symbol" in joined.lower()
+
+
+def test_symbol_policy_flips_with_contract() -> None:
+    from paxman._capabilities.money.rules import get_money_rules
+
+    off = get_money_rules(Money(currency="MYR", allow_symbol=False))
+    on = get_money_rules(Money(currency="MYR", allow_symbol=True))
+    m3_off = next(r for r in off if r["id"] == "M3")["summary"]
+    m3_on = next(r for r in on if r["id"] == "M3")["summary"]
+    assert "rejected when allow_symbol is false" in m3_off
+    assert "recognized only when allow_symbol is true" in m3_on
+
+
+def test_provenance_manifest_present() -> None:
+    from paxman._capabilities.money.rules import _RULE_PROVENANCE, _evidence
+
+    assert "currency_from_contract" in _RULE_PROVENANCE
+    ev = _evidence("currency_from_contract", "MYR")
+    assert ev.provenance == _RULE_PROVENANCE["currency_from_contract"]
+    assert ev.rule == "currency_from_contract"

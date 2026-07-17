@@ -190,6 +190,12 @@ src/paxman/
 │       ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
 │       ├── canonicalizer.py    #     IPCapability
 │       └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
+│   └── money/                  #   MoneyCapability (shipped built-in)
+│       ├── __init__.py         #     re-exports Money, CanonicalMoneyContract, MoneyCapability, GRAMMARS, recognize, _RULE_PROVENANCE
+│       ├── contract.py         #     CanonicalMoneyContract + Money()
+│       ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
+│       ├── canonicalizer.py    #     MoneyCapability
+│       └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 ├── _dsl/                       # the contract DSL (Dict ↔ value object)
 │   ├── __init__.py             #   re-exports parse_contract
 │   ├── parser.py               #   parse_contract — kind dispatch
@@ -445,15 +451,15 @@ orchestrator classifies the outcome as `Status.AMBIGUOUS` (mandate Law 4
 and §5.4) rather than choosing one. If zero capabilities claim it, the
 orchestrator classifies as `UNSUPPORTED`.
 
-### `_capabilities/{email,uuid,date,phone,url,boolean,ip}/` — Built-In Capabilities
+### `_capabilities/{email,uuid,date,phone,url,boolean,ip,money}/` — Built-In Capabilities
 
-Ships seven built-ins today: `EmailCapability`, `UUIDCapability`,
-`DateCapability`, `PhoneCapability`, `URLCapability`, `BooleanCapability`, and
-`IPCapability`. Each owns its domain under `paxman._capabilities.<domain>`
-(`contract.py`, `grammar.py`, `canonicalizer.py`, `parser.py`, `rules.py`,
-plus `value.py` and `calendar.py` for dates). Each capability package
-self-registers its contract builder via `register_contract` so
-`_dsl/parser.parse_contract` can dispatch on the contract `kind` without the
+Ships eight built-ins today: `EmailCapability`, `UUIDCapability`,
+`DateCapability`, `PhoneCapability`, `URLCapability`, `BooleanCapability`,
+`IPCapability`, and `MoneyCapability`. Each owns its domain under
+`paxman._capabilities.<domain>` (`contract.py`, `grammar.py`, `canonicalizer.py`,
+`parser.py`, `rules.py`, plus `value.py` and `calendar.py` for dates). Each
+capability package self-registers its contract builder via `register_contract`
+so `_dsl/parser.parse_contract` can dispatch on the contract `kind` without the
 engine knowing the domain.
 
 Each capability shares the same four-stage shape, split so that recognition
@@ -485,11 +491,12 @@ and feeds the result to `registry.load_builtins(...)` lazily, on the first
 
 Each future built-in grows as its own `_capabilities/<domain>/` package,
 pinning its contract `version` and adding a new `register_contract` branch —
-the same additive pattern the five shipped capabilities use. (Money is the
-deliberate exception: it was reclassified as a *multi-field* canonicalization
-— a currency field plus a decimal field — and deferred past the v2 RC, rather
-than shipped as a single `MoneyCapability`. The `_capabilities/<domain>/`
-pattern still applies should it be scoped later; see mandate §5.5.)
+the same additive pattern the shipped capabilities use. `MoneyCapability` is
+the eighth built-in: it ships as a single `MoneyCapability` whose contract
+carries a REQUIRED `currency` field (ISO 4217, never guessed — mandate Law 3)
+and canonicalizes to the form `<ISO4217>:<amount>`; the amount is an exact
+`Decimal` string (literal decimals preserved, thousands separators stripped,
+currency-keyed decimal separator). See mandate §5.5.
 
 ### `_dsl/parser.py` + `_capabilities/<domain>/contract.py` — The One Contract Format
 
@@ -525,9 +532,9 @@ can be expressed two equivalent ways (mandate §5):
 Both forms resolve to the same `CanonicalEmailContract` value object that
 the engine and capabilities consume. Future contract kinds follow the same
 additive path: bump the contract `version` and add a new `register_contract`
-branch. Money is intentionally absent from this list — it was reclassified as
-a multi-field canonicalization (currency field + decimal field) and deferred
-past the v2 RC; it is not a single `MoneyCapability` (mandate §5.5).
+branch. `Money` is the eighth shipped contract kind (`canonical_money`): its
+contract carries a REQUIRED `currency` field and canonicalizes to
+`<ISO4217>:<amount>` (mandate §5.5).
 
 ### `_errors/` (exceptions.py) — Error Hierarchy
 

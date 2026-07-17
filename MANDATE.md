@@ -8,10 +8,12 @@
 > Where this document conflicts with `README.md`, `ARCHITECTURE.md`, an ADR,
 > or any other document, this document wins.
 >
-> **Last amended:** 2026-07-15 — semantic-equivalence clarification (§1.4),
-> capability ownership of domain knowledge (§4.4–§4.5), two-layer contract
-> model (§5.5), registry-based discovery (§6.5), and six Design Principles
-> (§7.15). No law was repealed; these make implicit boundaries explicit.
+> **Last amended:** 2026-07-18 — added **Law 15 (A Cited Source Is Adopted
+> In Full, Or Not At All)**, forbidding partial adoption of any cited
+> named-entity enumeration (countries, peoples, currencies, languages, …)
+> as a discrimination-risk control. No prior law was repealed; Law 15
+> closes the gap between Law 14 (cite your source) and full embodiment of
+> that source's named-entity enumeration.
 >
 > ---
 
@@ -867,6 +869,84 @@ This keeps Law 1 (Determinism) and Law 12 (Replayability) intact: an
 artifact's provenance is recorded on the artifact; the same artifact
 replayed tomorrow cites the same document, even if the document mutates.
 
+### Law 15 — A Cited Source Is Adopted In Full, Or Not At All
+
+> When a capability cites an authoritative source that enumerates **named
+> entities** (countries, peoples, nations, currencies, languages, scripts,
+> jurisdictions, or any other discrete set of named human or political
+> subjects), Paxman must embody that enumeration **in full** or not cite it
+> at all. Partial adoption of such a source is forbidden.
+
+#### Why this law exists
+
+Law 14 requires every rule to *cite* an authority. It does **not** require
+the cited authority to be *fully embodied*. That gap permits a dangerous
+failure mode: a capability can cite `ISO 3166-1:2020` for its country
+table, satisfy Law 14, and yet include only a curated subset of the
+enumerated names — silently omitting some nations while including others.
+Including "Germany" but omitting "Lao People's Democratic Republic" is not
+a neutral data choice. It is the appearance of a *selection* — a silent
+editorial judgement about which named peoples are worth recognizing. That
+is a discrimination risk and an accusation Paxman must be structurally
+incapable of attracting.
+
+The protection is therefore **not** "cite your sources" (Law 14). It is
+**"if you cite a source that names peoples, you adopt its full naming, or
+you do not cite it."** A capability that recognizes 40 of 249 ISO country
+names while citing ISO 3166-1 violates this law, even though every one of
+the 40 entries individually carries a valid Law 14 citation.
+
+#### What counts as "named entities"
+
+The law is scoped to enumerations of *named human or political subjects* —
+the cases where partial adoption reads as a judgement about whose identity
+is worth recording. This deliberately excludes bulk reference data whose
+partial adoption carries no such implication (e.g. a sample of Unicode CLDR
+localized strings, a subset of code-point ranges, a benchmark vector). For
+those, partial adoption is governed by Law 14 plus an explicit scope
+statement (see the allowed exceptions below).
+
+#### Forbidden
+
+- ❌ Citing `ISO 3166-1` for a country table that contains only a subset of
+  the standard's enumerated names.
+- ❌ Citing `ISO 4217` for a currency table that lists only the currencies
+  the author happened to need.
+- ❌ Any "curated," "common," or "Tier-1" subset of a named-entity
+  enumeration presented as if it were the cited source.
+
+#### Allowed (with a recorded justification)
+
+Partial adoption of a *named-entity* source is permitted **only** when a
+strong, recorded justification exists, and that justification is itself
+captured as provenance (Law 14 source #3 — an explicit Paxman policy):
+
+- **Version mismatch** — the bundled data reflects a different edition of
+  the source than the one currently published, and the discrepancy is
+  documented (e.g. the dataset was frozen at `iso3166-1:2020` and the
+  capability cites that frozen edition explicitly, not the live standard).
+- **Data unavailable at publish time** — a portion of the source could not
+  be obtained or verified when the capability was authored; the missing
+  portion is enumerated in the recorded justification.
+- **Explicit scope boundary for non-named-entity bulk data** — for sources
+  that are not named-entity enumerations (CLDR samples, code-point subsets),
+  a documented scope statement records *why* a subset was chosen. This is a
+  Law 14 + scope-statement path, not a Law 15 waiver, and must never be
+  used to excuse a partial *named-entity* adoption.
+
+A justification that reduces to "we only needed a few" or "these are the
+common ones" is **not** strong and does not satisfy this law.
+
+#### Operational consequence
+
+When a capability cites a named-entity source, its dataset must be
+complete against that source's enumeration, or the citation must name the
+exact frozen edition that the dataset *does* fully embody. Adopting this
+law may require back-filling an existing table to full coverage (e.g.
+extending a country name table from a curated subset to all enumerated
+ISO 3166-1 names) — that back-fill is the law doing its job, not a breaking
+change to be avoided.
+
 ### 7.15 Design Principles
 
 The fourteen laws are the constitutional floor. The architecture discussion
@@ -996,6 +1076,15 @@ without an entry in that capability's `_RULE_PROVENANCE` manifest are
 rejected on sight (Law 14). A reviewer asking "what spec backs this rule?"
 and getting an answer that is not one of the three Law 14 sources is a
 blocker.
+
+PRs that cite a named-entity source (countries, peoples, currencies,
+languages, scripts, jurisdictions — any discrete set of named human or
+political subjects) for a capability dataset are rejected on sight unless
+the dataset embodies that source's enumeration **in full** or names the
+exact frozen edition it does fully embody, with any partial-adoption
+justification recorded as provenance (Law 15). A reviewer asking "is this
+the complete enumeration, or a curated subset?" and getting "we only needed
+a few" is a blocker.
 
 ### 10.3 For ADR authors
 

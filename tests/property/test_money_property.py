@@ -118,7 +118,9 @@ def test_canonical_form_shape(pair: tuple[str, str]) -> None:
 def test_identity_stable(pair: tuple[str, str]) -> None:
     currency, amount = pair
     contract = Money(currency=currency)
+    # Identity (Law 1): canonicalize only rewrites; the same known input with
+    # the same contract always yields the same canonical form. The canonical
+    # string ("ISO4217:amount") is an output-only form and is not a valid input.
     r1 = canonicalize(amount, contract)
     r2 = canonicalize(amount, contract)
-    # Identity: canonicalize only rewrites; same known input -> same output.
     assert r1.value == r2.value

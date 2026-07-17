@@ -59,7 +59,6 @@ _SYMBOL_TO_CODE: dict[str, str] = {
     "S$": "SGD",
     "A$": "AUD",
     "C$": "CAD",
-    "CHF": "CHF",
     "Rs": "INR",
     "₹": "INR",
     "R$": "BRL",
@@ -234,13 +233,16 @@ def parse_amount(amount: str, currency: str) -> str:
     comma_decimal = currency in _COMMA_DECIMAL_CURRENCIES
 
     # Split off a scientific-notation exponent (Q3=A) so the mantissa's
-    # separators can be validated independently of the "E".
+    # separators can be validated independently of the "E". The mantissa is the
+    # part BEFORE the exponent; trailing-zero width (F1) is measured on it, not
+    # on the post-exponent value.
     exponent_part = ""
-    base = amount
+    mantissa = amount
     for _i, _ch in enumerate(amount):
         if _ch in "eE":
-            base, exponent_part = amount[:_i], amount[_i:]
+            mantissa, exponent_part = amount[:_i], amount[_i:]
             break
+    base = mantissa
 
     if comma_decimal:
         # EUR etc.: DOT is the thousands sep, COMMA is the decimal sep.
@@ -276,11 +278,18 @@ def parse_amount(amount: str, currency: str) -> str:
 
     # F1/Q3: preserve the literal fractional-digit count of the INPUT mantissa
     # (not the post-exponent value) and always emit a plain decimal string
-    # (no "E"). E.g. "1.25E+2" keeps 2 places -> "125.00"; "1.5e3" -> "1500.0".
+    # (no "E"). E.g. "1.25E+2" keeps 2 places -> "125.00"; "1.5e3" -> "1500.0";
+    # "1e-2" -> "0.01" (the "E-2" dot must NOT be counted as a decimal point).
     decimal_sep = "," if comma_decimal else "."
-    if decimal_sep in base:
-        mantissa_frac = len(base.rsplit(decimal_sep, 1)[1])
+    if decimal_sep in mantissa:
+        mantissa_frac = len(mantissa.rsplit(decimal_sep, 1)[1])
     else:
         mantissa_frac = 0
-    frac = mantissa_frac
-    return str(value.quantize(Decimal(1).scaleb(-frac)))
+    plain = format(value, "f")
+    if mantissa_frac:
+        if "." not in plain:
+            plain += "." + ("0" * mantissa_frac)
+        else:
+            existing_frac = len(plain.rsplit(".", 1)[1])
+            plain += "0" * max(0, mantissa_frac - existing_frac)
+    return plain

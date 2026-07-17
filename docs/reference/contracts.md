@@ -4,7 +4,7 @@ A contract declares *what* the canonical form is. It is the source of truth in P
 
 ## The Contract Types in v2.0.0
 
-v2.0.0 ships eight contract kinds: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, `canonical_url`, `canonical_boolean`, `canonical_ip`, and `canonical_money`. The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract | CanonicalURLContract | CanonicalBooleanContract | CanonicalIPContract | CanonicalMoneyContract`.
+v2.0.0 ships nine contract kinds: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, `canonical_url`, `canonical_boolean`, `canonical_ip`, `canonical_money`, and `canonical_geolocation`. The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract | CanonicalURLContract | CanonicalBooleanContract | CanonicalIPContract | CanonicalMoneyContract | CanonicalGeolocationContract`.
 
 ## `CanonicalEmailContract`
 
@@ -277,13 +277,68 @@ contract = Money(currency="MYR")  # currency is mandatory
 
 The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
 
+## `CanonicalGeolocationContract`
+
+The frozen value object representing a geolocation canonicalization policy. There is no auto-detection: the caller declares the datum, coordinate order, hemisphere requirement, output format, and precision; the capability applies them (Law 7 — Explicit Over Clever).
+
+```python
+@attrs.frozen
+class CanonicalGeolocationContract:
+    datum: str = "WGS84"
+    coordinate_order: str = "lat_lon"
+    require_hemisphere: bool = True
+    output_format: str = "decimal"
+    precision: int = 6
+    kind: str = "canonical_geolocation"
+    version: int = 1
+    version_field: int = 1
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `datum` | `str` | `"WGS84"` | Geodetic datum of the coordinates. Only `"WGS84"` is supported in v2.0.0. |
+| `coordinate_order` | `"lat_lon"` or `"lon_lat"` | `"lat_lon"` | Order of latitude/longitude in input and output. |
+| `require_hemisphere` | `bool` | `True` | Require an explicit hemisphere sign (or N/S/E/W) on each coordinate so the canonical form is unambiguous. |
+| `output_format` | `str` | `"decimal"` | Canonical output format. Only `"decimal"` (decimal degrees) is supported in v2.0.0. |
+| `precision` | `int` | `6` | Number of decimal places in the canonical output. Must be an int in 0..12. |
+| `kind` | `str` | `"canonical_geolocation"` | The contract kind discriminator. Fixed. |
+| `version` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. Only `1` is accepted. |
+| `version_field` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. Only `1` is accepted. |
+
+The canonical form is the single string `"<lat>,<lon>"` in decimal degrees on the WGS84 datum, quantized to `precision` decimal places (trailing zeros kept). The resolver applies `coordinate_order`, resolves hemisphere signals (letter or sign), converts DMS to decimal, validates ranges (latitude in [-90, 90], longitude in [-180, 180]), and quantizes. An unsigned axis under `require_hemisphere=True` is surfaced as `Status.AMBIGUOUS` (Law 4), never guessed. The Law 14 rule manifest lives in `paxman._capabilities.geolocation.rules`.
+
+## `Geolocation()` — The Factory
+
+```python
+def Geolocation(
+    *,
+    datum: str = "WGS84",
+    coordinate_order: str = "lat_lon",
+    require_hemisphere: bool = True,
+    output_format: str = "decimal",
+    precision: int = 6,
+) -> CanonicalGeolocationContract
+```
+
+Domain-type sugar for declaring a geolocation contract. Returns a `CanonicalGeolocationContract`. All arguments are keyword-only.
+
+**Example:**
+
+```python
+from paxman import Geolocation
+
+contract = Geolocation(coordinate_order="lon_lat", precision=4)
+```
+
+The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
+
 ## `parse_contract()` — The Dict DSL Parser
 
 ```python
 def parse_contract(spec: Any) -> Contract
 ```
 
-Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, `CanonicalURLContract`, `CanonicalBooleanContract`, `CanonicalIPContract`, or `CanonicalMoneyContract`).
+Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, `CanonicalURLContract`, `CanonicalBooleanContract`, `CanonicalIPContract`, `CanonicalMoneyContract`, or `CanonicalGeolocationContract`).
 
 **Example:**
 
@@ -301,7 +356,7 @@ contract = paxman.parse_contract({
 
 **Raises:** `ContractError` if the spec is malformed. `parse_contract()` runs at the call site, *before* capability dispatch, so a bad contract is a programming error caught at the call site, not a `Status` outcome on the artifact.
 
-`parse_contract` is a no-op for an already-parsed contract value object — `CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, `CanonicalURLContract`, `CanonicalBooleanContract`, `CanonicalIPContract`, or `CanonicalMoneyContract` (the contract is the truth; an instance is its own best representation).
+`parse_contract` is a no-op for an already-parsed contract value object — `CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, `CanonicalURLContract`, `CanonicalBooleanContract`, `CanonicalIPContract`, `CanonicalMoneyContract`, or `CanonicalGeolocationContract` (the contract is the truth; an instance is its own best representation).
 
 ## The Dict DSL
 
@@ -320,7 +375,7 @@ The Dict DSL is the wire form of a contract. It is a dict with a `kind` discrimi
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `kind` | `str` | Yes | — | Must be a supported `kind`: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, `canonical_url`, `canonical_boolean`, `canonical_ip`, or `canonical_money` in v2.0.0. Unknown kinds raise `ContractError`. |
+| `kind` | `str` | Yes | — | Must be a supported `kind`: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, `canonical_url`, `canonical_boolean`, `canonical_ip`, `canonical_money`, or `canonical_geolocation` in v2.0.0. Unknown kinds raise `ContractError`. |
 | `lowercase` | `bool` | No | `True` | Same as `CanonicalEmailContract.lowercase`. |
 | `strip_whitespace` | `bool` | No | `True` | Same as `CanonicalEmailContract.strip_whitespace`. |
 | `provider_aliases` | `"none"` or `"gmail"` | No | `"none"` | Same as `CanonicalEmailContract.provider_aliases`. |

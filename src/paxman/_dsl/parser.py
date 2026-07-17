@@ -18,6 +18,7 @@ from typing import Any
 from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._capabilities.email.contract import CanonicalEmailContract
+from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
 from paxman._capabilities.ip.contract import CanonicalIPContract
 from paxman._capabilities.money.contract import CanonicalMoneyContract
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
@@ -43,6 +44,7 @@ def parse_contract(
     | CanonicalBooleanContract
     | CanonicalIPContract
     | CanonicalMoneyContract
+    | CanonicalGeolocationContract
 ):
     """Parse a Dict DSL contract into a Contract value object.
 
@@ -70,6 +72,8 @@ def parse_contract(
     if isinstance(spec, CanonicalIPContract):
         return spec
     if isinstance(spec, CanonicalMoneyContract):
+        return spec
+    if isinstance(spec, CanonicalGeolocationContract):
         return spec
 
     if not isinstance(spec, dict):

@@ -13,6 +13,7 @@ from paxman import _orchestrator_runtime
 from paxman._capabilities.boolean.contract import Boolean, CanonicalBooleanContract
 from paxman._capabilities.date.contract import CanonicalDateContract, Date
 from paxman._capabilities.email.contract import CanonicalEmailContract, Email
+from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract, Geolocation
 from paxman._capabilities.ip.contract import IP, CanonicalIPContract
 from paxman._capabilities.money.contract import CanonicalMoneyContract, Money
 from paxman._capabilities.phone.contract import CanonicalPhoneContract, Phone
@@ -51,6 +52,7 @@ Contract = (
     | CanonicalBooleanContract
     | CanonicalIPContract
     | CanonicalMoneyContract
+    | CanonicalGeolocationContract
 )
 
 
@@ -98,6 +100,7 @@ __all__ = [
     "CanonicalBooleanContract",
     "CanonicalDateContract",
     "CanonicalEmailContract",
+    "CanonicalGeolocationContract",
     "CanonicalIPContract",
     "CanonicalMoneyContract",
     "CanonicalPhoneContract",
@@ -115,6 +118,7 @@ __all__ = [
     "Evidence",
     "ExecutionArtifact",
     "FrozenRegistryError",
+    "Geolocation",
     "Money",
     "PaxmanError",
     "Phone",

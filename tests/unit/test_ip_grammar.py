@@ -28,6 +28,12 @@ def test_recognize_ipv6_zone_shape() -> None:
     assert reps[0].shape == "ipv6_zone"
 
 
+def test_recognize_ipv4_mapped_zone_shape() -> None:
+    reps = recognize("::ffff:192.0.2.1%eth0", _contract())
+    assert len(reps) == 1
+    assert reps[0].shape == "ipv6_zone"
+
+
 def test_recognize_unknown_returns_empty() -> None:
     assert recognize("example.com", _contract()) == []
 

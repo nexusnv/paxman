@@ -74,7 +74,20 @@ def _require_bool(field: str, value: object) -> bool:
     return value
 
 
+def _require_v1(field: str, value: object) -> int:
+    """Validate that a contract version field is the supported v1 (Law 7)."""
+    if not isinstance(value, int) or isinstance(value, bool):
+        raise ContractError(f"contract field {field!r} must be int 1, got {type(value).__name__}")
+    if value != 1:
+        raise ContractError(
+            f"contract field {field!r} must be 1 (only v1 is supported), got {value}"
+        )
+    return value
+
+
 def _build_ip(spec: dict[str, Any]) -> CanonicalIPContract:
+    _require_v1("version", spec.get("version", 1))
+    _require_v1("version_field", spec.get("version_field", 1))
     return CanonicalIPContract(
         allow_ipv4=_require_bool("allow_ipv4", spec.get("allow_ipv4", True)),
         allow_ipv6=_require_bool("allow_ipv6", spec.get("allow_ipv6", True)),

@@ -58,7 +58,7 @@ def test_artifact_is_immutable() -> None:
     r = canonicalize("192.168.1.1", IP())
     for field in attrs.fields(type(r)):
         try:
-            setattr(r, field.name, "x")  # type: ignore[arg-type]
+            setattr(r, field.name, "x")
             raise AssertionError(f"{field.name} was mutable")
         except attrs.exceptions.FrozenInstanceError:
             pass

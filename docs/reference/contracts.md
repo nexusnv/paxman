@@ -4,7 +4,7 @@ A contract declares *what* the canonical form is. It is the source of truth in P
 
 ## The Contract Types in v2.0.0
 
-v2.0.0 ships five contract kinds: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, and `canonical_url`. Future versions may add new kinds (Money, etc.). The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract | CanonicalURLContract`.
+v2.0.0 ships seven contract kinds: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, `canonical_url`, `canonical_boolean`, and `canonical_ip`. Future versions may add new kinds (Money, etc.). The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract | CanonicalURLContract | CanonicalBooleanContract | CanonicalIPContract`.
 
 ## `CanonicalEmailContract`
 
@@ -176,13 +176,62 @@ contract = URL(scheme_allow=("http", "https"), strip_fragment=False)
 
 The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
 
+## `CanonicalIPContract`
+
+The frozen value object representing an IP canonicalization policy.
+
+```python
+@attrs.frozen
+class CanonicalIPContract:
+    allow_ipv4: bool = True
+    allow_ipv6: bool = True
+    preserve_zone_id: bool = True
+    kind: str = "canonical_ip"
+    version: int = 1
+    version_field: int = 1
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `allow_ipv4` | `bool` | `True` | Accept IPv4 inputs. When `False`, IPv4 inputs fall through to the grammar gate and are rejected. |
+| `allow_ipv6` | `bool` | `True` | Accept IPv6 inputs. When `False`, IPv6 inputs are rejected. |
+| `preserve_zone_id` | `bool` | `True` | Preserve and lowercase the RFC 4007 zone identifier (e.g. `fe80::1%eth0`). When `False`, the zone is stripped. |
+| `kind` | `str` | `"canonical_ip"` | The contract kind discriminator. Fixed. |
+| `version` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. Only `1` is accepted. |
+| `version_field` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. Only `1` is accepted. |
+
+The capability recognizes IPv4, IPv6, and IPv6-with-zone forms and delegates parse + canonical form to the standard library `ipaddress` module (RFC 4291 / RFC 5952 / RFC 4007). IPv4 leading-zero octets are normalized (e.g. `192.168.001.001` → `192.168.1.1`); the resolver reads `08`/`09` as decimal, not octal. A non-`1` `version` or `version_field` in a `parse_contract` dict raises `ContractError`.
+
+## `IP()` — The Factory
+
+```python
+def IP(
+    *,
+    allow_ipv4: bool = True,
+    allow_ipv6: bool = True,
+    preserve_zone_id: bool = True,
+) -> CanonicalIPContract
+```
+
+Domain-type sugar for declaring an IP contract. Returns a `CanonicalIPContract`. All arguments are keyword-only.
+
+**Example:**
+
+```python
+from paxman import IP
+
+contract = IP(allow_ipv6=False)  # IPv4 only
+```
+
+The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
+
 ## `parse_contract()` — The Dict DSL Parser
 
 ```python
 def parse_contract(spec: Any) -> Contract
 ```
 
-Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, or `CanonicalURLContract`).
+Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, `CanonicalURLContract`, `CanonicalBooleanContract`, or `CanonicalIPContract`).
 
 **Example:**
 

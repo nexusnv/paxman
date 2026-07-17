@@ -30,6 +30,15 @@ from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
 
+# Case-folded index over the CLDR localized table. CLDR keys mix scripts and
+# cases (e.g. "États-Unis", "Deutschland", "Россия", "日本"); case folding makes
+# the Latin-script entries case-insensitive without disturbing non-Latin
+# scripts (casefold is a no-op for Cyrillic/Han). Built once at import so the
+# lookup stays deterministic (Law 1).
+_LOCALIZED_CASEFOLDED: dict[str, str] = {
+    key.casefold(): code for key, code in _LOCALIZED_TO_ALPHA2.items()
+}
+
 
 @attrs.frozen
 class _Candidate:
@@ -68,6 +77,8 @@ def generate_interpretations(
     a 2-letter synonym that is not a valid ISO alpha-2 code).
     """
     candidates: list[_Candidate] = []
+    if not reps:
+        return candidates
     rep = reps[0]
     token = rep.captures.get("tok", rep.raw).strip().upper()
     if rep.shape == "alpha2" and token in _ALPHA2_CODES:
@@ -102,7 +113,8 @@ def generate_interpretations(
         if code is not None:
             candidates.append(_mk(code, "canonicalized_country", "ISO 3166-1:2020 (name->alpha-2)"))
     if contract.localized_names:
-        code = _LOCALIZED_TO_ALPHA2.get(rep.captures.get("tok", rep.raw).strip())
+        raw = rep.captures.get("tok", rep.raw).strip()
+        code = _LOCALIZED_CASEFOLDED.get(raw.casefold())
         if code is not None:
             candidates.append(_mk(code, "localized_resolved", f"Unicode CLDR ({CLDR_VERSION})"))
     if contract.historical_names:

@@ -1164,7 +1164,7 @@ _LOCALIZED_TO_ALPHA2: dict[str, str] = {
     # Russia
     "Россия": "RU",
     # China
-    "中华人民共和": "CN",
+    "中华人民共和国": "CN",
     # India
     "भारत": "IN",
     # Indonesia

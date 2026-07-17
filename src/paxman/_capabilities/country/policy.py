@@ -43,10 +43,33 @@ COUNTRY_POLICY_NUMERIC: str = (
 
 # Unicode CLDR localized name recognition (opt-in). CLDR is a versioned
 # authoritative specification (Law 14 source #1); opt-in per Law 7 (data
-# footprint).
+# footprint). The bundled _LOCALIZED_TO_ALPHA2 is a CURATED SAMPLE, not the
+# full CLDR, and is therefore adopted under Law 15's "non-named-entity
+# bulk-data scope boundary" exception: CLDR localized strings are bulk
+# reference data, not a named-entity enumeration, and the subset is chosen
+# for data-footprint reasons (Law 7 — explicit opt-in keeps the default
+# surface small). The cited named-entity source (ISO 3166-1:2020) is adopted
+# in full elsewhere (_NAME_TO_ALPHA2); this CLDR sample is a separate,
+# explicitly-scoped bulk dataset.
 COUNTRY_POLICY_LOCALIZED: str = (
     "paxman policy/country: localized (CLDR) names accepted when "
-    "localized_names is set (Unicode CLDR; MANDATE.md Law 14 source #1)"
+    "localized_names is set (Unicode CLDR; MANDATE.md Law 14 source #1; "
+    "curated sample under Law 15 non-named-entity bulk-data scope boundary, "
+    "data-footprint per Law 7)"
+)
+
+# Convenience aliases retained in _NAME_TO_ALPHA2 that are NOT official ISO
+# 3166-1 short names (e.g. "UNITED STATES", "SOUTH KOREA", "RUSSIA"). These
+# are recorded as a Law 15-permitted addition: the cited named-entity source
+# (ISO 3166-1:2020) is adopted in FULL, and these extra entries are
+# backward-compatible shortcuts outside that cited source. Their existence is
+# recorded here so the exception justification is auditable provenance (Law 15
+# + Law 14 source #3).
+COUNTRY_POLICY_CONVENIENCE_ALIASES: str = (
+    "paxman policy/country: short convenience aliases (e.g. UNITED STATES, "
+    "SOUTH KOREA, RUSSIA) retained for backward compatibility; ISO 3166-1:2020 "
+    "adopted in full, these are extra entries outside the cited source "
+    "(Law 15 permitted addition; Law 14 source #3)"
 )
 
 # Historical / deprecated name recognition (opt-in). Recorded Paxman policy

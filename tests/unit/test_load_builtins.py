@@ -11,6 +11,7 @@ hidden state).
 from __future__ import annotations
 
 from paxman._capabilities.boolean import BooleanCapability
+from paxman._capabilities.country.canonicalizer import CountryCapability
 from paxman._capabilities.date import DateCapability
 from paxman._capabilities.discovery import builtin_capabilities
 from paxman._capabilities.email import EmailCapability
@@ -28,7 +29,7 @@ class TestBuiltinCapabilities:
     def test_returns_all_builtin_capabilities(self) -> None:
         result = builtin_capabilities()
         assert isinstance(result, list)
-        assert len(result) == 9
+        assert len(result) == 10
         names = {c.name for c in result}
         assert names == {
             "email_canonicalization",
@@ -40,6 +41,7 @@ class TestBuiltinCapabilities:
             "ip_canonicalization",
             "money_canonicalization",
             "geolocation_canonicalization",
+            "country_canonicalization",
         }
         assert any(isinstance(c, EmailCapability) for c in result)
         assert any(isinstance(c, UUIDCapability) for c in result)
@@ -49,7 +51,7 @@ class TestBuiltinCapabilities:
         assert any(isinstance(c, BooleanCapability) for c in result)
         assert any(isinstance(c, IPCapability) for c in result)
         assert any(isinstance(c, GeolocationCapability) for c in result)
-        assert any(isinstance(c, GeolocationCapability) for c in result)
+        assert any(isinstance(c, CountryCapability) for c in result)
 
     def test_returns_fresh_instances_on_each_call(self) -> None:
         # No shared mutable state across calls (Law 1, Law 8a).
@@ -67,6 +69,7 @@ class TestBuiltinCapabilities:
             "ip_canonicalization",
             "money_canonicalization",
             "geolocation_canonicalization",
+            "country_canonicalization",
         ]
 
 
@@ -134,6 +137,7 @@ class TestLoadBuiltins:
         registry_b.register(IPCapability())
         registry_b.register(MoneyCapability())
         registry_b.register(GeolocationCapability())
+        registry_b.register(CountryCapability())
         registry_b.freeze()
 
         assert registry_a.capabilities_hash() == registry_b.capabilities_hash()
@@ -169,6 +173,7 @@ class TestLoadBuiltins:
         via_register.register(IPCapability())
         via_register.register(MoneyCapability())
         via_register.register(GeolocationCapability())
+        via_register.register(CountryCapability())
         via_register.freeze()
 
         assert via_load.capabilities_hash() == via_register.capabilities_hash()

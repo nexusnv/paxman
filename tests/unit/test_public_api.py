@@ -72,6 +72,8 @@ class TestPublicAPI:
             "Boolean",
             "Money",
             "CanonicalMoneyContract",
+            "Country",
+            "CanonicalCountryContract",
             "annotations",
         }
         actual = {n for n in dir(paxman) if not n.startswith("_")}

@@ -36,7 +36,9 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "recognized_alpha3": "ISO 3166-1:2020 (alpha-3 shape)",
         "recognized_name": "ISO 3166-1:2020 (name shape)",
         "canonicalized_country": "ISO 3166-1:2020 (alpha-2 canonical form)",
-        "alias_resolved": "paxman spec/country §3.3 (bundled alias table, COUNTRY_TABLE_VERSION=iso3166-1:2020)",
+        "alias_resolved": (
+            "paxman spec/country §3.3 (bundled alias table, COUNTRY_TABLE_VERSION=iso3166-1:2020)"
+        ),
         "extra_synonym_resolved": COUNTRY_POLICY_EXTRA_SYNONYMS,
         "policy_disabled_kind": COUNTRY_POLICY_KIND_GATING,
         "missing_value": COUNTRY_POLICY_MISSING_VALUE,

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from paxman import Country, canonicalize, parse_contract, replay
 from paxman._core.status import Status
 

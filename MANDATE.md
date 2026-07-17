@@ -438,12 +438,6 @@ behavior.** Splitting the two layers is what lets a new domain be *additive*
 (Principle 6) — the capability supplies both its domain contract and its
 canonicalizer, and the core need not change.
 
-> Aside: `Money(currency="MYR")` appears elsewhere in this document as an
-> illustrative domain contract. The actual money canonicalization was
-> reclassified as a multi-field effort (currency field + decimal field) and is
-> deferred past the v2 RC; the example illustrates the *contract model*, not a
-> shipped built-in.
-
 ---
 
 ## 6. The Algorithm — Resolver, not Planner

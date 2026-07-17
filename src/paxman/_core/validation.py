@@ -14,6 +14,7 @@ Any other kind raises `UnsupportedContractError` (defined in
 from __future__ import annotations
 
 from paxman._capabilities.boolean.contract import CanonicalBooleanContract
+from paxman._capabilities.country.contract import CanonicalCountryContract
 from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
@@ -76,6 +77,11 @@ def validate(
         # The MoneyCapability has already validated the canonical form
         # ("<ISO4217>:<amount>"); no further policy check is needed here
         # (same rationale as UUID/Date/Phone/URL/IP above — Law 11).
+        return ValidationResult(is_valid=True)
+    if isinstance(contract, CanonicalCountryContract):
+        # The CountryCapability has already validated the canonical form
+        # (ISO 3166-1 alpha-2); no further policy check is needed here
+        # (same rationale as UUID/Date/Phone/URL/IP/Money/Geolocation above — Law 11).
         return ValidationResult(is_valid=True)
     if isinstance(contract, CanonicalGeolocationContract):
         # The GeolocationCapability has already validated the canonical form

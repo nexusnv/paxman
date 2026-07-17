@@ -17,6 +17,7 @@ additive architecture migration into `paxman._capabilities`.
 from __future__ import annotations
 
 from paxman._capabilities.boolean.canonicalizer import BooleanCapability
+from paxman._capabilities.country.canonicalizer import CountryCapability
 from paxman._capabilities.date.canonicalizer import DateCapability
 from paxman._capabilities.email.canonicalizer import EmailCapability
 from paxman._capabilities.geolocation.canonicalizer import GeolocationCapability
@@ -54,4 +55,5 @@ def builtin_capabilities() -> list[Capability]:
         IPCapability(),
         MoneyCapability(),
         GeolocationCapability(),
+        CountryCapability(),
     ]

@@ -23,7 +23,7 @@ from paxman._registry.capability_registry import CapabilityRegistry
 
 
 class TestBuiltinCapabilities:
-    def test_returns_all_six_builtin_capabilities(self) -> None:
+    def test_returns_all_builtin_capabilities(self) -> None:
         result = builtin_capabilities()
         assert isinstance(result, list)
         assert len(result) == 7

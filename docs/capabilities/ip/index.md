@@ -6,11 +6,11 @@ The ip capability is a built-in capability shipped with Paxman v2.0.0. It canoni
 
 **Contract kind:** `canonical_ip`
 
-**Contract factory:** `Ip()`
+**Contract factory:** `IP()`
 
 ## What It Does
 
-The ip capability rewrites a string into a single canonical form. The capability is governed by the contract you pass to `paxman.canonicalize()`. The contract is a frozen value object built with `Ip(...)`. See [Contracts](../../reference/contracts.md) for the full factory signature.
+The ip capability rewrites a string into a single canonical form. The capability is governed by the contract you pass to `paxman.canonicalize()`. The contract is a frozen value object built with `IP(...)`. See [Contracts](../../reference/contracts.md) for the full factory signature.
 
 ## The Rules
 
@@ -38,9 +38,9 @@ Before any rewriting, the capability runs `grammar.recognize` over the input. Re
 
 ```python
 import paxman
-from paxman import Ip, Status
+from paxman import IP, Status
 
-result = paxman.canonicalize("example_input", Ip())
+result = paxman.canonicalize("192.0.2.1", IP())
 ```
 
 ## References

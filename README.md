@@ -67,6 +67,17 @@ result = paxman.canonicalize("2025-01-01T07:00:00-05:00", Date(locale="ISO"))
 print(result.value)  # 2025-01-01T12:00:00Z
 ```
 
+### Money
+
+```python
+import paxman
+from paxman import Money
+
+# Currency is REQUIRED — Paxman never guesses it (Law 3).
+result = paxman.canonicalize("RM 12.50", Money(currency="MYR"))
+print(result.status.name, "->", result.value)  # CANONICALIZED -> MYR:12.50
+```
+
 Install with `git clone https://github.com/nexusnv/paxman.git && cd paxman && uv sync`, then `uv run python quickstart.py`.
 
 - `canonicalize(input_data, contract) -> ExecutionArtifact` — produce a canonical artifact.
@@ -94,10 +105,10 @@ MIT. See [`LICENSE`](./LICENSE).
 
 ## Extending Paxman
 
-Paxman ships with seven built-in capabilities: `email_canonicalization`,
+Paxman ships with eight built-in capabilities: `email_canonicalization`,
 `uuid_canonicalization`, `date_canonicalization`, `phone_canonicalization`,
-`url_canonicalization`, `boolean_canonicalization`, and
-`ip_canonicalization`. To register your own
+`url_canonicalization`, `boolean_canonicalization`, `ip_canonicalization`, and
+`money_canonicalization`. To register your own
 custom deterministic capability (a new canonical type, or an alternative
 implementation of an existing one), use the SPI:
 

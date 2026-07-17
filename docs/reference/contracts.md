@@ -4,7 +4,7 @@ A contract declares *what* the canonical form is. It is the source of truth in P
 
 ## The Contract Types in v2.0.0
 
-v2.0.0 ships seven contract kinds: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, `canonical_url`, `canonical_boolean`, and `canonical_ip`. Future versions may add new kinds (Money, etc.). The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract | CanonicalURLContract | CanonicalBooleanContract | CanonicalIPContract`.
+v2.0.0 ships eight contract kinds: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, `canonical_url`, `canonical_boolean`, `canonical_ip`, and `canonical_money`. The `Contract` type alias is the union of the frozen contract types: `CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract | CanonicalPhoneContract | CanonicalURLContract | CanonicalBooleanContract | CanonicalIPContract | CanonicalMoneyContract`.
 
 ## `CanonicalEmailContract`
 
@@ -202,6 +202,34 @@ class CanonicalIPContract:
 
 The capability recognizes IPv4, IPv6, and IPv6-with-zone forms and delegates parse + canonical form to the standard library `ipaddress` module (RFC 4291 / RFC 5952 / RFC 4007). IPv4 leading-zero octets are normalized (e.g. `192.168.001.001` → `192.168.1.1`); the resolver reads `08`/`09` as decimal, not octal. A non-`1` `version` or `version_field` in a `parse_contract` dict raises `ContractError`.
 
+## `CanonicalMoneyContract`
+
+The frozen value object representing a money canonicalization policy. The `currency` field is REQUIRED with no default: Paxman never guesses the currency (mandate Law 3 — Never Guess; Law 7 — Explicit Over Clever).
+
+```python
+@attrs.frozen
+class CanonicalMoneyContract:
+    currency: str
+    allow_symbol: bool = True
+    allow_code: bool = True
+    strip_spaces: bool = True
+    kind: str = "canonical_money"
+    version: int = 1
+    version_field: int = 1
+```
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `currency` | `str` | **(required)** | ISO 4217 alpha code (e.g. `"MYR"`, `"USD"`). No default — Paxman must never guess the currency (Law 3). Must be a recognized 3-letter code or `Money()` raises `ContractError`. |
+| `allow_symbol` | `bool` | `True` | Accept currency symbols (`$`/`€`/`£`/`¥`/`RM`) in the input, validating them against `currency`. When `False`, a symbol in the input is rejected. |
+| `allow_code` | `bool` | `True` | Accept an ISO code (e.g. `"MYR"`) in the input, validating it against `currency`. When `False`, a code in the input is rejected. |
+| `strip_spaces` | `bool` | `True` | Trim leading/trailing ASCII whitespace around the amount. When `False`, surrounding whitespace is rejected. |
+| `kind` | `str` | `"canonical_money"` | The contract kind discriminator. Fixed. |
+| `version` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. Only `1` is accepted. |
+| `version_field` | `int` | `1` | The contract schema version. Recorded on the artifact's `VersionStamp.contract_version`. Only `1` is accepted. |
+
+The canonical form is the single string `"<ISO4217>:<amount>"`, where `amount` is an exact `Decimal` string: literal decimal places are preserved (no rounding or quantization), thousands separators are stripped, and the decimal separator follows the currency-keyed convention (comma-decimal for EUR/DKK/NOK/SEK/CHF/BRL/RUB/TRY/PLN/HUF/CZK/RON/ILS/ISK, dot-decimal otherwise). Negatives are preserved (leading `-` or parenthesized `(...)`); scientific notation is normalized to plain decimal. Any symbol or code present in the input must match the contract `currency`, otherwise the input is rejected (Law 3 — Never Guess). The Law 14 rule manifest lives in `paxman._capabilities.money.rules`.
+
 ## `IP()` — The Factory
 
 ```python
@@ -225,13 +253,37 @@ contract = IP(allow_ipv6=False)  # IPv4 only
 
 The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
 
+## `Money()` — The Factory
+
+```python
+def Money(
+    *,
+    currency: str,
+    allow_symbol: bool = True,
+    allow_code: bool = True,
+    strip_spaces: bool = True,
+) -> CanonicalMoneyContract
+```
+
+Domain-type sugar for declaring a money contract. Returns a `CanonicalMoneyContract`. All arguments are keyword-only. `currency` is REQUIRED (no default) — Paxman never guesses the currency (Law 3).
+
+**Example:**
+
+```python
+from paxman import Money
+
+contract = Money(currency="MYR")  # currency is mandatory
+```
+
+The factory and the value object have the same field defaults. The factory does not introduce a new abstraction; it just provides a domain vocabulary.
+
 ## `parse_contract()` — The Dict DSL Parser
 
 ```python
 def parse_contract(spec: Any) -> Contract
 ```
 
-Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, `CanonicalURLContract`, `CanonicalBooleanContract`, or `CanonicalIPContract`).
+Parse a Dict DSL contract into a `Contract` value object. Accepts either a dict or an already-parsed contract value object (`CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, `CanonicalURLContract`, `CanonicalBooleanContract`, `CanonicalIPContract`, or `CanonicalMoneyContract`).
 
 **Example:**
 
@@ -249,7 +301,7 @@ contract = paxman.parse_contract({
 
 **Raises:** `ContractError` if the spec is malformed. `parse_contract()` runs at the call site, *before* capability dispatch, so a bad contract is a programming error caught at the call site, not a `Status` outcome on the artifact.
 
-`parse_contract` is a no-op for an already-parsed contract value object — `CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, and `CanonicalURLContract` (the contract is the truth; an instance is its own best representation).
+`parse_contract` is a no-op for an already-parsed contract value object — `CanonicalEmailContract`, `CanonicalUUIDContract`, `CanonicalDateContract`, `CanonicalPhoneContract`, `CanonicalURLContract`, `CanonicalBooleanContract`, `CanonicalIPContract`, or `CanonicalMoneyContract` (the contract is the truth; an instance is its own best representation).
 
 ## The Dict DSL
 
@@ -268,7 +320,7 @@ The Dict DSL is the wire form of a contract. It is a dict with a `kind` discrimi
 
 | Field | Type | Required | Default | Description |
 |---|---|---|---|---|
-| `kind` | `str` | Yes | — | Must be a supported `kind`: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, or `canonical_url` in v2.0.0. Unknown kinds raise `ContractError`. |
+| `kind` | `str` | Yes | — | Must be a supported `kind`: `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, `canonical_url`, `canonical_boolean`, `canonical_ip`, or `canonical_money` in v2.0.0. Unknown kinds raise `ContractError`. |
 | `lowercase` | `bool` | No | `True` | Same as `CanonicalEmailContract.lowercase`. |
 | `strip_whitespace` | `bool` | No | `True` | Same as `CanonicalEmailContract.strip_whitespace`. |
 | `provider_aliases` | `"none"` or `"gmail"` | No | `"none"` | Same as `CanonicalEmailContract.provider_aliases`. |

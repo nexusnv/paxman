@@ -1,11 +1,11 @@
-"""Static audit of the country Law 14 rule->provenance manifest."""
+"""Static audit of the country Law 14 rule->authority manifest."""
 
 from __future__ import annotations
 
 from paxman._capabilities.country import _RULE_AUTHORITIES
 
 
-def test_all_rules_have_nonempty_provenance() -> None:
+def test_all_rules_have_nonempty_authority() -> None:
     # Law 14 §838: a rule with an empty authority is a violation.
     # No rule — including dispatch invariants — may use None.
     for rule, authority in _RULE_AUTHORITIES.items():

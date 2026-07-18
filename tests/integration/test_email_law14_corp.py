@@ -1,4 +1,4 @@
-"""Golden 100+-email regression corpus for Law 14 (canonical-form provenance).
+"""Golden 100+-email regression corpus for Law 14 (canonical-form authority).
 
 Spec: `docs/superpowers/specs/
 2026-07-13-email-canonicalization-design.md` §7.
@@ -851,15 +851,13 @@ class TestEmailLaw14Corpus:
             f"  full evidence: {[(e.rule, e.detail, e.authority) for e in result.evidence]}"
         )
 
-    def test_no_empty_provenance_except_dispatch_invariants(self) -> None:
+    def test_no_empty_authority_except_dispatch_invariants(self) -> None:
         """Law 14 audit: every Evidence entry on every corpus artifact
-        has non-empty ``provenance`` except the two allow-listed
+        has a non-``None`` ``authority`` except the two allow-listed
         dispatch invariants (``not_an_email_contract``,
         ``not_a_string_value``).
         """
-        allowlist = frozenset(
-            {"not_an_email_contract", "not_a_string_value", "unrecognized_format"}
-        )
+        allowlist = frozenset({"not_an_email_contract", "not_a_string_value"})
         for entry in _ALL_ENTRIES:
             _kw: dict[str, Any] = entry.contract_kwargs
             contract = Email(**_kw) if _kw else Email()
@@ -869,7 +867,7 @@ class TestEmailLaw14Corpus:
                     continue
                 assert ev.authority is not None, (
                     f"Law 14 violation: rule {ev.rule!r} on input "
-                    f"{entry.input_email!r} has empty provenance."
+                    f"{entry.input_email!r} has empty authority."
                 )
 
     def test_all_canonicalized_replay_byte_equal(self) -> None:

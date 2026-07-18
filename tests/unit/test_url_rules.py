@@ -2,7 +2,7 @@ import pytest
 
 from paxman._capabilities.url.rules import _RULE_AUTHORITIES, _evidence
 
-# Mandate laws touched (Law 9 evidence-over-confidence; Law 14 provenance —
+# Mandate laws touched (Law 9 evidence requirements; Law 14 provenance —
 # every rule in the manifest must cite an authority). These tests pin the
 # rule manifest (core + WHATWG) and that each cited rule carries a
 # non-empty authority.
@@ -41,7 +41,7 @@ def test_whatwg_rules_present():
         assert _RULE_AUTHORITIES[rule], f"empty citation for {rule}"
 
 
-def test_evidence_pulls_provenance():
+def test_evidence_pulls_authority():
     ev = _evidence("lowercase_scheme")
     assert ev.rule == "lowercase_scheme"
     assert ev.authority is not None and "RFC 3986" in ev.authority.name

@@ -58,15 +58,16 @@ GOOGLE_HELP: Authority = Authority(
     "platform-behaviour",
     retrieved_at="2026-07-14",
 )
-# The WHATWG URL Standard is tracked as a pinned snapshot: the `retrieved_at`
-# date records when the bundled edition was captured. A single symbol (no
-# separate base/“pinned” alias) keeps the registry name-collision-free and
-# gives URL artifacts a stable, replay-verifiable authority edition.
+# The WHATWG URL Standard is an externally-maintained specification. It is
+# tracked as a `specification` (not `platform-behaviour`) so its edition flows
+# into `VersionStamp.spec_versions` and URL artifacts become replay-verifiable
+# for WHATWG staleness — the core intent of the versioned-authority model
+# (mandate Law 14). A single symbol (no separate base/"pinned" alias) keeps the
+# registry name-collision-free; the edition records the captured snapshot.
 WHATWG_URL: Authority = Authority(
     "WHATWG URL",
-    "WHATWG URL Standard",
-    "platform-behaviour",
-    retrieved_at="2026-07-16",
+    "WHATWG URL Standard (snapshotted 2026-07-16)",
+    "specification",
 )
 
 # ---------------------------------------------------------------------------

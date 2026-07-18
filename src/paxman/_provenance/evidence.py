@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
 
 import attrs
 
@@ -37,6 +36,20 @@ class Evidence:
     rule: str
     detail: str = ""
     authority: Authority | None = attrs.field(default=None, validator=_authority_validator)
+
+    @property
+    def provenance(self) -> str:
+        """Deprecated alias for the structured ``authority`` citation.
+
+        ``Evidence`` no longer carries a free-form ``provenance`` string
+        (mandate Law 14 — it carries a structured ``authority`` instead).
+        Accessing this property raises an informative error rather than
+        returning a silently-wrong value.
+        """
+        raise AttributeError(
+            "Evidence no longer carries a 'provenance' string; it carries a "
+            "structured 'authority: Authority | None' (mandate Law 14)."
+        )
 
 
 #: A capability's rule→authority manifest maps every emitted rule name to
@@ -85,16 +98,3 @@ def _evidence_from_args(
     outside the manifest path).
     """
     return Evidence(rule=rule, detail=detail, authority=authority)
-
-
-def __getattr__(name: str) -> Any:
-    # Backwards-compat shim: the previous ``Evidence`` API exposed a
-    # ``provenance`` field. Callers reaching for it now receive a clear,
-    # informative error instead of a silently-wrong attribute. (This
-    # helper is only consulted for names not found on the module.)
-    if name == "provenance":
-        raise AttributeError(
-            "Evidence no longer carries a 'provenance' string; it carries a "
-            "structured 'authority: Authority | None' (mandate Law 14)."
-        )
-    raise AttributeError(f"module 'paxman._provenance.evidence' has no attribute {name!r}")

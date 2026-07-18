@@ -1,4 +1,4 @@
-"""Law 14 rule→provenance manifest audit for the geolocation capability."""
+"""Law 14 rule→authority manifest audit for the geolocation capability."""
 
 from __future__ import annotations
 
@@ -10,20 +10,20 @@ from paxman._core.provenance import Evidence
 _DISPATCH_INVARIANTS = frozenset({"not_a_geolocation_contract", "not_a_string_value"})
 
 
-def test_every_manifest_entry_beyond_dispatch_has_provenance() -> None:
+def test_every_manifest_entry_beyond_dispatch_has_authority() -> None:
     for rule_name, authority in _RULE_AUTHORITIES.items():
         if rule_name in _DISPATCH_INVARIANTS:
             continue
         assert authority is not None, f"Law 14 violation: {rule_name!r} empty authority"
 
 
-def test_dispatch_invariants_allow_listed_with_empty_provenance() -> None:
+def test_dispatch_invariants_allow_listed_with_empty_authority() -> None:
     for invariant in _DISPATCH_INVARIANTS:
         assert invariant in _RULE_AUTHORITIES
         assert _RULE_AUTHORITIES[invariant] is None
 
 
-def test_evidence_provenance_matches_manifest() -> None:
+def test_evidence_authority_matches_manifest() -> None:
     ev = _evidence("canonicalized_geolocation", "40.7128N 74.0060W -> 40.712800,-74.006000")
     assert isinstance(ev, Evidence)
     assert ev.rule == "canonicalized_geolocation"

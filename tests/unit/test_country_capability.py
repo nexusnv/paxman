@@ -72,8 +72,6 @@ def test_idempotent() -> None:
 def test_evidence_has_provenance() -> None:
     r = canonicalize("United States", Country())
     for ev in r.evidence:
-        if ev.rule in ("not_a_country_contract", "not_a_string_value"):
-            continue
         assert ev.provenance, f"rule {ev.rule!r} missing provenance"
 
 
@@ -96,9 +94,11 @@ def test_dispatch_invariants_direct() -> None:
     not_contract = cap.canonicalize("US", object())
     assert not_contract.status == Status.INVALID
     assert not_contract.evidence[0].rule == "not_a_country_contract"
+    assert not_contract.evidence[0].provenance, "not_a_country_contract missing provenance"
     not_str = cap.canonicalize(cast(str, 123), Country())
     assert not_str.status == Status.INVALID
     assert not_str.evidence[0].rule == "not_a_string_value"
+    assert not_str.evidence[0].provenance, "not_a_string_value missing provenance"
 
 
 def test_classify_no_candidates_is_invalid() -> None:

@@ -492,8 +492,8 @@ and feeds the result to `registry.load_builtins(...)` lazily, on the first
 
 Each future built-in grows as its own `_capabilities/<domain>/` package,
 pinning its contract `version` and adding a new `register_contract` branch —
-the same additive pattern the shipped capabilities use. `MoneyCapability` is
-the eighth built-in: it ships as a single `MoneyCapability` whose contract
+the same additive pattern the shipped capabilities use. `MoneyCapability`
+ships as a single `MoneyCapability` whose contract
 carries a REQUIRED `currency` field (ISO 4217, never guessed — mandate Law 3)
 and canonicalizes to the form `<ISO4217>:<amount>`; the amount is an exact
 `Decimal` string (literal decimals preserved, thousands separators stripped,

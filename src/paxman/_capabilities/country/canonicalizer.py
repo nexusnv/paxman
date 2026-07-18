@@ -9,6 +9,9 @@ bundled, versioned ISO 3166-1 table (Law 8a).
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from types import MappingProxyType
+
 import attrs
 
 from paxman._capabilities.country.contract import (
@@ -34,10 +37,11 @@ from paxman._core.status import Status
 # cases (e.g. "États-Unis", "Deutschland", "Россия", "日本"); case folding makes
 # the Latin-script entries case-insensitive without disturbing non-Latin
 # scripts (casefold is a no-op for Cyrillic/Han). Built once at import so the
-# lookup stays deterministic (Law 1).
-_LOCALIZED_CASEFOLDED: dict[str, str] = {
-    key.casefold(): code for key, code in _LOCALIZED_TO_ALPHA2.items()
-}
+# lookup stays deterministic (Law 1). Wrapped in MappingProxyType for runtime
+# immutability (Law 1 + Law 2 — replay-affecting bundled state).
+_LOCALIZED_CASEFOLDED: Mapping[str, str] = MappingProxyType(
+    {key.casefold(): code for key, code in _LOCALIZED_TO_ALPHA2.items()}
+)
 
 
 @attrs.frozen
@@ -111,17 +115,32 @@ def generate_interpretations(
             candidates.append(_mk(code, "numeric_resolved", "ISO 3166-1:2020 (numeric->alpha-2)"))
     # Synonym / name / extra-synonym / localized / historical fallback for
     # tokens that are not valid codes of their own shape (e.g. UK, U.S.A.,
-    # America, 马来西亚, Burma).
-    if contract.allow_synonym:
-        code = _SYNONYM_TO_ALPHA2.get(token)
-        if code is not None:
+    # America, 马来西亚, Burma). When a table match exists but the contract
+    # disables that representation kind, record a policy_disabled_kind drop
+    # reason so the caller emits the documented policy-disabled evidence
+    # instead of the misleading unrecognized_format.
+    synonym_code = _SYNONYM_TO_ALPHA2.get(token)
+    if synonym_code is not None:
+        if contract.allow_synonym:
             candidates.append(
-                _mk(code, "alias_resolved", f"paxman spec/country §3.3 ({COUNTRY_TABLE_VERSION})")
+                _mk(
+                    synonym_code,
+                    "alias_resolved",
+                    f"paxman spec/country §3.3 ({COUNTRY_TABLE_VERSION})",
+                )
             )
-    if contract.allow_name:
-        code = _NAME_TO_ALPHA2.get(token)
-        if code is not None:
-            candidates.append(_mk(code, "canonicalized_country", "ISO 3166-1:2020 (name->alpha-2)"))
+        else:
+            drop_reasons.append("policy_disabled_kind")
+
+    name_code = _NAME_TO_ALPHA2.get(token)
+    if name_code is not None:
+        if contract.allow_name:
+            candidates.append(
+                _mk(name_code, "canonicalized_country", "ISO 3166-1:2020 (name->alpha-2)")
+            )
+        else:
+            drop_reasons.append("policy_disabled_kind")
+
     if contract.localized_names:
         raw = rep.captures.get("tok", rep.raw).strip()
         code = _LOCALIZED_CASEFOLDED.get(raw.casefold())

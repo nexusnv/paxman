@@ -16,10 +16,11 @@ enumeration — so Law 15 does not apply to them.
 Supported languages are an expanding set (like a translation matrix): today
 ``en``, ``de``, and ``ms`` are supported, with more to follow. Each supported
 language's vocabulary is embodied in FULL — if ``ms`` is supported, every Malay
-month and weekday name is present, never a curated subset. A *supported* language
-whose own vocabulary was only partially covered (e.g. ``ms`` recognizing only
-"Isnin" and "Selasa" while omitting the rest) would be a Law 15 subset violation
-and is deliberately not done; the supported-language set grows by adding whole
+month and weekday name is present, never a curated subset. A *supported*
+language whose own vocabulary was only partially covered (e.g. ``ms``
+recognizing only "Isnin" and "Selasa" while omitting the rest) would violate
+the Law 14 scope requirement that a declared policy table be complete, and is
+deliberately not done; the supported-language set grows by adding whole
 languages, never by partially covering one.
 
 Keys are stored lower-cased; lookups lower-case the input token before

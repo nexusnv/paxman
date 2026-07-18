@@ -28,8 +28,12 @@ from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
 __all__ = [
+    "CLDR_VERSION",
     "COUNTRY_TABLE_VERSION",
     "_ALPHA2_CODES",
+    "_ALPHA3_TO_ALPHA2",
+    "_HISTORICAL_TO_ALPHA2",
+    "_LOCALIZED_TO_ALPHA2",
     "_NAME_TO_ALPHA2",
     "_NUMERIC_TO_ALPHA2",
     "_SYNONYM_TO_ALPHA2",
@@ -314,7 +318,10 @@ _ALPHA3_TO_ALPHA2: Mapping[str, str] = MappingProxyType(
 # alpha-2. Curated sample spanning several scripts; the full dataset is large,
 # so this is opt-in via `localized_names` (data footprint, Law 7). CLDR is a
 # versioned authoritative specification (Law 14 source #1).
-CLDR_VERSION = "cldr-45"
+#: Frozen edition string for the bundled Unicode CLDR localized country-name
+#: sample. Recorded as evidence when ``localized_names`` resolves a token
+#: (Law 8a — the dataset version participates in replay).
+CLDR_VERSION: str = "cldr-45"
 _LOCALIZED_TO_ALPHA2: Mapping[str, str] = MappingProxyType(
     {
         # Malaysia

@@ -19,7 +19,18 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
-COUNTRY_TABLE_VERSION = "iso3166-1:2020"
+#: Frozen edition string for the bundled ISO 3166-1:2020 dataset. Every artifact
+#: that depends on this dataset records it as evidence (Law 8a — the dataset
+#: version participates in replay).
+COUNTRY_TABLE_VERSION: str = "iso3166-1:2020"
+
+__all__ = [
+    "COUNTRY_TABLE_VERSION",
+    "_ALPHA2_CODES",
+    "_NAME_TO_ALPHA2",
+    "_NUMERIC_TO_ALPHA2",
+    "_SYNONYM_TO_ALPHA2",
+]
 
 _ALPHA2_CODES: frozenset[str] = frozenset(
     {

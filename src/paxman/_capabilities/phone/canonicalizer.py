@@ -170,7 +170,7 @@ class PhoneCapability:
     and the ``can_handle`` / ``canonicalize`` methods, not by inheritance.
 
     Law 14 enforcement: every ``Evidence`` returned by ``canonicalize`` pulls
-    its ``provenance`` from ``_RULE_PROVENANCE`` via the ``_evidence`` helper.
+    its ``authority`` from ``_RULE_AUTHORITIES`` via the ``_evidence`` helper.
     """
 
     name: str = "phone_canonicalization"

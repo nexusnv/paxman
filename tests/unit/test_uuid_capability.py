@@ -16,7 +16,7 @@ from __future__ import annotations
 from typing import cast
 
 from paxman import Status
-from paxman._capabilities.uuid import _RULE_PROVENANCE, UUIDCapability
+from paxman._capabilities.uuid import _RULE_AUTHORITIES, UUIDCapability
 from paxman._capabilities.uuid.contract import CanonicalUUIDContract
 from paxman._core.contracts import Contract
 
@@ -139,9 +139,11 @@ class TestUUIDCapability:
                 fired.add(ev.rule)
         dispatch_invariants = {"not_a_uuid_contract", "not_a_string_value"}
         for rule in fired:
-            assert rule in _RULE_PROVENANCE, f"fired rule {rule!r} missing from manifest"
-        for rule_name, provenance in _RULE_PROVENANCE.items():
+            assert rule in _RULE_AUTHORITIES, f"fired rule {rule!r} missing from manifest"
+        for rule_name, authority in _RULE_AUTHORITIES.items():
             if rule_name in dispatch_invariants:
-                assert provenance == "", f"dispatch invariant {rule_name!r} must be empty"
+                assert authority is None, f"dispatch invariant {rule_name!r} must be empty"
                 continue
-            assert provenance != "", f"Law 14 violation: rule {rule_name!r} has empty provenance"
+            assert authority is not None, (
+                f"Law 14 violation: rule {rule_name!r} has empty authority"
+            )

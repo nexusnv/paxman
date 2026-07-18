@@ -103,3 +103,70 @@ class TestReplay:
         object.__setattr__(a, "replay_hash", "tampered")
         with pytest.raises(CanonicalizationError):
             replay(a, {"kind": "canonical_email"})
+
+    def test_replay_stale_specification_authority_raises(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from paxman._provenance import registries as _authorities
+
+        # An artifact that cited RFC 5322 at edition "RFC 5322 §3.2.3".
+        a = _artifact(
+            evidence=(Evidence(rule="lowercased_local_part"),),
+            version_stamp=VersionStamp(
+                paxman_version="0.0.0.dev0",
+                contract_version=1,
+                capabilities_hash=_EMPTY_REGISTRY_HASH,
+                configuration_version="0",
+                spec_versions={"RFC 5322": "RFC 5322 §3.2.3"},
+            ),
+        )
+        # The registry has since advanced that authority's edition.
+        monkeypatch.setattr(
+            _authorities,
+            "current_spec_versions",
+            lambda: {"RFC 5322": "RFC 5322 §3.2.3 (revised 2026)"},
+        )
+        with pytest.raises(VersionMismatchError, match="specification version mismatch"):
+            replay(a, {"kind": "canonical_email"})
+
+    def test_replay_stale_data_set_authority_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from paxman._provenance import registries as _authorities
+
+        # An artifact that cited ISO 3166-1 (a data-set authority).
+        a = _artifact(
+            evidence=(Evidence(rule="lowercased_local_part"),),
+            version_stamp=VersionStamp(
+                paxman_version="0.0.0.dev0",
+                contract_version=1,
+                capabilities_hash=_EMPTY_REGISTRY_HASH,
+                configuration_version="0",
+                registry_versions={"ISO 3166-1": "ISO 3166-1:2020"},
+            ),
+        )
+        monkeypatch.setattr(
+            _authorities,
+            "current_registry_versions",
+            lambda: {"ISO 3166-1": "ISO 3166-1:2025"},
+        )
+        with pytest.raises(VersionMismatchError, match="data-set version mismatch"):
+            replay(a, {"kind": "canonical_email"})
+
+    def test_replay_authority_edition_unchanged_passes(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from paxman._provenance import registries as _authorities
+
+        # The edition matches the live registry exactly → replay succeeds.
+        a = _artifact(
+            evidence=(Evidence(rule="lowercased_local_part"),),
+            version_stamp=VersionStamp(
+                paxman_version="0.0.0.dev0",
+                contract_version=1,
+                capabilities_hash=_EMPTY_REGISTRY_HASH,
+                configuration_version="0",
+                spec_versions={"RFC 5322": _authorities.RFC_5322.edition},
+            ),
+        )
+        rehydrated = replay(a, {"kind": "canonical_email"})
+        assert rehydrated == a
+        assert rehydrated.canonical_bytes() == a.canonical_bytes()

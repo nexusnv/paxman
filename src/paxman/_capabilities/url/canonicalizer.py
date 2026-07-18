@@ -19,7 +19,7 @@ from paxman._core.status import Status
 #   Law 3  (Never guess)        — ambiguous input yields Status.AMBIGUOUS, never a pick.
 #   Law 8a (Capability purity)  — no I/O, time, randomness, or network; (value, contract) only.
 #   Law 13 (Immutability)       — results are returned as frozen value objects.
-#   Law 14 (Provenance)         — every emitted rule cites a source via _RULE_PROVENANCE.
+#   Law 14 (Provenance)         — every emitted rule cites a source via _RULE_AUTHORITIES.
 # The dot-segment and authority normalizations below follow RFC 3986 §5.2.4 / §3.2.
 
 _PCT = re.compile(r"%([0-9a-fA-F]{2})")

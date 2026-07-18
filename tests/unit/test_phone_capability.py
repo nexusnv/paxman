@@ -26,7 +26,7 @@ def test_us_national_expands():
     assert res.status is Status.CANONICALIZED
     assert res.value == "+16502530000"
     assert res.evidence[0].rule == "cc_prepended"
-    assert res.evidence[0].provenance  # non-empty Law 14 citation
+    assert res.evidence[0].authority is not None  # non-empty Law 14 citation
 
 
 def test_gb_digits_only_expands():
@@ -35,7 +35,7 @@ def test_gb_digits_only_expands():
     assert res.status is Status.CANONICALIZED
     assert res.value == "+442079460000"
     assert res.evidence[0].rule == "cc_prepended"
-    assert res.evidence[0].provenance  # non-empty Law 14 citation
+    assert res.evidence[0].authority is not None  # non-empty Law 14 citation
 
 
 def test_00_prefix_rejected():

@@ -1,4 +1,4 @@
-from paxman._capabilities.phone.rules import _RULE_PROVENANCE, _evidence
+from paxman._capabilities.phone.rules import _RULE_AUTHORITIES, _evidence
 
 
 def test_manifest_exhaustive_for_emitted_rules():
@@ -11,13 +11,14 @@ def test_manifest_exhaustive_for_emitted_rules():
         "no_transformation_needed",
     }
     for rule in emitted:
-        assert rule in _RULE_PROVENANCE
+        assert rule in _RULE_AUTHORITIES
 
 
 def test_evidence_pulls_provenance():
     ev = _evidence("no_transformation_needed")
     assert ev.rule == "no_transformation_needed"
-    assert ev.provenance  # non-empty citation
+    assert ev.authority is not None
+    assert ev.authority == _RULE_AUTHORITIES["no_transformation_needed"]
 
 
 def test_unknown_rule_raises():

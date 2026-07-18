@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
 import attrs
@@ -13,16 +14,27 @@ if TYPE_CHECKING:
 
 @attrs.frozen
 class VersionStamp:
-    """The four-component version stamp recorded on every artifact.
+    """The version stamp recorded on every artifact (mandate Law 12).
 
-    Replay (mandate Law 12) verifies all four components. Mandate §8
-    makes the contract version a first-class component.
+    Replay (mandate Law 12) verifies every component. Mandate §8 makes the
+    contract version a first-class component.
+
+    The ``spec_versions`` / ``registry_versions`` maps record the editions
+    of the externally-maintained authorities that *actually produced* this
+    artifact's evidence (mandate Law 12 — the context that produced the
+    artifact, not the context that could have). An artifact triggering only
+    RFC 5321 rules will not fail replay just because RFC 1035 (cited
+    elsewhere by the same capability) was revised; ``capabilities_hash``
+    already captures the capability set. Only authorities cited in the
+    artifact's own evidence enter these maps.
     """
 
     paxman_version: str
     contract_version: int
     capabilities_hash: str
     configuration_version: str
+    spec_versions: Mapping[str, str] = attrs.field(factory=dict, hash=False)
+    registry_versions: Mapping[str, str] = attrs.field(factory=dict, hash=False)
 
 
 @attrs.frozen

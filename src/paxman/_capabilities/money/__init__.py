@@ -12,10 +12,10 @@ from __future__ import annotations
 
 from paxman._capabilities.money.canonicalizer import MoneyCapability
 from paxman._capabilities.money.contract import CanonicalMoneyContract, Money
-from paxman._capabilities.money.rules import _RULE_PROVENANCE
+from paxman._capabilities.money.rules import _RULE_AUTHORITIES
 
 __all__ = [
-    "_RULE_PROVENANCE",
+    "_RULE_AUTHORITIES",
     "CanonicalMoneyContract",
     "Money",
     "MoneyCapability",

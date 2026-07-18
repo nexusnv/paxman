@@ -22,8 +22,6 @@ from paxman._capabilities.country.contract import (
     _NAME_TO_ALPHA2,
     _NUMERIC_TO_ALPHA2,
     _SYNONYM_TO_ALPHA2,
-    CLDR_VERSION,
-    COUNTRY_TABLE_VERSION,
     CanonicalCountryContract,
 )
 from paxman._capabilities.country.grammar import RecognizedRep, recognize
@@ -50,7 +48,6 @@ class _Candidate:
 
     value: str
     rule: str
-    source: str
     evidence: tuple[Evidence, ...]
 
 
@@ -60,7 +57,6 @@ class _Survivor:
 
     value: str
     rule: str
-    source: str
     evidence: tuple[Evidence, ...]
 
 
@@ -94,26 +90,14 @@ def generate_interpretations(
     rep = reps[0]
     token = rep.captures.get("tok", rep.raw).strip().upper()
     if rep.shape == "alpha2" and token in _ALPHA2_CODES:
-        candidates.append(
-            _mk(
-                token,
-                "canonicalized_country",
-                f"ISO 3166-1:2020 (alpha-2; {COUNTRY_TABLE_VERSION})",
-            )
-        )
+        candidates.append(_mk(token, "canonicalized_country"))
     elif rep.shape == "alpha3":
         if not contract.allow_alpha3:
             drop_reasons.append("policy_disabled_kind")
             return candidates, drop_reasons
         code = _ALPHA3_TO_ALPHA2.get(token)
         if code is not None:
-            candidates.append(
-                _mk(
-                    code,
-                    "canonicalized_country",
-                    f"ISO 3166-1:2020 (alpha-3->alpha-2; {COUNTRY_TABLE_VERSION})",
-                )
-            )
+            candidates.append(_mk(code, "canonicalized_country"))
     elif rep.shape == "numeric":
         if not contract.allow_numeric:
             drop_reasons.append("policy_disabled_kind")
@@ -122,13 +106,7 @@ def generate_interpretations(
         # the unpadded form (e.g. "4" -> "004").
         code = _NUMERIC_TO_ALPHA2.get(token.zfill(3))
         if code is not None:
-            candidates.append(
-                _mk(
-                    code,
-                    "numeric_resolved",
-                    f"ISO 3166-1:2020 (numeric->alpha-2; {COUNTRY_TABLE_VERSION})",
-                )
-            )
+            candidates.append(_mk(code, "numeric_resolved"))
     # Synonym / name / extra-synonym / localized / historical fallback for
     # tokens that are not valid codes of their own shape (e.g. UK, U.S.A.,
     # America, 马来西亚, Burma). When a table match exists but the contract
@@ -138,26 +116,14 @@ def generate_interpretations(
     synonym_code = _SYNONYM_TO_ALPHA2.get(token)
     if synonym_code is not None:
         if contract.allow_synonym:
-            candidates.append(
-                _mk(
-                    synonym_code,
-                    "alias_resolved",
-                    f"paxman spec/country §3.3 ({COUNTRY_TABLE_VERSION})",
-                )
-            )
+            candidates.append(_mk(synonym_code, "alias_resolved"))
         else:
             drop_reasons.append("policy_disabled_kind")
 
     name_code = _NAME_TO_ALPHA2.get(token)
     if name_code is not None:
         if contract.allow_name:
-            candidates.append(
-                _mk(
-                    name_code,
-                    "canonicalized_country",
-                    f"ISO 3166-1:2020 (name->alpha-2; {COUNTRY_TABLE_VERSION})",
-                )
-            )
+            candidates.append(_mk(name_code, "canonicalized_country"))
         else:
             drop_reasons.append("policy_disabled_kind")
 
@@ -165,18 +131,14 @@ def generate_interpretations(
         raw = rep.captures.get("tok", rep.raw).strip()
         code = _LOCALIZED_CASEFOLDED.get(raw.casefold())
         if code is not None:
-            candidates.append(_mk(code, "localized_resolved", f"Unicode CLDR ({CLDR_VERSION})"))
+            candidates.append(_mk(code, "localized_resolved"))
     if contract.historical_names:
         code = _HISTORICAL_TO_ALPHA2.get(token)
         if code is not None:
-            candidates.append(
-                _mk(code, "historical_resolved", "paxman policy/country: historical name map")
-            )
+            candidates.append(_mk(code, "historical_resolved"))
     extra = contract.extra_synonyms.get(token.lower())
     if extra is not None:
-        candidates.append(
-            _mk(extra, "extra_synonym_resolved", "paxman spec/country §1.2 (extra_synonyms)")
-        )
+        candidates.append(_mk(extra, "extra_synonym_resolved"))
     # Collapse candidates that resolve to the same alpha-2 code. Two distinct
     # paths (e.g. alpha-3 `USA` and the bundled synonym `USA`) naming the same
     # country are one canonical answer, not ambiguity (spec §2.2 — intra-
@@ -189,8 +151,8 @@ def generate_interpretations(
     return list(seen.values()), drop_reasons
 
 
-def _mk(value: str, rule: str, source: str) -> _Candidate:
-    return _Candidate(value=value, rule=rule, source=source, evidence=(_evidence(rule, value),))
+def _mk(value: str, rule: str) -> _Candidate:
+    return _Candidate(value=value, rule=rule, evidence=(_evidence(rule, value),))
 
 
 def resolve_and_validate(
@@ -206,7 +168,7 @@ def resolve_and_validate(
     survivors: list[_Survivor] = []
     drop_reasons: list[str] = []
     for c in candidates:
-        survivors.append(_Survivor(c.value, c.rule, c.source, c.evidence))
+        survivors.append(_Survivor(c.value, c.rule, c.evidence))
     return survivors, drop_reasons
 
 

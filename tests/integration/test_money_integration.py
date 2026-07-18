@@ -87,7 +87,7 @@ def test_evidence_cites_law_14_rules() -> None:
     # Every evidence carries provenance (Law 14), except the two dispatch
     # invariants which are allow-listed with empty provenance (Law 14 §3.6).
     assert all(
-        e.provenance
+        e.authority is not None
         for e in artifact.evidence
         if e.rule not in ("not_a_money_contract", "not_a_string_value")
     )

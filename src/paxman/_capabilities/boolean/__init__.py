@@ -8,11 +8,11 @@ sugar / Law 14 manifest) without reaching into submodules.
 from paxman._capabilities.boolean.canonicalizer import BooleanCapability
 from paxman._capabilities.boolean.contract import Boolean, CanonicalBooleanContract
 from paxman._capabilities.boolean.grammar import GRAMMARS, recognize
-from paxman._capabilities.boolean.rules import _RULE_PROVENANCE
+from paxman._capabilities.boolean.rules import _RULE_AUTHORITIES
 
 __all__ = [
     "GRAMMARS",
-    "_RULE_PROVENANCE",
+    "_RULE_AUTHORITIES",
     "Boolean",
     "BooleanCapability",
     "CanonicalBooleanContract",

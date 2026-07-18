@@ -1,7 +1,9 @@
-"""UUID capability rule provenance.
+"""UUID capability rule authority manifest.
 
-Verbatim move of `_RULE_PROVENANCE` and `_evidence` from
-`paxman._capabilities.builtins.uuid`.
+Migrated from a free-form `_RULE_PROVENANCE` string map to a structured
+`_RULE_AUTHORITIES` authority map (mandate Law 14 — issue #158). Verbatim
+move of the rule set from `paxman._capabilities.builtins.uuid`, then
+re-pointed at the central authority registry.
 """
 
 from __future__ import annotations
@@ -10,37 +12,38 @@ from collections.abc import Mapping
 from types import MappingProxyType
 
 from paxman._core.provenance import Evidence
+from paxman._provenance import Authority
+from paxman._provenance import _evidence as _provenance_evidence
+from paxman._provenance import registries as R
 
-_RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
+_RULE_AUTHORITIES: Mapping[str, Authority | None] = MappingProxyType(
     {
-        # --- dispatch invariants (no provenance — Law 14 allow-list) ---
-        "not_a_uuid_contract": "",
-        "not_a_string_value": "",
+        # --- dispatch invariants (no authority — Law 14 allow-list) ---
+        "not_a_uuid_contract": None,
+        "not_a_string_value": None,
         # --- rejecting rules (authoritative spec) ---
-        "unrecognized_format": (
-            "RFC 4122 §3 (the canonical form is 36 chars; 8-4-4-4-12 grouping; lowercase hex)"
+        "unrecognized_format": R.RFC_4122.section(
+            "§3 (canonical form is 36 chars; 8-4-4-4-12 grouping; lowercase hex)"
         ),
-        "grammar_rejected": (
-            "RFC 4122 §3 (the value fails the canonical-form grammar: wrong length, "
-            "non-hex character, or hyphen in the wrong position)"
+        "grammar_rejected": R.RFC_4122.section(
+            "§3 (fails canonical-form grammar: wrong length, non-hex, or misplaced hyphen)"
         ),
-        "version_mismatch": "RFC 4122 §4.1.3 (version field encoding)",
+        "version_mismatch": R.RFC_4122.section("§4.1.3 (version field encoding)"),
         # --- ambiguity rule (recognition produced more than one survivor) ---
-        "ambiguous_provider_equivalence": (
-            "RFC 4122 §3 (more than one canonical reading survived validation; "
-            "Paxman surfaces the ambiguity rather than guessing) — Law 3 (never guess)"
+        "ambiguous_provider_equivalence": R.RFC_4122.section(
+            "§3 (more than one canonical reading survived; Paxman surfaces ambiguity — Law 3)"
         ),
         # --- transforming rule (success path) ---
-        "no_transformation_needed": "RFC 4122 §3 (the canonical form is X; X was provided)",
+        "no_transformation_needed": R.RFC_4122.section("§3 (input already the canonical form)"),
     }
 )
 
 
 def _evidence(rule: str, detail: str = "") -> Evidence:
-    """Build an `Evidence` pulling the Law 14 provenance citation from
-    the `_RULE_PROVENANCE` manifest.
+    """Build an `Evidence` pulling the Law 14 authority from the
+    `_RULE_AUTHORITIES` manifest.
 
     A rule with no manifest entry raises `KeyError`, surfacing a
     missing citation at the exact site where the rule is emitted.
     """
-    return Evidence(rule=rule, detail=detail, provenance=_RULE_PROVENANCE[rule])
+    return _provenance_evidence(rule, _RULE_AUTHORITIES, detail)

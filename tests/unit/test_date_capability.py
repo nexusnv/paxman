@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from paxman import Status
-from paxman._capabilities.date import _RULE_PROVENANCE, DateCapability
+from paxman._capabilities.date import _RULE_AUTHORITIES, DateCapability
 from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._core.contracts import Contract
 
@@ -215,23 +215,23 @@ class TestSub1000YearCanonicalization:
         assert r2.value == r.value
 
 
-class TestLaw14ProvenanceManifest:
-    """Audit ``_RULE_PROVENANCE`` against the capability source (MANDATE §10.2)."""
+class TestLaw14AuthorityManifest:
+    """Audit ``_RULE_AUTHORITIES`` against the capability source (MANDATE §10.2)."""
 
     _DISPATCH_INVARIANTS = frozenset(
         {"not_a_date_contract", "not_a_string_value", "empty_value", "unrecognized_format"}
     )
 
-    def test_every_manifest_entry_beyond_dispatch_has_provenance(self) -> None:
-        for rule_name, provenance in _RULE_PROVENANCE.items():
+    def test_every_manifest_entry_beyond_dispatch_has_authority(self) -> None:
+        for rule_name, authority in _RULE_AUTHORITIES.items():
             if rule_name in self._DISPATCH_INVARIANTS:
                 continue
-            assert provenance != "", f"Law 14 violation: {rule_name!r} has empty provenance"
+            assert authority is not None, f"Law 14 violation: {rule_name!r} has empty authority"
 
     def test_dispatch_invariants_allow_listed_empty(self) -> None:
         for invariant in self._DISPATCH_INVARIANTS:
-            assert invariant in _RULE_PROVENANCE, f"{invariant!r} missing from manifest"
-            assert _RULE_PROVENANCE[invariant] == "", f"{invariant!r} should be empty"
+            assert invariant in _RULE_AUTHORITIES, f"{invariant!r} missing from manifest"
+            assert _RULE_AUTHORITIES[invariant] is None, f"{invariant!r} should be empty"
 
     def test_manifest_keys_cover_every_fired_rule(self) -> None:
         c = _cap()
@@ -266,4 +266,4 @@ class TestLaw14ProvenanceManifest:
         for ev in r1.evidence + r2.evidence:
             fired.add(ev.rule)
         for rule in fired:
-            assert rule in _RULE_PROVENANCE, f"fired rule {rule!r} missing from manifest"
+            assert rule in _RULE_AUTHORITIES, f"fired rule {rule!r} missing from manifest"

@@ -9,7 +9,7 @@ Mandate Laws 4, 5, 7, 8, 8a, 11, 14:
 - Law 11: the canonical form is a function of (value, contract). Two
   independent implementations must produce the same value.
 - Law 14: every transformation rule has provenance. The rule→citation
-  manifest is `_RULE_PROVENANCE`; `Evidence.provenance` is populated
+  manifest is `_RULE_AUTHORITIES`; `Evidence.authority` is populated
   from it.
 
 Architecture (recognition → resolver → validation → classify)
@@ -180,7 +180,7 @@ class UUIDCapability:
     whitespace) are `Status.INVALID` with an `unrecognized_format` rule.
 
     Law 14 enforcement: every `Evidence` returned by `canonicalize`
-    pulls its `provenance` from `_RULE_PROVENANCE` via the `_evidence`
+    pulls its `authority` from `_RULE_AUTHORITIES` via the `_evidence`
     helper. Adding a new rule requires adding to the manifest; the
     manifest lookup will raise `KeyError` if a rule is constructed
     without one.

@@ -65,9 +65,10 @@ def test_symbol_policy_flips_with_contract() -> None:
 
 
 def test_provenance_manifest_present() -> None:
-    from paxman._capabilities.money.rules import _RULE_PROVENANCE, _evidence
+    from paxman._capabilities.money.rules import _RULE_AUTHORITIES, _evidence
 
-    assert "currency_from_contract" in _RULE_PROVENANCE
+    assert "currency_from_contract" in _RULE_AUTHORITIES
+    assert _RULE_AUTHORITIES["currency_from_contract"] is not None
     ev = _evidence("currency_from_contract", "MYR")
-    assert ev.provenance == _RULE_PROVENANCE["currency_from_contract"]
+    assert ev.authority == _RULE_AUTHORITIES["currency_from_contract"]
     assert ev.rule == "currency_from_contract"

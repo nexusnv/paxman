@@ -12,6 +12,8 @@ MANDATE section or spec section that authorizes the policy (MANDATE §826 bullet
 
 from __future__ import annotations
 
+from paxman._capabilities._iso3166 import COUNTRY_TABLE_VERSION
+
 # Whitespace trim before recognition. MANDATE §5.1 (SPI: canonicalize(value,
 # contract)); deterministic, idempotent, no guessing.
 COUNTRY_POLICY_WHITESPACE_TRIM: str = (
@@ -37,8 +39,9 @@ COUNTRY_POLICY_KIND_GATING: str = (
 # ISO 3166-1 numeric (M49) recognition. MANDATE Law 5 (contract is truth) +
 # Law 8a (versioned dataset); spec/country §3.1.
 COUNTRY_POLICY_NUMERIC: str = (
-    "paxman policy/country: numeric (M49) codes are accepted when "
-    "allow_numeric is set (MANDATE.md Law 5; Law 8a; spec/country §3.1)"
+    f"paxman policy/country: numeric (M49) codes are accepted when "
+    f"allow_numeric is set (MANDATE.md Law 5; Law 8a; spec/country §3.1; "
+    f"dataset {COUNTRY_TABLE_VERSION})"
 )
 
 # Unicode CLDR localized name recognition (opt-in). CLDR is a versioned

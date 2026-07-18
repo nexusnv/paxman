@@ -260,6 +260,11 @@ class CanonicalMoneyContract:
     version: int = attrs.field(default=1, validator=_validate_v1)
     version_field: int = attrs.field(default=1, validator=_validate_v1)
 
+    authority_override: Any = attrs.field(
+        default=None,
+        repr=False,
+    )
+
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
         return {
@@ -279,6 +284,7 @@ def Money(
     allow_symbol: bool = True,
     allow_code: bool = True,
     strip_spaces: bool = True,
+    authority_override: Any | None = None,
 ) -> CanonicalMoneyContract:
     """Domain-type sugar: declare a money contract in user vocabulary.
 
@@ -309,6 +315,7 @@ def Money(
         allow_symbol=_require_bool("allow_symbol", allow_symbol),
         allow_code=_require_bool("allow_code", allow_code),
         strip_spaces=_require_bool("strip_spaces", strip_spaces),
+        authority_override=authority_override,
     )
 
 
@@ -346,6 +353,7 @@ def _build_money(spec: dict[str, Any]) -> CanonicalMoneyContract:
         allow_symbol=_require_bool("allow_symbol", spec.get("allow_symbol", True)),
         allow_code=_require_bool("allow_code", spec.get("allow_code", True)),
         strip_spaces=_require_bool("strip_spaces", spec.get("strip_spaces", True)),
+        authority_override=spec.get("authority_override", None),
     )
 
 

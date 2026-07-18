@@ -31,6 +31,11 @@ class CanonicalIPContract:
     version: int = 1
     version_field: int = 1
 
+    authority_override: Any = attrs.field(
+        default=None,
+        repr=False,
+    )
+
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
         return {
@@ -48,6 +53,7 @@ def IP(
     allow_ipv4: bool = True,
     allow_ipv6: bool = True,
     preserve_zone_id: bool = True,
+    authority_override: Any | None = None,
 ) -> CanonicalIPContract:
     """Domain-type sugar: declare an IP contract in user vocabulary.
 
@@ -64,6 +70,7 @@ def IP(
         allow_ipv4=allow_ipv4,
         allow_ipv6=allow_ipv6,
         preserve_zone_id=preserve_zone_id,
+        authority_override=authority_override,
     )
 
 
@@ -92,6 +99,7 @@ def _build_ip(spec: dict[str, Any]) -> CanonicalIPContract:
         allow_ipv4=_require_bool("allow_ipv4", spec.get("allow_ipv4", True)),
         allow_ipv6=_require_bool("allow_ipv6", spec.get("allow_ipv6", True)),
         preserve_zone_id=_require_bool("preserve_zone_id", spec.get("preserve_zone_id", True)),
+        authority_override=spec.get("authority_override", None),
     )
 
 

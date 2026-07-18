@@ -30,12 +30,14 @@ import paxman as _paxman_version  # used to read __version__
 from paxman._capabilities.discovery import builtin_capabilities
 from paxman._core.artifact import ExecutionArtifact, _ContractLike
 from paxman._core.classification import ValidationResult, classify
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import VersionStamp
 from paxman._core.status import Status
 from paxman._core.validation import validate as validate_value
 from paxman._dsl.parser import parse_contract
 from paxman._errors import CanonicalizationError, ContractError, UnsupportedContractError
+from paxman._provenance.authority import Authority
 from paxman._registry.capability_registry import CapabilityRegistry
 
 
@@ -65,13 +67,22 @@ class _StubContract:
         return {"kind": "unknown"}
 
 
-def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
+def canonicalize(
+    input_data: object,
+    contract: Any,
+    engine: Engine | None = None,
+) -> ExecutionArtifact:
     """The single entry point that produces an ExecutionArtifact.
 
     Mandate Law 1 + §2: deterministic, total on supported inputs,
     idempotent, totality-preserving on rejection. The contract is the
     truth (Law 5); the algorithm is Paxman's (Law 6); failures are
     informative (Law 8).
+
+    The optional ``engine`` binds the concrete authority editions used for
+    this call (mandate Law 14). When omitted, ``Engine.default()`` resolves
+    every authority to its active edition, so the zero-config path is
+    unchanged. Replay reconstructs the exact engine from the recorded editions.
     """
     # Lazy import to avoid a circular import at module load.
     from paxman import _orchestrator_runtime
@@ -88,7 +99,10 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
         registry.load_builtins(builtin_capabilities())
         registry.freeze()
 
-    # Stage 1: inspect — parse the contract Dict DSL.
+    if engine is None:
+        engine = Engine.default()
+
+    # Stage 1: inspect — parse the contract DSL.
     try:
         parsed_contract: _ContractLike = parse_contract(contract)
     except ContractError:
@@ -98,6 +112,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
         # Status.UNSUPPORTED (mandate Law 8 — fail informatively).
         return _build_artifact(
             registry=registry,
+            engine=engine,
             parsed_contract=_StubContract(contract),
             status=Status.UNSUPPORTED,
             value=None,
@@ -109,12 +124,21 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
             ),
         )
 
+    # Stage 1.5: contract-level authority override (escape hatch A, testing).
+    # A contract may pin a specific edition for one call; this is layered on
+    # top of the engine's binding so the pin wins for this single canonicalize.
+    override = getattr(parsed_contract, "authority_override", None)
+    if override:
+        for name, selector in override.items():
+            engine = engine.override(name, selector)
+
     # Stage 2: resolve — find the claimants.
     claimants = registry.resolve_all(parsed_contract, input_data)
 
     if not claimants:
         return _build_artifact(
             registry=registry,
+            engine=engine,
             parsed_contract=parsed_contract,
             status=Status.UNSUPPORTED,
             value=None,
@@ -133,6 +157,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
         # Mandate §5.4: more than one claimant -> Status.AMBIGUOUS.
         return _build_artifact(
             registry=registry,
+            engine=engine,
             parsed_contract=parsed_contract,
             status=Status.AMBIGUOUS,
             value=None,
@@ -146,7 +171,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
 
     # Exactly one claimant.
     capability = claimants[0]
-    capability_result = capability.canonicalize(input_data, parsed_contract)
+    capability_result = capability.canonicalize(input_data, parsed_contract, engine)
 
     # Stage 3+4: execute + canonicalize. The capability did both.
     # Stage 5: validate.
@@ -165,6 +190,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
             # contract. If it does, treat as UNSUPPORTED.
             return _build_artifact(
                 registry=registry,
+                engine=engine,
                 parsed_contract=parsed_contract,
                 status=Status.UNSUPPORTED,
                 value=None,
@@ -179,6 +205,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
     # Contract (result.py): candidates are exclusive to AMBIGUOUS; drop otherwise.
     return _build_artifact(
         registry=registry,
+        engine=engine,
         parsed_contract=parsed_contract,
         status=final_status,
         value=capability_result.value if final_status is Status.CANONICALIZED else None,
@@ -190,6 +217,7 @@ def canonicalize(input_data: object, contract: Any) -> ExecutionArtifact:
 def _build_artifact(
     *,
     registry: CapabilityRegistry,
+    engine: Engine,
     parsed_contract: _ContractLike,
     status: Status,
     value: str | None,
@@ -202,31 +230,25 @@ def _build_artifact(
     is testable in isolation and so a future orchestrator variation can
     use a non-default registry without monkey-patching.
 
-    The ``spec_versions`` / ``registry_versions`` maps are populated from
-    the authorities actually cited in this artifact's evidence (mandate Law
-    12 — the context that *produced* the artifact). Only the authorities
-    this artifact fired enter the maps; an artifact that triggers only RFC
-    5321 rules must not fail replay because RFC 1035 (cited elsewhere by
-    the same capability) was revised.
+    The recorded ``authorities`` are the distinct concrete editions cited in
+    this artifact's evidence (mandate Law 12 — the context that *produced*
+    the artifact). Only the authorities this artifact fired are recorded; an
+    artifact that triggers only RFC 5321 rules will not carry RFC 1035. The
+    concrete edition objects (not selectors) make replay deterministic.
     """
-    spec_versions: dict[str, str] = {}
-    registry_versions: dict[str, str] = {}
+    seen: dict[str, Authority] = {}
     for ev in evidence:
         authority = ev.authority
         if authority is None:
             continue
-        if authority.kind == "specification":
-            spec_versions[authority.name] = authority.edition
-        elif authority.kind == "data-set":
-            registry_versions[authority.name] = authority.edition
+        seen[authority.name] = authority
+    authorities = tuple(sorted(seen.values(), key=lambda a: a.name))
     version_stamp = VersionStamp(
         paxman_version=_paxman_version.__version__,
         # Law 12: stamp the contract schema version (not the capability policy).
         contract_version=parsed_contract.version_field,
         capabilities_hash=registry.capabilities_hash(),
         configuration_version="0",
-        spec_versions=spec_versions,
-        registry_versions=registry_versions,
     )
     return ExecutionArtifact(
         status=status,
@@ -234,5 +256,6 @@ def _build_artifact(
         evidence=evidence,
         contract=parsed_contract,
         version_stamp=version_stamp,
+        authorities=authorities,
         candidates=candidates,
     )

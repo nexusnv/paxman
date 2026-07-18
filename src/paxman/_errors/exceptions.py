@@ -58,3 +58,15 @@ class ConfigurationError(PaxmanError):
     """A capability is structurally invalid (missing `name`, missing
     methods, or duplicate registration). Raised at register time,
     before any canonicalize call."""
+
+
+class UnknownAuthorityEdition(CanonicalizationError):
+    """An authority edition was requested that this Paxman build does not
+    ship (e.g. a replayed artifact cites an edition that was pruned, or a
+    user pinned an edition id that does not exist).
+
+    Distinct from :class:`VersionMismatchError`: a *mismatch* means the
+    edition exists but differs from the current one; *unknown* means it is
+    not present at all (a deliberate prune). Raised by authority resolution
+    and by replay when a recorded edition cannot be reconstructed.
+    """

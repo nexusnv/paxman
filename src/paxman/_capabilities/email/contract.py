@@ -32,6 +32,11 @@ class CanonicalEmailContract:
     version: int = 1
     version_field: int = 1
 
+    authority_override: Any = attrs.field(
+        default=None,
+        repr=False,
+    )
+
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract.
 
@@ -58,6 +63,7 @@ def Email(
     provider_aliases: ProviderAliasesPolicy = "none",
     lowercase: bool = True,
     strip_whitespace: bool = True,
+    authority_override: Any | None = None,
 ) -> CanonicalEmailContract:
     """Domain-type sugar: declare an email contract in user vocabulary.
 
@@ -92,6 +98,7 @@ def Email(
         strip_whitespace=strip_whitespace,
         provider_aliases=provider_aliases,
         strict=strict,
+        authority_override=authority_override,
     )
 
 
@@ -119,6 +126,7 @@ def _build_email(spec: dict[str, Any]) -> CanonicalEmailContract:
         strip_whitespace=_require_bool("strip_whitespace", spec.get("strip_whitespace", True)),
         provider_aliases=cast(ProviderAliasesPolicy, provider_aliases),
         strict=_require_bool("strict", spec.get("strict", False)),
+        authority_override=spec.get("authority_override", None),
     )
 
 

@@ -6,7 +6,7 @@ reorganisation into ``paxman._capabilities.date``.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 import attrs
 
@@ -39,6 +39,11 @@ class CanonicalDateContract:
     kind: str = "canonical_date"
     version_field: int = 1
 
+    authority_override: Any = attrs.field(
+        default=None,
+        repr=False,
+    )
+
     def as_dict(self) -> dict[str, object]:
         """Return the Dict DSL form of this contract (round-trips via parse_contract)."""
         return {
@@ -55,6 +60,7 @@ def Date(
     locale: Literal["ISO", "US", "EU"] = "ISO",
     language: str = "en",
     two_digit_year: TwoDigitYearPolicy | None = None,
+    authority_override: Any | None = None,
 ) -> CanonicalDateContract:
     """Domain-type sugar: declare a date contract in user vocabulary.
 
@@ -65,7 +71,14 @@ def Date(
     ``"en"``); ``two_digit_year`` selects the century policy (default ``None``,
     i.e. Don't Guess -> AMBIGUOUS for 2-digit years).
     """
-    return _build_date({"locale": locale, "language": language, "two_digit_year": two_digit_year})
+    return _build_date(
+        {
+            "locale": locale,
+            "language": language,
+            "two_digit_year": two_digit_year,
+            "authority_override": authority_override,
+        }
+    )
 
 
 def _validate_two_digit_year(policy: TwoDigitYearPolicy | None) -> None:
@@ -98,10 +111,12 @@ def _build_date(spec: dict[str, object]) -> CanonicalDateContract:
         )
     two_digit_year = spec.get("two_digit_year", None)
     _validate_two_digit_year(two_digit_year)
+    authority_override = spec.get("authority_override", None)
     return CanonicalDateContract(
         locale=locale,
         language=language,
         two_digit_year=two_digit_year,
+        authority_override=authority_override,
     )
 
 

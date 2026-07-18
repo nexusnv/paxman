@@ -5,6 +5,7 @@ from paxman._errors.exceptions import (
     ContractError,
     FrozenRegistryError,
     PaxmanError,
+    UnknownAuthorityEdition,
     UnsupportedContractError,
     VersionMismatchError,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "ContractError",
     "FrozenRegistryError",
     "PaxmanError",
+    "UnknownAuthorityEdition",
     "UnsupportedContractError",
     "VersionMismatchError",
 ]

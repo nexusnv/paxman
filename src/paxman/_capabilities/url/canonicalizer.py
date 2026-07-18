@@ -9,6 +9,7 @@ from paxman._capabilities.url.contract import CanonicalURLContract
 from paxman._capabilities.url.grammar import RecognizedRep, recognize
 from paxman._capabilities.url.parser import default_port_for_scheme
 from paxman._capabilities.url.rules import _evidence
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
@@ -342,7 +343,9 @@ class URLCapability:
     def can_handle(self, contract: object, value: object) -> bool:
         return isinstance(contract, CanonicalURLContract) and isinstance(value, str)
 
-    def canonicalize(self, value: object, contract: object) -> CapabilityResult:
+    def canonicalize(
+        self, value: object, contract: object, engine: Engine | None = None
+    ) -> CapabilityResult:
         if not isinstance(contract, CanonicalURLContract):
             return CapabilityResult(
                 status=Status.INVALID,

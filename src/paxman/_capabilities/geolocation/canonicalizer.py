@@ -27,6 +27,7 @@ from paxman._capabilities.geolocation.grammar import (
 )
 from paxman._capabilities.geolocation.rules import _evidence
 from paxman._core.contracts import Contract
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
@@ -345,7 +346,9 @@ class GeolocationCapability:
             value is None or isinstance(value, str)
         )
 
-    def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+    def canonicalize(
+        self, value: object, contract: Contract, engine: Engine | None = None
+    ) -> CapabilityResult:
         """Canonicalize a geolocation string into "<lat>,<lon>".
 
         Args:

@@ -96,6 +96,8 @@ from paxman import (
     canonicalize, replay, register_capability,
     # the contract vocabulary
     Email, CanonicalEmailContract, Contract, parse_contract,
+    # the Engine: bind concrete authority editions (Concern 3)
+    Engine, ComplianceProfile, canonicalize_with,
     # the type vocabulary
     Capability, CapabilityRegistry, ExecutionArtifact,
     CapabilityResult, Evidence, Status, ValidationResult, VersionStamp,
@@ -111,6 +113,48 @@ from paxman import (
 `paxman.normalize` deliberately does not exist: the module's
 `__getattr__` raises an `AttributeError` that teaches the right function
 (mandate §1.1 — Paxman canonicalizes, it does not normalize).
+
+### Engine & Authority Editions (Concern 3)
+
+Paxman records *which edition* of each externally-maintained authority
+(ISO 3166-1, ISO 4217, …) produced an artifact, so replay is
+deterministic against that exact edition (mandate Law 12). The `Engine` is
+the immutable `name -> Authority` binding that selects those concrete
+editions. It has three layers:
+
+- **Foundation (C):** `Engine(authorities)` binds explicit editions; this is
+  what replay reconstructs from the recorded artifact.
+- **Sugar (B):** `Engine.with_authorities({"ISO 3166-1": "2020"})` pins
+  specific editions via a `ComplianceProfile` (an organization's adopted
+  profile). `Engine.default()` resolves every authority to its active
+  edition — this is what the zero-config `paxman.canonicalize` uses, so the
+  default path is unchanged.
+- **Escape hatch (A):** a contract's `authority_override` pins one edition
+  for a single call (testing), layered on top of the engine.
+
+```python
+from paxman import canonicalize, replay, Country, Engine
+
+# Zero-config: active editions, identical to paxman.canonicalize(...)
+r = canonicalize("malaysia", Country(allow_name=True))
+
+# Pin a non-default edition for one call via the Engine.
+eng = Engine.with_authorities({"ISO 3166-1": "2020"})
+from paxman import canonicalize_with
+r = canonicalize_with("malaysia", Country(allow_name=True), eng)
+assert {a.name: a.edition for a in r.authorities}["ISO 3166-1"] == "2020"
+
+# Or pin via the contract escape hatch (single call only).
+c = Country(allow_name=True, authority_override={"ISO 3166-1": "2020"})
+r = canonicalize("malaysia", c)
+
+# Replay auto-loads the recorded editions — byte-for-byte deterministic.
+assert replay(r, Country(allow_name=True)) == r
+```
+
+Grammars (RFC 5321, ISO 8601, …) carry a single edition and reject a
+non-default pin via `UnknownAuthorityEdition`; only `registry`/`normative_
+standard`/`taxonomy` authorities accept `supports_multiple_editions=True`.
 
 ### The Library's Directory Shape
 

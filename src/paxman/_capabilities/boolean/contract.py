@@ -30,6 +30,11 @@ class CanonicalBooleanContract:
     version: int = 1
     version_field: int = 1
 
+    authority_override: Any = attrs.field(
+        default=None,
+        repr=False,
+    )
+
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
         return {
@@ -46,6 +51,7 @@ def Boolean(
     accept_numeric: bool = True,
     accept_words: bool = True,
     case_sensitive: bool = False,
+    authority_override: Any | None = None,
 ) -> CanonicalBooleanContract:
     """Domain-type sugar: declare a boolean contract in user vocabulary.
 
@@ -63,6 +69,7 @@ def Boolean(
         accept_numeric=accept_numeric,
         accept_words=accept_words,
         case_sensitive=case_sensitive,
+        authority_override=authority_override,
     )
 
 

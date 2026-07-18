@@ -110,6 +110,11 @@ class CanonicalGeolocationContract:
     version: int = attrs.field(default=1, validator=_validate_v1)
     version_field: int = attrs.field(default=1, validator=_validate_v1)
 
+    authority_override: Any = attrs.field(
+        default=None,
+        repr=False,
+    )
+
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
         return {
@@ -131,6 +136,7 @@ def Geolocation(
     require_hemisphere: bool = True,
     output_format: str = "decimal",
     precision: int = 6,
+    authority_override: Any | None = None,
 ) -> CanonicalGeolocationContract:
     """Domain-type sugar: declare a geolocation contract in user vocabulary.
 
@@ -165,6 +171,7 @@ def Geolocation(
         require_hemisphere=_require_bool("require_hemisphere", require_hemisphere),
         output_format=_require_str_in("output_format", output_format, _OUTPUT_FORMATS),
         precision=_require_precision("precision", precision),
+        authority_override=authority_override,
     )
 
 
@@ -224,6 +231,7 @@ def _build_geolocation(spec: dict[str, Any]) -> CanonicalGeolocationContract:
             "output_format", spec.get("output_format", "decimal"), _OUTPUT_FORMATS
         ),
         precision=_require_precision("precision", spec.get("precision", 6)),
+        authority_override=spec.get("authority_override", None),
     )
 
 

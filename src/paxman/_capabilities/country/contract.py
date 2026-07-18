@@ -15,7 +15,7 @@ from typing import Any
 
 import attrs
 
-# ISO 3166-1:2020 dataset is the single shared source (see _iso3166.py).
+# ISO 3166-1:2024 dataset is the single shared source (see _iso3166.py).
 # Re-exported here so existing importers (canonicalizer, rules) are unchanged.
 from paxman._capabilities._iso3166 import (
     _ALPHA2_CODES,
@@ -39,9 +39,9 @@ __all__ = [
     "_SYNONYM_TO_ALPHA2",
 ]
 
-# (ISO 3166-1:2020 dataset imported and re-exported from _iso3166 below)
+# (ISO 3166-1:2024 dataset imported and re-exported from _iso3166 below)
 
-# (ISO 3166-1:2020 dataset imported and re-exported from _iso3166 below)
+# (ISO 3166-1:2024 dataset imported and re-exported from _iso3166 below)
 # codes (v1 scope, matching _ALPHA2_CODES). Mirrors the alpha-2 frozenset
 # order. Law 8a: bundled, versioned dataset (COUNTRY_TABLE_VERSION).
 # Wrapped in MappingProxyType for runtime immutability (Law 1 + Law 2 — see
@@ -300,9 +300,9 @@ _ALPHA3_TO_ALPHA2: Mapping[str, str] = MappingProxyType(
     }
 )
 
-# (ISO 3166-1:2020 dataset imported and re-exported from _iso3166 below)
+# (ISO 3166-1:2024 dataset imported and re-exported from _iso3166 below)
 
-# (ISO 3166-1:2020 dataset imported and re-exported from _iso3166 below)
+# (ISO 3166-1:2024 dataset imported and re-exported from _iso3166 below)
 
 # ISO 3166-1 numeric -> alpha-2. Numeric codes are official ISO
 # representations, zero-padded to 3 digits (e.g. "004" and "4" both denote
@@ -312,7 +312,7 @@ _ALPHA3_TO_ALPHA2: Mapping[str, str] = MappingProxyType(
 # exceptional/reserved numeric codes (249 fx, 530 an, 891 cs) are excluded
 # because they are not in the assigned _ALPHA2_CODES set. Verified bijective
 # with _ALPHA2_CODES (249 entries) by the assertion at the foot of this module.
-# (ISO 3166-1:2020 dataset imported and re-exported from _iso3166 below)
+# (ISO 3166-1:2024 dataset imported and re-exported from _iso3166 below)
 
 # Unicode CLDR (Common Locale Data Repository) localized country names ->
 # alpha-2. Curated sample spanning several scripts; the full dataset is large,
@@ -468,6 +468,11 @@ class CanonicalCountryContract:
     version: int = attrs.field(default=1, validator=_validate_v1)
     version_field: int = attrs.field(default=1, validator=_validate_v1)
 
+    authority_override: Any = attrs.field(
+        default=None,
+        repr=False,
+    )
+
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
         return {
@@ -493,6 +498,7 @@ def Country(
     localized_names: bool = False,
     historical_names: bool = False,
     extra_synonyms: Mapping[str, str] | None = None,
+    authority_override: Any | None = None,
 ) -> CanonicalCountryContract:
     """Domain-type sugar: declare a country contract in user vocabulary.
 
@@ -523,6 +529,7 @@ def Country(
         localized_names=_require_bool("localized_names", localized_names),
         historical_names=_require_bool("historical_names", historical_names),
         extra_synonyms=dict(extra_synonyms) if extra_synonyms is not None else {},
+        authority_override=authority_override,
     )
 
 
@@ -558,6 +565,7 @@ def _build_country(spec: dict[str, Any]) -> CanonicalCountryContract:
         localized_names=_require_bool("localized_names", spec.get("localized_names", False)),
         historical_names=_require_bool("historical_names", spec.get("historical_names", False)),
         extra_synonyms=dict(extra),
+        authority_override=spec.get("authority_override", None),
     )
 
 

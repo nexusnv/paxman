@@ -18,6 +18,7 @@ from paxman._capabilities.ip.contract import CanonicalIPContract
 from paxman._capabilities.ip.grammar import RecognizedRep, recognize
 from paxman._capabilities.ip.rules import _evidence
 from paxman._core.contracts import Contract
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
@@ -160,7 +161,9 @@ class IPCapability:
             value is None or isinstance(value, str)
         )
 
-    def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+    def canonicalize(
+        self, value: object, contract: Contract, engine: Engine | None = None
+    ) -> CapabilityResult:
         if not isinstance(contract, CanonicalIPContract):
             return CapabilityResult(
                 status=Status.INVALID, evidence=(_evidence("not_a_ip_contract"),)

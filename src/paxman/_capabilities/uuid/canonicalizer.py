@@ -42,6 +42,7 @@ from paxman._capabilities.uuid.grammar import RecognizedRep, recognize
 from paxman._capabilities.uuid.parser import CANONICAL_CHARS, CANONICAL_LENGTH, HYPHEN_POSITIONS
 from paxman._capabilities.uuid.rules import _evidence
 from paxman._core.contracts import Contract
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
@@ -191,7 +192,9 @@ class UUIDCapability:
     def can_handle(self, contract: Contract, value: object) -> bool:
         return isinstance(contract, CanonicalUUIDContract) and isinstance(value, str)
 
-    def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+    def canonicalize(
+        self, value: object, contract: Contract, engine: Engine | None = None
+    ) -> CapabilityResult:
         # Defensive type-check (mirrors email's pattern).
         if not isinstance(contract, CanonicalUUIDContract):
             return CapabilityResult(

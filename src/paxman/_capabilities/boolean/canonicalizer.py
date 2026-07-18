@@ -17,6 +17,7 @@ from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 from paxman._capabilities.boolean.grammar import RecognizedRep, recognize
 from paxman._capabilities.boolean.rules import _evidence
 from paxman._core.contracts import Contract
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
@@ -164,7 +165,9 @@ class BooleanCapability:
             value is None or isinstance(value, str)
         )
 
-    def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+    def canonicalize(
+        self, value: object, contract: Contract, engine: Engine | None = None
+    ) -> CapabilityResult:
         """Canonicalize a boolean-shaped input into "true" or "false".
 
         The pipeline (recognition → resolver → validation → classify):

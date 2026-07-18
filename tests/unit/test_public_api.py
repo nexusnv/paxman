@@ -74,6 +74,9 @@ class TestPublicAPI:
             "CanonicalMoneyContract",
             "Country",
             "CanonicalCountryContract",
+            "Engine",
+            "ComplianceProfile",
+            "canonicalize_with",
             "annotations",
         }
         actual = {n for n in dir(paxman) if not n.startswith("_")}

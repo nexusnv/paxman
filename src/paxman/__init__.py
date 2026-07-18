@@ -24,6 +24,7 @@ from paxman._capabilities.uuid.contract import UUID, CanonicalUUIDContract
 from paxman._core.artifact import ExecutionArtifact
 from paxman._core.classification import ValidationResult
 from paxman._core.engine import canonicalize as _canonicalize
+from paxman._core.engine_env import ComplianceProfile, Engine, canonicalize_with
 from paxman._core.provenance import Evidence
 from paxman._core.replay import replay as _replay
 from paxman._core.result import CapabilityResult, VersionStamp
@@ -113,12 +114,14 @@ __all__ = [
     "Capability",
     "CapabilityRegistry",
     "CapabilityResult",
+    "ComplianceProfile",
     "ConfigurationError",
     "Contract",
     "ContractError",
     "Country",
     "Date",
     "Email",
+    "Engine",
     "Evidence",
     "ExecutionArtifact",
     "FrozenRegistryError",
@@ -133,6 +136,7 @@ __all__ = [
     "VersionStamp",
     "__version__",
     "canonicalize",
+    "canonicalize_with",
     "parse_contract",
     "register_capability",
     "replay",

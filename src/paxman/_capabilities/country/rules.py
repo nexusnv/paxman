@@ -3,7 +3,7 @@
 
 Migrated from a free-form `_RULE_PROVENANCE` string map to a structured
 `_RULE_AUTHORITIES` authority map (mandate Law 14 — issue #158). The
-bundled ISO 3166-1:2020 edition is declared once in the central registry
+bundled ISO 3166-1:2024 edition is declared once in the central registry
 (`paxman._provenance.registries.ISO_3166`) and referenced here by import;
 the `COUNTRY_TABLE_VERSION` string is no longer interpolated. Paxman
 policy rules reference the recorded policy authorities so amendments are
@@ -15,9 +15,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
-from paxman._provenance import Authority
-from paxman._provenance import _evidence as _provenance_evidence
+from paxman._provenance import Authority, _evidence_from_args
 from paxman._provenance import registries as R
 
 # Composite authorities used by single country rules.
@@ -69,10 +69,35 @@ _RULE_AUTHORITIES: Mapping[str, Authority | None] = MappingProxyType(
 )
 
 
-def _evidence(rule: str, detail: str = "") -> Evidence:
+# Rules whose authority cites the ISO 3166-1 registry. When an engine binds
+# a non-default ISO 3166-1 edition, these evidence entries must cite the
+# engine's resolved edition (Concern 3 — the recorded edition reflects the
+# pinned edition so replay is deterministic against it).
+_ISO_3166_RULES = frozenset(
+    {
+        "recognized_alpha2",
+        "recognized_alpha3",
+        "recognized_numeric",
+        "recognized_name",
+        "canonicalized_country",
+        "unrecognized_format",
+    }
+)
+
+
+def _evidence(rule: str, detail: str = "", engine: Engine | None = None) -> Evidence:
     """Build an `Evidence` pulling the Law 14 authority from the manifest.
 
     A rule with no manifest entry raises `KeyError` at the construction
-    site, surfacing a missing citation immediately.
+    site, surfacing a missing citation immediately. When ``engine`` binds a
+    non-default ISO 3166-1 edition, the registry-citing rules resolve their
+    authority from the engine so the recorded edition matches the binding.
     """
-    return _provenance_evidence(rule, _RULE_AUTHORITIES, detail)
+    authority = _RULE_AUTHORITIES[rule]
+    if engine is not None and rule in _ISO_3166_RULES:
+        iso = engine.authority("ISO 3166-1")
+        if rule == "unrecognized_format":
+            authority = iso.section("input is not a recognized country token")
+        elif authority is not None:
+            authority = iso.section(authority.version)
+    return _evidence_from_args(rule, authority, detail)

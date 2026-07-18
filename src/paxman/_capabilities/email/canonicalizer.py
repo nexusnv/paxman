@@ -57,6 +57,7 @@ from paxman._capabilities.email.grammar import recognize
 from paxman._capabilities.email.parser import _validate_dot_atom_domain, _validate_dot_atom_local
 from paxman._capabilities.email.rules import _evidence
 from paxman._core.contracts import Contract
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
@@ -329,7 +330,9 @@ class EmailCapability:
     def can_handle(self, contract: Contract, value: object) -> bool:
         return isinstance(contract, CanonicalEmailContract) and isinstance(value, str)
 
-    def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+    def canonicalize(
+        self, value: object, contract: Contract, engine: Engine | None = None
+    ) -> CapabilityResult:
         if not isinstance(contract, CanonicalEmailContract):
             # Structural typecheck: a non-email contract must not reach
             # this capability. Return INVALID as a defensive default;

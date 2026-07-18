@@ -208,6 +208,30 @@ def test_evidence_has_provenance_expanded() -> None:
             assert ev.provenance, f"rule {ev.rule!r} missing provenance"
 
 
+def test_lookup_paths_derive_version_from_constant() -> None:
+    """Every ISO 3166-1 lookup path (alpha2, alpha3, numeric, name) must cite
+    the shared COUNTRY_TABLE_VERSION constant in its evidence, not a
+    hard-coded edition literal (Law 8a — the dataset version participates in
+    replay; CodeRabbit PR review finding)."""
+    from paxman._capabilities._iso3166 import COUNTRY_TABLE_VERSION
+
+    cases = [
+        ("US", Country(), "alpha-2"),
+        ("USA", Country(), "alpha-3"),
+        ("840", Country(), "numeric"),
+        ("United States", Country(), "name"),
+    ]
+    for value, contract, shape_label in cases:
+        r = canonicalize(value, contract)
+        assert r.status == Status.CANONICALIZED, f"{shape_label}: {r.status}"
+        # The candidate's source (carried via the canonicalizer's _Candidate)
+        # is embedded in the evidence provenance. Assert the version constant
+        # appears in at least one evidence entry's provenance for this path.
+        assert any(COUNTRY_TABLE_VERSION in ev.provenance for ev in r.evidence), (
+            f"{shape_label} path did not cite {COUNTRY_TABLE_VERSION}"
+        )
+
+
 # --- Law 15: cited named-entity source (ISO 3166-1:2020) adopted in full ---
 
 

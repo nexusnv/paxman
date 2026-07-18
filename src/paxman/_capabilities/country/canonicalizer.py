@@ -94,7 +94,13 @@ def generate_interpretations(
     rep = reps[0]
     token = rep.captures.get("tok", rep.raw).strip().upper()
     if rep.shape == "alpha2" and token in _ALPHA2_CODES:
-        candidates.append(_mk(token, "canonicalized_country", "ISO 3166-1:2020 (alpha-2)"))
+        candidates.append(
+            _mk(
+                token,
+                "canonicalized_country",
+                f"ISO 3166-1:2020 (alpha-2; {COUNTRY_TABLE_VERSION})",
+            )
+        )
     elif rep.shape == "alpha3":
         if not contract.allow_alpha3:
             drop_reasons.append("policy_disabled_kind")
@@ -102,7 +108,11 @@ def generate_interpretations(
         code = _ALPHA3_TO_ALPHA2.get(token)
         if code is not None:
             candidates.append(
-                _mk(code, "canonicalized_country", "ISO 3166-1:2020 (alpha-3->alpha-2)")
+                _mk(
+                    code,
+                    "canonicalized_country",
+                    f"ISO 3166-1:2020 (alpha-3->alpha-2; {COUNTRY_TABLE_VERSION})",
+                )
             )
     elif rep.shape == "numeric":
         if not contract.allow_numeric:
@@ -112,7 +122,13 @@ def generate_interpretations(
         # the unpadded form (e.g. "4" -> "004").
         code = _NUMERIC_TO_ALPHA2.get(token.zfill(3))
         if code is not None:
-            candidates.append(_mk(code, "numeric_resolved", "ISO 3166-1:2020 (numeric->alpha-2)"))
+            candidates.append(
+                _mk(
+                    code,
+                    "numeric_resolved",
+                    f"ISO 3166-1:2020 (numeric->alpha-2; {COUNTRY_TABLE_VERSION})",
+                )
+            )
     # Synonym / name / extra-synonym / localized / historical fallback for
     # tokens that are not valid codes of their own shape (e.g. UK, U.S.A.,
     # America, 马来西亚, Burma). When a table match exists but the contract
@@ -136,7 +152,11 @@ def generate_interpretations(
     if name_code is not None:
         if contract.allow_name:
             candidates.append(
-                _mk(name_code, "canonicalized_country", "ISO 3166-1:2020 (name->alpha-2)")
+                _mk(
+                    name_code,
+                    "canonicalized_country",
+                    f"ISO 3166-1:2020 (name->alpha-2; {COUNTRY_TABLE_VERSION})",
+                )
             )
         else:
             drop_reasons.append("policy_disabled_kind")

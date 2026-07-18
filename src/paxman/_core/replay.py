@@ -25,6 +25,7 @@ from paxman._errors import (
     ContractError,
     VersionMismatchError,
 )
+from paxman._provenance import registries as _authorities
 
 
 def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
@@ -61,6 +62,41 @@ def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
             f"capabilities hash mismatch: "
             f"artifact is {artifact.version_stamp.capabilities_hash!r}, "
             f"current is {current_hash!r}"
+        )
+
+    # Verify the cited authority editions. These are redundant with the
+    # replay_hash check (an authority change already breaks the hash) but
+    # exist for mandate Law 8 informative failure — they name *which*
+    # authority shifted rather than leaving the caller to diff the hash.
+    # Per Law 12, only the authorities this artifact's evidence cited are
+    # compared (the artifact's own production context, not the global
+    # registry of everything Paxman could cite). Composed authorities
+    # (e.g. a rule citing two specs at once) carry a descriptive name not
+    # tracked as a standalone edition; those are covered by the hash check
+    # and skipped here.
+    current_spec = _authorities.current_spec_versions()
+    artifact_spec = {
+        name: edition
+        for name, edition in artifact.version_stamp.spec_versions.items()
+        if name in current_spec
+    }
+    if artifact_spec != {k: current_spec[k] for k in artifact_spec}:
+        raise VersionMismatchError(
+            f"specification version mismatch: "
+            f"artifact cites {dict(artifact.version_stamp.spec_versions)!r}, "
+            f"current is {dict(current_spec)!r}"
+        )
+    current_registry = _authorities.current_registry_versions()
+    artifact_registry = {
+        name: edition
+        for name, edition in artifact.version_stamp.registry_versions.items()
+        if name in current_registry
+    }
+    if artifact_registry != {k: current_registry[k] for k in artifact_registry}:
+        raise VersionMismatchError(
+            f"data-set version mismatch: "
+            f"artifact cites {dict(artifact.version_stamp.registry_versions)!r}, "
+            f"current is {dict(current_registry)!r}"
         )
 
     # Verify the replay_hash.

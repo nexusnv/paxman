@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import cast
 
-from paxman._capabilities.boolean import _RULE_PROVENANCE, BooleanCapability
+from paxman._capabilities.boolean import _RULE_AUTHORITIES, BooleanCapability
 from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 from paxman._core.contracts import Contract
 from paxman._core.status import Status
@@ -111,15 +111,15 @@ class TestBooleanCapability:
 class TestLaw14ProvenanceManifest:
     _DISPATCH_INVARIANTS = frozenset({"not_a_boolean_contract", "not_a_string_value"})
 
-    def test_every_manifest_entry_beyond_dispatch_has_provenance(self) -> None:
-        for rule, prov in _RULE_PROVENANCE.items():
+    def test_every_manifest_entry_beyond_dispatch_has_authority(self) -> None:
+        for rule, authority in _RULE_AUTHORITIES.items():
             if rule in self._DISPATCH_INVARIANTS:
                 continue
-            assert prov != ""
+            assert authority is not None
 
     def test_dispatch_invariants_allow_listed(self) -> None:
         for inv in self._DISPATCH_INVARIANTS:
-            assert inv in _RULE_PROVENANCE and _RULE_PROVENANCE[inv] == ""
+            assert inv in _RULE_AUTHORITIES and _RULE_AUTHORITIES[inv] is None
 
     def test_manifest_keys_cover_every_fired_rule(self) -> None:
         c = _cap()
@@ -146,4 +146,4 @@ class TestLaw14ProvenanceManifest:
         for ev in r1.evidence:
             fired.add(ev.rule)
         for rule in fired:
-            assert rule in _RULE_PROVENANCE, f"fired rule {rule!r} missing from manifest"
+            assert rule in _RULE_AUTHORITIES, f"fired rule {rule!r} missing from manifest"

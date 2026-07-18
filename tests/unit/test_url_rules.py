@@ -1,11 +1,11 @@
 import pytest
 
-from paxman._capabilities.url.rules import _RULE_PROVENANCE, _evidence
+from paxman._capabilities.url.rules import _RULE_AUTHORITIES, _evidence
 
 # Mandate laws touched (Law 9 evidence-over-confidence; Law 14 provenance —
 # every rule in the manifest must cite an authority). These tests pin the
 # rule manifest (core + WHATWG) and that each cited rule carries a
-# non-empty provenance string.
+# non-empty authority.
 
 
 def test_manifest_has_core_rules():
@@ -26,8 +26,8 @@ def test_manifest_has_core_rules():
         "grammar_rejected",
         "scheme_not_allowed",
     ):
-        assert rule in _RULE_PROVENANCE, f"missing citation for {rule}"
-        assert _RULE_PROVENANCE[rule], f"empty citation for {rule}"
+        assert rule in _RULE_AUTHORITIES, f"missing citation for {rule}"
+        assert _RULE_AUTHORITIES[rule], f"empty citation for {rule}"
 
 
 def test_whatwg_rules_present():
@@ -37,14 +37,14 @@ def test_whatwg_rules_present():
         "whatwg_infinite_slashes",
         "whatwg_backslash_coerce",
     ):
-        assert rule in _RULE_PROVENANCE
-        assert _RULE_PROVENANCE[rule], f"empty citation for {rule}"
+        assert rule in _RULE_AUTHORITIES
+        assert _RULE_AUTHORITIES[rule], f"empty citation for {rule}"
 
 
 def test_evidence_pulls_provenance():
     ev = _evidence("lowercase_scheme")
     assert ev.rule == "lowercase_scheme"
-    assert "RFC 3986" in ev.provenance
+    assert ev.authority is not None and "RFC 3986" in ev.authority.name
 
 
 def test_unknown_rule_raises():

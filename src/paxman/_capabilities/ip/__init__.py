@@ -9,12 +9,12 @@ sugar / Law 14 manifest) without reaching into submodules.
 from paxman._capabilities.ip.canonicalizer import IPCapability
 from paxman._capabilities.ip.contract import IP, CanonicalIPContract
 from paxman._capabilities.ip.grammar import GRAMMARS, recognize
-from paxman._capabilities.ip.rules import _RULE_PROVENANCE
+from paxman._capabilities.ip.rules import _RULE_AUTHORITIES
 
 __all__ = [
     "GRAMMARS",
     "IP",
-    "_RULE_PROVENANCE",
+    "_RULE_AUTHORITIES",
     "CanonicalIPContract",
     "IPCapability",
     "recognize",

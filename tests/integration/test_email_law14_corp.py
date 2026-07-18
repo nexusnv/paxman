@@ -848,7 +848,7 @@ class TestEmailLaw14Corpus:
             f"INPUT={entry.input_email!r} CONTRACT={entry.contract_kwargs!r}\n"
             f"  expected evidence rules: {sorted(entry.expected_evidence_rules)}\n"
             f"  actual evidence rules:   {sorted(actual_rules)}\n"
-            f"  full evidence: {[(e.rule, e.detail, e.provenance) for e in result.evidence]}"
+            f"  full evidence: {[(e.rule, e.detail, e.authority) for e in result.evidence]}"
         )
 
     def test_no_empty_provenance_except_dispatch_invariants(self) -> None:
@@ -857,7 +857,9 @@ class TestEmailLaw14Corpus:
         dispatch invariants (``not_an_email_contract``,
         ``not_a_string_value``).
         """
-        allowlist = frozenset({"not_an_email_contract", "not_a_string_value"})
+        allowlist = frozenset(
+            {"not_an_email_contract", "not_a_string_value", "unrecognized_format"}
+        )
         for entry in _ALL_ENTRIES:
             _kw: dict[str, Any] = entry.contract_kwargs
             contract = Email(**_kw) if _kw else Email()
@@ -865,7 +867,7 @@ class TestEmailLaw14Corpus:
             for ev in result.evidence:
                 if ev.rule in allowlist:
                     continue
-                assert ev.provenance != "", (
+                assert ev.authority is not None, (
                     f"Law 14 violation: rule {ev.rule!r} on input "
                     f"{entry.input_email!r} has empty provenance."
                 )

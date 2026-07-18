@@ -201,13 +201,32 @@ def _build_artifact(
     The `registry` is passed in (not read from a global) so the function
     is testable in isolation and so a future orchestrator variation can
     use a non-default registry without monkey-patching.
+
+    The ``spec_versions`` / ``registry_versions`` maps are populated from
+    the authorities actually cited in this artifact's evidence (mandate Law
+    12 — the context that *produced* the artifact). Only the authorities
+    this artifact fired enter the maps; an artifact that triggers only RFC
+    5321 rules must not fail replay because RFC 1035 (cited elsewhere by
+    the same capability) was revised.
     """
+    spec_versions: dict[str, str] = {}
+    registry_versions: dict[str, str] = {}
+    for ev in evidence:
+        authority = ev.authority
+        if authority is None:
+            continue
+        if authority.kind == "specification":
+            spec_versions[authority.name] = authority.edition
+        elif authority.kind == "data-set":
+            registry_versions[authority.name] = authority.edition
     version_stamp = VersionStamp(
         paxman_version=_paxman_version.__version__,
         # Law 12: stamp the contract schema version (not the capability policy).
         contract_version=parsed_contract.version_field,
         capabilities_hash=registry.capabilities_hash(),
         configuration_version="0",
+        spec_versions=spec_versions,
+        registry_versions=registry_versions,
     )
     return ExecutionArtifact(
         status=status,

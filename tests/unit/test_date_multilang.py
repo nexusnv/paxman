@@ -98,7 +98,7 @@ class TestProvenanceAndIdempotence:
     def test_canonicalized_result_carries_non_empty_provenance(self) -> None:
         r = _cap().canonicalize("16 July 2026", Date(locale="ISO", language="en"))
         assert r.status is Status.CANONICALIZED
-        assert all(e.provenance != "" for e in r.evidence)
+        assert all(e.authority is not None for e in r.evidence)
 
     def test_rfc2822_weekday_prefix_canonicalizes(self) -> None:
         # Bonus fix: a weekday-prefixed RFC 2822 form must canonicalize, not

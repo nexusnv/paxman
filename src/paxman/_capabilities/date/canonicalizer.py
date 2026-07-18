@@ -7,7 +7,7 @@ Mandate alignment:
 - Law 8a: pure function of (value, contract). No network, no time.now(),
   no filesystem.
 - Law 11: SPI litmus — two implementations produce the same canonical form.
-- Law 14: every rule cites a source via ``_RULE_PROVENANCE``.
+- Law 14: every rule cites a source via ``_RULE_AUTHORITIES``.
 """
 
 from __future__ import annotations
@@ -533,7 +533,7 @@ class DateCapability:
 
     Mandate alignment:
     - Law 8a: every method is a pure function of its arguments.
-    - Law 14: every rule cites a source via ``_RULE_PROVENANCE``.
+    - Law 14: every rule cites a source via ``_RULE_AUTHORITIES``.
     """
 
     name: str = "date_canonicalization"

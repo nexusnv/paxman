@@ -9,11 +9,11 @@ package triggers `contract.py`'s `register_contract` side-effect.
 from paxman._capabilities.phone.canonicalizer import PhoneCapability
 from paxman._capabilities.phone.contract import CanonicalPhoneContract, Phone
 from paxman._capabilities.phone.grammar import GRAMMARS, recognize
-from paxman._capabilities.phone.rules import _RULE_PROVENANCE
+from paxman._capabilities.phone.rules import _RULE_AUTHORITIES
 
 __all__ = [
     "GRAMMARS",
-    "_RULE_PROVENANCE",
+    "_RULE_AUTHORITIES",
     "CanonicalPhoneContract",
     "Phone",
     "PhoneCapability",

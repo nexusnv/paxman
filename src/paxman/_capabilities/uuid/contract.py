@@ -34,7 +34,7 @@ class CanonicalUUIDContract:
       `__attrs_post_init__`), never a silent `INVALID`.
     - Law 13: the contract is `@attrs.frozen` — immutable by mandate.
     - Law 14: every capability rule that fires cites a source via
-      `_RULE_PROVENANCE`; `Evidence.provenance` is populated from it.
+      `_RULE_AUTHORITIES`; `Evidence.authority` is populated from it.
 
     The canonical form is the RFC 4122 §3 representation: 32 lowercase
     hex characters in 8-4-4-4-12 grouping, total 36 characters. The

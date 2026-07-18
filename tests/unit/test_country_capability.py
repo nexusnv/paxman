@@ -72,7 +72,7 @@ def test_idempotent() -> None:
 def test_evidence_has_provenance() -> None:
     r = canonicalize("United States", Country())
     for ev in r.evidence:
-        assert ev.provenance, f"rule {ev.rule!r} missing provenance"
+        assert ev.authority is not None, f"rule {ev.rule!r} missing authority"
 
 
 def test_policy_disabled_name() -> None:
@@ -94,11 +94,13 @@ def test_dispatch_invariants_direct() -> None:
     not_contract = cap.canonicalize("US", object())
     assert not_contract.status == Status.INVALID
     assert not_contract.evidence[0].rule == "not_a_country_contract"
-    assert not_contract.evidence[0].provenance, "not_a_country_contract missing provenance"
+    assert not_contract.evidence[0].authority is not None, (
+        "not_a_country_contract missing authority"
+    )
     not_str = cap.canonicalize(cast(str, 123), Country())
     assert not_str.status == Status.INVALID
     assert not_str.evidence[0].rule == "not_a_string_value"
-    assert not_str.evidence[0].provenance, "not_a_string_value missing provenance"
+    assert not_str.evidence[0].authority is not None, "not_a_string_value missing authority"
 
 
 def test_classify_no_candidates_is_invalid() -> None:
@@ -205,16 +207,22 @@ def test_evidence_has_provenance_expanded() -> None:
     ):
         r = canonicalize(val, ctor)
         for ev in r.evidence:
-            assert ev.provenance, f"rule {ev.rule!r} missing provenance"
+            assert ev.authority is not None, f"rule {ev.rule!r} missing authority"
 
 
 def test_lookup_paths_derive_version_from_constant() -> None:
     """Every ISO 3166-1 lookup path (alpha2, alpha3, numeric, name) must cite
-    the shared COUNTRY_TABLE_VERSION constant in its evidence, not a
-    hard-coded edition literal (Law 8a — the dataset version participates in
-    replay; CodeRabbit PR review finding)."""
-    from paxman._capabilities._iso3166 import COUNTRY_TABLE_VERSION
+    its registry authority in its evidence, not a hard-coded edition literal
+    (Law 8a — the dataset version participates in replay; CodeRabbit PR review
+    finding). Alpha/name shapes cite ISO 3166-1 directly; the numeric shape is
+    resolved by a Paxman policy (``paxman spec/country``) and cites that."""
 
+    expected_authority = {
+        "alpha-2": "ISO 3166-1",
+        "alpha-3": "ISO 3166-1",
+        "numeric": "paxman spec/country",
+        "name": "ISO 3166-1",
+    }
     cases = [
         ("US", Country(), "alpha-2"),
         ("USA", Country(), "alpha-3"),
@@ -224,12 +232,10 @@ def test_lookup_paths_derive_version_from_constant() -> None:
     for value, contract, shape_label in cases:
         r = canonicalize(value, contract)
         assert r.status == Status.CANONICALIZED, f"{shape_label}: {r.status}"
-        # The candidate's source (carried via the canonicalizer's _Candidate)
-        # is embedded in the evidence provenance. Assert the version constant
-        # appears in at least one evidence entry's provenance for this path.
-        assert any(COUNTRY_TABLE_VERSION in ev.provenance for ev in r.evidence), (
-            f"{shape_label} path did not cite {COUNTRY_TABLE_VERSION}"
-        )
+        assert any(
+            ev.authority is not None and ev.authority.name == expected_authority[shape_label]
+            for ev in r.evidence
+        ), f"{shape_label} path did not cite {expected_authority[shape_label]}"
 
 
 # --- Law 15: cited named-entity source (ISO 3166-1:2020) adopted in full ---

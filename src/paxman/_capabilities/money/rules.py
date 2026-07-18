@@ -1,12 +1,18 @@
 # src/paxman/_capabilities/money/rules.py
-"""Money Law 14 rule→provenance manifest + evidence helper.
+"""Money Law 14 rule→authority manifest + evidence helper.
 
-Mirrors the IP sibling convention: the authoritative Law 14 surface is the
-`_RULE_PROVENANCE` mapping (rule-name → provenance citation) plus the
-`_evidence` helper that the canonicalizer consumes. Every emitted `Evidence`
-carries a `provenance` citation sourced from `_RULE_PROVENANCE`. A separate
-`get_money_rules` summary artifact is provided for human-readable
-introspection (it is NOT the Law 14 surface).
+Migrated from a free-form `_RULE_PROVENANCE` string map to a structured
+`_RULE_AUTHORITIES` authority map (mandate Law 14 — issue #158). The
+authoritative Law 14 surface is the `_RULE_AUTHORITIES` mapping
+(rule-name → Authority) plus the `_evidence` helper that the
+canonicalizer consumes. Every emitted `Evidence` carries an `authority`
+citation sourced from `_RULE_AUTHORITIES`. A separate `get_money_rules`
+summary artifact is provided for human-readable introspection (it is NOT
+the Law 14 surface).
+
+The bundled dataset editions (ISO 4217, Unicode CLDR) are declared once
+in the central registry (`paxman._provenance.registries`) and referenced
+here by import — they are no longer interpolated as strings.
 """
 
 from __future__ import annotations
@@ -15,75 +21,89 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Any
 
-from paxman._capabilities.money.contract import (
-    MONEY_TABLE_VERSION,
-    CanonicalMoneyContract,
-)
+from paxman._capabilities.money.contract import CanonicalMoneyContract
 from paxman._core.provenance import Evidence
+from paxman._provenance import Authority
+from paxman._provenance import _evidence as _provenance_evidence
+from paxman._provenance import registries as R
 
-# Law 14 rule→provenance manifest. Dispatch invariants (not_a_money_contract,
-# not_a_string_value) are allow-listed with empty provenance (Law 14 §3.6):
-# they describe a routing failure, not a canonical-form rule. Every
+# Composite authorities used by single money rules that cite more than one
+# source.
+_CURRENCY_FROM_CONTRACT = Authority(
+    "MANDATE + ISO 4217",
+    "MANDATE Law 3 (Never Guess) + Law 7 (Explicit Over Clever); currency is an ISO 4217:2015 code",
+    "specification",
+)
+_CANONICAL_FORM = Authority(
+    "paxman spec/money + ISO 4217",
+    "money design spec M2 ('<ISO4217>:<amount>'); currency is an ISO 4217:2015 code",
+    "policy",
+)
+_SYMBOL_VALIDATED = Authority(
+    "Unicode CLDR + ISO 4217",
+    "Unicode CLDR currency symbol data (frozen glyph→ISO 4217 code map) + "
+    "contract currency match (Law 3 — Never Guess)",
+    "data-set",
+)
+_CODE_VALIDATED = R.ISO_4217.section(
+    "code must be a recognized ISO 4217 code and match the contract currency"
+)
+_PARSED_DECIMAL = Authority(
+    "Unicode CLDR + money design spec",
+    "Unicode CLDR currency number patterns (frozen comma-decimal convention) + "
+    "money design spec Q1=A (Decimal, comma-decimal per currency)",
+    "data-set",
+)
+
+# Law 14 rule→authority manifest. Dispatch invariants (not_a_money_contract,
+# not_a_string_value) are allow-listed with ``None`` authority (Law 14
+# §3.6): they describe a routing failure, not a canonical-form rule. Every
 # canonical-form rule cites an authoritative source (mandate law or the
 # approved money design spec).
-_RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
+_RULE_AUTHORITIES: Mapping[str, Authority | None] = MappingProxyType(
     {
-        # --- dispatch invariants (no provenance — Law 14 §3.6 allow-list) ---
-        "not_a_money_contract": "",
-        "not_a_string_value": "",
+        # --- dispatch invariants (no authority — Law 14 §3.6 allow-list) ---
+        "not_a_money_contract": None,
+        "not_a_string_value": None,
         # missing_value is a canonical-form rejection (empty input), not a
         # routing failure, so it carries a real citation (Law 3 — Never Guess).
-        "missing_value": "money design spec (empty input rejected — Law 3 Never Guess)",
+        "missing_value": Authority(
+            "money design spec",
+            "empty input rejected — Law 3 Never Guess",
+            "policy",
+        ),
         # --- recognition / canonicalization (mandate laws + design spec) ---
-        "currency_from_contract": (
-            f"MANDATE Law 3 (Never Guess) + Law 7 (Explicit Over Clever); "
-            f"currency is an ISO 4217:2015 code ({MONEY_TABLE_VERSION})"
+        "currency_from_contract": _CURRENCY_FROM_CONTRACT,
+        "canonical_form": _CANONICAL_FORM,
+        "symbol_validated": _SYMBOL_VALIDATED,
+        "code_validated": _CODE_VALIDATED,
+        "trimmed_whitespace": R.PAXMAN_SPEC_MONEY.section("strip_spaces policy"),
+        "preserved_sign": R.PAXMAN_SPEC_MONEY.section("design spec Q2=A (negatives preserved)"),
+        "parsed_decimal": _PARSED_DECIMAL,
+        "preserved_decimals": R.PAXMAN_SPEC_MONEY.section(
+            "design spec F1/Q3=A (no quantization; sci-notation normalized)"
         ),
-        "canonical_form": (
-            f"money design spec M2 ('<ISO4217>:<amount>'); currency is an "
-            f"ISO 4217:2015 code ({MONEY_TABLE_VERSION})"
-        ),
-        "symbol_validated": (
-            "Unicode CLDR currency symbol data (frozen glyph→ISO 4217 code map); "
-            "symbol recognized via the bundled symbol table and must match the "
-            "contract currency (Law 3 — Never Guess)"
-        ),
-        "code_validated": (
-            f"ISO 4217:2015 ({MONEY_TABLE_VERSION}); code must be a recognized "
-            f"ISO 4217 code and match the contract currency"
-        ),
-        "trimmed_whitespace": "money design spec (strip_spaces policy)",
-        "preserved_sign": "money design spec Q2=A (negatives preserved)",
-        "parsed_decimal": (
-            "Unicode CLDR currency number patterns (frozen comma-decimal "
-            "convention table); money design spec Q1=A (Decimal, "
-            "comma-decimal per currency)"
-        ),
-        "preserved_decimals": (
-            "money design spec F1/Q3=A (no quantization; sci-notation normalized)"
-        ),
-        "unrecognized_format": (
-            "money design spec (rejected: empty, malformed, or symbol/code "
-            "mismatch — Law 3 Never Guess)"
+        "unrecognized_format": R.PAXMAN_SPEC_MONEY.section(
+            "rejected: empty, malformed, or symbol/code mismatch — Law 3 Never Guess"
         ),
     }
 )
 
 
 def _evidence(rule: str, detail: str = "") -> Evidence:
-    """Build an `Evidence` pulling the Law 14 provenance from the manifest.
+    """Build an `Evidence` pulling the Law 14 authority from the manifest.
 
     A rule with no manifest entry raises `KeyError` at the construction
     site, surfacing a missing citation immediately.
     """
-    return Evidence(rule=rule, detail=detail, provenance=_RULE_PROVENANCE[rule])
+    return _provenance_evidence(rule, _RULE_AUTHORITIES, detail)
 
 
 def get_money_rules(contract: CanonicalMoneyContract) -> list[dict[str, Any]]:
     """Human-readable summary of the money canonicalization rules.
 
     NOTE: this is an introspection/summary artifact. The authoritative Law 14
-    surface is `_RULE_PROVENANCE` + `_evidence`, consumed by the canonicalizer.
+    surface is `_RULE_AUTHORITIES` + `_evidence`, consumed by the canonicalizer.
     """
     symbol_policy = (
         "recognized only when allow_symbol is true"

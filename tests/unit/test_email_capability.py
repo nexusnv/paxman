@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from paxman._capabilities.email import _RULE_PROVENANCE, EmailCapability
+from paxman._capabilities.email import _RULE_AUTHORITIES, EmailCapability
 from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._core.contracts import Contract
 from paxman._core.status import Status
@@ -143,7 +143,9 @@ class TestEmailCapability:
         for ev in r.evidence:
             if ev.rule in allowlist:
                 continue
-            assert ev.provenance != "", f"Law 14 violation: rule {ev.rule!r} has empty provenance"
+            assert ev.authority is not None, (
+                f"Law 14 violation: rule {ev.rule!r} has empty authority"
+            )
 
     def test_ws_padded_collapses_internal_whitespace_in_local_part(self) -> None:
         c = _cap()
@@ -332,7 +334,7 @@ class TestEmailCapability:
 
 
 class TestLaw14ProvenanceManifest:
-    """Audit the `_RULE_PROVENANCE` manifest against the capability source.
+    """Audit the `_RULE_AUTHORITIES` manifest against the capability source.
 
     Mandate §10.2: a reviewer gate. Mandate Law 14 §3.6: two dispatch
     invariants are allow-listed with empty provenance; every *other* rule
@@ -342,20 +344,20 @@ class TestLaw14ProvenanceManifest:
     _DISPATCH_INVARIANTS = frozenset({"not_an_email_contract", "not_a_string_value"})
 
     def test_every_manifest_entry_beyond_dispatch_has_provenance(self) -> None:
-        for rule_name, provenance in _RULE_PROVENANCE.items():
+        for rule_name, authority in _RULE_AUTHORITIES.items():
             if rule_name in self._DISPATCH_INVARIANTS:
                 continue
-            assert provenance != "", (
-                f"Law 14 violation: manifest entry {rule_name!r} has empty provenance"
+            assert authority is not None, (
+                f"Law 14 violation: manifest entry {rule_name!r} has empty authority"
             )
 
     def test_dispatch_invariants_are_allow_listed_with_empty_provenance(self) -> None:
         for invariant in self._DISPATCH_INVARIANTS:
-            assert invariant in _RULE_PROVENANCE, (
+            assert invariant in _RULE_AUTHORITIES, (
                 f"dispatch invariant {invariant!r} missing from manifest"
             )
-            assert _RULE_PROVENANCE[invariant] == "", (
-                f"dispatch invariant {invariant!r} should have empty provenance"
+            assert _RULE_AUTHORITIES[invariant] is None, (
+                f"dispatch invariant {invariant!r} should have empty authority"
             )
 
     def test_manifest_keys_cover_every_fired_rule(self) -> None:
@@ -391,6 +393,6 @@ class TestLaw14ProvenanceManifest:
         for ev in r1.evidence + r2.evidence:
             fired.add(ev.rule)
         for rule in fired:
-            assert rule in _RULE_PROVENANCE, (
-                f"fired rule {rule!r} missing from _RULE_PROVENANCE manifest"
+            assert rule in _RULE_AUTHORITIES, (
+                f"fired rule {rule!r} missing from _RULE_AUTHORITIES manifest"
             )

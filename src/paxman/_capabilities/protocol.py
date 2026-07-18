@@ -16,6 +16,7 @@ from typing import Any, Protocol, runtime_checkable
 # value); it does not orchestrate. Law 8a (pure functions):
 # canonicalize is a pure (value, contract) -> result transform.
 from paxman._core.contracts import Contract
+from paxman._core.engine_env import Engine
 from paxman._core.result import CapabilityResult
 
 
@@ -28,4 +29,6 @@ class Capability(Protocol):
 
     def can_handle(self, contract: Contract, value: Any) -> bool: ...
 
-    def canonicalize(self, value: Any, contract: Contract) -> CapabilityResult: ...
+    def canonicalize(
+        self, value: Any, contract: Contract, engine: Engine | None = None
+    ) -> CapabilityResult: ...

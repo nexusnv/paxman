@@ -59,6 +59,11 @@ class CanonicalUUIDContract:
                 f"invalid uuid version: {self.version!r}; allowed: {sorted(_UUID_VERSIONS_ALLOWED)}"
             )
 
+    authority_override: Any = attrs.field(
+        default=None,
+        repr=False,
+    )
+
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract (round-trips via parse_contract)."""
         return {
@@ -71,13 +76,14 @@ class CanonicalUUIDContract:
 def UUID(
     *,
     version: Literal["any", "1", "3", "4", "5", "7"] = "any",
+    authority_override: Any | None = None,
 ) -> CanonicalUUIDContract:
     """Domain-type sugar: declare a UUID contract in user vocabulary.
 
     Returns a `CanonicalUUIDContract` value object; does NOT subclass it.
     Mirrors the `Email()` factory pattern.
     """
-    return CanonicalUUIDContract(version=version)
+    return CanonicalUUIDContract(version=version, authority_override=authority_override)
 
 
 def _build_uuid(spec: dict[str, Any]) -> CanonicalUUIDContract:
@@ -86,7 +92,8 @@ def _build_uuid(spec: dict[str, Any]) -> CanonicalUUIDContract:
         raise ContractError(
             f"invalid uuid version: {version!r}; allowed: {sorted(_UUID_VERSIONS_ALLOWED)}"
         )
-    return CanonicalUUIDContract(version=version)
+    authority_override = spec.get("authority_override", None)
+    return CanonicalUUIDContract(version=version, authority_override=authority_override)
 
 
 register_contract("canonical_uuid", _build_uuid)

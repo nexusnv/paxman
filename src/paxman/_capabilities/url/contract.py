@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import attrs
 
 from paxman._errors import ContractError
@@ -23,6 +25,11 @@ class CanonicalURLContract:
     version: int = 1
     version_field: int = 1  # required by the Contract Protocol (mirrors CanonicalPhoneContract)
 
+    authority_override: Any = attrs.field(
+        default=None,
+        repr=False,
+    )
+
     def as_dict(self) -> dict[str, object]:
         return {
             "kind": self.kind,
@@ -43,6 +50,7 @@ def URL(
     strip_fragment: bool = True,
     sort_query: bool = False,
     whatwg: bool = False,
+    authority_override: Any | None = None,
 ) -> CanonicalURLContract:
     """Domain-type sugar for declaring a URL contract (mirrors Phone()/Date())."""
     return CanonicalURLContract(
@@ -51,6 +59,7 @@ def URL(
         strip_fragment=strip_fragment,
         sort_query=sort_query,
         whatwg=whatwg,
+        authority_override=authority_override,
     )
 
 
@@ -96,6 +105,7 @@ def _build_url(spec: dict[str, object]) -> CanonicalURLContract:
         whatwg=_bool("whatwg", False),
         version=version,
         version_field=version_field,
+        authority_override=spec.get("authority_override", None),
     )
 
 

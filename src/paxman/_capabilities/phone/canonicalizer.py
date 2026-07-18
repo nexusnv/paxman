@@ -15,6 +15,7 @@ from paxman._capabilities.phone.contract import CanonicalPhoneContract
 from paxman._capabilities.phone.grammar import RecognizedRep, recognize
 from paxman._capabilities.phone.parser import _cc_for_country
 from paxman._capabilities.phone.rules import _evidence
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
@@ -178,7 +179,9 @@ class PhoneCapability:
     def can_handle(self, contract: object, value: object) -> bool:
         return isinstance(contract, CanonicalPhoneContract) and isinstance(value, str)
 
-    def canonicalize(self, value: object, contract: object) -> CapabilityResult:
+    def canonicalize(
+        self, value: object, contract: object, engine: Engine | None = None
+    ) -> CapabilityResult:
         if not isinstance(contract, CanonicalPhoneContract):
             return CapabilityResult(
                 status=Status.INVALID,

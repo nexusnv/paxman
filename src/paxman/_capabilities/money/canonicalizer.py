@@ -14,6 +14,7 @@ from paxman._capabilities.money.contract import CanonicalMoneyContract
 from paxman._capabilities.money.grammar import parse_amount, recognize_money
 from paxman._capabilities.money.rules import _evidence
 from paxman._core.contracts import Contract
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
@@ -34,7 +35,9 @@ class MoneyCapability:
             value is None or isinstance(value, str)
         )
 
-    def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+    def canonicalize(
+        self, value: object, contract: Contract, engine: Engine | None = None
+    ) -> CapabilityResult:
         """Canonicalize a money string into "<ISO4217>:<amount>".
 
         Args:
@@ -48,16 +51,18 @@ class MoneyCapability:
         """
         if not isinstance(contract, CanonicalMoneyContract):
             return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_money_contract"),)
+                status=Status.INVALID, evidence=(_evidence("not_a_money_contract", engine=engine),)
             )
         if not (value is None or isinstance(value, str)):
             return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_string_value"),)
+                status=Status.INVALID, evidence=(_evidence("not_a_string_value", engine=engine),)
             )
 
         # Missing/whitespace-only value -> INVALID (spec: empty input rejected).
         if value is None or value.strip(" \t\r\n\f\v") == "":
-            return CapabilityResult(status=Status.INVALID, evidence=(_evidence("missing_value"),))
+            return CapabilityResult(
+                status=Status.INVALID, evidence=(_evidence("missing_value", engine=engine),)
+            )
 
         # Track whether surrounding whitespace was stripped (record if changed).
         # Only strip when the contract policy allows it (Law 7 — policy is the
@@ -68,7 +73,7 @@ class MoneyCapability:
         if contract.strip_spaces:
             stripped = value.strip(" \t\r\n\f\v")
             if stripped != value:
-                stripped_evidence = (_evidence("trimmed_whitespace"),)
+                stripped_evidence = (_evidence("trimmed_whitespace", engine=engine),)
                 value = stripped
 
         # Recognition layer (Layer 1) — shape classification + symbol/code
@@ -78,7 +83,7 @@ class MoneyCapability:
             parts = recognize_money(value, contract)
         except ContractError:
             return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("unrecognized_format"),)
+                status=Status.INVALID, evidence=(_evidence("unrecognized_format", engine=engine),)
             )
 
         # Parse the amount into the canonical decimal string (F1/Q1/Q2/Q3).
@@ -88,24 +93,28 @@ class MoneyCapability:
             parsed = parse_amount(parts.amount, contract.currency, parts.canonical)
         except ContractError:
             return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("unrecognized_format"),)
+                status=Status.INVALID, evidence=(_evidence("unrecognized_format", engine=engine),)
             )
 
         # Compose the canonical form "<ISO4217>:<sign><amount>".
         canonical = f"{contract.currency}:{parts.sign}{parsed}"
 
         evidence: list[Evidence] = list(stripped_evidence)
-        evidence.append(_evidence("currency_from_contract", f"currency={contract.currency}"))
+        evidence.append(
+            _evidence("currency_from_contract", f"currency={contract.currency}", engine=engine)
+        )
         if parts.symbol is not None:
-            evidence.append(_evidence("symbol_validated", f"symbol={parts.symbol}"))
+            evidence.append(_evidence("symbol_validated", f"symbol={parts.symbol}", engine=engine))
         if parts.code is not None:
-            evidence.append(_evidence("code_validated", f"code={parts.code}"))
+            evidence.append(_evidence("code_validated", f"code={parts.code}", engine=engine))
         if parts.sign:
-            evidence.append(_evidence("preserved_sign", f"sign={parts.sign}"))
-        evidence.append(_evidence("parsed_decimal", f"amount={parts.amount}"))
+            evidence.append(_evidence("preserved_sign", f"sign={parts.sign}", engine=engine))
+        evidence.append(_evidence("parsed_decimal", f"amount={parts.amount}", engine=engine))
         if "." in parts.amount or "e" in parts.amount.lower() or "E" in parts.amount:
-            evidence.append(_evidence("preserved_decimals", f"amount={parts.amount}"))
-        evidence.append(_evidence("canonical_form", f"{value!r} -> {canonical!r}"))
+            evidence.append(
+                _evidence("preserved_decimals", f"amount={parts.amount}", engine=engine)
+            )
+        evidence.append(_evidence("canonical_form", f"{value!r} -> {canonical!r}", engine=engine))
 
         return CapabilityResult(
             status=Status.CANONICALIZED, value=canonical, evidence=tuple(evidence)

@@ -35,6 +35,7 @@ from paxman._capabilities.date.parser import (
 from paxman._capabilities.date.rules import _evidence
 from paxman._capabilities.date.value import _render_date, _render_datetime
 from paxman._core.contracts import Contract
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
@@ -550,7 +551,9 @@ class DateCapability:
         """
         return isinstance(contract, CanonicalDateContract) and isinstance(value, str)
 
-    def canonicalize(self, value: object, contract: Contract) -> CapabilityResult:
+    def canonicalize(
+        self, value: object, contract: Contract, engine: Engine | None = None
+    ) -> CapabilityResult:
         """Canonicalize a date string according to the contract's locale policy.
 
         The capability recognises several input families; each is matched by a

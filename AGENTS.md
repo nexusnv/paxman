@@ -119,6 +119,14 @@ src/paxman/
   `FrozenRegistryError`).
 - Contracts: `Email`, `Date`, `UUID` (and their `Canonical*` forms).
   `parse_contract` for the DSL. Errors re-exported from `_errors`.
+- `Engine` — the immutable `name -> Authority` binding that selects concrete
+  authority editions (Concern 3). `Engine.default()` resolves active editions
+  (what zero-config `canonicalize` uses); `Engine.with_authorities({...})`
+  pins specific editions; `canonicalize_with(input, contract, engine)` is the
+  engine-pinned entry point. A contract's `authority_override` pins one edition
+  for a single call. `Edition(id)` / `Latest` are the selection values.
+  `UnknownAuthorityEdition` is raised when a pin names an invalid or
+  non-multiple-edition authority.
 
 **Hard boundaries:**
 

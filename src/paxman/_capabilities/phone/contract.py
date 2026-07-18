@@ -28,6 +28,11 @@ class CanonicalPhoneContract:
     version: int = 1
     version_field: int = 1
 
+    authority_override: Any = attrs.field(
+        default=None,
+        repr=False,
+    )
+
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract.
 
@@ -45,7 +50,7 @@ class CanonicalPhoneContract:
         }
 
 
-def Phone(*, country: str = "US") -> CanonicalPhoneContract:
+def Phone(*, country: str = "US", authority_override: Any | None = None) -> CanonicalPhoneContract:
     """Domain-type sugar: declare a phone contract in user vocabulary.
 
     MANDATE §4: the contract is the user's language; the capability is
@@ -62,7 +67,7 @@ def Phone(*, country: str = "US") -> CanonicalPhoneContract:
     Returns:
         A frozen CanonicalPhoneContract instance.
     """
-    return CanonicalPhoneContract(country=country)
+    return CanonicalPhoneContract(country=country, authority_override=authority_override)
 
 
 def _build_phone(spec: dict[str, Any]) -> CanonicalPhoneContract:
@@ -74,7 +79,9 @@ def _build_phone(spec: dict[str, Any]) -> CanonicalPhoneContract:
     from paxman._capabilities.phone.parser import _cc_for_country
 
     _cc_for_country(country)  # raises ContractError if unknown
-    return CanonicalPhoneContract(country=country)
+    return CanonicalPhoneContract(
+        country=country, authority_override=spec.get("authority_override", None)
+    )
 
 
 register_contract("canonical_phone", _build_phone)

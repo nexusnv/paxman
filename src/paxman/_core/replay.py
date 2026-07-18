@@ -19,19 +19,26 @@ from typing import Any
 import paxman as _paxman_version
 from paxman import _orchestrator_runtime
 from paxman._core.artifact import ExecutionArtifact
+from paxman._core.engine_env import Engine, _verify_recorded_authorities
 from paxman._dsl.parser import parse_contract
 from paxman._errors import (
     CanonicalizationError,
     ContractError,
     VersionMismatchError,
 )
-from paxman._provenance import registries as _authorities
 
 
 def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
     """Rehydrate `artifact` from its stored form, without re-execution.
 
     Mandate Law 12: `replay(artifact) == artifact` byte-for-byte.
+
+    Replay reconstructs the exact production Engine from the editions
+    recorded on the artifact (``Engine.from_artifact``), so a newer edition
+    shipped since the artifact was produced does not change the result. A
+    recorded edition that is neither the active edition nor a known historical
+    edition is rejected (``UnknownAuthorityEdition`` surfaces as the replay
+    failure), protecting artifact integrity.
     """
     try:
         parsed_contract = parse_contract(contract)
@@ -64,46 +71,25 @@ def replay(artifact: ExecutionArtifact, contract: Any) -> ExecutionArtifact:
             f"current is {current_hash!r}"
         )
 
-    # Verify the cited authority editions. These are redundant with the
-    # replay_hash check (an authority change already breaks the hash) but
-    # exist for mandate Law 8 informative failure — they name *which*
-    # authority shifted rather than leaving the caller to diff the hash.
-    # Per Law 12, only the authorities this artifact's evidence cited are
-    # compared (the artifact's own production context, not the global
-    # registry of everything Paxman could cite). Composed authorities
-    # (e.g. a rule citing two specs at once) carry a descriptive name not
-    # tracked as a standalone edition; those are covered by the hash check
-    # and skipped here.
-    current_spec = _authorities.current_spec_versions()
-    artifact_spec = {
-        name: edition
-        for name, edition in artifact.version_stamp.spec_versions.items()
-        if name in current_spec
-    }
-    if artifact_spec != {k: current_spec[k] for k in artifact_spec}:
-        raise VersionMismatchError(
-            f"specification version mismatch: "
-            f"artifact cites {dict(artifact.version_stamp.spec_versions)!r}, "
-            f"current is {dict(current_spec)!r}"
-        )
-    current_registry = _authorities.current_registry_versions()
-    artifact_registry = {
-        name: edition
-        for name, edition in artifact.version_stamp.registry_versions.items()
-        if name in current_registry
-    }
-    if artifact_registry != {k: current_registry[k] for k in artifact_registry}:
-        raise VersionMismatchError(
-            f"data-set version mismatch: "
-            f"artifact cites {dict(artifact.version_stamp.registry_versions)!r}, "
-            f"current is {dict(current_registry)!r}"
-        )
-
-    # Verify the replay_hash.
+    # Verify the replay_hash (mandate Law 12): independently recompute from the
+    # canonical bytes rather than trusting the stored value. This is the
+    # authoritative integrity guard and runs before any edition interpretation.
     if artifact.replay_hash != _compute_replay_hash(artifact):
         raise CanonicalizationError(
             "replay_hash mismatch: artifact content does not match its stored hash"
         )
+
+    # Reconstruct the exact production Engine from the recorded editions
+    # (Concern 2): recorded editions are reused verbatim, merged over the
+    # active roster, so a newer edition shipped since production does not
+    # change the result. This runs after the hash guard so a hash failure
+    # surfaces first (the artifact is already proven intact).
+    Engine.from_artifact(artifact.authorities)
+
+    # Verify the recorded authority editions are still known. This is the
+    # informative (Law 8) failure path: it names *which* authority is
+    # retired/forged rather than leaving the caller to diff the replay hash.
+    _verify_recorded_authorities(artifact.authorities)
 
     return artifact
 

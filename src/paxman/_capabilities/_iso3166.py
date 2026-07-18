@@ -1,7 +1,7 @@
 # src/paxman/_capabilities/_iso3166.py
-"""Shared, versioned ISO 3166-1:2020 dataset (Law 8a — bundled, versioned, no I/O).
+"""Shared, versioned ISO 3166-1:2024 dataset (Law 8a — bundled, versioned, no I/O).
 
-This module is the SINGLE authoritative source for the ISO 3166-1:2020 named-entity
+This module is the SINGLE authoritative source for the ISO 3166-1:2024 named-entity
 enumeration used by Paxman. Both the country capability (recognition of country
 names/codes) and the phone capability (ISO 3166-1 alpha-2 -> ITU-T E.164 calling-code
 expansion) import from here so the cited provenance reference is defined in exactly one
@@ -19,10 +19,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import MappingProxyType
 
-#: Frozen edition string for the bundled ISO 3166-1:2020 dataset. Every artifact
+#: Frozen edition string for the bundled ISO 3166-1:2024 dataset. Every artifact
 #: that depends on this dataset records it as evidence (Law 8a — the dataset
 #: version participates in replay).
-COUNTRY_TABLE_VERSION: str = "iso3166-1:2020"
+COUNTRY_TABLE_VERSION: str = "iso3166-1:2024"
 
 __all__ = [
     "COUNTRY_TABLE_VERSION",
@@ -286,10 +286,10 @@ _ALPHA2_CODES: frozenset[str] = frozenset(
     }
 )
 
-# ISO 3166-1:2020 official English short names (upper-cased) -> alpha-2.
+# ISO 3166-1:2024 official English short names (upper-cased) -> alpha-2.
 # FULL enumeration of all 249 assigned codes (Law 15 — a cited
 # named-entity source is adopted in full). Source edition:
-# COUNTRY_TABLE_VERSION = "iso3166-1:2020". The canonical ISO
+# COUNTRY_TABLE_VERSION = "iso3166-1:2024". The canonical ISO
 # capitalization is preserved in the trailing comment per line.
 # A small set of prior convenience aliases (e.g. "UNITED STATES",
 # "SOUTH KOREA", "RUSSIA") is retained below for backward

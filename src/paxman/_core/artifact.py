@@ -12,12 +12,14 @@ from typing import Any, Protocol
 
 import attrs
 
-# Law 13 (artifact immutability): the artifact is frozen; these fields
-# are set once at construction. Law 12 (replayability): the
-# version stamp + evidence hash make the artifact byte-replayable.
 from paxman._core.provenance import Evidence
 from paxman._core.result import VersionStamp
 from paxman._core.status import Status
+
+# Law 13 (artifact immutability): the artifact is frozen; these fields
+# are set once at construction. Law 12 (replayability): the
+# version stamp + evidence hash make the artifact byte-replayable.
+from paxman._provenance.authority import Authority
 
 
 class _ContractLike(Protocol):
@@ -54,6 +56,7 @@ class ExecutionArtifact:
     evidence: tuple[Evidence, ...]
     contract: _ContractLike
     version_stamp: VersionStamp
+    authorities: tuple[Authority, ...] = ()
     candidates: tuple[str, ...] | None = None
     replay_hash: str = attrs.field(init=False, eq=False)
 
@@ -82,9 +85,10 @@ class ExecutionArtifact:
         (name, version, kind, retrieved_at) are included so a changed or
         stale edition breaks the replay hash (mandate Law 12).
 
-        The version stamp additionally records the editions of the
-        externally-maintained authorities that produced this artifact's
-        evidence, sorted for byte-stability.
+        The recorded authorities (the concrete editions that produced this
+        artifact's evidence, across every kind) are serialized sorted by name
+        for byte-stability; a changed or stale edition breaks the replay hash
+        (mandate Law 12).
         """
         payload = {
             "status": self.status.value,
@@ -113,9 +117,22 @@ class ExecutionArtifact:
                 "contract_version": self.version_stamp.contract_version,
                 "capabilities_hash": self.version_stamp.capabilities_hash,
                 "configuration_version": self.version_stamp.configuration_version,
-                "spec_versions": dict(sorted(self.version_stamp.spec_versions.items())),
-                "registry_versions": dict(sorted(self.version_stamp.registry_versions.items())),
             },
+            "authorities": [
+                {
+                    "name": a.name,
+                    "edition": a.edition,
+                    "kind": a.kind,
+                    "version": a.version,
+                    "publisher": a.publisher,
+                    "released_on": a.released_on,
+                    "lifecycle": a.lifecycle,
+                    "checksum": a.checksum,
+                    "retrieved_at": a.retrieved_at,
+                    "supports_multiple_editions": a.supports_multiple_editions,
+                }
+                for a in sorted(self.authorities, key=lambda x: x.name)
+            ],
         }
         return json.dumps(
             payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False

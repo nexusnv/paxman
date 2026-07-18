@@ -12,7 +12,11 @@ from paxman._core.replay import replay
 from paxman._core.result import VersionStamp
 from paxman._core.status import Status
 from paxman._dsl.parser import parse_contract
-from paxman._errors import CanonicalizationError, VersionMismatchError
+from paxman._errors import (
+    CanonicalizationError,
+    UnknownAuthorityEdition,
+    VersionMismatchError,
+)
 
 _EMPTY_REGISTRY_HASH = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
@@ -104,68 +108,39 @@ class TestReplay:
         with pytest.raises(CanonicalizationError):
             replay(a, {"kind": "canonical_email"})
 
-    def test_replay_stale_specification_authority_raises(
-        self, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
-        from paxman._provenance import registries as _authorities
-
-        # An artifact that cited RFC 5322 at edition "RFC 5322 §3.2.3".
-        a = _artifact(
-            evidence=(Evidence(rule="lowercased_local_part"),),
-            version_stamp=VersionStamp(
-                paxman_version="0.0.0.dev0",
-                contract_version=1,
-                capabilities_hash=_EMPTY_REGISTRY_HASH,
-                configuration_version="0",
-                spec_versions={"RFC 5322": "RFC 5322 §3.2.3"},
-            ),
-        )
-        # The registry has since advanced that authority's edition.
-        monkeypatch.setattr(
-            _authorities,
-            "current_spec_versions",
-            lambda: {"RFC 5322": "RFC 5322 §3.2.3 (revised 2026)"},
-        )
-        with pytest.raises(VersionMismatchError, match="specification version mismatch"):
-            replay(a, {"kind": "canonical_email"})
-
     def test_replay_stale_data_set_authority_raises(self, monkeypatch: pytest.MonkeyPatch) -> None:
-        from paxman._provenance import registries as _authorities
+        from paxman._provenance.authority import Authority
 
-        # An artifact that cited ISO 3166-1 (a data-set authority).
+        # An artifact that cited ISO 3166-1 at an edition no longer known to
+        # the registry (a retired/forged edition). Replay must reject it
+        # (mandate Law 12 — replay must not trust a stale or forged edition).
+        stale = Authority(
+            name="ISO 3166-1",
+            edition="ISO 3166-1:2025",
+            kind="registry",
+            lifecycle="retired",
+        )
         a = _artifact(
             evidence=(Evidence(rule="lowercased_local_part"),),
-            version_stamp=VersionStamp(
-                paxman_version="0.0.0.dev0",
-                contract_version=1,
-                capabilities_hash=_EMPTY_REGISTRY_HASH,
-                configuration_version="0",
-                registry_versions={"ISO 3166-1": "ISO 3166-1:2020"},
-            ),
+            authorities=(stale,),
         )
-        monkeypatch.setattr(
-            _authorities,
-            "current_registry_versions",
-            lambda: {"ISO 3166-1": "ISO 3166-1:2025"},
-        )
-        with pytest.raises(VersionMismatchError, match="data-set version mismatch"):
+        with pytest.raises(UnknownAuthorityEdition, match="retired/unknown edition"):
             replay(a, {"kind": "canonical_email"})
 
     def test_replay_authority_edition_unchanged_passes(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        from paxman._provenance import registries as _authorities
+        from paxman._provenance.authority import Authority
 
-        # The edition matches the live registry exactly → replay succeeds.
+        # The recorded edition is a known (active) edition → replay succeeds.
+        active = Authority(
+            name="RFC 5322",
+            edition="RFC 5322 (Internet Message Format)",
+            kind="grammar",
+        )
         a = _artifact(
             evidence=(Evidence(rule="lowercased_local_part"),),
-            version_stamp=VersionStamp(
-                paxman_version="0.0.0.dev0",
-                contract_version=1,
-                capabilities_hash=_EMPTY_REGISTRY_HASH,
-                configuration_version="0",
-                spec_versions={"RFC 5322": _authorities.RFC_5322.edition},
-            ),
+            authorities=(active,),
         )
         rehydrated = replay(a, {"kind": "canonical_email"})
         assert rehydrated == a

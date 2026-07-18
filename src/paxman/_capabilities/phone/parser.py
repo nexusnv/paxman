@@ -7,7 +7,7 @@ inference, no dataset. Extending the table is a capability-version bump
 (Law 8a) — the version rides on the artifact's VersionStamp.
 
 Law 15 (cited named-entity source adopted in full): the cited source is
-ISO 3166-1:2020 (the same edition the country capability embodies). The
+ISO 3166-1:2024 (the same edition the country capability embodies). The
 E.164 calling-code assignment is taken from the ITU-T E.164 country code
 list (Annex to ITU Operational Bulletin No. 1114, 15.XII.2016, complement to
 ITU-T Recommendation E.164 (11/2010)). Every one of the 249 officially
@@ -25,12 +25,12 @@ from types import MappingProxyType
 from paxman._capabilities._iso3166 import _ALPHA2_CODES, COUNTRY_TABLE_VERSION
 from paxman._errors import ContractError
 
-# Full ISO 3166-1:2020 alpha-2 -> ITU-T E.164 country calling code.
+# Full ISO 3166-1:2024 alpha-2 -> ITU-T E.164 country calling code.
 # 249 entries, matching the cited enumeration exactly. Codes that share a
 # parent's calling code (e.g. NANP territories under "1", RU/KZ under "7")
 # resolve to the administering state's code — the alpha-2 remains the
 # disambiguator, which is what this capability keys on. XK (Kosovo) is a
-# user-assigned code, not part of ISO 3166-1:2020, so it is intentionally
+# user-assigned code, not part of ISO 3166-1:2024, so it is intentionally
 # excluded (Law 15 — only the cited source's enumeration is embodied).
 # Wrapped in MappingProxyType for runtime immutability (Law 1 + Law 2 —
 # the E.164 map is replay-affecting bundled state).
@@ -288,7 +288,7 @@ _COUNTRY_TO_CC: Mapping[str, str] = MappingProxyType(
     }
 )
 
-# Law 15 guard: the E.164 map must embody the full cited ISO 3166-1:2020
+# Law 15 guard: the E.164 map must embody the full cited ISO 3166-1:2024
 # enumeration. Fail fast at import if any assigned code is missing or any
 # code outside the cited source has crept in. Uses an explicit `raise` (not
 # `assert`) so the guard still runs under `python -O` (asserts are stripped
@@ -298,7 +298,7 @@ _missing = set(_ALPHA2_CODES) - set(_COUNTRY_TO_CC)
 _extra = set(_COUNTRY_TO_CC) - set(_ALPHA2_CODES)
 if _missing or _extra:
     raise RuntimeError(
-        "phone E.164 map must embody ISO 3166-1:2020 in full "
+        "phone E.164 map must embody ISO 3166-1:2024 in full "
         f"(missing={sorted(_missing)}, extra={sorted(_extra)})"
     )
 
@@ -307,16 +307,16 @@ def _cc_for_country(country: str) -> str:
     """Return the E.164 country code for an ISO 3166-1 alpha-2 code.
 
     Raises:
-        ContractError: if `country` is not a code in the full ISO 3166-1:2020
+        ContractError: if `country` is not a code in the full ISO 3166-1:2024
             enumeration (edition ``COUNTRY_TABLE_VERSION``). Unknown codes are a
             contract error at parse time, never a runtime guess (Law 3 — Never
             Guess). Because the map is complete against the cited source, this
-            only fires for inputs outside ISO 3166-1:2020 entirely.
+            only fires for inputs outside ISO 3166-1:2024 entirely.
     """
     cc = _COUNTRY_TO_CC.get(country.upper())
     if cc is None:
         raise ContractError(
-            f"unknown country code: {country!r}; must be an ISO 3166-1:2020 "
+            f"unknown country code: {country!r}; must be an ISO 3166-1:2024 "
             f"alpha-2 code (edition {COUNTRY_TABLE_VERSION})"
         )
     return cc

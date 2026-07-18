@@ -22,9 +22,9 @@ from types import MappingProxyType
 from typing import Any
 
 from paxman._capabilities.money.contract import CanonicalMoneyContract
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
-from paxman._provenance import Authority
-from paxman._provenance import _evidence as _provenance_evidence
+from paxman._provenance import Authority, _evidence_from_args
 from paxman._provenance import registries as R
 
 # Composite authorities used by single money rules that cite more than one
@@ -90,13 +90,25 @@ _RULE_AUTHORITIES: Mapping[str, Authority | None] = MappingProxyType(
 )
 
 
-def _evidence(rule: str, detail: str = "") -> Evidence:
+# Rules whose authority cites the ISO 4217 registry. When an engine binds a
+# non-default ISO 4217 edition, the recorded authority must reflect that
+# edition (Concern 3 — replay is deterministic against the pinned edition).
+_ISO_4217_RULES = frozenset({"code_validated"})
+
+
+def _evidence(rule: str, detail: str = "", engine: Engine | None = None) -> Evidence:
     """Build an `Evidence` pulling the Law 14 authority from the manifest.
 
     A rule with no manifest entry raises `KeyError` at the construction
-    site, surfacing a missing citation immediately.
+    site, surfacing a missing citation immediately. When ``engine`` binds a
+    non-default ISO 4217 edition, the registry-citing rule resolves its
+    authority from the engine so the recorded edition matches the binding.
     """
-    return _provenance_evidence(rule, _RULE_AUTHORITIES, detail)
+    authority = _RULE_AUTHORITIES[rule]
+    if engine is not None and rule in _ISO_4217_RULES and authority is not None:
+        iso = engine.authority("ISO 4217")
+        authority = iso.section(authority.version)
+    return _evidence_from_args(rule, authority, detail)
 
 
 def get_money_rules(contract: CanonicalMoneyContract) -> list[dict[str, Any]]:

@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from types import MappingProxyType
 
 import attrs
 
@@ -100,7 +101,7 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
         match = grammar.compiled.fullmatch(value)
         if match is None:
             continue
-        captures = {k: v for k, v in match.groupdict().items() if v is not None}
+        captures = MappingProxyType({k: v for k, v in match.groupdict().items() if v is not None})
         reps.append(
             RecognizedRep(
                 grammar_id=grammar.id,

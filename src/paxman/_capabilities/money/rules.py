@@ -44,8 +44,9 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
             f"ISO 4217:2015 code ({MONEY_TABLE_VERSION})"
         ),
         "symbol_validated": (
-            f"ISO 4217:2015 ({MONEY_TABLE_VERSION}); symbol recognized via "
-            f"the bundled symbol→code map and must match the contract currency"
+            "Unicode CLDR currency symbol data (frozen glyph→ISO 4217 code map); "
+            "symbol recognized via the bundled symbol table and must match the "
+            "contract currency (Law 3 — Never Guess)"
         ),
         "code_validated": (
             f"ISO 4217:2015 ({MONEY_TABLE_VERSION}); code must be a recognized "
@@ -54,8 +55,9 @@ _RULE_PROVENANCE: Mapping[str, str] = MappingProxyType(
         "trimmed_whitespace": "money design spec (strip_spaces policy)",
         "preserved_sign": "money design spec Q2=A (negatives preserved)",
         "parsed_decimal": (
-            "money design spec Q1=A (Decimal, comma-decimal per currency); "
-            "comma-decimal set is the ISO 4217-backed convention table"
+            "Unicode CLDR currency number patterns (frozen comma-decimal "
+            "convention table); money design spec Q1=A (Decimal, "
+            "comma-decimal per currency)"
         ),
         "preserved_decimals": (
             "money design spec F1/Q3=A (no quantization; sci-notation normalized)"
@@ -151,7 +153,7 @@ def get_money_rules(contract: CanonicalMoneyContract) -> list[dict[str, Any]]:
                 "Amounts are parsed exactly with Decimal (never float); "
                 "thousands separators are stripped and the decimal separator "
                 "follows the currency-keyed convention, comma-decimal for "
-                "EUR/DKK/NOK/SEK/CHF/BRL/RUB/TRY/PLN/HUF/CZK/RON/ILS/ISK (Q1=A)."
+                "EUR/DKK/NOK/SEK/BRL/RUB/TRY/PLN/HUF/CZK/RON/CHE (Q1=A)."
             ),
             "deterministic": True,
         },

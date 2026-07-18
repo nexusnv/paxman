@@ -16,15 +16,16 @@ import attrs
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
-# Version of the bundled ISO 4217 dataset. Recorded on every artifact's
-# evidence (Law 8a — the dataset version participates in replay). The cited
-# source is embodied in full: the complete ISO 4217:2015 active code list
-# (maintained by the SIX Group Maintenance Agency; amendments through #179,
-# effective 2026-01-01, which added XAD; the 2026-01-01 Bulgaria->EUR change
-# withdrew BGN, and the 2023-01-01 Croatia->EUR change withdrew HRK — both
-# withdrawn codes are excluded). Law 15: a cited named-entity source (currencies)
-# is adopted in full; there is no curated subset.
-MONEY_TABLE_VERSION = (
+#: Frozen edition string for the bundled ISO 4217 dataset. Recorded on every
+#: artifact's evidence (Law 8a — the dataset version participates in replay).
+#: The cited source is embodied in full: the complete ISO 4217:2015 active
+#: code list (maintained by the SIX Group Maintenance Agency; amendments
+#: through #179, effective 2026-01-01, which added XAD; the 2026-01-01
+#: Bulgaria->EUR change withdrew BGN, and the 2023-01-01 Croatia->EUR change
+#: withdrew HRK — both withdrawn codes are excluded). Law 15: a cited
+#: named-entity source (currencies) is adopted in full; there is no curated
+#: subset.
+MONEY_TABLE_VERSION: str = (
     "iso4217:2015 (SIX Maintenance Agency register, amendments through #179, effective 2026-01-01)"
 )
 

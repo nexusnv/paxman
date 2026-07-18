@@ -21,12 +21,17 @@ into full compliance:
   is imported from the single shared `_iso3166` module — it is no longer
   duplicated in the phone package.
 
-- **money** — `_ISO4217_CODES` (the contract's accepted-currency gate),
-  `_SYMBOL_TO_CODE`, and `_COMMA_DECIMAL_CURRENCIES` were back-filled to the
-  **complete ISO 4217:2015 active code list** (177 codes; withdrawn BGN and HRK
-  excluded per their 2026/2023 euro adoptions). A new `MONEY_TABLE_VERSION`
-  constant cites the frozen edition, and the currency/symbol/code rules in
-  `_RULE_PROVENANCE` now cite ISO 4217 explicitly. No curated subset remains.
+- **money** — `_ISO4217_CODES` (the contract's accepted-currency gate) was
+  back-filled to the **complete ISO 4217:2015 active code list** (177 codes;
+  withdrawn BGN and HRK excluded per their 2026/2023 euro adoptions); no
+  curated subset remains. `_SYMBOL_TO_CODE` and `_COMMA_DECIMAL_CURRENCIES`
+  are intentionally scoped convention tables (recognition aids, not the
+  named-entity enumeration): the symbol map is sourced from Unicode CLDR
+  currency symbol data, and the comma-decimal set from CLDR currency number
+  patterns. A new `MONEY_TABLE_VERSION` constant cites the frozen edition,
+  and the currency/symbol/code rules in `_RULE_PROVENANCE` now cite their
+  actual sources (ISO 4217 for code validation, CLDR for symbols and decimal
+  conventions).
 
 - **country** — the country capability's bundled ISO 3166-1:2020 dataset
   (alpha-2 codes, alpha-3→alpha-2, numeric→alpha-2, official names, synonyms)

@@ -37,7 +37,7 @@ _RULE_AUTHORITIES: Mapping[str, Authority | None] = MappingProxyType(
             "§3.3 (contract policy disables address family)"
         ),
         "missing_value": R.PAXMAN_SPEC_IP.section("§3.4 (Law 8 — required value absent)"),
-        "unrecognized_format": R.RFC_4291.section("(input is not a valid IP address)"),
+        "unrecognized_format": R.RFC_4291.section("§2.1 (input is not a valid textual IP address)"),
     }
 )
 

@@ -14,7 +14,7 @@ def test_manifest_exhaustive_for_emitted_rules():
         assert rule in _RULE_AUTHORITIES
 
 
-def test_evidence_pulls_provenance():
+def test_evidence_pulls_authority():
     ev = _evidence("no_transformation_needed")
     assert ev.rule == "no_transformation_needed"
     assert ev.authority is not None

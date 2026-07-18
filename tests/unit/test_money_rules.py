@@ -64,7 +64,7 @@ def test_symbol_policy_flips_with_contract() -> None:
     assert "recognized only when allow_symbol is true" in m3_on
 
 
-def test_provenance_manifest_present() -> None:
+def test_authority_manifest_present() -> None:
     from paxman._capabilities.money.rules import _RULE_AUTHORITIES, _evidence
 
     assert "currency_from_contract" in _RULE_AUTHORITIES

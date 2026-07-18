@@ -14,6 +14,17 @@ from __future__ import annotations
 
 from paxman._capabilities._iso3166 import COUNTRY_TABLE_VERSION
 
+__all__ = [
+    "COUNTRY_POLICY_WHITESPACE_TRIM",
+    "COUNTRY_POLICY_EXTRA_SYNONYMS",
+    "COUNTRY_POLICY_KIND_GATING",
+    "COUNTRY_POLICY_NUMERIC",
+    "COUNTRY_POLICY_LOCALIZED",
+    "COUNTRY_POLICY_CONVENIENCE_ALIASES",
+    "COUNTRY_POLICY_HISTORICAL",
+    "COUNTRY_POLICY_MISSING_VALUE",
+]
+
 # Whitespace trim before recognition. MANDATE §5.1 (SPI: canonicalize(value,
 # contract)); deterministic, idempotent, no guessing.
 COUNTRY_POLICY_WHITESPACE_TRIM: str = (

@@ -1,4 +1,4 @@
-from paxman._capabilities.uuid.contract import CanonicalUUIDContract
+from paxman._capabilities.uuid.contract import CanonicalUUIDContract, UUID
 from paxman._capabilities.uuid.grammar import recognize
 
 
@@ -26,3 +26,10 @@ def test_uuid_evidence_still_resolves_manifest():
 def test_uuid_authority_override_field_present():
     c = CanonicalUUIDContract(authority_override={"ISO 4217": "2024"})
     assert c.authority_override == {"ISO 4217": "2024"}
+
+
+def test_uuid_authority_override_excluded_from_as_dict():
+    # The override is an escape hatch for a single call; it must never enter
+    # the canonical Dict-DSL form (canonical-form parity / replay determinism).
+    c = UUID(authority_override={"ISO 4217": "2024"})
+    assert "authority_override" not in c.as_dict()

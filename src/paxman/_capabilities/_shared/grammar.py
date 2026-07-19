@@ -82,7 +82,7 @@ def recognize_grammars(
     contract: object,
     contract_type: type,
     *,
-    strip: "bool | str" = False,
+    strip: bool | str = False,
 ) -> list[RecognizedRep]:
     """Recognise every grammar shape ``value`` full-matches.
 

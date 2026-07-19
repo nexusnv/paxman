@@ -24,6 +24,10 @@ from paxman._capabilities._iso3166 import (
     _SYNONYM_TO_ALPHA2,
     COUNTRY_TABLE_VERSION,
 )
+from paxman._capabilities._shared.contract import (
+    _authority_override_from_spec,
+    authority_override_field,
+)
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
@@ -472,12 +476,7 @@ class CanonicalCountryContract:
     version: int = attrs.field(default=1, validator=_validate_v1)
     version_field: int = attrs.field(default=1, validator=_validate_v1)
 
-    authority_override: Any = attrs.field(
-        default=None,
-        repr=False,
-        eq=False,
-        hash=False,
-    )
+    authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
@@ -571,7 +570,7 @@ def _build_country(spec: dict[str, Any]) -> CanonicalCountryContract:
         localized_names=_require_bool("localized_names", spec.get("localized_names", False)),
         historical_names=_require_bool("historical_names", spec.get("historical_names", False)),
         extra_synonyms=dict(extra),
-        authority_override=spec.get("authority_override", None),
+        authority_override=_authority_override_from_spec(spec),
     )
 
 

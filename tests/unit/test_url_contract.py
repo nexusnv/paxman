@@ -53,3 +53,15 @@ def test_build_url_default_missing_allow():
     c = _build_url({"kind": "canonical_url"})
     assert c.scheme_allow is None
     assert c.strip_fragment is True
+
+
+def test_authority_override_dsl_round_trip():
+    override = {"ISO 3166-1": "2024"}
+    spec = {
+        "kind": "canonical_url",
+        "authority_override": override,
+    }
+    c = _build_url(spec)
+    assert c.authority_override == override
+    # The override is excluded from as_dict (does not affect identity/replay).
+    assert "authority_override" not in c.as_dict()

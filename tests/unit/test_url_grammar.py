@@ -64,3 +64,19 @@ def test_trailing_newline_rejected():
     assert recognize("https://Example.COM/a\n", URL()) == []
     assert recognize("//host.example/path\n", URL()) == []
     assert recognize("/a/b\n", URL()) == []
+
+
+def test_recognize_delegates_to_shared_scaffold():
+    # After migrating recognition onto _shared.grammar, recognize() must still
+    # preserve the pre-migration contract: no strip, raw captures, and the
+    # Law-14 source provenance carried on every rep.
+    reps = recognize("https://Example.COM/a", URL())
+    assert len(reps) == 1
+    rep = reps[0]
+    assert rep.grammar_id == "absolute"
+    assert rep.raw == "https://Example.COM/a"
+    assert rep.source.startswith("RFC 3986 §3")
+    # url never strips: a whitespace-prefixed value is NOT coerced to absolute;
+    # it falls through to path_relative (the original behavior, preserved).
+    ws = recognize("  https://Example.COM/a  ", URL())
+    assert [r.grammar_id for r in ws] == ["path_relative"]

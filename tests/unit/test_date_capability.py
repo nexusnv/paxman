@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from paxman import Status
+from paxman import parse_contract
 from paxman._capabilities.date import _RULE_AUTHORITIES, DateCapability
-from paxman._capabilities.date.contract import CanonicalDateContract
+from paxman._capabilities.date.contract import CanonicalDateContract, Date
 from paxman._core.contracts import Contract
 
 
@@ -267,3 +268,16 @@ class TestLaw14AuthorityManifest:
             fired.add(ev.rule)
         for rule in fired:
             assert rule in _RULE_AUTHORITIES, f"fired rule {rule!r} missing from manifest"
+
+
+def test_dsl_authority_override_is_not_dropped() -> None:
+    result = parse_contract(
+        {"kind": "canonical_date", "authority_override": "OVERRIDE_X"}
+    )
+    assert isinstance(result, CanonicalDateContract)
+    assert result.authority_override == "OVERRIDE_X"
+
+
+def test_factory_authority_override_round_trips() -> None:
+    c = Date(authority_override="Y")
+    assert c.authority_override == "Y"

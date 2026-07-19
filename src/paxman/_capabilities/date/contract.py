@@ -10,6 +10,10 @@ from typing import Any, Literal
 
 import attrs
 
+from paxman._capabilities._shared.contract import (
+    _authority_override_from_spec,
+    authority_override_field,
+)
 from paxman._capabilities.date.i18n import SUPPORTED_LANGUAGES
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
@@ -39,12 +43,7 @@ class CanonicalDateContract:
     kind: str = "canonical_date"
     version_field: int = 1
 
-    authority_override: Any = attrs.field(
-        default=None,
-        repr=False,
-        eq=False,
-        hash=False,
-    )
+    authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, object]:
         """Return the Dict DSL form of this contract (round-trips via parse_contract)."""
@@ -113,7 +112,7 @@ def _build_date(spec: dict[str, object]) -> CanonicalDateContract:
         )
     two_digit_year = spec.get("two_digit_year", None)
     _validate_two_digit_year(two_digit_year)
-    authority_override = spec.get("authority_override", None)
+    authority_override = _authority_override_from_spec(spec)
     return CanonicalDateContract(
         locale=locale,
         language=language,

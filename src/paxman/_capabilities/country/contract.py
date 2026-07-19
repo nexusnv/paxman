@@ -460,6 +460,10 @@ class CanonicalCountryContract:
         factory=dict,
         validator=_validate_extra_synonyms,
         converter=_freeze_extra_synonyms,
+        # Excluded from __hash__: the frozen MappingProxyType it converts to
+        # is not hashable, but it stays in __eq__ so two contracts with
+        # different synonym maps remain distinct (mandate Law 5 equality).
+        hash=False,
     )
     kind: str = attrs.field(
         default="canonical_country",
@@ -471,6 +475,8 @@ class CanonicalCountryContract:
     authority_override: Any = attrs.field(
         default=None,
         repr=False,
+        eq=False,
+        hash=False,
     )
 
     def as_dict(self) -> dict[str, Any]:

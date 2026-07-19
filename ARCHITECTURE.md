@@ -124,7 +124,7 @@ editions. It has three layers:
 
 - **Foundation (C):** `Engine(authorities)` binds explicit editions; this is
   what replay reconstructs from the recorded artifact.
-- **Sugar (B):** `Engine.with_authorities({"ISO 3166-1": "2020"})` pins
+- **Sugar (B):** `Engine.with_authorities({"ISO 3166-1": "2024"})` pins
   specific editions via a `ComplianceProfile` (an organization's adopted
   profile). `Engine.default()` resolves every authority to its active
   edition — this is what the zero-config `paxman.canonicalize` uses, so the
@@ -139,13 +139,13 @@ from paxman import canonicalize, replay, Country, Engine
 r = canonicalize("malaysia", Country(allow_name=True))
 
 # Pin a non-default edition for one call via the Engine.
-eng = Engine.with_authorities({"ISO 3166-1": "2020"})
+eng = Engine.with_authorities({"ISO 3166-1": "2024"})
 from paxman import canonicalize_with
 r = canonicalize_with("malaysia", Country(allow_name=True), eng)
-assert {a.name: a.edition for a in r.authorities}["ISO 3166-1"] == "2020"
+assert {a.name: a.edition for a in r.authorities}["ISO 3166-1"] == "2024"
 
 # Or pin via the contract escape hatch (single call only).
-c = Country(allow_name=True, authority_override={"ISO 3166-1": "2020"})
+c = Country(allow_name=True, authority_override={"ISO 3166-1": "2024"})
 r = canonicalize("malaysia", c)
 
 # Replay auto-loads the recorded editions — byte-for-byte deterministic.

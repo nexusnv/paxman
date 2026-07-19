@@ -39,6 +39,7 @@ from paxman._errors import (
     UnsupportedContractError,
     VersionMismatchError,
 )
+from paxman._provenance.selection import Edition, Latest
 from paxman._registry.capability_registry import CapabilityRegistry
 
 # Public `Contract` union of concrete value objects (mandate Law 5). The
@@ -120,12 +121,14 @@ __all__ = [
     "ContractError",
     "Country",
     "Date",
+    "Edition",
     "Email",
     "Engine",
     "Evidence",
     "ExecutionArtifact",
     "FrozenRegistryError",
     "Geolocation",
+    "Latest",
     "Money",
     "PaxmanError",
     "Phone",

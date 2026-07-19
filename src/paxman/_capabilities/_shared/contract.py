@@ -2,11 +2,13 @@
 
 The ``authority_override`` field, its factory param, and the DSL ``spec`` read
 were verbatim-duplicated across all 10 capability contracts (41 occurrences).
-The field is a cross-cutting concern with zero domain logic; the DSL read and
-the ``as_dict`` exclusion now centralize here so a new contract declares the
-field in one line and routes its DSL builder through one helper. ``engine.py``
-still reads the field via ``getattr`` (Candidate 3 will type it); this module
-only removes the copy-paste.
+The field is a cross-cutting concern with zero domain logic; this module
+centralizes the field factory and the DSL read so a new contract declares the
+field in one line and routes its DSL builder through one helper. The shared
+``_AUTHORITY_OVERRIDE_KEY`` constant is the single source of truth that the
+per-contract ``as_dict`` exclusion and the DSL read both reference, so they
+cannot drift apart. ``engine.py`` still reads the field via ``getattr``
+(Candidate 3 will type it); this module only removes the copy-paste.
 """
 
 from __future__ import annotations

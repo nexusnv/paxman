@@ -13,6 +13,8 @@ Any other kind raises `UnsupportedContractError` (defined in
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 from paxman._capabilities.country.contract import CanonicalCountryContract
 from paxman._capabilities.date.contract import CanonicalDateContract
@@ -27,73 +29,25 @@ from paxman._core.classification import ValidationResult
 from paxman._errors import UnsupportedContractError
 
 
-def validate(
-    value: str,
-    contract: object,
-) -> ValidationResult:
-    """Validate a canonical value against the contract.
+def _always_valid(value: str, contract: object) -> ValidationResult:
+    """Return a passing result for a contract already validated by its capability.
 
-    Raises `UnsupportedContractError` for unknown contract kinds. The
-    orchestrator is responsible for catching that and mapping to
-    `Status.UNSUPPORTED`.
+    The relevant capability has already validated the canonical form and any
+    version/shape policy; no further policy check is needed here. Mandate Law 11:
+    Paxman must not silently canonicalize incorrectly — delegating to the
+    capability's prior validation upholds that guarantee (deterministic, no
+    guessing).
     """
-    # v2.0.0: dispatch on type. The supported kinds are the email,
-    # uuid, and date contracts. A future v2.x that adds new kinds will replace this
-    # with a Protocol-based dispatch table.
-    if isinstance(contract, CanonicalUUIDContract):
-        # The UUIDCapability has already validated the canonical form and
-        # the version policy; no further policy check is needed here.
-        # Mandate Law 11: Paxman must not silently canonicalize
-        # incorrectly — delegating to the capability's prior validation
-        # upholds that guarantee (deterministic, no guessing).
-        return ValidationResult(is_valid=True)
-    if isinstance(contract, CanonicalDateContract):
-        # The DateCapability has already validated the canonical form;
-        # no further policy check is needed here (same rationale as
-        # UUID above — Law 11).
-        return ValidationResult(is_valid=True)
-    if isinstance(contract, CanonicalPhoneContract):
-        # The PhoneCapability has already validated the canonical form
-        # against the E.164 global shape rule; no further policy check
-        # is needed here (same rationale as UUID/Date above — Law 11).
-        return ValidationResult(is_valid=True)
-    if isinstance(contract, CanonicalURLContract):
-        # The URLCapability has already validated the canonical form;
-        # no further policy check is needed here (same rationale as
-        # UUID/Date/Phone above — Law 11).
-        return ValidationResult(is_valid=True)
-    if isinstance(contract, CanonicalBooleanContract):
-        # The BooleanCapability has already validated the canonical form
-        # ("true"/"false"); no further policy check is needed here
-        # (same rationale as UUID/Date/Phone/URL above — Law 11).
-        return ValidationResult(is_valid=True)
-    if isinstance(contract, CanonicalIPContract):
-        # The IPCapability has already validated the canonical form
-        # (RFC 5952 / dotted-decimal); no further policy check is needed
-        # here (mandate Law 11 — delegating to the capability's prior
-        # validation upholds the no-silent-canonicalization guarantee).
-        return ValidationResult(is_valid=True)
-    if isinstance(contract, CanonicalMoneyContract):
-        # The MoneyCapability has already validated the canonical form
-        # ("<ISO4217>:<amount>"); no further policy check is needed here
-        # (same rationale as UUID/Date/Phone/URL/IP above — Law 11).
-        return ValidationResult(is_valid=True)
-    if isinstance(contract, CanonicalCountryContract):
-        # The CountryCapability has already validated the canonical form
-        # (ISO 3166-1 alpha-2); no further policy check is needed here
-        # (same rationale as UUID/Date/Phone/URL/IP/Money — Geolocation is
-        # handled below — Law 11).
-        return ValidationResult(is_valid=True)
-    if isinstance(contract, CanonicalGeolocationContract):
-        # The GeolocationCapability has already validated the canonical form
-        # ("<lat>,<lon>" decimal WGS84); no further policy check is needed here
-        # (same rationale as UUID/Date/Phone/URL/IP/Money above — Law 11).
-        return ValidationResult(is_valid=True)
-    if not isinstance(contract, CanonicalEmailContract):
-        raise UnsupportedContractError(
-            f"validation does not support contract kind: {type(contract).__name__}"
-        )
+    return ValidationResult(is_valid=True)
 
+
+def _validate_email(value: str, contract: object) -> ValidationResult:
+    """Validate a canonical email value against the contract's strictness policy.
+
+    The EmailCapability has already validated the canonical form; this step only
+    enforces the post-capability policy (Law 4): non-empty local/domain parts and,
+    in strict mode, no embedded whitespace and ASCII-only local/domain.
+    """
     # Local part and domain must be non-empty.
     if "@" not in value:
         return ValidationResult(is_valid=False)
@@ -120,3 +74,39 @@ def validate(
             return ValidationResult(is_valid=False)
 
     return ValidationResult(is_valid=True)
+
+
+# Registry mapping each supported contract type to its validator. Dispatch is on
+# the exact contract type (type(contract)), preserving the prior per-branch
+# isinstance behavior. The eight non-email kinds are already validated by their
+# capability (Law 11), so they share the no-op _always_valid validator.
+VALIDATORS: dict[type, Callable[[str, object], ValidationResult]] = {
+    CanonicalUUIDContract: _always_valid,
+    CanonicalDateContract: _always_valid,
+    CanonicalPhoneContract: _always_valid,
+    CanonicalURLContract: _always_valid,
+    CanonicalBooleanContract: _always_valid,
+    CanonicalIPContract: _always_valid,
+    CanonicalMoneyContract: _always_valid,
+    CanonicalCountryContract: _always_valid,
+    CanonicalGeolocationContract: _always_valid,
+    CanonicalEmailContract: _validate_email,
+}
+
+
+def validate(
+    value: str,
+    contract: object,
+) -> ValidationResult:
+    """Validate a canonical value against the contract.
+
+    Raises `UnsupportedContractError` for unknown contract kinds. The
+    orchestrator is responsible for catching that and mapping to
+    `Status.UNSUPPORTED`.
+    """
+    validator = VALIDATORS.get(type(contract))
+    if validator is None:
+        raise UnsupportedContractError(
+            f"validation does not support contract kind: {type(contract).__name__}"
+        )
+    return validator(value, contract)

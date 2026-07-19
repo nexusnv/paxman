@@ -6,8 +6,17 @@ from typing import Any, cast
 
 import pytest
 
+from paxman._capabilities.boolean.contract import CanonicalBooleanContract
+from paxman._capabilities.country.contract import CanonicalCountryContract
+from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._capabilities.email.contract import CanonicalEmailContract
-from paxman._core.validation import validate
+from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
+from paxman._capabilities.ip.contract import CanonicalIPContract
+from paxman._capabilities.money.contract import CanonicalMoneyContract
+from paxman._capabilities.phone.contract import CanonicalPhoneContract
+from paxman._capabilities.url.contract import CanonicalURLContract
+from paxman._capabilities.uuid.contract import CanonicalUUIDContract
+from paxman._core.validation import VALIDATORS, validate
 from paxman._errors import UnsupportedContractError
 
 
@@ -18,6 +27,23 @@ class _UnsupportedContract:
 
     def as_dict(self) -> dict[str, object]:
         return {"kind": "canonical_widget"}
+
+
+# One representative instance per supported contract type, used to assert that
+# each routes through the registry to a passing result (Law 11: the capability
+# already validated the canonical form).
+_KNOWN_CONTRACTS: list[object] = [
+    CanonicalUUIDContract(),
+    CanonicalDateContract(),
+    CanonicalPhoneContract(),
+    CanonicalURLContract(),
+    CanonicalBooleanContract(),
+    CanonicalIPContract(),
+    CanonicalMoneyContract(currency="MYR"),
+    CanonicalCountryContract(),
+    CanonicalGeolocationContract(),
+    CanonicalEmailContract(),
+]
 
 
 def _contract(**overrides: object) -> CanonicalEmailContract:
@@ -32,6 +58,19 @@ def _contract(**overrides: object) -> CanonicalEmailContract:
 
 
 class TestValidate:
+    def test_every_known_contract_type_is_registered(self) -> None:
+        # Each supported contract type must have a validator entry.
+        for contract in _KNOWN_CONTRACTS:
+            assert type(contract) in VALIDATORS
+
+    def test_every_known_contract_type_routes_to_valid_result(self) -> None:
+        # The capability already validated the canonical form (Law 11), so each
+        # known kind returns a passing result for a well-formed value. The email
+        # contract is the only one with real logic, so it needs a valid email.
+        for contract in _KNOWN_CONTRACTS:
+            sample = "a@b.c" if isinstance(contract, CanonicalEmailContract) else "dummy"
+            assert validate(sample, contract).is_valid is True
+
     def test_simple_email_is_valid_in_default_mode(self) -> None:
         assert validate("a@b.c", _contract()).is_valid is True
 

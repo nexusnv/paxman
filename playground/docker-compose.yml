@@ -1,0 +1,33 @@
+# Playground: a ready-to-run JupyterLab for learning Paxman.
+#
+#   docker compose up
+#
+# opens JupyterLab at http://localhost:8888 with NO token (local playground only).
+# The playground/ folder (notebooks + data) is bind-mounted live from your host,
+# and paxman is installed editable from the repo source baked into the image.
+#
+# Build context is the repo ROOT so the Dockerfile can COPY the whole project.
+services:
+  paxman-playground:
+    build:
+      context: ..
+      dockerfile: playground/Dockerfile
+    image: paxman-playground:local
+    container_name: paxman-playground
+    ports:
+      - "8888:8888"
+    volumes:
+      # Live notebooks + sample data, editable from the host.
+      - ./notebooks:/home/jovyan/playground/notebooks
+      - ./data:/home/jovyan/playground/data
+      # Keep the reference backbone doc available inside the lab too.
+      - ./NOTEBOOK_INPUTS.md:/home/jovyan/playground/NOTEBOOK_INPUTS.md:ro
+    working_dir: /home/jovyan/playground
+    command: >
+      start-notebook.py
+      --NotebookApp.token=""
+      --NotebookApp.password=""
+      --NotebookApp.ip=0.0.0.0
+      --NotebookApp.port=8888
+      --NotebookApp.open_browser=False
+    restart: "no"

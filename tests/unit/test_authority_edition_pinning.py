@@ -147,3 +147,22 @@ def test_compliance_profile_builds_pinned_engine() -> None:
     assert eng.authority("ISO 3166-1").edition == "2024"
     # unpinned authorities still resolve to their active edition
     assert eng.authority("ISO 4217").edition == "iso4217:2015"
+
+
+def test_engine_reads_authority_override_statically_with_override() -> None:
+    # The engine must read authority_override as a typed attribute (not via
+    # getattr), so a contract carrying a pin hits the override path and the
+    # pinned edition is recorded rather than silently dropped.
+    c = Country(allow_name=True, authority_override={"ISO 3166-1": "2024"})
+    assert c.authority_override == {"ISO 3166-1": "2024"}
+    r = canonicalize("malaysia", c)
+    assert _edition(r.authorities, "ISO 3166-1") == "2024"
+
+
+def test_engine_reads_authority_override_statically_without_override() -> None:
+    # A contract with no pin exposes authority_override as None; the engine's
+    # override block must be skipped and the default (latest) edition recorded.
+    c = Country(allow_name=True)
+    assert c.authority_override is None
+    r = canonicalize("malaysia", c)
+    assert _edition(r.authorities, "ISO 3166-1") == "2024"

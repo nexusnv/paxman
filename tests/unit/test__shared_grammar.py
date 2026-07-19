@@ -71,3 +71,22 @@ def test_recognize_grammars_strip_true_trims_input():
     reps = recognize_grammars((g,), "  abc  ", _FakeContract(), _FakeContract, strip=True)
     assert len(reps) == 1
     assert reps[0].raw == "abc"
+
+
+def test_recognize_grammars_strip_charset_is_narrow():
+    # A narrow ASCII charset must NOT strip a non-breaking space (\u00a0),
+    # preserving country's determinism (full str.strip() WOULD remove it).
+    g = make_grammar("ws", "Fake spec §2 (whitespace tolerated)", r"^(?P<value>abc)$")
+    # ASCII spaces are stripped by the narrow charset → matches.
+    reps = recognize_grammars(
+        (g,), "  abc  ", _FakeContract(), _FakeContract, strip=" \t\r\n\f\v"
+    )
+    assert len(reps) == 1
+    assert reps[0].raw == "abc"
+    # A non-breaking space is NOT in the narrow charset → preserved → no match.
+    assert (
+        recognize_grammars(
+            (g,), "abc\u00a0", _FakeContract(), _FakeContract, strip=" \t\r\n\f\v"
+        )
+        == []
+    )

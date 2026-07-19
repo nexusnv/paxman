@@ -8,9 +8,8 @@ Migrated from a free-form `_RULE_PROVENANCE` string map to a structured
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from paxman._core.provenance import Evidence
+from paxman._capabilities._shared.evidence import make_evidence
 from paxman._provenance import Authority
-from paxman._provenance import _evidence as _provenance_evidence
 from paxman._provenance import registries as R
 
 # Law 14 rule→authority manifest. The two dispatch invariants
@@ -42,10 +41,4 @@ _RULE_AUTHORITIES: Mapping[str, Authority | None] = MappingProxyType(
 )
 
 
-def _evidence(rule: str, detail: str = "") -> Evidence:
-    """Build an `Evidence` pulling the Law 14 authority from the manifest.
-
-    A rule with no manifest entry raises `KeyError` at the construction
-    site, surfacing a missing citation immediately.
-    """
-    return _provenance_evidence(rule, _RULE_AUTHORITIES, detail)
+_evidence = make_evidence(_RULE_AUTHORITIES)

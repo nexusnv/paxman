@@ -13,6 +13,10 @@ from typing import Any
 
 import attrs
 
+from paxman._capabilities._shared.contract import (
+    _authority_override_from_spec,
+    authority_override_field,
+)
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
@@ -260,12 +264,7 @@ class CanonicalMoneyContract:
     version: int = attrs.field(default=1, validator=_validate_v1)
     version_field: int = attrs.field(default=1, validator=_validate_v1)
 
-    authority_override: Any = attrs.field(
-        default=None,
-        repr=False,
-        eq=False,
-        hash=False,
-    )
+    authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
@@ -355,7 +354,7 @@ def _build_money(spec: dict[str, Any]) -> CanonicalMoneyContract:
         allow_symbol=_require_bool("allow_symbol", spec.get("allow_symbol", True)),
         allow_code=_require_bool("allow_code", spec.get("allow_code", True)),
         strip_spaces=_require_bool("strip_spaces", spec.get("strip_spaces", True)),
-        authority_override=spec.get("authority_override", None),
+        authority_override=_authority_override_from_spec(spec),
     )
 
 

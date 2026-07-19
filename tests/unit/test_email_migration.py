@@ -1,5 +1,5 @@
-from paxman._capabilities.email.grammar import recognize, GRAMMARS
 from paxman._capabilities.email.contract import CanonicalEmailContract, Email
+from paxman._capabilities.email.grammar import recognize
 
 
 def test_email_recognize_delegates_to_shared():

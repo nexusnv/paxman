@@ -1,4 +1,4 @@
-from paxman._capabilities.uuid.contract import CanonicalUUIDContract, UUID
+from paxman._capabilities.uuid.contract import UUID, CanonicalUUIDContract
 from paxman._capabilities.uuid.grammar import recognize
 
 

@@ -185,6 +185,11 @@ src/paxman/
 │   ├── __init__.py             #   re-exports domain contract vocabulary
 │   ├── protocol.py             #   Capability Protocol (Law 8a: pure)
 │   ├── discovery.py            #   builtin_capabilities() — source of truth
+│   ├── _shared/                #   shared recognition/evidence/contract scaffold (de-duplicated from domains)
+│   │   ├── __init__.py         #     package marker (empty)
+│   │   ├── grammar.py          #     Grammar/RecognizedRep/make_grammar/recognize_grammars
+│   │   ├── evidence.py         #     make_evidence / make_evidence_for (engine-aware)
+│   │   └── contract.py         #     authority_override_field / _authority_override_from_spec
 │   ├── email/                  #   EmailCapability (shipped built-in)
 │   │   ├── __init__.py         #     re-exports CanonicalEmailContract, Email, GRAMMARS, recognize
 │   │   ├── contract.py         #     CanonicalEmailContract + Email()

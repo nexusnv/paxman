@@ -116,3 +116,53 @@ Fix what the review identifies as valid; skip findings that no longer apply and
 state why briefly. Do not bundle unrelated refactors into a targeted fix. Before
 claiming a change is complete, run the lint, type-check, and test gates the CI
 runs, and confirm the relevant coverage gate still passes.
+
+## 10. The `_shared` recognition seam — and its intentional escapes
+
+The recognition/evidence/contract boilerplate that was verbatim-duplicated
+across the capability domains now lives in
+`src/paxman/_capabilities/_shared/` (`grammar.py`, `evidence.py`,
+`contract.py`). **The canonical pattern for a regex-grammar capability is to
+delegate to it**:
+
+- `grammar.py` imports `Grammar`, `RecognizedRep`, `make_grammar`,
+  `recognize_grammars` from `_shared.grammar`; keeps only its `GRAMMARS`
+  tuple and a thin `recognize(value, contract) -> list[RecognizedRep]`
+  that calls `recognize_grammars(GRAMMARS, value, contract, CanonicalXContract)`.
+- `rules.py` builds `_evidence` via `make_evidence(_RULE_AUTHORITIES)`
+  (or `make_evidence_for(..., authority_name, registry_rules=...)` for the
+  engine-aware capabilities).
+- `contract.py` declares `authority_override: Any = authority_override_field()`
+  and reads it in the builder via `_authority_override_from_spec(spec)`.
+
+The **six regex-grammar domains** (`country`, `boolean`, `url`, `ip`,
+`phone`, `geolocation`) follow this pattern and are the baseline to copy
+when adding or migrating a standard capability.
+
+**`money` and `date` are INTENTIONAL escapes from this seam — do not treat
+them as the pattern, and do not "helpfully" migrate them onto
+`recognize_grammars`.** They were consciously left out of the `_shared`
+migration:
+
+- **`money`** performs no grammar matching at all. Its "recognition" is a
+  structured parser (`recognize_money` → `MoneyParts`): symbol/code detection
+  against a 90+ entry map, sign splitting, and currency-aware decimal
+  parsing. There are no anchored regex grammars, so `recognize_grammars`
+  cannot express it. It adopts only `make_evidence_for("ISO 4217")` and
+  `authority_override_field()`.
+- **`date`** uses a *bracket-notation* grammar language
+  (`"[DAY] [MONTH(lang)] [YEAR]"`) compiled **per `contract.language`**
+  inside the match loop, and its `Grammar` carries a `field_roles` field the
+  shared `Grammar` lacks. The shared `make_grammar` compiles a raw regex
+  directly and cannot consume bracket notation or recompile per language.
+  Forcing it through `recognize_grammars` would either explode the grammar
+  tuple across languages or contaminate the shared scaffold with a date-only
+  compile callback — defeating the seam's purpose. Date keeps its local
+  `Grammar`/`RecognizedRep` and adopts only `authority_override_field()`
+  plus `make_evidence`.
+
+If you are adding a *new* capability and it recognizes input with anchored
+regexes (the normal case), follow the six regex-grammar domains, not money/date.
+If your new capability needs bracket notation, per-language compilation, or a
+structured parser rather than grammar matching, document that divergence in the
+module docstring so a future session does not mistake it for a missed migration.

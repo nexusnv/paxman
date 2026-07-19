@@ -114,6 +114,12 @@ select = [
     "UP",  # pyupgrade (modern Python syntax)
     "RUF", # ruff-specific rules
 ]
+# RUF009 (function call in attrs field default) is intentionally ignored: the
+# shared `authority_override_field()` factory (paxman._capabilities._shared.contract)
+# is the mandated cross-domain pattern for the authority-override escape hatch.
+# `# noqa` is banned in src/paxman/, so ignoring the rule project-wide is the
+# only compliant way to permit the shared field across all 10 capability contracts.
+ignore = ["RUF009"]
 # ANN (annotations) is intentionally excluded: v2 uses `object` and
 # `Any` in a few narrow places where the type is genuinely dynamic
 # (the orchestrator's lazy imports, the artifact's Protocol contract).

@@ -341,3 +341,52 @@ jobs:
 
       - name: Run integration tests
         run: uv run pytest tests/integration --no-header
+
+  # ---------------------------------------------------------------------------
+  # Playground notebook smoke test
+  # Executes every notebook in playground/notebooks/ top-to-bottom with
+  # `jupyter nbconvert --execute` so API drift in the public surface (or a
+  # broken example) fails CI instead of rotting. The job globs the directory,
+  # so newly added capability notebooks are picked up automatically. py3.12
+  # only: notebooks exercise the public API, not a version-specific path.
+  # ---------------------------------------------------------------------------
+  notebook-smoke:
+    name: playground notebook smoke test (py3.12)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+
+      - name: Set up Python 3.12
+        run: uv python install 3.12
+
+      - name: Install dependencies (frozen lockfile)
+        # jupyter + nbconvert are in the dev group for this job.
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Execute playground notebooks
+        run: |
+          shopt -s nullglob
+          fails=0
+          for nb in playground/notebooks/*.ipynb; do
+            echo "::group::execute $nb"
+            if uv run jupyter nbconvert --execute --to notebook --stdout "$nb" >/dev/null 2>&1; then
+              echo "ok: $nb"
+            else
+              echo "::error::notebook failed to execute: $nb"
+              fails=1
+            fi
+            echo "::endgroup::"
+          done
+          exit "$fails"

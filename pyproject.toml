@@ -45,6 +45,9 @@ dev = [
     "ruff>=0.15.21",
     "mypy>=2.3.0",
     "interrogate>=1.7.0",
+    # Notebook smoke tests (playground/): execute .ipynb top-to-bottom in CI.
+    "jupyter>=1.1.1",
+    "nbconvert>=7.16.0",
 ]
 
 # ---------------------------------------------------------------------------
@@ -88,6 +91,10 @@ markers = [
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+# Notebooks are pedagogical examples verified by the `notebook-smoke` CI job
+# (jupyter nbconvert --execute), not by the source linter. Exclude them so
+# ruff does not flag example-only imports/ordering inside notebook cells.
+exclude = ["playground"]
 
 [tool.ruff.lint]
 select = [

@@ -20,14 +20,14 @@ from paxman._provenance.authority import Authority
 from paxman._provenance.evidence import Evidence, _evidence_from_args
 
 #: Engine-aware ``_evidence`` closure shape: ``(rule, detail="", engine=None)``.
-EngineEvidence = Callable[[str, str, "Engine | None"], Evidence]
+EngineEvidence = Callable[..., Evidence]
 
 #: A capability's rule→authority manifest maps every emitted rule name to the
 #: :class:`Authority` it cites (or ``None`` for allow-listed dispatch invariants).
 RuleAuthorities = Mapping[str, Authority | None]
 
 
-def make_evidence(manifest: RuleAuthorities) -> Callable[[str, str], Evidence]:
+def make_evidence(manifest: RuleAuthorities) -> Callable[..., Evidence]:
     """Return an ``_evidence(rule, detail="")`` closure bound to ``manifest``."""
 
     def _evidence(rule: str, detail: str = "") -> Evidence:
@@ -40,7 +40,7 @@ def make_evidence_for(
     manifest: RuleAuthorities,
     authority_name: str,
     registry_rules: frozenset[str] | None = None,
-) -> EngineEvidence:
+) -> Callable[..., Evidence]:
     """Return an engine-aware ``_evidence(rule, detail="", engine=None)`` closure.
 
     When ``engine`` is not ``None`` and ``rule`` is in ``registry_rules`` and the

@@ -16,6 +16,10 @@ from typing import Any, Literal
 
 import attrs
 
+from paxman._capabilities._shared.contract import (
+    _authority_override_from_spec,
+    authority_override_field,
+)
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
@@ -48,23 +52,13 @@ class CanonicalUUIDContract:
     version: Literal["any", "1", "3", "4", "5", "7"] = "any"
     kind: str = "canonical_uuid"
     version_field: int = 1
+    authority_override: Any = authority_override_field()
 
     def __attrs_post_init__(self) -> None:
-        # Enforce the allowed version set at runtime. `attrs` does not
-        # validate `Literal`, so a misconfigured `UUID(version="99")`
-        # would otherwise silently canonicalize every input to INVALID
-        # (Mandate Law 7 — explicit over clever; fail loudly).
         if self.version not in _UUID_VERSIONS_ALLOWED:
             raise ContractError(
                 f"invalid uuid version: {self.version!r}; allowed: {sorted(_UUID_VERSIONS_ALLOWED)}"
             )
-
-    authority_override: Any = attrs.field(
-        default=None,
-        repr=False,
-        eq=False,
-        hash=False,
-    )
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract (round-trips via parse_contract)."""
@@ -94,7 +88,7 @@ def _build_uuid(spec: dict[str, Any]) -> CanonicalUUIDContract:
         raise ContractError(
             f"invalid uuid version: {version!r}; allowed: {sorted(_UUID_VERSIONS_ALLOWED)}"
         )
-    authority_override = spec.get("authority_override", None)
+    authority_override = _authority_override_from_spec(spec)
     return CanonicalUUIDContract(version=version, authority_override=authority_override)
 
 

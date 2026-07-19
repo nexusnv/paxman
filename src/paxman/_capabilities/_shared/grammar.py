@@ -82,7 +82,7 @@ def recognize_grammars(
     contract: object,
     contract_type: type,
     *,
-    strip: bool = False,
+    strip: "bool | str" = False,
 ) -> list[RecognizedRep]:
     """Recognise every grammar shape ``value`` full-matches.
 
@@ -99,15 +99,23 @@ def recognize_grammars(
         value: The raw input string.
         contract: The contract instance this recogniser was called with.
         contract_type: The exact contract class this recogniser accepts.
-        strip: When ``True``, ``value`` is ``str.strip``-ed before matching
-            (country's only behavioural fork in the scaffold).
+        strip: Before matching, trim ``value``. ``True`` uses the full
+            ``str.strip()`` (all Unicode whitespace); a non-empty ``str`` is
+            passed as the explicit ``chars`` argument to ``str.strip(chars)``
+            (preserves country's narrow ASCII-whitespace charset — see
+            ``country/grammar.py``). ``False`` (default) matches untrimmed.
 
     Returns:
         A list of :class:`RecognizedRep` (possibly empty).
     """
     if not isinstance(contract, contract_type):
         return []
-    matched = value.strip() if strip else value
+    if strip is True:
+        matched = value.strip()
+    elif strip:
+        matched = value.strip(strip)
+    else:
+        matched = value
     reps: list[RecognizedRep] = []
     for grammar in grammars:
         match = grammar.compiled.fullmatch(matched)

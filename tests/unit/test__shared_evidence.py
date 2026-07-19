@@ -57,3 +57,24 @@ def test_make_evidence_for_reresolves_registry_rules_via_engine():
     assert resolved.authority.version == "alpha-2 shape"
     # A non-registry rule is untouched even when an engine is passed.
     assert ev("unrecognized_format", engine=engine).authority.name == "ISO 3166-1"
+
+
+def test_make_evidence_for_unrecognized_format_resolves_via_engine():
+    authority_name = "ISO 3166-1"
+    registry_rules = frozenset({"unrecognized_format"})
+    manifest = {"unrecognized_format": R.ISO_3166.section("input not recognized")}
+    ev = make_evidence_for(manifest, authority_name, registry_rules)
+    engine = _stub_engine(authority_name, "input not recognized")
+    resolved = ev("unrecognized_format", engine=engine)
+    # The unrecognized_format narrative is re-resolved against the engine edition.
+    assert resolved.authority.name == authority_name
+    assert resolved.authority.version == "input not recognized"
+
+
+def test_make_evidence_for_default_registry_rules_is_noop_with_engine():
+    authority_name = "ISO 3166-1"
+    manifest = {"recognized_alpha2": R.ISO_3166.section("alpha-2 shape")}
+    # registry_rules defaults to None → empty frozenset → engine is a no-op.
+    ev = make_evidence_for(manifest, authority_name)
+    engine = _stub_engine(authority_name, "alpha-2 shape")
+    assert ev("recognized_alpha2", engine=engine).authority == manifest["recognized_alpha2"]

@@ -10,6 +10,10 @@ from typing import Any, cast
 
 import attrs
 
+from paxman._capabilities._shared.contract import (
+    _authority_override_from_spec,
+    authority_override_field,
+)
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 from paxman._types.common import ProviderAliasesPolicy
@@ -32,12 +36,7 @@ class CanonicalEmailContract:
     version: int = 1
     version_field: int = 1
 
-    authority_override: Any = attrs.field(
-        default=None,
-        repr=False,
-        eq=False,
-        hash=False,
-    )
+    authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract.
@@ -128,7 +127,7 @@ def _build_email(spec: dict[str, Any]) -> CanonicalEmailContract:
         strip_whitespace=_require_bool("strip_whitespace", spec.get("strip_whitespace", True)),
         provider_aliases=cast(ProviderAliasesPolicy, provider_aliases),
         strict=_require_bool("strict", spec.get("strict", False)),
-        authority_override=spec.get("authority_override", None),
+        authority_override=_authority_override_from_spec(spec),
     )
 
 

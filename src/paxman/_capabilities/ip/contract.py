@@ -11,6 +11,10 @@ from typing import Any
 
 import attrs
 
+from paxman._capabilities._shared.contract import (
+    _authority_override_from_spec,
+    authority_override_field,
+)
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
@@ -31,12 +35,7 @@ class CanonicalIPContract:
     version: int = 1
     version_field: int = 1
 
-    authority_override: Any = attrs.field(
-        default=None,
-        repr=False,
-        eq=False,
-        hash=False,
-    )
+    authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
@@ -101,7 +100,7 @@ def _build_ip(spec: dict[str, Any]) -> CanonicalIPContract:
         allow_ipv4=_require_bool("allow_ipv4", spec.get("allow_ipv4", True)),
         allow_ipv6=_require_bool("allow_ipv6", spec.get("allow_ipv6", True)),
         preserve_zone_id=_require_bool("preserve_zone_id", spec.get("preserve_zone_id", True)),
-        authority_override=spec.get("authority_override", None),
+        authority_override=_authority_override_from_spec(spec),
     )
 
 

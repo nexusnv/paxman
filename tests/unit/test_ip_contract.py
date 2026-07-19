@@ -77,3 +77,16 @@ def test_non_int_version_raises_contract_error() -> None:
 def test_unknown_kind_raises_contract_error() -> None:
     with pytest.raises(ContractError):
         parse_contract({"kind": "canonical_bogus"})
+
+
+def test_dsl_authority_override_is_not_dropped() -> None:
+    result = parse_contract(
+        {"kind": "canonical_ip", "authority_override": "OVERRIDE_X"}
+    )
+    assert isinstance(result, CanonicalIPContract)
+    assert result.authority_override == "OVERRIDE_X"
+
+
+def test_factory_authority_override_round_trips() -> None:
+    c = IP(authority_override="Y")
+    assert c.authority_override == "Y"

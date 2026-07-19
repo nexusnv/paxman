@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from paxman import Status
-from paxman import parse_contract
+from paxman import Status, parse_contract
 from paxman._capabilities.date import _RULE_AUTHORITIES, DateCapability
 from paxman._capabilities.date.contract import CanonicalDateContract, Date
 from paxman._core.contracts import Contract
@@ -271,9 +270,7 @@ class TestLaw14AuthorityManifest:
 
 
 def test_dsl_authority_override_is_not_dropped() -> None:
-    result = parse_contract(
-        {"kind": "canonical_date", "authority_override": "OVERRIDE_X"}
-    )
+    result = parse_contract({"kind": "canonical_date", "authority_override": "OVERRIDE_X"})
     assert isinstance(result, CanonicalDateContract)
     assert result.authority_override == "OVERRIDE_X"
 

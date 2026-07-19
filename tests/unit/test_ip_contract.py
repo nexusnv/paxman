@@ -80,9 +80,7 @@ def test_unknown_kind_raises_contract_error() -> None:
 
 
 def test_dsl_authority_override_is_not_dropped() -> None:
-    result = parse_contract(
-        {"kind": "canonical_ip", "authority_override": "OVERRIDE_X"}
-    )
+    result = parse_contract({"kind": "canonical_ip", "authority_override": "OVERRIDE_X"})
     assert isinstance(result, CanonicalIPContract)
     assert result.authority_override == "OVERRIDE_X"
 

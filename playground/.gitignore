@@ -1,0 +1,3 @@
+# Scratch space for your own sample inputs when running the playground lab.
+# Bind-mounted read-only into the container; keep it out of version control.
+data/

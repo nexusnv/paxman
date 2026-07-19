@@ -45,6 +45,11 @@ dev = [
     "ruff>=0.15.21",
     "mypy>=2.3.0",
     "interrogate>=1.7.0",
+]
+# Optional: only needed for the playground notebook smoke test / local lab.
+# Kept out of the base `dev` group so a normal `uv sync` does not pull the
+# heavy Jupyter stack. CI installs it via `--all-extras`.
+playground = [
     # Notebook smoke tests (playground/): execute .ipynb top-to-bottom in CI.
     "jupyter>=1.1.1",
     "nbconvert>=7.16.0",

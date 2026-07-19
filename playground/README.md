@@ -51,11 +51,35 @@ docker compose up
 
 - First run builds the image (pulls `jupyter/scipy-notebook`, installs Paxman
   editable) — this takes a minute or two.
-- Open **http://localhost:8888** in your browser. The lab is **tokenless**
-  (local playground only — don't expose port 8888 to untrusted networks).
+- The lab starts on **http://127.0.0.1:8888** (localhost only, not reachable
+  from the network) and is protected by a **random token** printed to the
+  container logs. Get the URL with:
+
+  ```bash
+  docker compose logs 2>&1 | grep -E "token=|Open:"
+  ```
+
+  Open that URL in your browser. **Never** run the playground on a shared or
+  networked host in open mode (below).
 - Notebooks are bind-mounted from `playground/notebooks/` on your host, so any
-  edit you make in the browser is saved back to the repo.
+  edit you make in the browser is saved back to the repo. The `data/` scratch
+  directory is mounted read-only inside the lab, so a notebook cannot write
+  back into your repo tree.
 - Shut it down with `Ctrl-C`, or `docker compose down` from another terminal.
+
+### Open mode (tokenless, opt-in — NOT for shared hosts)
+
+The default is localhost + token for safety. To run the original tokenless
+lab bound to all interfaces (e.g. for a throwaway local-only demo on an
+isolated machine), opt in explicitly:
+
+```bash
+PAXMAN_PLAYGROUND_OPEN=1 docker compose up
+```
+
+This disables the token and binds to `0.0.0.0`. **Only do this on a host you
+trust is unreachable from any untrusted network** — an open Jupyter server is
+remote-code-execution exposure.
 
 To rebuild after changing the Dockerfile or `pyproject.toml`:
 

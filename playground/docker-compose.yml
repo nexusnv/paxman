@@ -2,11 +2,17 @@
 #
 #   docker compose up
 #
-# opens JupyterLab at http://localhost:8888 with NO token (local playground only).
-# The playground/ folder (notebooks + data) is bind-mounted live from your host,
-# and paxman is installed editable from the repo source baked into the image.
+# Opens JupyterLab at http://127.0.0.1:8888 with a RANDOM token printed to the
+# container logs (run `docker compose logs` to see the "token=..." URL). The
+# server binds to localhost only by default — it is NOT reachable from the
+# network. The playground/ folder (notebooks + data) is bind-mounted live from
+# your host, and paxman is installed editable from the repo source baked in.
 #
 # Build context is the repo ROOT so the Dockerfile can COPY the whole project.
+#
+# SECURITY: the open, tokenless, 0.0.0.0-bound mode is opt-in only.
+# Set PAXMAN_PLAYGROUND_OPEN=1 (and accept the risk) to disable the token and
+# bind to all interfaces — never do this on a shared or networked machine.
 services:
   paxman-playground:
     build:
@@ -14,20 +20,40 @@ services:
       dockerfile: playground/Dockerfile
     image: paxman-playground:local
     container_name: paxman-playground
+    environment:
+      # Opt-in, insecure mode. Leave unset (or "0") for the safe localhost+token default.
+      PAXMAN_PLAYGROUND_OPEN: "${PAXMAN_PLAYGROUND_OPEN:-0}"
     ports:
-      - "8888:8888"
+      # localhost only by default; the container decides 0.0.0.0 only in open mode.
+      - "127.0.0.1:8888:8888"
     volumes:
-      # Live notebooks + sample data, editable from the host.
+      # Live notebooks, editable from the host.
       - ./notebooks:/home/jovyan/playground/notebooks
-      - ./data:/home/jovyan/playground/data
+      # Scratch space for your own sample inputs — read-only inside the lab so a
+      # compromised/errant notebook cannot write back into your repo tree.
+      - ./data:/home/jovyan/playground/data:ro
       # Keep the reference backbone doc available inside the lab too.
       - ./NOTEBOOK_INPUTS.md:/home/jovyan/playground/NOTEBOOK_INPUTS.md:ro
     working_dir: /home/jovyan/playground
     command: >
-      start-notebook.py
-      --NotebookApp.token=""
-      --NotebookApp.password=""
-      --NotebookApp.ip=0.0.0.0
-      --NotebookApp.port=8888
-      --NotebookApp.open_browser=False
+      bash -c '
+        if [ "$${PAXMAN_PLAYGROUND_OPEN}" = "1" ]; then
+          echo "WARNING: starting PLAYGROUND in OPEN (tokenless, 0.0.0.0) mode. Not for shared/networked hosts." >&2
+          start-notebook.py
+            --NotebookApp.token=""
+            --NotebookApp.password=""
+            --NotebookApp.ip=0.0.0.0
+            --NotebookApp.port=8888
+            --NotebookApp.open_browser=False
+        else
+          TOKEN="$$(openssl rand -hex 24 2>/dev/null || head -c 24 /dev/urandom | xxd -p -c 24)"
+          echo "Playground token: $${TOKEN}" >&2
+          echo "Open: http://127.0.0.1:8888/?token=$${TOKEN}" >&2
+          start-notebook.py
+            --NotebookApp.token="$${TOKEN}"
+            --NotebookApp.ip=127.0.0.1
+            --NotebookApp.port=8888
+            --NotebookApp.open_browser=False
+        fi
+      '
     restart: "no"

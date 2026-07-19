@@ -63,9 +63,7 @@ class RecognizedRep:
     captures: Mapping[str, str]
 
 
-def make_grammar(
-    id: str, source: str, pattern: str, shape: str | None = None
-) -> Grammar:
+def make_grammar(id: str, source: str, pattern: str, shape: str | None = None) -> Grammar:
     """Construct a :class:`Grammar` (compiled, anchored)."""
     return Grammar(
         id=id,

@@ -20,7 +20,7 @@ from paxman._provenance.authority import Authority
 from paxman._provenance.evidence import Evidence, _evidence_from_args
 
 #: Engine-aware ``_evidence`` closure shape: ``(rule, detail="", engine=None)``.
-EngineEvidence = Callable[..., Evidence]
+EngineEvidence = Callable[[str, str, "Engine | None"], Evidence]
 
 #: A capability's rule→authority manifest maps every emitted rule name to the
 #: :class:`Authority` it cites (or ``None`` for allow-listed dispatch invariants).

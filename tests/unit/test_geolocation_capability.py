@@ -223,13 +223,13 @@ class TestGeolocationResolverEdgeCases:
         assert "out_of_range" in {e.rule for e in r.evidence}
 
     def test_classify_unrecognized_format_direct(self) -> None:
-        # Direct classify path when recognition returned no rep.
-        from paxman._capabilities.geolocation.canonicalizer import classify
+        # The recognition layer now returns [] for junk; the canonicalize path
+        # maps that empty list to INVALID with an unrecognized_format evidence
+        # entry (the old classify(None, ...) branch is gone).
         from paxman._capabilities.geolocation.grammar import recognize
 
-        status, value, evidence, _cands = classify(None, [], _contract())
-        assert status is Status.INVALID
-        assert value is None
-        assert "unrecognized_format" in {e.rule for e in evidence}
-        # recognize returns None for junk, exercising the same classify branch.
-        assert recognize("abc") is None
+        reps = recognize("abc", _contract())
+        assert reps == []
+        r = _cap().canonicalize("abc", _contract())
+        assert r.status is Status.INVALID
+        assert "unrecognized_format" in {e.rule for e in r.evidence}

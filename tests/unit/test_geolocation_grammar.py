@@ -6,40 +6,64 @@ from decimal import Decimal, InvalidOperation
 
 import pytest
 
+from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
 from paxman._capabilities.geolocation.grammar import (
     GRAMMARS,
+    RecognizedRep,
     _parse_number,
     _split_sign,
     recognize,
 )
+from paxman._capabilities.uuid.contract import CanonicalUUIDContract
+
+
+def test_recognize_guard_rejects_other_contract() -> None:
+    # The standard seam guard: a non-geolocation contract yields no reps.
+    assert recognize("40.7128, -74.0060", CanonicalUUIDContract()) == []
+
+
+def test_recognize_unknown_returns_empty_list() -> None:
+    # Aligned return type: unrecognised input is [] (NOT None).
+    assert recognize("abc", CanonicalGeolocationContract()) == []
+
+
+def test_recognize_decimal_pair_returns_single_rep() -> None:
+    reps = recognize("40.7128, -74.0060", CanonicalGeolocationContract())
+    assert isinstance(reps, list)
+    assert len(reps) == 1
+    rep = reps[0]
+    assert isinstance(rep, RecognizedRep)
+    assert rep.grammar_id == "geo_decimal_pair"
+    assert rep.shape == "geo_decimal_pair"
+    assert rep.source != ""
 
 
 def test_recognize_decimal_pair_shape() -> None:
-    rep = recognize("40.7128, -74.0060")
-    assert rep is not None
-    assert rep.shape == "geo_decimal_pair"
+    reps = recognize("40.7128, -74.0060", CanonicalGeolocationContract())
+    assert len(reps) == 1
+    assert reps[0].shape == "geo_decimal_pair"
 
 
 def test_recognize_decimal_hemisphere_shape() -> None:
-    rep = recognize("40.7128N 74.0060W")
-    assert rep is not None
-    assert rep.shape == "geo_decimal_hemi"
+    reps = recognize("40.7128N 74.0060W", CanonicalGeolocationContract())
+    assert len(reps) == 1
+    assert reps[0].shape == "geo_decimal_hemi"
 
 
 def test_recognize_dms_shape() -> None:
-    rep = recognize("40°42'46\"N 74°0'21\"W")
-    assert rep is not None
-    assert rep.shape == "geo_dms"
+    reps = recognize("40°42'46\"N 74°0'21\"W", CanonicalGeolocationContract())
+    assert len(reps) == 1
+    assert reps[0].shape == "geo_dms"
 
 
 def test_recognize_dms_signed_shape() -> None:
-    rep = recognize("40 42 46, -74 0 21")
-    assert rep is not None
-    assert rep.shape == "geo_dms_signed"
+    reps = recognize("40 42 46, -74 0 21", CanonicalGeolocationContract())
+    assert len(reps) == 1
+    assert reps[0].shape == "geo_dms_signed"
 
 
 def test_recognize_unknown_returns_none() -> None:
-    assert recognize("abc") is None
+    assert recognize("abc", CanonicalGeolocationContract()) == []
 
 
 def test_grammars_have_provenance_source() -> None:

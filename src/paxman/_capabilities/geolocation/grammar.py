@@ -9,48 +9,23 @@ the contract policy. Recognition is a deterministic predicate only (Law 4).
 
 Law 14: every grammar carries a `source` (provenance) for the shape it
 recognises.
+
+The recognition scaffold (Grammar, RecognizedRep, make_grammar, the match loop)
+now lives in ``paxman._capabilities._shared.grammar``; this module owns only the
+geolocation grammar set and the contract-typed ``recognize`` entry point.
 """
 
 from __future__ import annotations
 
-import re
-from collections.abc import Mapping
 from decimal import Decimal
 
-import attrs
-
-
-@attrs.frozen
-class Grammar:
-    """A single geolocation grammar: a regex pattern plus provenance."""
-
-    id: str
-    source: str
-    pattern: str
-    compiled: re.Pattern[str]
-    shape: str | None = None
-
-
-@attrs.frozen
-class RecognizedRep:
-    """A single grammar match: raw string captures, no semantic meaning."""
-
-    grammar_id: str
-    source: str
-    raw: str
-    shape: str | None
-    captures: Mapping[str, str]
-
-
-def _make_grammar(id: str, source: str, pattern: str, shape: str | None = None) -> Grammar:
-    return Grammar(
-        id=id,
-        source=source,
-        pattern=pattern,
-        compiled=re.compile(pattern),
-        shape=shape,
-    )
-
+from paxman._capabilities._shared.grammar import (
+    Grammar,
+    RecognizedRep,
+    make_grammar,
+    recognize_grammars,
+)
+from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
 
 _GRAMMAR_SOURCE = "paxman spec/geolocation §3.1 (closed coordinate shape vocabulary)"
 
@@ -71,26 +46,26 @@ GRAMMARS: tuple[Grammar, ...] = (
     # fully parenthesized pair. Each defines the a1/a2 groups in its OWN
     # pattern (not an alternation) so the names are not redefined. A single
     # delimiter — "(lat, lon" or "lat, lon)" — matches neither and is rejected.
-    _make_grammar(
+    make_grammar(
         "geo_decimal_pair",
         _GRAMMAR_SOURCE,
         r"^\s*" + _NUM + r"\s*$",
         shape="geo_decimal_pair",
     ),
-    _make_grammar(
+    make_grammar(
         "geo_decimal_pair_paren",
         _GRAMMAR_SOURCE,
         r"^\(\s*" + _NUM + r"\s*\)$",
         shape="geo_decimal_pair",
     ),
-    _make_grammar(
+    make_grammar(
         "geo_decimal_hemi",
         _GRAMMAR_SOURCE,
         r"^(?P<a1>[-+]?\d+(?:\.\d+)?)\s*(?P<h1>[NS])\s*"
         r"(?P<a2>[-+]?\d+(?:\.\d+)?)\s*(?P<h2>[EW])$",
         shape="geo_decimal_hemi",
     ),
-    _make_grammar(
+    make_grammar(
         "geo_decimal_hemi_lonlat",
         _GRAMMAR_SOURCE,
         # Longitude-first letter order (E/W then N/S) for coordinate_order="lon_lat".
@@ -100,7 +75,7 @@ GRAMMARS: tuple[Grammar, ...] = (
         r"(?P<a2>[-+]?\d+(?:\.\d+)?)\s*(?P<h2>[NS])$",
         shape="geo_decimal_hemi",
     ),
-    _make_grammar(
+    make_grammar(
         "geo_dms",
         _GRAMMAR_SOURCE,
         r"^(?P<d1>\d+(?:\.\d+)?)\s*[°]\s*(?P<m1>\d+(?:\.\d+)?)\s*[']\s*"
@@ -109,7 +84,7 @@ GRAMMARS: tuple[Grammar, ...] = (
         r'(?P<s2>\d+(?:\.\d+)?)\s*["°]\s*(?P<h2>[EW])$',
         shape="geo_dms",
     ),
-    _make_grammar(
+    make_grammar(
         "geo_dms_lonlat",
         _GRAMMAR_SOURCE,
         # Longitude-first letter order (E/W then N/S) for coordinate_order="lon_lat".
@@ -121,7 +96,7 @@ GRAMMARS: tuple[Grammar, ...] = (
         r'(?P<s2>\d+(?:\.\d+)?)\s*["°]\s*(?P<h2>[NS])$',
         shape="geo_dms",
     ),
-    _make_grammar(
+    make_grammar(
         "geo_dms_signed",
         _GRAMMAR_SOURCE,
         r"^(?P<d1>[-+]?\d+(?:\.\d+)?)\s+(?P<m1>\d+(?:\.\d+)?)\s+(?P<s1>[-+]?\d+(?:\.\d+)?)"
@@ -179,31 +154,22 @@ def _parse_number(text: str) -> Decimal:
     return value
 
 
-def recognize(value: str) -> RecognizedRep | None:
-    """Recognise the geolocation shape the (already-trimmed) input matches.
+def recognize(value: str, contract: object) -> list[RecognizedRep]:
+    """Recognise every geolocation grammar shape ``value`` full-matches.
 
-    Returns the first RecognizedRep whose regex FULLMATCHES the input, or
-    ``None`` when the input names no known geolocation shape. Each rep carries
-    the grammar's ``source`` (Law 14) and only RAW string captures — no
-    semantic meaning is assigned here.
+    Returns one ``RecognizedRep`` per matching shape (a recognised input yields
+    a 1-element list; an unrecognised input yields ``[]``). Each rep carries the
+    grammar's ``source`` (Law 14) and only RAW string captures — no semantic
+    meaning is assigned here. A ``contract`` that is not a
+    ``CanonicalGeolocationContract`` yields no reps (the standard seam guard).
 
     Args:
         value: The raw (already whitespace-trimmed) input string.
+        contract: The contract instance this recogniser was called with.
 
     Returns:
-        A RecognizedRep for the first matching shape, or ``None`` when no
-        known shape matches.
+        A list of ``RecognizedRep`` (possibly empty).
     """
-    for grammar in GRAMMARS:
-        match = grammar.compiled.fullmatch(value)
-        if match is None:
-            continue
-        captures = {k: v for k, v in match.groupdict().items() if v is not None}
-        return RecognizedRep(
-            grammar_id=grammar.id,
-            source=grammar.source,
-            raw=match.group(0),
-            shape=grammar.shape,
-            captures=captures,
-        )
-    return None
+    if not isinstance(contract, CanonicalGeolocationContract):
+        return []
+    return recognize_grammars(GRAMMARS, value, contract, CanonicalGeolocationContract)

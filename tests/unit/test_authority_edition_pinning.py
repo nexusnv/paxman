@@ -134,3 +134,16 @@ def test_from_artifact_merges_over_default_roster() -> None:
     # unknown name still raises
     with pytest.raises(UnknownAuthorityEdition):
         eng.authority("nope")
+
+
+def test_compliance_profile_builds_pinned_engine() -> None:
+    # ComplianceProfile.engine() delegates to Engine.with_authorities,
+    # pinning the adopted edition over the active roster.
+    from paxman._core.engine_env import ComplianceProfile
+
+    profile = ComplianceProfile({"ISO 3166-1": Edition("2024")})
+    eng = profile.engine()
+    assert isinstance(eng, Engine)
+    assert eng.authority("ISO 3166-1").edition == "2024"
+    # unpinned authorities still resolve to their active edition
+    assert eng.authority("ISO 4217").edition == "iso4217:2015"

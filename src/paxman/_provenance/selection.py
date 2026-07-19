@@ -14,9 +14,12 @@ from __future__ import annotations
 
 from typing import Literal
 
+import attrs
+
 from paxman._provenance.authority import Authority
 
 
+@attrs.frozen
 class Latest:
     """Select the active edition of an authority.
 
@@ -26,12 +29,8 @@ class Latest:
     a newer edition has since been published.
     """
 
-    __slots__ = ()
 
-    def __repr__(self) -> str:
-        return "Latest"
-
-
+@attrs.frozen
 class Edition:
     """Pin a concrete edition id of an authority (e.g. ``"2024"`` for ISO 3166-1).
 
@@ -39,19 +38,7 @@ class Edition:
     organization's pinned edition for replay-deterministic canonicalization.
     """
 
-    __slots__ = ("edition_id",)
-
-    def __init__(self, edition_id: str) -> None:
-        self.edition_id = edition_id
-
-    def __repr__(self) -> str:
-        return f"Edition({self.edition_id!r})"
-
-    def __eq__(self, other: object) -> bool:
-        return isinstance(other, Edition) and other.edition_id == self.edition_id
-
-    def __hash__(self) -> int:
-        return hash(("Edition", self.edition_id))
+    edition_id: str
 
 
 #: A selection for one authority: either "use the latest", pin a concrete

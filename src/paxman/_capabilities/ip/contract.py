@@ -34,6 +34,8 @@ class CanonicalIPContract:
     authority_override: Any = attrs.field(
         default=None,
         repr=False,
+        eq=False,
+        hash=False,
     )
 
     def as_dict(self) -> dict[str, Any]:

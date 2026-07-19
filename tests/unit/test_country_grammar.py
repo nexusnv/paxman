@@ -24,10 +24,10 @@ def test_recognize_narrow_ascii_strip_only() -> None:
     # stays "\xa0US\xa0" and falls through to the name shape (never becomes a
     # trimmed "US" alpha2). This pins the narrow charset through the _shared
     # migration — a full Unicode strip would wrongly canonicalize it.
-    reps = recognize(" US ", Country())
+    reps = recognize("\xa0US\xa0", Country())
     assert len(reps) == 1
     assert reps[0].shape == "name"
-    assert reps[0].raw == " US "
+    assert reps[0].raw == "\xa0US\xa0"
 
 
 def test_authority_override_dsl_round_trip() -> None:

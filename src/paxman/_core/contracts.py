@@ -16,5 +16,9 @@ class Contract(Protocol):
 
     kind: str
     version_field: int
+    # Concern-3 escape hatch: a contract may pin a specific authority edition
+    # for a single canonicalize call (same semantics as the per-domain
+    # authority_override_field()). None means "no pin; use the engine binding".
+    authority_override: Any | None
 
     def as_dict(self) -> dict[str, Any]: ...

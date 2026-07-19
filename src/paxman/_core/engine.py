@@ -127,7 +127,7 @@ def canonicalize(
     # Stage 1.5: contract-level authority override (escape hatch A, testing).
     # A contract may pin a specific edition for one call; this is layered on
     # top of the engine's binding so the pin wins for this single canonicalize.
-    override = getattr(parsed_contract, "authority_override", None)
+    override = parsed_contract.authority_override
     if override:
         for name, selector in override.items():
             engine = engine.override(name, selector)

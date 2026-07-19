@@ -8,9 +8,8 @@ from a free-form `_RULE_PROVENANCE` string map to a structured
 from collections.abc import Mapping
 from types import MappingProxyType
 
-from paxman._core.provenance import Evidence
+from paxman._capabilities._shared.evidence import make_evidence
 from paxman._provenance import Authority
-from paxman._provenance import _evidence as _provenance_evidence
 from paxman._provenance import registries as R
 
 # Composite authority used by a single rule that cites more than one spec.
@@ -81,16 +80,4 @@ _RULE_AUTHORITIES: Mapping[str, Authority | None] = MappingProxyType(
 )
 
 
-def _evidence(rule: str, detail: str = "") -> Evidence:
-    """Build an `Evidence` pulling the Law 14 authority from the
-    `_RULE_AUTHORITIES` manifest.
-
-    The manifest is the single source of truth: a rule with no manifest
-    entry raises `KeyError` here, surfacing a missing citation at the
-    exact site where the rule is emitted (rather than only in a unit
-    test far away). The Law 14 audit test (`test_no_empty_provenance`)
-    in `tests/unit/test_email_capability.py` additionally greps the
-    capability source for `rule="..."` literals and asserts every
-    literal is keyed in `_RULE_AUTHORITIES`.
-    """
-    return _provenance_evidence(rule, _RULE_AUTHORITIES, detail)
+_evidence = make_evidence(_RULE_AUTHORITIES)

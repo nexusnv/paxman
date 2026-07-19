@@ -11,6 +11,17 @@ Each notebook follows the locked reference template
 
 Emits valid nbformat 4.5 (every code cell has id + outputs +
 execution_count).
+
+Constitutional compliance:
+  - Law 1 (Determinism): every generated code cell carries a deterministic,
+    domain-prefixed id (``{domain}-{NN}``) so regeneration is diff-stable and
+    notebook execution order is fully determined by the source, never by a
+    random id.
+  - Law 12 (Replayability): the generated ``show()`` helper surfaces
+    ``artifact.evidence`` alongside the canonical value, making the replay
+    evidence chain visible for every example; the committed notebooks are
+    verified byte-for-byte by the ``notebook-smoke`` CI job.
+  No MANDATE laws are violated.
 """
 
 from __future__ import annotations
@@ -445,11 +456,10 @@ def build_notebook(spec: dict) -> nbformat.NotebookNode:
 
     cells.append(
         nbformat.v4.new_code_cell(
-            f"from paxman import canonicalize, {c}, ContractError, "
-            "CanonicalizationError\n"
+            f"from paxman import canonicalize, {c}, ContractError\n"
             "\n"
             "def show(raw, contract):\n"
-            '    """Canonicalize `raw`; print status + value."""\n'
+            '    """Canonicalize `raw`; print status, value, and evidence."""\n'
             "    artifact = canonicalize(raw, contract)\n"
             '    if artifact.status.name == "CANONICALIZED":\n'
             '        print(f"{raw!r:38} -> {artifact.status.name:14} '
@@ -457,6 +467,8 @@ def build_notebook(spec: dict) -> nbformat.NotebookNode:
             "    else:\n"
             '        print(f"{raw!r:38} -> {artifact.status.name:14} '
             '(no canonical value)")\n'
+            "    for e in artifact.evidence:\n"
+            '        print(f"    evidence: {e.rule} {e.detail!r}")\n'
             "    return artifact",
             id=cid(),
         )

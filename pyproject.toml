@@ -45,6 +45,7 @@ dev = [
     "ruff>=0.15.21",
     "mypy>=2.3.0",
     "interrogate>=1.7.0",
+    "nbformat>=5.10.4",
 ]
 # Optional: only needed for the playground notebook smoke test / local lab.
 # Kept out of the base `dev` group so a normal `uv sync` does not pull the
@@ -99,7 +100,9 @@ target-version = "py311"
 # Notebooks are pedagogical examples verified by the `notebook-smoke` CI job
 # (jupyter nbconvert --execute), not by the source linter. Exclude them so
 # ruff does not flag example-only imports/ordering inside notebook cells.
-exclude = ["playground"]
+# Use extend-exclude to preserve Ruff's built-in default excludes
+# (.git, *.pyc, venvs, etc.) rather than replacing them.
+extend-exclude = ["playground"]
 
 [tool.ruff.lint]
 select = [

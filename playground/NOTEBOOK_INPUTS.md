@@ -2,7 +2,7 @@
 
 > **Source of truth:** `src/paxman/_capabilities/<domain>/` (contract.py, canonicalizer.py, grammar.py, rules.py, parser.py) and `src/paxman/_core/` (artifact.py, result.py, status.py). All snippets below were executed against the working tree on 2026-07-19 and produced the shown outputs.
 
-## Universal API contract (applies to ALL 10 capabilities)
+## Universal API Contract (applies to ALL 10 capabilities)
 
 ```python
 import paxman
@@ -332,7 +332,7 @@ UUID(version="99")                                                # ContractErro
 
 ---
 
-## Cross-cutting notes for notebook authors
+## Cross-Cutting Notes for Notebook Authors
 
 1. **`artifact.value` is the canonical string** for all 10 capabilities. It is `None` for `INVALID`/`MISSING`/`AMBIGUOUS`/`UNSUPPORTED`.
 2. **`artifact.candidates`** is non-`None` only for `AMBIGUOUS` outcomes (date century/ordering, geolocation hemisphere, url multi-reading). It is the tuple of every surviving canonical form — Paxman surfaces ambiguity instead of guessing.

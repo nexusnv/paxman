@@ -375,8 +375,10 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies (frozen lockfile)
-        # jupyter + nbconvert are in the playground extra group for this job.
-        run: uv sync --frozen --all-extras --dev
+        # jupyter + nbconvert live in the `playground` [dependency-groups]
+        # group; `--all-groups` installs every dependency-group (dev +
+        # playground), which is what this job needs to execute the notebooks.
+        run: uv sync --frozen --all-groups
 
       - name: Check notebooks are in sync with the generator
         # Drift guard: the committed notebooks must match what

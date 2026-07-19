@@ -10,6 +10,10 @@ from typing import Any
 
 import attrs
 
+from paxman._capabilities._shared.contract import (
+    _authority_override_from_spec,
+    authority_override_field,
+)
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
@@ -28,12 +32,7 @@ class CanonicalPhoneContract:
     version: int = 1
     version_field: int = 1
 
-    authority_override: Any = attrs.field(
-        default=None,
-        repr=False,
-        eq=False,
-        hash=False,
-    )
+    authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract.
@@ -81,9 +80,8 @@ def _build_phone(spec: dict[str, Any]) -> CanonicalPhoneContract:
     from paxman._capabilities.phone.parser import _cc_for_country
 
     _cc_for_country(country)  # raises ContractError if unknown
-    return CanonicalPhoneContract(
-        country=country, authority_override=spec.get("authority_override", None)
-    )
+    authority_override = _authority_override_from_spec(spec)
+    return CanonicalPhoneContract(country=country, authority_override=authority_override)
 
 
 register_contract("canonical_phone", _build_phone)

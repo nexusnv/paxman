@@ -4,6 +4,10 @@ from typing import Any
 
 import attrs
 
+from paxman._capabilities._shared.contract import (
+    _authority_override_from_spec,
+    authority_override_field,
+)
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
@@ -25,12 +29,7 @@ class CanonicalURLContract:
     version: int = 1
     version_field: int = 1  # required by the Contract Protocol (mirrors CanonicalPhoneContract)
 
-    authority_override: Any = attrs.field(
-        default=None,
-        repr=False,
-        eq=False,
-        hash=False,
-    )
+    authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, object]:
         return {
@@ -107,7 +106,7 @@ def _build_url(spec: dict[str, object]) -> CanonicalURLContract:
         whatwg=_bool("whatwg", False),
         version=version,
         version_field=version_field,
-        authority_override=spec.get("authority_override", None),
+        authority_override=_authority_override_from_spec(spec),
     )
 
 

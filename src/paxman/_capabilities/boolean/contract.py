@@ -10,6 +10,10 @@ from typing import Any
 
 import attrs
 
+from paxman._capabilities._shared.contract import (
+    _authority_override_from_spec,
+    authority_override_field,
+)
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
@@ -30,12 +34,7 @@ class CanonicalBooleanContract:
     version: int = 1
     version_field: int = 1
 
-    authority_override: Any = attrs.field(
-        default=None,
-        repr=False,
-        eq=False,
-        hash=False,
-    )
+    authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
@@ -83,10 +82,12 @@ def _require_bool(field: str, value: object) -> bool:
 
 
 def _build_boolean(spec: dict[str, Any]) -> CanonicalBooleanContract:
+    authority_override = _authority_override_from_spec(spec)
     return CanonicalBooleanContract(
         accept_numeric=_require_bool("accept_numeric", spec.get("accept_numeric", True)),
         accept_words=_require_bool("accept_words", spec.get("accept_words", True)),
         case_sensitive=_require_bool("case_sensitive", spec.get("case_sensitive", False)),
+        authority_override=authority_override,
     )
 
 

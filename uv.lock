@@ -1466,12 +1466,14 @@ dependencies = [
 dev = [
     { name = "hypothesis" },
     { name = "interrogate" },
-    { name = "jupyter" },
     { name = "mypy" },
-    { name = "nbconvert" },
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "ruff" },
+]
+playground = [
+    { name = "jupyter" },
+    { name = "nbconvert" },
 ]
 
 [package.metadata]
@@ -1481,12 +1483,14 @@ requires-dist = [{ name = "attrs", specifier = ">=26.1.0" }]
 dev = [
     { name = "hypothesis", specifier = ">=6.156.6" },
     { name = "interrogate", specifier = ">=1.7.0" },
-    { name = "jupyter", specifier = ">=1.1.1" },
     { name = "mypy", specifier = ">=2.3.0" },
-    { name = "nbconvert", specifier = ">=7.16.0" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "pytest-cov", specifier = ">=6.0.0" },
     { name = "ruff", specifier = ">=0.15.21" },
+]
+playground = [
+    { name = "jupyter", specifier = ">=1.1.1" },
+    { name = "nbconvert", specifier = ">=7.16.0" },
 ]
 
 [[package]]

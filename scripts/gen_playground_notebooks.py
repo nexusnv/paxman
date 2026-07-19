@@ -423,6 +423,13 @@ def build_notebook(spec: dict) -> nbformat.NotebookNode:
     domain = spec["domain"]
     title = DISPLAY.get(domain, domain.capitalize())
     cells = []
+    # Deterministic cell ids so regeneration is diff-stable (no random churn).
+    idx = 0
+
+    def cid() -> str:
+        nonlocal idx
+        idx += 1
+        return f"{domain}-{idx:02d}"
 
     cells.append(
         nbformat.v4.new_markdown_cell(
@@ -431,7 +438,8 @@ def build_notebook(spec: dict) -> nbformat.NotebookNode:
             + spec["intro"]
             + "\n\n> Run every cell in order. `artifact.value` holds the canonical "
             'string when `artifact.status == "CANONICALIZED"`; otherwise it is '
-            "`None`."
+            "`None`.",
+            id=cid(),
         )
     )
 
@@ -449,13 +457,14 @@ def build_notebook(spec: dict) -> nbformat.NotebookNode:
             "    else:\n"
             '        print(f"{raw!r:38} -> {artifact.status.name:14} '
             '(no canonical value)")\n'
-            "    return artifact"
+            "    return artifact",
+            id=cid(),
         )
     )
 
     for md, code_lines in spec["sections"]:
-        cells.append(nbformat.v4.new_markdown_cell(md))
-        cells.append(nbformat.v4.new_code_cell("\n".join(code_lines)))
+        cells.append(nbformat.v4.new_markdown_cell(md, id=cid()))
+        cells.append(nbformat.v4.new_code_cell("\n".join(code_lines), id=cid()))
 
     cells.append(
         nbformat.v4.new_markdown_cell(
@@ -469,7 +478,8 @@ def build_notebook(spec: dict) -> nbformat.NotebookNode:
             "against the working tree).\n\n"
             "> Every other capability notebook ("
             + ", ".join(DISPLAY[d] for d in [s["domain"] for s in CAPS] if d != spec["domain"])
-            + ") follows this exact structure."
+            + ") follows this exact structure.",
+            id=cid(),
         )
     )
 
@@ -486,13 +496,53 @@ def build_notebook(spec: dict) -> nbformat.NotebookNode:
 
 
 def main() -> None:
+    import argparse
+    import filecmp
+    import shutil
+    import tempfile
+
+    parser = argparse.ArgumentParser(description="Generate Paxman playground notebooks.")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Write to a temp dir and diff against the committed notebooks; "
+        "exit non-zero if they differ (CI drift guard). Does not modify the tree.",
+    )
+    args = parser.parse_args()
+
     out_dir = "playground/notebooks"
+    if args.check:
+        # Regenerate into a throwaway dir so we never touch the working tree.
+        tmp = tempfile.mkdtemp(prefix="paxman-nb-")
+        target_dir = tmp
+    else:
+        target_dir = out_dir
+
     for spec in CAPS:
         nb = build_notebook(spec)
         nbformat.validate(nb)
-        path = f"{out_dir}/{spec['num']}_{spec['domain']}.ipynb"
+        path = f"{target_dir}/{spec['num']}_{spec['domain']}.ipynb"
         nbformat.write(nb, path)
-        print("wrote", path)
+        if not args.check:
+            print("wrote", path)
+
+    if args.check:
+        mismatches = 0
+        for spec in CAPS:
+            name = f"{spec['num']}_{spec['domain']}.ipynb"
+            committed = f"{out_dir}/{name}"
+            generated = f"{tmp}/{name}"
+            if not filecmp.cmp(committed, generated, shallow=False):
+                mismatches += 1
+                print(f"DRIFT: {name} differs from generated output")
+        shutil.rmtree(tmp, ignore_errors=True)
+        if mismatches:
+            print(
+                f"::error:: {mismatches} notebook(s) out of sync with "
+                "scripts/gen_playground_notebooks.py — run the generator and commit."
+            )
+            raise SystemExit(1)
+        print("notebooks in sync with generator")
 
 
 if __name__ == "__main__":

@@ -353,6 +353,9 @@ jobs:
   notebook-smoke:
     name: playground notebook smoke test (py3.12)
     runs-on: ubuntu-latest
+    # Bound the job and each notebook so a hanging/looping cell cannot burn the
+    # full 6h runner budget.
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -372,8 +375,15 @@ jobs:
         run: uv python install 3.12
 
       - name: Install dependencies (frozen lockfile)
-        # jupyter + nbconvert are in the dev group for this job.
+        # jupyter + nbconvert are in the playground extra group for this job.
         run: uv sync --frozen --all-extras --dev
+
+      - name: Check notebooks are in sync with the generator
+        # Drift guard: the committed notebooks must match what
+        # scripts/gen_playground_notebooks.py produces. Regenerates to a temp
+        # dir and diffs; never modifies the tree. Catches hand-edits that drift
+        # from the generator's source of truth.
+        run: uv run python scripts/gen_playground_notebooks.py --check
 
       - name: Execute playground notebooks
         run: |
@@ -381,12 +391,17 @@ jobs:
           fails=0
           for nb in playground/notebooks/*.ipynb; do
             echo "::group::execute $nb"
-            if uv run jupyter nbconvert --execute --to notebook --stdout "$nb" >/dev/null 2>&1; then
+            log="$(mktemp)"
+            # --ExecutePreprocessor.timeout bounds a single notebook; stderr is
+            # captured and surfaced on failure (not discarded) for diagnostics.
+            if uv run jupyter nbconvert --ExecutePreprocessor.timeout=120 --execute --to notebook --stdout "$nb" >/dev/null 2>"$log"; then
               echo "ok: $nb"
             else
               echo "::error::notebook failed to execute: $nb"
+              sed 's/^/    /' "$log"
               fails=1
             fi
+            rm -f "$log"
             echo "::endgroup::"
           done
           exit "$fails"

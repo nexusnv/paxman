@@ -274,7 +274,7 @@ def generate_interpretations(
 
 
 def classify(
-    rep: RecognizedRep | None,
+    rep: RecognizedRep,
     candidates: list[_Candidate],
     contract: CanonicalGeolocationContract,
 ) -> tuple[Status, str | None, tuple[Evidence, ...], tuple[str, ...] | None]:
@@ -286,15 +286,13 @@ def classify(
     never guessed.
 
     Args:
-        rep: The RecognizedRep (or ``None`` when no shape matched).
+        rep: The RecognizedRep from the recognition layer.
         candidates: The resolver's candidate list.
         contract: The CanonicalGeolocationContract (policy authority).
 
     Returns:
         A 4-tuple of (status, value, evidence, candidates).
     """
-    if rep is None:
-        return Status.INVALID, None, (_evidence("unrecognized_format"),), None
     if not candidates:
         # Resolver rejected a malformed or out-of-range input. When the input was
         # a decimal pair with no hemisphere signal and the contract requires one,
@@ -382,11 +380,12 @@ class GeolocationCapability:
             value = stripped
 
         # Recognition layer (Layer 1) — shape classification only.
-        rep = recognize(value)
-        if rep is None:
+        reps = recognize(value, contract)
+        if not reps:
             return CapabilityResult(
                 status=Status.INVALID, evidence=(_evidence("unrecognized_format"),)
             )
+        rep = reps[0]
 
         # Resolver (applies contract policy) + classify.
         cands = generate_interpretations(rep, contract)

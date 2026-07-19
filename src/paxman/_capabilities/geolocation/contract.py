@@ -15,6 +15,10 @@ from typing import Any
 
 import attrs
 
+from paxman._capabilities._shared.contract import (
+    _authority_override_from_spec,
+    authority_override_field,
+)
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
@@ -110,12 +114,7 @@ class CanonicalGeolocationContract:
     version: int = attrs.field(default=1, validator=_validate_v1)
     version_field: int = attrs.field(default=1, validator=_validate_v1)
 
-    authority_override: Any = attrs.field(
-        default=None,
-        repr=False,
-        eq=False,
-        hash=False,
-    )
+    authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
@@ -233,7 +232,7 @@ def _build_geolocation(spec: dict[str, Any]) -> CanonicalGeolocationContract:
             "output_format", spec.get("output_format", "decimal"), _OUTPUT_FORMATS
         ),
         precision=_require_precision("precision", spec.get("precision", 6)),
-        authority_override=spec.get("authority_override", None),
+        authority_override=_authority_override_from_spec(spec),
     )
 
 

@@ -173,10 +173,10 @@ src/paxman/
 │   ├── classification.py       #   the classify() function + ValidationResult
 │   ├── artifact.py             #   ExecutionArtifact (immutable, Law 13)
 │   ├── replay.py               #   byte-equal rehydration (first-class module)
-│   ├── provenance.py           #   Evidence (provenance record); _RULE_PROVENANCE lives in each capability's rules.py
+│   ├── provenance.py           #   re-export shim (14 lines) pointing at _provenance/evidence.py; NOT a parallel impl
 │   ├── result.py               #   CapabilityResult, VersionStamp
 │   ├── status.py               #   Status enum (five outcomes)
-│   └── contracts.py            #   the structural Contract Protocol
+│   └── contracts.py            #   the structural Contract Protocol + _StubContract (moved from engine.py)
 ├── _registry/                  # the two registries (resolver + dispatch)
 │   ├── __init__.py             #   package marker (empty)
 │   ├── capability_registry.py  #   CapabilityRegistry — the resolver/dispatcher
@@ -187,6 +187,7 @@ src/paxman/
 │   ├── discovery.py            #   builtin_capabilities() — source of truth
 │   ├── _shared/                #   shared recognition/evidence/contract scaffold (de-duplicated from domains)
 │   │   ├── __init__.py         #     package marker (empty)
+│   │   │   ├── base.py             #     CapabilityBase — uniform validate hook + make_can_handle / dispatch-reject helpers all 10 capabilities inherit
 │   │   ├── grammar.py          #     Grammar/RecognizedRep/make_grammar/recognize_grammars
 │   │   ├── evidence.py         #     make_evidence / make_evidence_for (engine-aware)
 │   │   └── contract.py         #     authority_override_field / _authority_override_from_spec
@@ -245,6 +246,17 @@ src/paxman/
 │       ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
 │       ├── canonicalizer.py    #     MoneyCapability
 │       └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
+├── _provenance/                 # the provenance package (Law 14 source citations + bundled datasets)
+│   ├── __init__.py             #   package marker (empty)
+│   ├── authority.py            #   Authority — structured Law 14 citation
+│   ├── selection.py            #   Latest / Selector / NormalizedSelector
+│   ├── evidence.py             #   Evidence record + _evidence helper (the single source of truth)
+│   ├── registries/             #   bundled versioned datasets: iso_3166, iso_4217, cldr, itu_e164
+│   ├── specs/                  #   per-RFC resolver modules (rfc_5321, rfc_5322, rfc_4122, rfc_3986, rfc_3339, rfc_5952, …) — Law 14 source #1
+│   ├── behaviour/              #   documented platform behavior (e.g. google_help) — Law 14 source #2
+│   ├── policy/                 #   declared Paxman policy — Law 14 source #3
+│   ├── standards/              #   standards metadata
+│   └── taxonomies/             #   taxonomy metadata
 ├── _dsl/                       # the contract DSL (Dict ↔ value object)
 │   ├── __init__.py             #   re-exports parse_contract
 │   ├── parser.py               #   parse_contract — kind dispatch
@@ -254,7 +266,9 @@ src/paxman/
     └── common.py               #   ProviderAliasesPolicy, etc.
 ```
 
-**Total: 42 Python source files across the packages above.**
+**Total: 42 Python source files across the packages above (excluding the
+`_provenance/` package and `_capabilities/_shared/base.py`, which are
+documented in the tree above).**
 
 This shape is the concrete form of two mandate boundaries. **Mandate §4.4**
 (capabilities own domain knowledge): every domain's `contract.py`,
@@ -265,7 +279,11 @@ Protocol vs Domain Contract): the **Paxman Contract Protocol** is
 Law 5), while the **Domain Contract** is the value object each capability owns
 in `paxman._capabilities.<domain>.contract` (`CanonicalEmailContract`,
 `CanonicalUUIDContract`, `CanonicalDateContract`). The core knows the
-protocol; the capability owns the policy.
+protocol; the capability owns the policy. `_core.contracts` also hosts
+`_StubContract` — the minimal contract stand-in for unparseable contract
+specs (it satisfies the `_ContractLike` Protocol structurally). It was
+moved here from `_core/engine.py` so the structural contract surface lives
+in one place.
 
 ### The Test Layout
 
@@ -410,7 +428,9 @@ The smallest units of state Paxman manipulates, and the boundary at which
 mandate Laws 1, 2, 9, 12, and 14 are enforced. All are frozen `attrs`
 dataclasses or `enum.Enum`, split across domain-free modules: `Status` in
 `_core/status.py`, `Evidence` and the `_RULE_PROVENANCE` manifest in
-`_core/provenance.py`, `CapabilityResult` and `VersionStamp` in
+`_provenance/evidence.py` (re-exported by the 14-line `_core/provenance.py`
+shim — there is no parallel implementation; the Evidence record lives once,
+in `_provenance/evidence.py`), `CapabilityResult` and `VersionStamp` in
 `_core/result.py`, and shared closed enums such as `ProviderAliasesPolicy`
 in `_types/common.py`. They are re-exported from `paxman.__init__` as type
 vocabulary, but most end users will not instantiate them directly — the

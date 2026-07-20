@@ -3,10 +3,12 @@
 Replaces the former `_KIND_DISPATCH` dict and the per-kind `if` branches
 in `parse_contract`. Each capability domain registers a builder at import
 time (see `paxman._capabilities.<domain>.contract`). The DSL parser asks
-this registry; it never names a concrete contract class.
+this registry by `kind`; runtime dispatch is registry-driven and domain-free.
 
 This module is domain-free: it imports only the generic `Contract`
 Protocol (structural) from `_core.contracts` and the error hierarchy. The
+`TYPE_CHECKING` block and `_BuilderResult` union below are static
+type-annotation conveniences only and do not affect runtime dispatch. The
 public `Contract` union of concrete contracts lives in `paxman.__init__`.
 """
 

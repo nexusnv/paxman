@@ -53,7 +53,13 @@ from collections.abc import Sequence
 
 import attrs
 
-from paxman._capabilities._shared.base import CapabilityBase
+from paxman._capabilities._shared.base import (
+    CanHandle,
+    CapabilityBase,
+    make_can_handle,
+    reject_contract,
+    reject_non_string,
+)
 from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._capabilities.email.grammar import recognize
 from paxman._capabilities.email.parser import _validate_dot_atom_domain, _validate_dot_atom_local
@@ -330,25 +336,19 @@ class EmailCapability(CapabilityBase):
 
     name: str = "email_canonicalization"
 
-    def can_handle(self, contract: Contract, value: object) -> bool:
-        return isinstance(contract, CanonicalEmailContract) and isinstance(value, str)
+    can_handle: CanHandle = make_can_handle(CanonicalEmailContract, accept_none=False)
 
     def canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
-        if not isinstance(contract, CanonicalEmailContract):
-            # Structural typecheck: a non-email contract must not reach
-            # this capability. Return INVALID as a defensive default;
-            # the orchestrator maps it through classification.
-            return CapabilityResult(
-                status=Status.INVALID,
-                evidence=(_evidence("not_an_email_contract"),),
-            )
-        if not isinstance(value, str):
-            return CapabilityResult(
-                status=Status.INVALID,
-                evidence=(_evidence("not_a_string_value"),),
-            )
+        r = reject_contract(contract, CanonicalEmailContract, _evidence, "not_an_email_contract")
+        if r is not None:
+            return r
+        r = reject_non_string(value, _evidence)
+        if r is not None:
+            return r
+        assert isinstance(contract, CanonicalEmailContract)
+        assert isinstance(value, str)
 
         # Strict-mode grammar check happens FIRST so a non-grammar input
         # is rejected before any rewriting (no partial canonicalization).

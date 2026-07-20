@@ -5,79 +5,48 @@ form is, never *how* it is produced. The DSL is a closed vocabulary: `kind`
 is a fixed set, and an unknown `kind` raises `ContractError` at parse time
 (the orchestrator catches that and yields `Status.UNSUPPORTED`).
 
-The parser is registry-driven: each capability domain registers a builder at
-import time (see `paxman._capabilities.<domain>.contract`); `parse_contract`
-asks the contract registry and never names a concrete contract class. The
-public `Contract` union of concrete contracts lives in `paxman.__init__`.
+Dict specs are resolved via the contract registry (`get_builder`): each
+capability domain registers a builder at import time
+(see `paxman._capabilities.<domain>.contract`), and `parse_contract` asks the
+registry by `kind` — it never names a concrete contract class. An
+already-parsed contract value object is returned by identity through a
+structural `Contract` Protocol check (the module no longer enumerates
+concrete contract classes). The public `Contract` union of concrete contracts
+lives in `paxman.__init__`.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-from paxman._capabilities.boolean.contract import CanonicalBooleanContract
-from paxman._capabilities.country.contract import CanonicalCountryContract
-from paxman._capabilities.date.contract import CanonicalDateContract
-from paxman._capabilities.email.contract import CanonicalEmailContract
-from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
-from paxman._capabilities.ip.contract import CanonicalIPContract
-from paxman._capabilities.money.contract import CanonicalMoneyContract
-from paxman._capabilities.phone.contract import CanonicalPhoneContract
-from paxman._capabilities.url.contract import CanonicalURLContract
-from paxman._capabilities.uuid.contract import CanonicalUUIDContract
+from paxman._core.contracts import Contract
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import get_builder
 
 # Importing the domain contract modules registers their builders with the
 # contract registry (register_contract), so get_builder resolves every kind.
-# Importing them here also binds the concrete classes referenced by the
-# isinstance short-circuit below.
 
 
 def parse_contract(
     spec: Any,
-) -> (
-    CanonicalEmailContract
-    | CanonicalUUIDContract
-    | CanonicalDateContract
-    | CanonicalPhoneContract
-    | CanonicalURLContract
-    | CanonicalBooleanContract
-    | CanonicalIPContract
-    | CanonicalMoneyContract
-    | CanonicalGeolocationContract
-    | CanonicalCountryContract
-):
+) -> Contract:
     """Parse a Dict DSL contract into a Contract value object.
 
     Raises `ContractError` on:
     - non-dict input (unless it's already a contract value object)
     - missing or unknown `kind`
     - invalid field values (wrong type, unknown provider_aliases)
+
+    An already-parsed contract value object satisfies the structural
+    `Contract` Protocol and is returned by identity (Law 5) — no
+    reconstruction. Dict specs are dispatched through the contract registry
+    via `get_builder(kind)`.
     """
-    # Short-circuit: an already-parsed contract value object is the
-    # source of truth (Law 5). Exact-type checks (not the parent
-    # `Contract` alias) so a future multi-field contract type is NOT
-    # silently absorbed here — it must grow its own dispatch branch.
-    if isinstance(spec, CanonicalEmailContract):
-        return spec
-    if isinstance(spec, CanonicalUUIDContract):
-        return spec
-    if isinstance(spec, CanonicalDateContract):
-        return spec
-    if isinstance(spec, CanonicalPhoneContract):
-        return spec
-    if isinstance(spec, CanonicalURLContract):
-        return spec
-    if isinstance(spec, CanonicalBooleanContract):
-        return spec
-    if isinstance(spec, CanonicalIPContract):
-        return spec
-    if isinstance(spec, CanonicalMoneyContract):
-        return spec
-    if isinstance(spec, CanonicalGeolocationContract):
-        return spec
-    if isinstance(spec, CanonicalCountryContract):
+    # Identity: an already-parsed contract value object is the source of
+    # truth (Law 5). A single structural Protocol check replaces the former
+    # per-domain isinstance branches — any value object satisfying `Contract`
+    # is returned unchanged, and a future contract type needs no new branch.
+    if isinstance(spec, Contract):
         return spec
 
     if not isinstance(spec, dict):

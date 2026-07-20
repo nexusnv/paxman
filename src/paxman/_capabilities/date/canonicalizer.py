@@ -18,7 +18,13 @@ from email.utils import parsedate_to_datetime
 
 import attrs
 
-from paxman._capabilities._shared.base import CapabilityBase
+from paxman._capabilities._shared.base import (
+    CanHandle,
+    CapabilityBase,
+    make_can_handle,
+    reject_contract,
+    reject_non_string,
+)
 from paxman._capabilities.date.calendar import _valid_calendar_date
 from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._capabilities.date.grammar import _ORDINAL_WORDS, RecognizedRep, recognize
@@ -543,17 +549,7 @@ class DateCapability(CapabilityBase):
 
     name: str = "date_canonicalization"
 
-    def can_handle(self, contract: Contract, value: object) -> bool:
-        """Return ``True`` when the contract is a date contract and value is a string.
-
-        Args:
-            contract: The contract to check.
-            value: The input value to check.
-
-        Returns:
-            ``True`` if this capability can handle the (contract, value) pair.
-        """
-        return isinstance(contract, CanonicalDateContract) and isinstance(value, str)
+    can_handle: CanHandle = make_can_handle(CanonicalDateContract, accept_none=False)
 
     def canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
@@ -592,27 +588,16 @@ class DateCapability(CapabilityBase):
         Returns:
             A ``CapabilityResult`` with the canonicalized value and evidence.
         """
-        if not isinstance(contract, CanonicalDateContract):
-            # Genuine UNSUPPORTED: the contract was never a date contract, so
-            # this capability should not have claimed it (Decision A).
-            return CapabilityResult(
-                status=Status.UNSUPPORTED,
-                evidence=(_evidence("not_a_date_contract"),),
-            )
-        if not isinstance(value, str):
-            # Genuine UNSUPPORTED: a non-string value is not this capability's
-            # to claim (Decision A). UNSUPPORTED is reserved for non-string /
-            # wrong-contract inputs; a string the grammar cannot recognise is
-            # INVALID (see the enumeration fallback below).
-            return CapabilityResult(
-                status=Status.UNSUPPORTED,
-                evidence=(_evidence("not_a_string_value"),),
-            )
+        r = reject_contract(contract, CanonicalDateContract, _evidence, "not_a_date_contract")
+        if r is not None:
+            return r
+        r = reject_non_string(value, _evidence)
+        if r is not None:
+            return r
+        assert isinstance(contract, CanonicalDateContract)
+        assert isinstance(value, str)
         if not value.strip():
-            return CapabilityResult(
-                status=Status.MISSING,
-                evidence=(_evidence("empty_value"),),
-            )
+            return CapabilityResult(status=Status.MISSING, evidence=(_evidence("empty_value"),))
 
         # Dispatch order (MANDATE §6.4 / spec §6.1): Unix epoch -> ISO -> numeric
         # -> RFC 2822. The spec lists RFC 2822 before ISO, but the grammars are

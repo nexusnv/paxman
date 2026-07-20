@@ -11,7 +11,13 @@ import re
 
 import attrs
 
-from paxman._capabilities._shared.base import CapabilityBase
+from paxman._capabilities._shared.base import (
+    CanHandle,
+    CapabilityBase,
+    make_can_handle,
+    reject_contract,
+    reject_non_string,
+)
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
 from paxman._capabilities.phone.grammar import RecognizedRep, recognize
 from paxman._capabilities.phone.parser import _cc_for_country
@@ -177,22 +183,19 @@ class PhoneCapability(CapabilityBase):
 
     name: str = "phone_canonicalization"
 
-    def can_handle(self, contract: object, value: object) -> bool:
-        return isinstance(contract, CanonicalPhoneContract) and isinstance(value, str)
+    can_handle: CanHandle = make_can_handle(CanonicalPhoneContract, accept_none=False)
 
     def canonicalize(
         self, value: object, contract: object, engine: Engine | None = None
     ) -> CapabilityResult:
-        if not isinstance(contract, CanonicalPhoneContract):
-            return CapabilityResult(
-                status=Status.INVALID,
-                evidence=(_evidence("not_a_phone_contract"),),
-            )
-        if not isinstance(value, str):
-            return CapabilityResult(
-                status=Status.INVALID,
-                evidence=(_evidence("not_a_string_value"),),
-            )
+        r = reject_contract(contract, CanonicalPhoneContract, _evidence, "not_a_phone_contract")
+        if r is not None:
+            return r
+        r = reject_non_string(value, _evidence)
+        if r is not None:
+            return r
+        assert isinstance(contract, CanonicalPhoneContract)
+        assert isinstance(value, str)
 
         reps = recognize(value, contract)
         if not reps:

@@ -37,7 +37,13 @@ from __future__ import annotations
 
 import attrs
 
-from paxman._capabilities._shared.base import CapabilityBase
+from paxman._capabilities._shared.base import (
+    CanHandle,
+    CapabilityBase,
+    make_can_handle,
+    reject_contract,
+    reject_non_string,
+)
 from paxman._capabilities.uuid.contract import CanonicalUUIDContract
 from paxman._capabilities.uuid.grammar import RecognizedRep, recognize
 from paxman._capabilities.uuid.parser import CANONICAL_CHARS, CANONICAL_LENGTH, HYPHEN_POSITIONS
@@ -190,23 +196,20 @@ class UUIDCapability(CapabilityBase):
 
     name: str = "uuid_canonicalization"
 
-    def can_handle(self, contract: Contract, value: object) -> bool:
-        return isinstance(contract, CanonicalUUIDContract) and isinstance(value, str)
+    can_handle: CanHandle = make_can_handle(CanonicalUUIDContract, accept_none=False)
 
     def canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         # Defensive type-check (mirrors email's pattern).
-        if not isinstance(contract, CanonicalUUIDContract):
-            return CapabilityResult(
-                status=Status.INVALID,
-                evidence=(_evidence("not_a_uuid_contract"),),
-            )
-        if not isinstance(value, str):
-            return CapabilityResult(
-                status=Status.INVALID,
-                evidence=(_evidence("not_a_string_value"),),
-            )
+        r = reject_contract(contract, CanonicalUUIDContract, _evidence, "not_a_uuid_contract")
+        if r is not None:
+            return r
+        r = reject_non_string(value, _evidence)
+        if r is not None:
+            return r
+        assert isinstance(contract, CanonicalUUIDContract)
+        assert isinstance(value, str)
 
         # Step 1 (Layer 1): recognition. UUID does NOT strip whitespace —
         # leading/trailing whitespace is rejected (current behaviour).

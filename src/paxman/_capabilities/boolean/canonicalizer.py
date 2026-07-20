@@ -13,7 +13,14 @@ from types import MappingProxyType
 
 import attrs
 
-from paxman._capabilities._shared.base import CapabilityBase
+from paxman._capabilities._shared.base import (
+    CanHandle,
+    CapabilityBase,
+    make_can_handle,
+    reject_contract,
+    reject_missing,
+    reject_non_string,
+)
 from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 from paxman._capabilities.boolean.grammar import RecognizedRep, recognize
 from paxman._capabilities.boolean.rules import _evidence
@@ -154,17 +161,7 @@ class BooleanCapability(CapabilityBase):
 
     name: str = "boolean_canonicalization"
 
-    def can_handle(self, contract: Contract, value: object) -> bool:
-        """Declare whether this capability canonicalizes the (contract, value) pair.
-
-        Returns True only when the contract is a CanonicalBooleanContract and
-        the value is None or a str. None is accepted so that a missing value
-        routes to Status.MISSING (spec §3.3) rather than Status.UNSUPPORTED;
-        any other type is not claimed.
-        """
-        return isinstance(contract, CanonicalBooleanContract) and (
-            value is None or isinstance(value, str)
-        )
+    can_handle: CanHandle = make_can_handle(CanonicalBooleanContract, accept_none=True)
 
     def canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
@@ -182,18 +179,19 @@ class BooleanCapability(CapabilityBase):
           drops tokens disabled by accept_numeric/accept_words
           (policy_disabled_token), and classify emits the final Status.
         """
-        if not isinstance(contract, CanonicalBooleanContract):
-            return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_boolean_contract"),)
-            )
-        if not (value is None or isinstance(value, str)):
-            return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_string_value"),)
-            )
+        r = reject_contract(contract, CanonicalBooleanContract, _evidence, "not_a_boolean_contract")
+        if r is not None:
+            return r
+        r = reject_non_string(value, _evidence)
+        if r is not None:
+            return r
+        assert isinstance(contract, CanonicalBooleanContract)
 
         # Missing value -> MISSING (spec §3.3).
-        if value is None or value.strip(" \t\r\n\f\v") == "":
-            return CapabilityResult(status=Status.MISSING, evidence=(_evidence("missing_value"),))
+        r = reject_missing(value, _evidence, "missing_value")
+        if r is not None:
+            return r
+        assert isinstance(value, str)
 
         # Trim leading/trailing ASCII whitespace (record if changed).
         stripped_evidence: tuple[Evidence, ...] = ()

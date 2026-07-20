@@ -1,4 +1,4 @@
-"""Shared capability base (Finding D, narrow).
+"""Shared capability base (Finding A + D).
 
 Every capability subclasses ``CapabilityBase`` so it inherits the uniform
 post-canonicalization ``validate`` hook and a single import surface for the
@@ -17,16 +17,112 @@ shared ``_shared`` scaffolds (grammar, evidence, contract field). The
 mechanism — Finding C) and is threaded through, ignored by domains that do
 not cite authorities.
 
+Finding A (dispatch boilerplate extraction): the ``make_can_handle`` factory
+and the ``reject_contract`` / ``reject_non_string`` / ``reject_missing``
+helpers below centralise the duplicated ``can_handle`` predicate and the
+top-of-``canonicalize`` dispatch guards every capability repeated. They are
+pure refactors — they preserve the exact ``Status``, evidence rule names,
+``CapabilityResult`` shapes, and ``replay_hash`` of the inline code they
+replace.
+
 Law 4: ``validate`` is a post-canonicalization policy check, never
 interpretation. Default passes; the engine dispatches to it.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, cast
 
 from paxman._core.classification import ValidationResult
 from paxman._core.contracts import Contract
+from paxman._core.provenance import Evidence
+from paxman._core.result import CapabilityResult
+from paxman._core.status import Status
+
+# Shared type for a capability's can_handle predicate. Declared with `Any`
+# params (not `Contract`) because mypy erases a @runtime_checkable
+# Protocol used as a Callable parameter type when the Callable is
+# produced by a factory and checked against the Capability Protocol;
+# `Any` keeps both sides of the conformance check identical.
+CanHandle = Callable[[Any, Any], bool]
+
+# Whitespace characters stripped by the canonicalizers' missing-value check
+# (ASCII whitespace only — Unicode whitespace is intentionally left intact so
+# canonicalization stays deterministic across Python versions).
+WS = " \t\r\n\f\v"
+
+
+def make_can_handle(contract_cls: type, *, accept_none: bool = False) -> Callable[[Any, Any], bool]:
+    """Return a ``can_handle(self, contract, value)`` method for ``contract_cls``.
+
+    The returned predicate claims the (contract, value) pair exactly when the
+    contract is an instance of ``contract_cls`` and the value is a string (or,
+    when ``accept_none`` is True, also ``None`` — so a missing value routes to
+    ``Status.MISSING`` rather than ``Status.UNSUPPORTED``).
+    """
+
+    def can_handle(contract: Contract, value: Any) -> bool:
+        if accept_none:
+            return isinstance(contract, contract_cls) and (value is None or isinstance(value, str))
+        return isinstance(contract, contract_cls) and isinstance(value, str)
+
+    return cast(CanHandle, staticmethod(can_handle))
+
+
+def reject_contract(
+    contract: object,
+    expected_cls: type,
+    _evidence_fn: Callable[[str], object],
+    rule: str,
+) -> CapabilityResult | None:
+    """Return ``CapabilityResult(INVALID, evidence=(_evidence_fn(rule),))`` or ``None``.
+
+    Returns a rejecting ``CapabilityResult`` when ``contract`` is not an
+    instance of ``expected_cls``; otherwise ``None`` (caller proceeds). The
+    ``_evidence_fn`` closure is supplied by the caller so each capability cites
+    its own evidence manifest (and, where relevant, its engine).
+    """
+    if not isinstance(contract, expected_cls):
+        return CapabilityResult(
+            status=Status.INVALID, evidence=(cast(Evidence, _evidence_fn(rule)),)
+        )
+    return None
+
+
+def reject_non_string(
+    value: object,
+    _evidence_fn: Callable[[str], object],
+    rule: str = "not_a_string_value",
+) -> CapabilityResult | None:
+    """Return ``CapabilityResult(INVALID, ...)`` for non-string, non-None values, else ``None``.
+
+    Mirrors the inline guard every capability used: a value that is neither
+    ``None`` nor a ``str`` is not this capability's to claim, so it returns
+    ``Status.INVALID`` with the given evidence rule.
+    """
+    if not (value is None or isinstance(value, str)):
+        return CapabilityResult(
+            status=Status.INVALID, evidence=(cast(Evidence, _evidence_fn(rule)),)
+        )
+    return None
+
+
+def reject_missing(
+    value: object,
+    _evidence_fn: Callable[[str], object],
+    rule: str = "missing_value",
+) -> CapabilityResult | None:
+    """Return ``CapabilityResult(MISSING, ...)`` for None/whitespace-only values, else ``None``.
+
+    Preserves the original missing-value guard: ``None`` or a string that is
+    empty after stripping ``WS`` is reported as ``Status.MISSING``.
+    """
+    if value is None or (isinstance(value, str) and value.strip(WS) == ""):
+        return CapabilityResult(
+            status=Status.MISSING, evidence=(cast(Evidence, _evidence_fn(rule)),)
+        )
+    return None
 
 
 class CapabilityBase:
@@ -38,9 +134,12 @@ class CapabilityBase:
 
     name: str
 
-    def can_handle(self, contract: Contract, value: Any) -> bool:  # pragma: no cover
-        """Return True if this capability canonicalizes the (contract, value) pair."""
-        raise NotImplementedError
+    # Declared as a CanHandle attribute (a Callable, not a method) so that
+    # subclasses overriding it with `can_handle: CanHandle = make_can_handle(...)`
+    # type-match exactly against both this base and the Capability Protocol.
+    # A Protocol method `def can_handle(self, contract, value)` is satisfied
+    # by this Callable attribute shape (self is bound away at the call site).
+    can_handle: CanHandle
 
     def canonicalize(
         self, value: Any, contract: Contract, engine: Any | None = None

@@ -154,15 +154,36 @@ broken extension cannot quietly corrupt the constitution.
 
 ### 5.2 Contracts (the shared language)
 
-A *contract* is the agreement between caller and engine. It names the kind of
-information being canonicalized and may pin specific authoritative choices
-(Editions). Contracts are declarative and versioned. They are how a caller says
-*"I am giving you a date; here is the authority I trust"* without writing any
-logic.
+A *contract* is the agreement between caller and engine. If the engine is the
+bench and the capability is the expert witness, the contract is the charge
+sheet: it states, in plain terms, what kind of thing is being brought forward
+and under whose authority it should be judged. The caller does not describe
+*how* to judge it; that would be writing law, and the caller is not the law. The
+caller only declares *what* it is and *whose standard* applies.
 
-Contracts keep the public surface stable and predictable. A caller learns the
-contract once and can canonicalize any supported kind of information the same
-way.
+Concretely, a contract carries two kinds of information, and only these two:
+
+- **The kind.** It names the category of information being canonicalized — this
+  is what lets the engine resolve which single capability owns the case. The
+  contract is the key to the lookup; without it, the engine would not know which
+  door to open.
+- **The authority pin (optional).** It may name a specific edition of the
+  relevant authority the caller trusts (see 5.5). If the caller says nothing,
+  Paxman applies its active default. Either way, the choice is recorded in the
+  artifact, so the verdict is always reproducible against the same contract.
+
+The contract is **declarative and versioned**. Declarative means the caller
+states intent, never behavior — the how lives entirely with the capability
+author. Versioned means a contract has an identity Paxman can reason about over
+time; as authorities revise their standards, the contract model can grow without
+breaking callers who depend on an earlier shape.
+
+This is what makes the public surface stable and predictable. A caller learns
+the contract model once and can canonicalize any supported kind of information
+the same way, because every domain speaks through the same declarative
+vocabulary. The contract is the one piece of Paxman a user touches directly, so
+it is designed to be the simplest possible thing: *name the kind, optionally
+name the authority, and step back.*
 
 ### 5.3 Capabilities (the only extension point)
 
@@ -175,11 +196,13 @@ everything about its one subject and nothing about the others.
 After many refactors, the aspired shape of a capability is small, honest, and
 complete. A capability does exactly two things and nothing more.
 
-**First, it declares what it owns.** A capability answers, for any contract put
-before it: *"Is this mine?"* This is a clean, deterministic claim — not a
-confidence score, not a heuristic. In the registry, capability claims do not
-overlap; the engine's resolve step is a lookup, not a negotiation. A capability
-owns a contract kind, and it owns it wholly.
+**First, it declares what it owns.** At registration time, a capability makes a
+clean, deterministic claim of the contract kinds it answers for — not a
+confidence score, not a heuristic. The registry collects these claims into a
+fixed table, so that at run time the engine's Resolve step is a pure lookup, not
+a negotiation: it reads the table, finds the one capability that claimed this
+contract, and calls it. A capability owns its contract kind, and it owns it
+wholly — claims do not overlap, so there is never a tie to break.
 
 **Second, it renders a verdict.** Given an input and the contract it owns, the
 capability returns one of two outcomes, and the duality is the soul of Paxman:
@@ -202,10 +225,11 @@ input and the contract. That is what makes its verdict *deterministic* and its
 evidence *sufficient* — given the same two things, it always returns the same
 verdict with the same evidence, and the evidence is enough to reproduce it.
 
-Capabilities are organized one package per domain. Paxman today understands
-several foundational domains — email, date, unique identifiers, and more — and
-the shape of each capability package is identical. Adding a new domain means
-copying that shape, not inventing a new architecture.
+Capabilities are organized one package per domain. The contract kinds Paxman is
+built to serve span the everyday categories of known information — addresses,
+dates, unique identifiers, and the like — and the shape of each capability
+package is identical across all of them. Adding a new domain means copying that
+shape, not inventing a new architecture.
 
 This is the heart of Paxman's extensibility: **the only thing you are allowed to
 add is a capability, and the path for adding one is already paved.** There is no
@@ -215,20 +239,71 @@ the extender cannot accidentally break the constitution while playing it.
 
 ### 5.4 The Registry (safe by construction)
 
-Capabilities are registered before the engine runs. Once the engine begins its
-work, the set of capabilities is frozen. This prevents the silent, order-
-dependent behavior that plagues extensible systems: you cannot register a
-capability mid-flight and change the outcome of an in-progress run. Freezing
-makes determinism observable and enforceable rather than hoped-for.
+The registry is the roll call. It is the single place where capabilities declare
+themselves before any case is heard, and it is what turns the engine's Resolve
+step from a negotiation into a lookup. A capability that is not on the roll
+cannot be called to the stand; a capability that is on it is the only one who may
+answer for the contract it claims.
+
+The registry has one rule, and the rule is the whole point: **capabilities are
+registered before the engine runs, and once the engine begins its work the set
+of capabilities is frozen.** After that moment, the roster cannot change.
+
+Why this matters is something hard-won. Extensible systems routinely let
+capabilities appear, disappear, or reorder while work is in flight, and the
+result is the quiet kind of bug that defeats determinism: the same input yields
+a different verdict because a different specialist happened to be registered at
+the time. By freezing the roster up front, Paxman removes the possibility
+entirely. There is no "later," no "this time it was different because something
+registered in between." The capability set that judges the first case is the
+capability set that judges the last, for the life of the process.
+
+Freezing also makes the contract-to-capability mapping *observable*. Because the
+claims do not overlap and the roster is fixed, anyone can list, ahead of time,
+exactly which capability owns which contract. Determinism stops being a hope
+documented in prose and becomes a property you can see and enforce: the resolve
+is a closed, fixed table, not an open-ended search. The registry is the quiet
+guardian of Invariant 2 — and because it sits between engine and capability, it
+protects the user without ever asking the user to think about it.
 
 ### 5.5 Authoritative Editions
 
-Different authorities publish different canonical forms for the same domain.
-Paxman models this explicitly through *editions* — named, selectable versions of
-an authority. A caller can rely on the active default, or pin a specific edition
-for a single call, or pin editions across an entire engine. This lets Paxman
-honor real-world authority without hardcoding a single worldview, and it keeps
-canonicalization both configurable and reproducible.
+An edition is the recognition that *truth has a publisher*. For any domain
+Paxman canonicalizes, there is usually a real-world authority — a standards body,
+a specification, a registry — that defines what the canonical form actually is.
+But authorities are not frozen in time, and they are not singular. A date has an
+ISO form; a country has an ISO code list that gets revised; a currency has an
+assigned code table that expands. The same domain can therefore have more than
+one legitimate canonical form depending on *which edition* of the authority you
+honor.
+
+Paxman models this explicitly through **editions** — named, selectable versions
+of an authority. An edition is not a guess about the future; it is a pinned
+reference to a specific published standard. And it is first-class in the system,
+not a footnote:
+
+- A caller who says nothing gets Paxman's **active default edition** — the
+  currently trusted publication for each authority.
+- A caller who needs a specific standard can **pin an edition for a single
+  call**, so one verdict in a batch obeys a different authority than the rest.
+- A caller building a long-running system can **pin editions across an entire
+  engine**, so every verdict that process produces is judged against the same
+  fixed standards.
+
+Editions solve a tension that would otherwise tear the promise apart. On one
+hand, Paxman must honor real-world authority — it cannot invent its own
+canonical forms. On the other hand, it must be reproducible — the same input
+must always yield the same artifact. If the authority were read live, "same in,
+same out" would break the day the standard was revised. Editions resolve both at
+once: Paxman defers to genuine external authority, but it records *which*
+edition it deferred to, so replay always reconstructs the verdict against the
+exact same standard.
+
+This is also what keeps a fork honest. A variant that trusts a different
+authority does not fork the pipeline to express that — it simply pins different
+editions. The sealed engine still guarantees the invariants; only the declared
+standard changes. Editions are how Paxman stays both *humble* (it answers to
+real authorities) and *deterministic* (it never quietly changes its answer).
 
 ---
 

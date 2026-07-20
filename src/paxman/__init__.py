@@ -44,18 +44,18 @@ from paxman._registry.capability_registry import CapabilityRegistry
 # structural `Contract` Protocol of the same name lives in
 # `paxman._core.contracts`; this union is what the DSL parser returns and
 # what callers hold.
-Contract = (
-    CanonicalEmailContract
-    | CanonicalUUIDContract
-    | CanonicalDateContract
-    | CanonicalPhoneContract
-    | CanonicalURLContract
-    | CanonicalBooleanContract
-    | CanonicalIPContract
-    | CanonicalMoneyContract
-    | CanonicalGeolocationContract
-    | CanonicalCountryContract
+_CANONICAL_CONTRACTS = tuple(
+    v
+    for k, v in list(globals().items())
+    if k.startswith("Canonical") and k.endswith("Contract") and isinstance(v, type)
 )
+if _CANONICAL_CONTRACTS:
+    _contract_union: object = _CANONICAL_CONTRACTS[0]
+    for _extra in _CANONICAL_CONTRACTS[1:]:
+        _contract_union = _contract_union | _extra
+    Contract = _contract_union
+else:
+    Contract = object
 
 
 def canonicalize(input_data: object, contract: object) -> ExecutionArtifact:

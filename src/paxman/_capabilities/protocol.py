@@ -12,6 +12,8 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
+from paxman._capabilities._shared.base import CanHandle
+
 # Law 4 (capability boundaries): a capability transforms (contract,
 # value); it does not orchestrate. Law 8a (pure functions):
 # canonicalize is a pure (value, contract) -> result transform.
@@ -36,7 +38,11 @@ class Capability(Protocol):
 
     name: str
 
-    def can_handle(self, contract: Contract, value: Any) -> bool: ...
+    # can_handle is a Callable attribute (not a method) matching CanHandle.
+    # This keeps the Protocol's surface identical to what subclasses assign
+    # (`can_handle: CanHandle = make_can_handle(...)`), so mypy's
+    # conformance check sees two identical Callable shapes.
+    can_handle: CanHandle
 
     def canonicalize(
         self, value: Any, contract: Contract, engine: Engine | None = None

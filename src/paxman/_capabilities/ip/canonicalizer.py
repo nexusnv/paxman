@@ -14,7 +14,14 @@ import ipaddress
 
 import attrs
 
-from paxman._capabilities._shared.base import CapabilityBase
+from paxman._capabilities._shared.base import (
+    CanHandle,
+    CapabilityBase,
+    make_can_handle,
+    reject_contract,
+    reject_missing,
+    reject_non_string,
+)
 from paxman._capabilities.ip.contract import CanonicalIPContract
 from paxman._capabilities.ip.grammar import RecognizedRep, recognize
 from paxman._capabilities.ip.rules import _evidence
@@ -159,26 +166,24 @@ class IPCapability(CapabilityBase):
 
     name: str = "ip_canonicalization"
 
-    def can_handle(self, contract: Contract, value: object) -> bool:
-        return isinstance(contract, CanonicalIPContract) and (
-            value is None or isinstance(value, str)
-        )
+    can_handle: CanHandle = make_can_handle(CanonicalIPContract, accept_none=True)
 
     def canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
-        if not isinstance(contract, CanonicalIPContract):
-            return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_ip_contract"),)
-            )
-        if not (value is None or isinstance(value, str)):
-            return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_string_value"),)
-            )
+        r = reject_contract(contract, CanonicalIPContract, _evidence, "not_a_ip_contract")
+        if r is not None:
+            return r
+        r = reject_non_string(value, _evidence)
+        if r is not None:
+            return r
+        assert isinstance(contract, CanonicalIPContract)
 
         # Missing value -> MISSING (spec §3.4).
-        if value is None or value.strip(" \t\r\n\f\v") == "":
-            return CapabilityResult(status=Status.MISSING, evidence=(_evidence("missing_value"),))
+        r = reject_missing(value, _evidence, "missing_value")
+        if r is not None:
+            return r
+        assert isinstance(value, str)
 
         # Trim leading/trailing ASCII whitespace (record if changed).
         stripped_evidence: tuple[Evidence, ...] = ()

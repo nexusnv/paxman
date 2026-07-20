@@ -18,7 +18,14 @@ from decimal import ROUND_HALF_EVEN, Decimal
 
 import attrs
 
-from paxman._capabilities._shared.base import CapabilityBase
+from paxman._capabilities._shared.base import (
+    CanHandle,
+    CapabilityBase,
+    make_can_handle,
+    reject_contract,
+    reject_missing,
+    reject_non_string,
+)
 from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
 from paxman._capabilities.geolocation.grammar import (
     RecognizedRep,
@@ -336,14 +343,7 @@ class GeolocationCapability(CapabilityBase):
 
     name: str = "geolocation_canonicalization"
 
-    def can_handle(self, contract: Contract, value: object) -> bool:
-        """Return True if this capability canonicalizes the given contract.
-
-        Accepts a CanonicalGeolocationContract with a string (or None) value.
-        """
-        return isinstance(contract, CanonicalGeolocationContract) and (
-            value is None or isinstance(value, str)
-        )
+    can_handle: CanHandle = make_can_handle(CanonicalGeolocationContract, accept_none=True)
 
     def canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
@@ -360,18 +360,21 @@ class GeolocationCapability(CapabilityBase):
             deterministically resolved (empty, malformed, out of range, or an
             unsigned axis under a hemisphere-requiring contract).
         """
-        if not isinstance(contract, CanonicalGeolocationContract):
-            return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_geolocation_contract"),)
-            )
-        if not (value is None or isinstance(value, str)):
-            return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_string_value"),)
-            )
+        r = reject_contract(
+            contract, CanonicalGeolocationContract, _evidence, "not_a_geolocation_contract"
+        )
+        if r is not None:
+            return r
+        r = reject_non_string(value, _evidence)
+        if r is not None:
+            return r
+        assert isinstance(contract, CanonicalGeolocationContract)
 
-        # Missing/whitespace-only value -> MISSING (spec §5, Law 8).
-        if value is None or value.strip(" \t\r\n\f\v") == "":
-            return CapabilityResult(status=Status.MISSING, evidence=(_evidence("missing_value"),))
+        # Missing value -> MISSING (spec §3.9).
+        r = reject_missing(value, _evidence, "missing_value")
+        if r is not None:
+            return r
+        assert isinstance(value, str)
 
         # Track whether surrounding whitespace was stripped (record if changed).
         stripped_evidence: tuple[Evidence, ...] = ()

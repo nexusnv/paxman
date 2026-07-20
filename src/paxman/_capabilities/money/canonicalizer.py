@@ -10,7 +10,13 @@ string from `parse_amount` (F1 literal decimals, Q1/Q2/Q3 applied).
 
 from __future__ import annotations
 
-from paxman._capabilities._shared.base import CapabilityBase
+from paxman._capabilities._shared.base import (
+    CanHandle,
+    CapabilityBase,
+    make_can_handle,
+    reject_contract,
+    reject_non_string,
+)
 from paxman._capabilities.money.contract import CanonicalMoneyContract
 from paxman._capabilities.money.grammar import parse_amount, recognize_money
 from paxman._capabilities.money.rules import _evidence
@@ -27,14 +33,7 @@ class MoneyCapability(CapabilityBase):
 
     name: str = "money_canonicalization"
 
-    def can_handle(self, contract: Contract, value: object) -> bool:
-        """Return True if this capability canonicalizes the given contract.
-
-        Accepts a CanonicalMoneyContract with a string (or None) value.
-        """
-        return isinstance(contract, CanonicalMoneyContract) and (
-            value is None or isinstance(value, str)
-        )
+    can_handle: CanHandle = make_can_handle(CanonicalMoneyContract, accept_none=True)
 
     def canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
@@ -50,14 +49,18 @@ class MoneyCapability(CapabilityBase):
             or INVALID when the input cannot be deterministically resolved
             (empty, malformed, or a symbol/code that does not match the contract).
         """
-        if not isinstance(contract, CanonicalMoneyContract):
-            return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_money_contract", engine=engine),)
-            )
-        if not (value is None or isinstance(value, str)):
-            return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_string_value", engine=engine),)
-            )
+
+        def _ev(rule: str) -> object:
+            return _evidence(rule, engine=engine)
+
+        r = reject_contract(contract, CanonicalMoneyContract, _ev, "not_a_money_contract")
+        if r is not None:
+            return r
+        r = reject_non_string(value, _ev)
+        if r is not None:
+            return r
+        assert isinstance(contract, CanonicalMoneyContract)
+        assert isinstance(value, str)
 
         # Missing/whitespace-only value -> INVALID (spec: empty input rejected).
         if value is None or value.strip(" \t\r\n\f\v") == "":

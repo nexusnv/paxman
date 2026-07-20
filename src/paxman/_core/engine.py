@@ -30,6 +30,7 @@ import paxman as _paxman_version  # used to read __version__
 from paxman._capabilities.discovery import builtin_capabilities
 from paxman._core.artifact import ExecutionArtifact, _ContractLike
 from paxman._core.classification import ValidationResult, classify
+from paxman._core.contracts import _StubContract
 from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import VersionStamp
@@ -39,37 +40,6 @@ from paxman._dsl.parser import parse_contract
 from paxman._errors import CanonicalizationError, ContractError, UnsupportedContractError
 from paxman._provenance.authority import Authority
 from paxman._registry.capability_registry import CapabilityRegistry
-
-
-class _StubContract:
-    """Minimal contract stand-in for unparseable contract specs.
-
-    Satisfies the ``_ContractLike`` Protocol structurally: all members are
-    read-only properties (matching ``@attrs.frozen`` contract types).
-    """
-
-    def __init__(self, spec: object) -> None:
-        self._spec = spec
-        self._kind = "unknown"
-        self._version_field = 0
-        self._authority_override: Any | None = None
-
-    @property
-    def kind(self) -> str:
-        return self._kind
-
-    @property
-    def version_field(self) -> int:
-        return self._version_field
-
-    @property
-    def authority_override(self) -> Any | None:
-        return self._authority_override
-
-    def as_dict(self) -> dict[str, object]:
-        if isinstance(self._spec, dict):
-            return dict(self._spec)
-        return {"kind": "unknown"}
 
 
 def canonicalize(

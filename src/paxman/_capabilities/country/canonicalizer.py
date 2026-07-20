@@ -14,7 +14,14 @@ from types import MappingProxyType
 
 import attrs
 
-from paxman._capabilities._shared.base import CapabilityBase
+from paxman._capabilities._shared.base import (
+    CanHandle,
+    CapabilityBase,
+    make_can_handle,
+    reject_contract,
+    reject_missing,
+    reject_non_string,
+)
 from paxman._capabilities.country.contract import (
     _ALPHA2_CODES,
     _ALPHA3_TO_ALPHA2,
@@ -212,29 +219,28 @@ class CountryCapability(CapabilityBase):
 
     name: str = "country_canonicalization"
 
-    def can_handle(self, contract: Contract, value: object) -> bool:
-        return isinstance(contract, CanonicalCountryContract) and (
-            value is None or isinstance(value, str)
-        )
+    can_handle: CanHandle = make_can_handle(CanonicalCountryContract, accept_none=True)
 
     def canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
-        if not isinstance(contract, CanonicalCountryContract):
-            return CapabilityResult(
-                status=Status.INVALID,
-                evidence=(_evidence("not_a_country_contract", engine=engine),),
-            )
-        if not (value is None or isinstance(value, str)):
-            return CapabilityResult(
-                status=Status.INVALID, evidence=(_evidence("not_a_string_value", engine=engine),)
-            )
+
+        def _ev(rule: str) -> object:
+            return _evidence(rule, engine=engine)
+
+        r = reject_contract(contract, CanonicalCountryContract, _ev, "not_a_country_contract")
+        if r is not None:
+            return r
+        r = reject_non_string(value, _ev)
+        if r is not None:
+            return r
+        assert isinstance(contract, CanonicalCountryContract)
+        assert isinstance(value, str)
 
         # Missing value -> MISSING (spec §3.5).
-        if value is None or value.strip(" \t\r\n\f\v") == "":
-            return CapabilityResult(
-                status=Status.MISSING, evidence=(_evidence("missing_value", engine=engine),)
-            )
+        r = reject_missing(value, _ev, "missing_value")
+        if r is not None:
+            return r
 
         # Trim leading/trailing ASCII whitespace (record if changed).
         stripped_evidence: tuple[Evidence, ...] = ()

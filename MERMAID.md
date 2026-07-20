@@ -10,18 +10,18 @@ recognition/parsing in `_capabilities/money/grammar.py`).
 sequenceDiagram
     autonumber
     actor Caller
-    participant API as paxman.canonicalize()<br/>_core/engine.py
-    participant ORT as _orchestrator_runtime<br/>default_registry
+    participant API as paxman.canonicalize() in _core/engine.py
+    participant ORT as _orchestrator_runtime default_registry
     participant REG as CapabilityRegistry
-    participant DSL as parse_contract()<br/>_dsl/parser.py
-    participant ENG as Engine<br/>_core/engine_env.py
-    participant CAP as MoneyCapability<br/>_capabilities/money/canonicalizer.py
-    participant GR as recognize_money()<br/>_capabilities/money/grammar.py
-    participant PA as parse_amount()<br/>_capabilities/money/grammar.py
-    participant RULES as rules.py _evidence()<br/>+ _RULE_AUTHORITIES
-    participant VAL as validate_value()<br/>_core/validation.py
-    participant CLS as classify()<br/>_core/classification.py
-    participant ART as ExecutionArtifact<br/>_core/artifact.py
+    participant DSL as parse_contract() in _dsl/parser.py
+    participant ENG as Engine in _core/engine_env.py
+    participant CAP as MoneyCapability in _capabilities/money/canonicalizer.py
+    participant GR as recognize_money() in _capabilities/money/grammar.py
+    participant PA as parse_amount() in _capabilities/money/grammar.py
+    participant RULES as rules.py _evidence() with _RULE_AUTHORITIES
+    participant VAL as validate_value() in _core/validation.py
+    participant CLS as classify() in _core/classification.py
+    participant ART as ExecutionArtifact in _core/artifact.py
 
     Caller->>API: canonicalize(input, Money(currency=...))
 
@@ -29,28 +29,28 @@ sequenceDiagram
     API->>ORT: default_registry
     API->>REG: load_builtins(builtin_capabilities())
     API->>REG: freeze()
-    API->>ENG: Engine.default()  (if engine is None)
+    API->>ENG: Engine.default() if engine is None
 
-    Note over API,DSL: Stage 1 — inspect (parse contract)
+    Note over API,DSL: Stage 1 - inspect (parse contract)
     API->>DSL: parse_contract(Money(...))
     DSL-->>API: CanonicalMoneyContract (parsed_contract)
 
-    Note over API,ENG: Stage 1.5 — authority override
+    Note over API,ENG: Stage 1.5 - authority override
     API->>API: override = parsed_contract.authority_override
     API->>ENG: engine.override(name, selector) per pin
 
-    Note over API,REG: Stage 2 — resolve claimants
+    Note over API,REG: Stage 2 - resolve claimants
     API->>REG: resolve_all(parsed_contract, input)
-    REG-->>API: [MoneyCapability]  (exactly one claimant)
+    REG-->>API: [MoneyCapability] exactly one claimant
 
-    Note over API,CAP: Stage 3+4 — execute + canonicalize
+    Note over API,CAP: Stage 3+4 - execute + canonicalize
     API->>CAP: canonicalize(input, parsed_contract, engine)
 
-    alt not a CanonicalMoneyContract / not str
+    alt not a CanonicalMoneyContract or not str
         CAP-->>RULES: _evidence("not_a_money_contract" / "not_a_string_value")
         RULES-->>CAP: Evidence(authority=None)
         CAP-->>API: CapabilityResult(status=INVALID, evidence=...)
-    else missing / whitespace-only value
+    else missing or whitespace-only value
         CAP-->>RULES: _evidence("missing_value")
         RULES-->>CAP: Evidence(authority=None)
         CAP-->>API: CapabilityResult(status=INVALID, evidence=...)
@@ -59,14 +59,15 @@ sequenceDiagram
         RULES-->>CAP: Evidence(authority=None)
     end
 
-    Note over CAP,GR: Layer 1 — recognition (shape + symbol/code validation)
+    Note over CAP,GR: Layer 1 - recognition (shape + symbol/code validation)
     CAP->>GR: recognize_money(value, contract)
-    GR->>GR: _strip_amount_text()  (whitespace / empty)
-    GR->>GR: _split_sign()  (outer +/-, trailing -, parens)
-    GR->>GR: _detect_symbol()  (validate vs contract.currency)
-    GR->>GR: _detect_code()  (validate vs contract.currency; detect ":" canonical)
-    GR->>GR: _split_sign()  (inner sign; reject contradictory signs)
-    alt ContractError raised (malformed / mismatch)
+    GR->>GR: _strip_amount_text() handles whitespace and empty
+    GR->>GR: _split_sign() handles outer +/-, trailing -, parens
+    GR->>GR: _detect_symbol() validates against contract.currency
+    GR->>GR: _detect_code() validates code, detects ":" canonical delimiter
+    GR->>GR: _split_sign() inner sign; reject contradictory signs
+
+    alt ContractError raised (malformed or mismatch)
         GR-->>CAP: raise ContractError
         CAP-->>RULES: _evidence("unrecognized_format")
         RULES-->>CAP: Evidence(authority=None)
@@ -75,11 +76,12 @@ sequenceDiagram
         GR-->>CAP: MoneyParts(currency, amount, symbol, code, sign, canonical)
     end
 
-    Note over CAP,PA: Parse amount → canonical decimal string (F1/Q1/Q2/Q3)
+    Note over CAP,PA: Parse amount into canonical decimal string (F1/Q1/Q2/Q3)
     CAP->>PA: parse_amount(amount, contract.currency, parts.canonical)
     PA->>PA: apply separator convention (comma vs dot decimal)
-    PA->>PA: _validate_thousands()  (reject ambiguous grouping)
+    PA->>PA: _validate_thousands() rejects ambiguous grouping
     PA->>PA: Decimal(...) exact; preserve literal decimals (F1); normalize sci-notation (Q3)
+
     alt ContractError raised (bad amount)
         PA-->>CAP: raise ContractError
         CAP-->>RULES: _evidence("unrecognized_format")
@@ -89,20 +91,20 @@ sequenceDiagram
         PA-->>CAP: canonical decimal string
     end
 
-    Note over CAP,RULES: Compose canonical form + evidence
-    CAP->>CAP: canonical = f"{currency}:{sign}{parsed}"
-    CAP->>RULES: _evidence("currency_from_contract", "symbol_validated" |<br/>"code_validated", "preserved_sign", "parsed_decimal",<br/>"preserved_decimals", "canonical_form")
+    Note over CAP,RULES: Compose canonical form and evidence
+    CAP->>CAP: canonical = currency + ":" + sign + parsed
+    CAP->>RULES: _evidence("currency_from_contract", "symbol_validated" / "code_validated", "preserved_sign", "parsed_decimal", "preserved_decimals", "canonical_form")
     RULES-->>CAP: Evidence(rule, authority from _RULE_AUTHORITIES)
     CAP-->>API: CapabilityResult(status=CANONICALIZED, value=canonical, evidence=...)
 
-    Note over API,CLS: Stage 5 — validate + Stage 6 — classify
+    Note over API,CLS: Stage 5 - validate and Stage 6 - classify
     API->>VAL: validate_value(canonical, parsed_contract)
     VAL-->>API: ValidationResult(is_valid=True)
     API->>CLS: classify(capability_result, validation)
     CLS-->>API: Status.CANONICALIZED
 
     Note over API,ART: Build artifact
-    API->>ART: _build_artifact(registry, engine, parsed_contract,<br/>status, value, evidence, candidates)
+    API->>ART: _build_artifact(registry, engine, parsed_contract, status, value, evidence, candidates)
     ART->>ART: collect authorities cited in evidence (Law 12)
     ART->>ART: VersionStamp(paxman_version, contract_version, capabilities_hash)
     ART-->>Caller: ExecutionArtifact(status, value="ISO4217:amount", evidence, contract, authorities, version_stamp)
@@ -110,20 +112,12 @@ sequenceDiagram
     Note over Caller,ART: Replay (determinism invariant)
     Caller->>API: replay(artifact, contract)
     API->>ART: reconstruct engine from recorded authorities
-    API->>ART: re-canonicalize → byte-for-byte identical artifact
+    API->>ART: re-canonicalize to a byte-for-byte identical artifact
 ```
 
 ## Notes
 
-- **Single claimant contract**: the registry resolves exactly one capability
-  (`MoneyCapability`) for a `CanonicalMoneyContract`. Multiple claimants →
-  `Status.AMBIGUOUS`; no claimants → `Status.UNSUPPORTED`.
-- **Currency is never guessed** (Law 3): `Money(...)` requires `currency`; the
-  grammar only validates that any symbol/code present matches the contract
-  currency, never infers it.
-- **Determinism / idempotence**: `parts.canonical` (set when the input is the
-  capability's own `"ISO4217:amount"` output) makes `parse_amount` skip the
-  currency separator convention, so `canonicalize(canonicalize(x)) == canonicalize(x)`.
-- **Evidence authority**: every fired rule resolves from the capability's
-  `_RULE_AUTHORITIES` manifest (mandate Law 14); routing/dispatch failures carry
-  `authority=None`.
+- Single claimant contract: the registry resolves exactly one capability (MoneyCapability) for a CanonicalMoneyContract. Multiple claimants produce Status.AMBIGUOUS; no claimants produce Status.UNSUPPORTED.
+- Currency is never guessed (Law 3): Money(...) requires currency; the grammar only validates that any symbol/code present matches the contract currency, never infers it.
+- Determinism / idempotence: parts.canonical (set when the input is the capability's own "ISO4217:amount" output) makes parse_amount skip the currency separator convention, so canonicalize(canonicalize(x)) == canonicalize(x).
+- Evidence authority: every fired rule resolves from the capability's _RULE_AUTHORITIES manifest (mandate Law 14); routing/dispatch failures carry authority=None.

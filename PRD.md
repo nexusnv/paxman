@@ -107,19 +107,50 @@ side can evolve without disturbing the other.
 
 ### 5.1 The Engine (fixed, owned, sealed)
 
-At the center sits the engine. The engine is the immutable pipeline that:
+At the center sits the engine. If Paxman were a courtroom, the engine would be
+the bench: it never argues a case, it never invents the law, and it never
+whispers to one side. It receives what is brought before it, confirms the law
+applies, asks the right specialist to render a verdict, records that verdict
+word-for-word, and can read the verdict back verbatim years later. The engine is
+the unchanging frame inside which all change is permitted.
 
-- accepts an input and a *contract* describing what kind of information this is,
-- selects the right capability to handle it,
-- runs canonicalization,
-- produces a self-describing artifact,
-- and supports replay of that artifact.
+We spent many cycles refactoring to find the engine's true shape, and the
+aspired sweet spot looks like this.
+
+**The engine is a pure, stateless referee.** It holds no opinion about email or
+dates or money. It holds only the rules of engagement. Given an input and a
+contract, it performs a fixed sequence of moves, and that sequence is the entire
+job of Paxman:
+
+1. **Receive.** Take the raw input and the contract that names its kind.
+2. **Resolve.** Ask the registry, deterministically, which single capability
+   has declared that it owns this contract. There is no scoring, no ranking, no
+   "best match" — exactly one capability claims it, or the engine reports that
+   none does.
+3. **Delegate.** Hand the input and contract to that capability and receive back
+   a structured verdict: either a canonical form with the evidence that produced
+   it, or an explicit refusal with the reason why no unique form exists.
+4. **Seal.** Wrap the verdict, the contract, and the authority choices into a
+   self-describing artifact — a record that needs nothing outside itself to be
+   understood or replayed.
+5. **Replay.** Given that artifact and the same contract, reproduce it exactly,
+   without ever re-invoking the capability. Replay is reading the sealed record,
+   not re-running the trial.
+
+What makes this the sweet spot is not any single move but the *discipline of the
+frame*. The engine is intentionally boring. It contains no branching that
+depends on which domain is being canonicalized. It knows nothing about casing,
+time zones, or currency. All of that lives elsewhere, behind the one door. This
+is why the engine can be sealed: there is nothing inside it worth forking, and
+nothing inside it that could drift. The invariants — Identity, Determinism,
+Replay — are not sprinkled across the system; they are *concentrated* in this
+one component, and concentration is what makes them provable.
 
 The engine is **owned by Paxman**. Contributors do not rewrite the pipeline.
-They do not redefine how artifacts are produced or replayed. This is not a
-limitation — it is the guarantee. Because the engine is sealed, the three
-invariants are protected in one place, and every extension inherits them for
-free.
+They do not redefine how verdicts are rendered or how artifacts are sealed. This
+is not a limitation — it is the guarantee. Because the frame is sealed, every
+extension that plugs into it inherits the three invariants for free, and a
+broken extension cannot quietly corrupt the constitution.
 
 ### 5.2 Contracts (the shared language)
 
@@ -136,19 +167,51 @@ way.
 ### 5.3 Capabilities (the only extension point)
 
 Everything Paxman *knows how to canonicalize* lives behind a single, uniform
-interface: a **capability**. A capability answers two questions:
+interface: a **capability**. The capability is the specialist the engine calls
+to the stand — the only place where real domain knowledge is allowed to live. If
+the engine is the bench, the capability is the expert witness: it knows
+everything about its one subject and nothing about the others.
 
-- *Can I handle this contract?*
-- *Given this input and contract, what is the canonical artifact?*
+After many refactors, the aspired shape of a capability is small, honest, and
+complete. A capability does exactly two things and nothing more.
 
-Capabilities are organized one package per domain. Today Paxman understands
-several foundational domains — email, date, and unique identifiers — and the
-shape of each capability package is identical. Adding a new domain means copying
-that shape, not inventing a new architecture.
+**First, it declares what it owns.** A capability answers, for any contract put
+before it: *"Is this mine?"* This is a clean, deterministic claim — not a
+confidence score, not a heuristic. In the registry, capability claims do not
+overlap; the engine's resolve step is a lookup, not a negotiation. A capability
+owns a contract kind, and it owns it wholly.
+
+**Second, it renders a verdict.** Given an input and the contract it owns, the
+capability returns one of two outcomes, and the duality is the soul of Paxman:
+
+- A **canonical verdict** — the single agreed form, accompanied by *evidence*:
+  the named rules that fired, the order they fired in, and the authority whose
+  standard was applied. Evidence is not decoration. It is the receipt. It is what
+  lets a reader (human or machine) trust the verdict and what lets replay
+  reconstruct it without re-running the reasoning.
+- A **refusal** — an explicit, reasoned statement that the input does not
+  determine a unique form. The capability does not guess, does not fall back to
+  a "probably," does not pass the buck. It says *why* it cannot decide, and it
+  stops. Refusal is a first-class result, stored in the artifact exactly like a
+  success, because refusing correctly is as much a part of the promise as
+  succeeding.
+
+The capability never reaches outside itself for the answer. It does not call a
+service, consult a clock, or read ambient state. Its output depends only on the
+input and the contract. That is what makes its verdict *deterministic* and its
+evidence *sufficient* — given the same two things, it always returns the same
+verdict with the same evidence, and the evidence is enough to reproduce it.
+
+Capabilities are organized one package per domain. Paxman today understands
+several foundational domains — email, date, unique identifiers, and more — and
+the shape of each capability package is identical. Adding a new domain means
+copying that shape, not inventing a new architecture.
 
 This is the heart of Paxman's extensibility: **the only thing you are allowed to
 add is a capability, and the path for adding one is already paved.** There is no
-secret hook, no special-case escape hatch, no fork-the-core requirement.
+secret hook, no special-case escape hatch, no fork-the-core requirement. The
+capability is the whole game for an extender — and because the engine is sealed,
+the extender cannot accidentally break the constitution while playing it.
 
 ### 5.4 The Registry (safe by construction)
 

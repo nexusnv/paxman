@@ -14,13 +14,11 @@ domain (CLDR, E.164) wires in with no change here.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from types import MappingProxyType
 
 from paxman._core.engine_env import Engine
 from paxman._provenance.authority import Authority
 from paxman._provenance.evidence import Evidence, _evidence_from_args
-
-#: Engine-aware ``_evidence`` closure shape: ``(rule, detail="", engine=None)``.
-EngineEvidence = Callable[[str, str, "Engine | None"], Evidence]
 
 #: A capability's rule→authority manifest maps every emitted rule name to the
 #: :class:`Authority` it cites (or ``None`` for allow-listed dispatch invariants).
@@ -34,6 +32,20 @@ def make_evidence(manifest: RuleAuthorities) -> Callable[..., Evidence]:
         return Evidence(rule=rule, detail=detail, authority=manifest[rule])
 
     return _evidence
+
+
+def rule_authorities(
+    mapping: Mapping[str, Authority | None],
+) -> Callable[..., Evidence]:
+    """Declare a capability's rule->authority manifest and return its ``_evidence`` closure.
+
+    Replaces the repeated ``_RULE_AUTHORITIES = MappingProxyType({...})``
+    literal plus ``_evidence = make_evidence(_RULE_AUTHORITIES)`` pair in
+    every domain. The manifest is frozen at call time (determinism parity
+    with the prior ``MappingProxyType``). Domain data stays with the domain.
+    """
+    frozen: Mapping[str, Authority | None] = MappingProxyType(dict(mapping))
+    return make_evidence(frozen)
 
 
 def make_evidence_for(
@@ -62,18 +74,7 @@ def make_evidence_for(
         authority = manifest[rule]
         if engine is not None and rule in rules and authority is not None:
             bound = engine.authority(authority_name)
-            if rule == "unrecognized_format":
-                authority = bound.section(_unrecognized_section(manifest, rule))
-            else:
-                authority = bound.section(authority.version)
+            authority = bound.section(authority.version)
         return _evidence_from_args(rule, authority, detail)
 
     return _evidence
-
-
-def _unrecognized_section(manifest: RuleAuthorities, rule: str) -> str:
-    """Preserve the manifest's unrecognized_format narrative if present."""
-    base = manifest.get(rule)
-    if base is not None and base.version:
-        return base.version
-    return "input is not a recognized token"

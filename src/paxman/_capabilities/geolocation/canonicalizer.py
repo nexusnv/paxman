@@ -18,6 +18,7 @@ from decimal import ROUND_HALF_EVEN, Decimal
 
 import attrs
 
+from paxman._capabilities._shared.base import CapabilityBase
 from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
 from paxman._capabilities.geolocation.grammar import (
     RecognizedRep,
@@ -330,7 +331,7 @@ def classify(
     return Status.CANONICALIZED, c.value, c.evidence, None
 
 
-class GeolocationCapability:
+class GeolocationCapability(CapabilityBase):
     """A pure deterministic transformation that canonicalizes geolocations."""
 
     name: str = "geolocation_canonicalization"

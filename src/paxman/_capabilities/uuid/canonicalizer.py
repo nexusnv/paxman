@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import attrs
 
+from paxman._capabilities._shared.base import CapabilityBase
 from paxman._capabilities.uuid.contract import CanonicalUUIDContract
 from paxman._capabilities.uuid.grammar import RecognizedRep, recognize
 from paxman._capabilities.uuid.parser import CANONICAL_CHARS, CANONICAL_LENGTH, HYPHEN_POSITIONS
@@ -172,7 +173,7 @@ def classify(
     )
 
 
-class UUIDCapability:
+class UUIDCapability(CapabilityBase):
     """A pure deterministic transformation that canonicalizes UUIDs.
 
     The capability accepts only the RFC 4122 §3 canonical form (36

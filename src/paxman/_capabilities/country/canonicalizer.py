@@ -14,6 +14,7 @@ from types import MappingProxyType
 
 import attrs
 
+from paxman._capabilities._shared.base import CapabilityBase
 from paxman._capabilities.country.contract import (
     _ALPHA2_CODES,
     _ALPHA3_TO_ALPHA2,
@@ -206,7 +207,7 @@ def classify(
     )
 
 
-class CountryCapability:
+class CountryCapability(CapabilityBase):
     """A pure deterministic transformation that canonicalizes countries."""
 
     name: str = "country_canonicalization"

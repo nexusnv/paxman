@@ -13,6 +13,7 @@ from types import MappingProxyType
 
 import attrs
 
+from paxman._capabilities._shared.base import CapabilityBase
 from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 from paxman._capabilities.boolean.grammar import RecognizedRep, recognize
 from paxman._capabilities.boolean.rules import _evidence
@@ -148,7 +149,7 @@ def classify(
     )
 
 
-class BooleanCapability:
+class BooleanCapability(CapabilityBase):
     """A pure deterministic transformation that canonicalizes booleans."""
 
     name: str = "boolean_canonicalization"

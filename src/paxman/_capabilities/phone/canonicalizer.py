@@ -11,6 +11,7 @@ import re
 
 import attrs
 
+from paxman._capabilities._shared.base import CapabilityBase
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
 from paxman._capabilities.phone.grammar import RecognizedRep, recognize
 from paxman._capabilities.phone.parser import _cc_for_country
@@ -163,7 +164,7 @@ def classify(
     )
 
 
-class PhoneCapability:
+class PhoneCapability(CapabilityBase):
     """A pure deterministic transformation that canonicalizes phone numbers.
 
     ``Capability`` (from ``paxman._capabilities.protocol``) is a structural

@@ -14,6 +14,7 @@ import ipaddress
 
 import attrs
 
+from paxman._capabilities._shared.base import CapabilityBase
 from paxman._capabilities.ip.contract import CanonicalIPContract
 from paxman._capabilities.ip.grammar import RecognizedRep, recognize
 from paxman._capabilities.ip.rules import _evidence
@@ -29,7 +30,7 @@ class _Candidate:
     """A single enumerated reading of an IP-shaped input."""
 
     value: str
-    family: str
+    family: str | None
     rule: str
     source: str
     evidence: tuple[Evidence, ...]
@@ -65,7 +66,9 @@ def generate_interpretations(
             # equivalent dotted-decimal representation canonicalizes to the
             # same form (RFC 4291 §2.2 — no leading zeros in canonical text).
             normalized = ".".join(str(int(octet)) for octet in addr.split("."))
-            parsed = ipaddress.IPv4Address(normalized)
+            parsed: ipaddress.IPv4Address | ipaddress.IPv6Address = ipaddress.IPv4Address(
+                normalized
+            )
             canonical = str(parsed)  # dotted-decimal, no leading zeros
             rule = "canonicalized_ipv4"
             source = "RFC 4291 §2.2"
@@ -151,7 +154,7 @@ def classify(
     )
 
 
-class IPCapability:
+class IPCapability(CapabilityBase):
     """A pure deterministic transformation that canonicalizes IP addresses."""
 
     name: str = "ip_canonicalization"

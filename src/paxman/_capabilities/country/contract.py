@@ -27,6 +27,7 @@ from paxman._capabilities._iso3166 import (
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    strip_authority_override,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
@@ -480,18 +481,20 @@ class CanonicalCountryContract:
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
-        return {
-            "kind": self.kind,
-            "allow_alpha3": self.allow_alpha3,
-            "allow_name": self.allow_name,
-            "allow_synonym": self.allow_synonym,
-            "allow_numeric": self.allow_numeric,
-            "localized_names": self.localized_names,
-            "historical_names": self.historical_names,
-            "extra_synonyms": dict(self.extra_synonyms),
-            "version": self.version,
-            "version_field": self.version_field,
-        }
+        return strip_authority_override(
+            {
+                "kind": self.kind,
+                "allow_alpha3": self.allow_alpha3,
+                "allow_name": self.allow_name,
+                "allow_synonym": self.allow_synonym,
+                "allow_numeric": self.allow_numeric,
+                "localized_names": self.localized_names,
+                "historical_names": self.historical_names,
+                "extra_synonyms": dict(self.extra_synonyms),
+                "version": self.version,
+                "version_field": self.version_field,
+            }
+        )
 
 
 def Country(

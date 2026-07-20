@@ -6,9 +6,8 @@ Migrated from a free-form `_RULE_PROVENANCE` string map to a structured
 """
 
 from collections.abc import Mapping
-from types import MappingProxyType
 
-from paxman._capabilities._shared.evidence import make_evidence
+from paxman._capabilities._shared.evidence import rule_authorities
 from paxman._provenance import Authority
 from paxman._provenance import registries as R
 
@@ -16,29 +15,24 @@ from paxman._provenance import registries as R
 # (not_a_ip_contract, not_a_string_value) are allow-listed with ``None``
 # authority (Law 14 §3.6): they describe a routing failure, not a
 # canonical-form rule. Every canonical-form rule cites an authoritative RFC.
-_RULE_AUTHORITIES: Mapping[str, Authority | None] = MappingProxyType(
-    {
-        # --- dispatch invariants (no authority — Law 14 §3.6 allow-list) ---
-        "not_a_ip_contract": None,
-        "not_a_string_value": None,
-        # --- recognition / resolution (RFCs + declared Paxman policy) ---
-        "trimmed_whitespace": R.PAXMAN_SPEC_IP.section("§3.2 (ASCII whitespace trim)"),
-        "recognized_ipv4": R.RFC_4291.section("§2.2 (IPv4 address text representation)"),
-        "recognized_ipv6": R.RFC_4291.section("§2.2 (IPv6 address text representation)"),
-        "canonicalized_ipv4": R.RFC_4291.section("§2.2 (dotted-decimal, no leading zeros)"),
-        "canonicalized_ipv6": R.RFC_5952.section(
-            "§4 (IPv6 text representation, lowercase compressed)"
-        ),
-        "canonicalized_ipv6_zone": R.RFC_4007.section(
-            "§11 + RFC 5952 §4.3 (zone id preserved, lowercased)"
-        ),
-        "policy_disabled_family": R.PAXMAN_SPEC_IP.section(
-            "§3.3 (contract policy disables address family)"
-        ),
-        "missing_value": R.PAXMAN_SPEC_IP.section("§3.4 (Law 8 — required value absent)"),
-        "unrecognized_format": R.RFC_4291.section("§2.1 (input is not a valid textual IP address)"),
-    }
-)
+_RULE_AUTHORITIES: Mapping[str, Authority | None] = {
+    # --- dispatch invariants (no authority — Law 14 §3.6 allow-list) ---
+    "not_a_ip_contract": None,
+    "not_a_string_value": None,
+    # --- recognition / resolution (RFCs + declared Paxman policy) ---
+    "trimmed_whitespace": R.PAXMAN_SPEC_IP.section("§3.2 (ASCII whitespace trim)"),
+    "recognized_ipv4": R.RFC_4291.section("§2.2 (IPv4 address text representation)"),
+    "recognized_ipv6": R.RFC_4291.section("§2.2 (IPv6 address text representation)"),
+    "canonicalized_ipv4": R.RFC_4291.section("§2.2 (dotted-decimal, no leading zeros)"),
+    "canonicalized_ipv6": R.RFC_5952.section("§4 (IPv6 text representation, lowercase compressed)"),
+    "canonicalized_ipv6_zone": R.RFC_4007.section(
+        "§11 + RFC 5952 §4.3 (zone id preserved, lowercased)"
+    ),
+    "policy_disabled_family": R.PAXMAN_SPEC_IP.section(
+        "§3.3 (contract policy disables address family)"
+    ),
+    "missing_value": R.PAXMAN_SPEC_IP.section("§3.4 (Law 8 — required value absent)"),
+    "unrecognized_format": R.RFC_4291.section("§2.1 (input is not a valid textual IP address)"),
+}
 
-
-_evidence = make_evidence(_RULE_AUTHORITIES)
+_evidence = rule_authorities(_RULE_AUTHORITIES)

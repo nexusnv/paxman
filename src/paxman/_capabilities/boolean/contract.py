@@ -13,6 +13,7 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    strip_authority_override,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
@@ -38,13 +39,15 @@ class CanonicalBooleanContract:
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
-        return {
-            "kind": self.kind,
-            "accept_numeric": self.accept_numeric,
-            "accept_words": self.accept_words,
-            "case_sensitive": self.case_sensitive,
-            "version": self.version,
-        }
+        return strip_authority_override(
+            {
+                "kind": self.kind,
+                "accept_numeric": self.accept_numeric,
+                "accept_words": self.accept_words,
+                "case_sensitive": self.case_sensitive,
+                "version": self.version,
+            }
+        )
 
 
 def Boolean(

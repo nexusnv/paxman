@@ -25,20 +25,24 @@ from paxman._provenance.authority import Authority
 class _ContractLike(Protocol):
     """What ExecutionArtifact needs from a Contract.
 
-    The real Contract (in src/paxman/_contracts/contract.py) provides
-    this and more. Keeping the dependency here as a Protocol avoids
-    a forward import. `version` is a read-only property because
-    `CanonicalEmailContract` (the real contract) is `@attrs.frozen`
-    and its fields are read-only.
+    Mirrors :class:`~paxman._core.contracts.Contract`: all members are
+    read-only properties because the concrete ``Canonical*Contract`` types
+    are ``@attrs.frozen``.
     """
 
-    kind: str
-
-    def as_dict(self) -> dict[str, Any]:
+    @property
+    def kind(self) -> str:
         raise NotImplementedError
 
     @property
     def version_field(self) -> int:
+        raise NotImplementedError
+
+    @property
+    def authority_override(self) -> Any | None:
+        raise NotImplementedError
+
+    def as_dict(self) -> dict[str, Any]:
         raise NotImplementedError
 
 

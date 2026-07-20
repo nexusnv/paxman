@@ -18,7 +18,6 @@ here by import — they are no longer interpolated as strings.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from types import MappingProxyType
 from typing import Any
 
 from paxman._capabilities._shared.evidence import make_evidence_for
@@ -31,7 +30,7 @@ from paxman._provenance import registries as R
 _CURRENCY_FROM_CONTRACT = Authority(
     "MANDATE + ISO 4217",
     "MANDATE Law 3 (Never Guess) + Law 7 (Explicit Over Clever); currency is an ISO 4217:2015 code",
-    "specification",
+    "grammar",
 )
 _CANONICAL_FORM = Authority(
     "paxman spec/money + ISO 4217",
@@ -42,7 +41,7 @@ _SYMBOL_VALIDATED = Authority(
     "Unicode CLDR + ISO 4217",
     "Unicode CLDR currency symbol data (frozen glyph→ISO 4217 code map) + "
     "contract currency match (Law 3 — Never Guess)",
-    "data-set",
+    "registry",
 )
 _CODE_VALIDATED = R.ISO_4217.section(
     "code must be a recognized ISO 4217 code and match the contract currency"
@@ -51,7 +50,7 @@ _PARSED_DECIMAL = Authority(
     "Unicode CLDR + money design spec",
     "Unicode CLDR currency number patterns (frozen comma-decimal convention) + "
     "money design spec Q1=A (Decimal, comma-decimal per currency)",
-    "data-set",
+    "registry",
 )
 
 # Law 14 rule→authority manifest. Dispatch invariants (not_a_money_contract,
@@ -59,34 +58,32 @@ _PARSED_DECIMAL = Authority(
 # §3.6): they describe a routing failure, not a canonical-form rule. Every
 # canonical-form rule cites an authoritative source (mandate law or the
 # approved money design spec).
-_RULE_AUTHORITIES: Mapping[str, Authority | None] = MappingProxyType(
-    {
-        # --- dispatch invariants (no authority — Law 14 §3.6 allow-list) ---
-        "not_a_money_contract": None,
-        "not_a_string_value": None,
-        # missing_value is a canonical-form rejection (empty input), not a
-        # routing failure, so it carries a real citation (Law 3 — Never Guess).
-        "missing_value": Authority(
-            "money design spec",
-            "empty input rejected — Law 3 Never Guess",
-            "policy",
-        ),
-        # --- recognition / canonicalization (mandate laws + design spec) ---
-        "currency_from_contract": _CURRENCY_FROM_CONTRACT,
-        "canonical_form": _CANONICAL_FORM,
-        "symbol_validated": _SYMBOL_VALIDATED,
-        "code_validated": _CODE_VALIDATED,
-        "trimmed_whitespace": R.PAXMAN_SPEC_MONEY.section("strip_spaces policy"),
-        "preserved_sign": R.PAXMAN_SPEC_MONEY.section("design spec Q2=A (negatives preserved)"),
-        "parsed_decimal": _PARSED_DECIMAL,
-        "preserved_decimals": R.PAXMAN_SPEC_MONEY.section(
-            "design spec F1/Q3=A (no quantization; sci-notation normalized)"
-        ),
-        "unrecognized_format": R.PAXMAN_SPEC_MONEY.section(
-            "rejected: empty, malformed, or symbol/code mismatch — Law 3 Never Guess"
-        ),
-    }
-)
+_RULE_AUTHORITIES: Mapping[str, Authority | None] = {
+    # --- dispatch invariants (no authority — Law 14 §3.6 allow-list) ---
+    "not_a_money_contract": None,
+    "not_a_string_value": None,
+    # missing_value is a canonical-form rejection (empty input), not a
+    # routing failure, so it carries a real citation (Law 3 — Never Guess).
+    "missing_value": Authority(
+        "money design spec",
+        "empty input rejected — Law 3 Never Guess",
+        "policy",
+    ),
+    # --- recognition / canonicalization (mandate laws + design spec) ---
+    "currency_from_contract": _CURRENCY_FROM_CONTRACT,
+    "canonical_form": _CANONICAL_FORM,
+    "symbol_validated": _SYMBOL_VALIDATED,
+    "code_validated": _CODE_VALIDATED,
+    "trimmed_whitespace": R.PAXMAN_SPEC_MONEY.section("strip_spaces policy"),
+    "preserved_sign": R.PAXMAN_SPEC_MONEY.section("design spec Q2=A (negatives preserved)"),
+    "parsed_decimal": _PARSED_DECIMAL,
+    "preserved_decimals": R.PAXMAN_SPEC_MONEY.section(
+        "design spec F1/Q3=A (no quantization; sci-notation normalized)"
+    ),
+    "unrecognized_format": R.PAXMAN_SPEC_MONEY.section(
+        "rejected: empty, malformed, or symbol/code mismatch — Law 3 Never Guess"
+    ),
+}
 
 
 # Rules whose authority cites the ISO 4217 registry. When an engine binds a

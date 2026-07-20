@@ -23,7 +23,16 @@ from paxman._core.result import CapabilityResult
 @runtime_checkable
 class Capability(Protocol):
     """A pure deterministic transformation that answers
-    'Can I canonicalize this value, given this contract?'"""
+    'Can I canonicalize this value, given this contract?'
+
+    Optional hook — ``validate(value, contract) -> ValidationResult``:
+    a capability MAY define this method to enforce contract-specific
+    strictness policy after canonicalization (mandate Law 4). It is not
+    part of the runtime-checked Protocol surface (so existing capabilities
+    remain valid without it); the orchestrator dispatches to it via
+    duck-typing. The default behavior when absent is "always valid". The
+    method must not interpret or guess (Law 4).
+    """
 
     name: str
 

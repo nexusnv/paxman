@@ -8,10 +8,6 @@ Foundation layer (C) of the three-layer authority model:
   explicit concrete editions. This is what replay reconstructs — the artifact
   records exactly which editions produced it, so ``Engine.from_artifact``
   rebuilds them byte-for-byte (mandate Law 12, Concern 2).
-- **Sugar (B):** ``Engine.with_authorities({name: "2024", ...})`` pins specific
-  editions (a ``ComplianceProfile``), resolving each selector once. Only editions
-  Paxman actually bundles are accepted; an unknown edition raises
-  ``UnknownAuthorityEdition``.
 - **Escape hatch (A):** a contract's ``authority_override`` can pin one
   authority for a single call (testing), layered on top of the engine.
 
@@ -23,10 +19,7 @@ path is unchanged.
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import TYPE_CHECKING, NamedTuple
-
-if TYPE_CHECKING:
-    from paxman._core.artifact import ExecutionArtifact
+from typing import NamedTuple
 
 from paxman._errors import UnknownAuthorityEdition
 from paxman._provenance.authority import Authority
@@ -85,8 +78,8 @@ class Engine:
     """An immutable binding of authority names to concrete editions.
 
     The map holds only concrete :class:`Authority` objects (never selectors).
-    Construct via :meth:`default`, :meth:`with_authorities`, or
-    :meth:`from_artifact`; the positional constructor binds explicit editions.
+    Construct via :meth:`default` or :meth:`from_artifact`; the positional
+    constructor binds explicit editions.
     """
 
     __slots__ = ("_authorities",)
@@ -100,27 +93,6 @@ class Engine:
     def default(cls) -> Engine:
         """Bind every known authority to its active (latest) edition."""
         return cls(dict(_DEFAULT_AUTHORITIES))
-
-    @classmethod
-    def with_authorities(cls, bindings: Mapping[str, Selector]) -> Engine:
-        """Pin specific editions via a ``name -> Selector`` mapping.
-
-        Each selector is resolved once: ``Latest`` -> the active edition,
-        ``Edition(id)`` -> the concrete pinned edition. Unknown authority names
-        or unknown edition ids raise :class:`UnknownAuthorityEdition`.
-        """
-        resolved: dict[str, Authority] = {}
-        for name, selector in bindings.items():
-            if name not in _RESOLVERS:
-                raise UnknownAuthorityEdition(
-                    f"cannot bind unknown authority {name!r}; known: {sorted(_RESOLVERS)!r}"
-                )
-            norm: NormalizedSelector = _normalize_selector(selector)
-            if isinstance(norm, Latest):
-                resolved[name] = _RESOLVERS[name].latest()
-            else:
-                resolved[name] = _RESOLVERS[name].edition(norm.edition_id)
-        return cls(resolved)
 
     @classmethod
     def from_artifact(cls, authorities: tuple[Authority, ...]) -> Engine:
@@ -198,43 +170,3 @@ def _verify_recorded_authorities(authorities: tuple[Authority, ...]) -> None:
                 f"artifact records retired/unknown edition {auth.edition!r} "
                 f"for {auth.name!r}; known editions: {sorted(known)!r}"
             )
-
-
-class ComplianceProfile:
-    """Sugar over :meth:`Engine.with_authorities` for pinning editions.
-
-    A compliance profile names the editions an organization has adopted;
-    building an ``Engine`` from it pins exactly those editions for every
-    canonicalize call, so artifacts are replay-deterministic against the
-    adopted profile regardless of newer editions Paxman later bundles.
-    """
-
-    __slots__ = ("bindings",)
-
-    def __init__(self, bindings: Mapping[str, Selector]) -> None:
-        self.bindings = dict(bindings)
-
-    def engine(self) -> Engine:
-        """Build the pinned :class:`Engine` for this profile.
-
-        Pins the named editions over :meth:`Engine.default` (the active
-        roster), so every bindable authority remains concretely bound. This is
-        the concrete form of the plan's ``ComplianceProfile.to_engine`` (the
-        ``base`` merge parameter is always ``Engine.default`` here).
-        """
-        return Engine.with_authorities(self.bindings)
-
-
-def canonicalize_with(
-    input_data: object,
-    contract: object,
-    engine: Engine,
-) -> ExecutionArtifact:
-    """Canonicalize ``input_data`` against ``contract`` using a specific ``engine``.
-
-    The Foundation entry point (C): binds explicit authority editions for one
-    call. The zero-config ``paxman.canonicalize`` uses ``Engine.default()``.
-    """
-    from paxman._core.engine import canonicalize as _canonicalize
-
-    return _canonicalize(input_data, contract, engine)

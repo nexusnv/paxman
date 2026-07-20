@@ -13,6 +13,7 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    strip_authority_override,
 )
 from paxman._capabilities.date.i18n import SUPPORTED_LANGUAGES
 from paxman._errors import ContractError
@@ -47,13 +48,15 @@ class CanonicalDateContract:
 
     def as_dict(self) -> dict[str, object]:
         """Return the Dict DSL form of this contract (round-trips via parse_contract)."""
-        return {
-            "kind": self.kind,
-            "locale": self.locale,
-            "language": self.language,
-            "two_digit_year": self.two_digit_year,
-            "version_field": self.version_field,
-        }
+        return strip_authority_override(
+            {
+                "kind": self.kind,
+                "locale": self.locale,
+                "language": self.language,
+                "two_digit_year": self.two_digit_year,
+                "version_field": self.version_field,
+            }
+        )
 
 
 def Date(
@@ -111,6 +114,8 @@ def _build_date(spec: dict[str, object]) -> CanonicalDateContract:
             f"unsupported language: {language!r}; allowed: {sorted(SUPPORTED_LANGUAGES)}"
         )
     two_digit_year = spec.get("two_digit_year", None)
+    if two_digit_year is not None and not isinstance(two_digit_year, str):
+        raise ContractError(f"invalid two_digit_year: {two_digit_year!r}; expected string")
     _validate_two_digit_year(two_digit_year)
     authority_override = _authority_override_from_spec(spec)
     return CanonicalDateContract(

@@ -34,7 +34,7 @@ from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.result import VersionStamp
 from paxman._core.status import Status
-from paxman._core.validation import validate as validate_value
+from paxman._core.validation import validate as _validate_value
 from paxman._dsl.parser import parse_contract
 from paxman._errors import CanonicalizationError, ContractError, UnsupportedContractError
 from paxman._provenance.authority import Authority
@@ -44,22 +44,27 @@ from paxman._registry.capability_registry import CapabilityRegistry
 class _StubContract:
     """Minimal contract stand-in for unparseable contract specs.
 
-    Satisfies the `_ContractLike` Protocol structurally (provides
-    `as_dict()` and a read-only `version` property). The orchestrator
-    hands a `_StubContract` to `_build_artifact` when the caller's
-    contract could not be parsed, so the resulting artifact still has
-    a serializable contract representation.
+    Satisfies the ``_ContractLike`` Protocol structurally: all members are
+    read-only properties (matching ``@attrs.frozen`` contract types).
     """
 
     def __init__(self, spec: object) -> None:
         self._spec = spec
-        self.kind = "unknown"
-        self._version = 0
+        self._kind = "unknown"
+        self._version_field = 0
+        self._authority_override: Any | None = None
+
+    @property
+    def kind(self) -> str:
+        return self._kind
 
     @property
     def version_field(self) -> int:
-        # Law 12: preserve the contract schema version for replayability.
-        return self._version
+        return self._version_field
+
+    @property
+    def authority_override(self) -> Any | None:
+        return self._authority_override
 
     def as_dict(self) -> dict[str, object]:
         if isinstance(self._spec, dict):
@@ -104,7 +109,7 @@ def canonicalize(
 
     # Stage 1: inspect — parse the contract DSL.
     try:
-        parsed_contract: _ContractLike = parse_contract(contract)
+        parsed_contract = parse_contract(contract)
     except ContractError:
         # An unparseable contract is a call that cannot proceed. The
         # contract is the truth (Law 5); a malformed contract is a
@@ -184,7 +189,9 @@ def canonicalize(
         if capability_result.value is None:
             raise CanonicalizationError("CANONICALIZED capability result must carry a value")
         try:
-            validation = validate_value(capability_result.value, parsed_contract)
+            validation = _validate_value(
+                capability_result.value, parsed_contract, capability=capability
+            )
         except UnsupportedContractError:
             # Defensive: validation should never raise for a parsed
             # contract. If it does, treat as UNSUPPORTED.

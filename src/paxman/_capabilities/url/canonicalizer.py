@@ -5,6 +5,7 @@ import re
 
 import attrs
 
+from paxman._capabilities._shared.base import CapabilityBase
 from paxman._capabilities.url.contract import CanonicalURLContract
 from paxman._capabilities.url.grammar import RecognizedRep, recognize
 from paxman._capabilities.url.parser import default_port_for_scheme
@@ -337,7 +338,7 @@ def classify(
     return Status.CANONICALIZED, survivors[0].value, survivors[0].evidence, None
 
 
-class URLCapability:
+class URLCapability(CapabilityBase):
     name: str = "url_canonicalization"
 
     def can_handle(self, contract: object, value: object) -> bool:

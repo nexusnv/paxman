@@ -137,27 +137,18 @@ ignore = ["RUF009"]
 
 # ---------------------------------------------------------------------------
 # Mypy (type check)
-# Moderate config for v2.0.0. `disallow_untyped_defs` catches missing
-# annotations; `warn_unused_ignores` catches stale type: ignore
-# comments. The full `--strict` mode is intentionally not enabled:
-# the orchestrator's lazy circular-import workaround and the
-# `_ContractLike` Protocol structural typing would require additional
-# stubs that are not yet worth the complexity for v2.0.0.
+# Full type-safety: no error codes are disabled. The ``_ContractLike`` Protocol
+# uses structural typing (a Protocol with ``...`` method bodies) which mypy
+# handles natively; ``_StubContract`` satisfies it structurally. The concrete
+# ``Canonical*Contract`` types declare ``authority_override: Any | None`` via
+# the shared ``authority_override_field()`` factory.
 # ---------------------------------------------------------------------------
 [tool.mypy]
 python_version = "3.11"
 files = ["src/paxman"]
-# Moderate strictness — not full strict. Catches the most impactful
-# issues (missing annotations, unused ignores, redundant casts) without
-# requiring every function to be fully annotated.
 disallow_untyped_defs = true
 warn_unused_ignores = true
 warn_redundant_casts = true
-# Allow the `_ContractLike` Protocol's structural conformance pattern.
-# The orchestrator passes `_StubContract` and `CanonicalEmailContract`
-# through a single `_ContractLike` parameter; this is the intended
-# structural-typing pattern, not a bug.
-disable_error_code = ["assignment", "attr-defined", "arg-type"]
 
 # ---------------------------------------------------------------------------
 # interrogate — docstring coverage on the public API surface.

@@ -12,13 +12,14 @@ that mirrors the old `parse_contract` uuid branch exactly.
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import attrs
 
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    strip_authority_override,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
@@ -62,11 +63,13 @@ class CanonicalUUIDContract:
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract (round-trips via parse_contract)."""
-        return {
-            "kind": self.kind,
-            "version": self.version,
-            "version_field": self.version_field,
-        }
+        return strip_authority_override(
+            {
+                "kind": self.kind,
+                "version": self.version,
+                "version_field": self.version_field,
+            }
+        )
 
 
 def UUID(
@@ -89,7 +92,10 @@ def _build_uuid(spec: dict[str, Any]) -> CanonicalUUIDContract:
             f"invalid uuid version: {version!r}; allowed: {sorted(_UUID_VERSIONS_ALLOWED)}"
         )
     authority_override = _authority_override_from_spec(spec)
-    return CanonicalUUIDContract(version=version, authority_override=authority_override)
+    return CanonicalUUIDContract(
+        version=cast(Literal["any", "1", "3", "4", "5", "7"], version),
+        authority_override=authority_override,
+    )
 
 
 register_contract("canonical_uuid", _build_uuid)

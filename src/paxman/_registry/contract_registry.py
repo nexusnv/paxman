@@ -18,19 +18,22 @@ from typing import TYPE_CHECKING, Any, TypeAlias
 from paxman._errors import ConfigurationError, ContractError
 
 if TYPE_CHECKING:
+    from paxman._capabilities.boolean.contract import CanonicalBooleanContract
+    from paxman._capabilities.country.contract import CanonicalCountryContract
     from paxman._capabilities.date.contract import CanonicalDateContract
     from paxman._capabilities.email.contract import CanonicalEmailContract
+    from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
+    from paxman._capabilities.ip.contract import CanonicalIPContract
+    from paxman._capabilities.money.contract import CanonicalMoneyContract
     from paxman._capabilities.phone.contract import CanonicalPhoneContract
     from paxman._capabilities.url.contract import CanonicalURLContract
     from paxman._capabilities.uuid.contract import CanonicalUUIDContract
 
-# The builder returns a concrete contract value object; the union is
-# imported under TYPE_CHECKING only so the registry stays domain-free at
-# runtime (the domain contract modules import this registry, so a runtime
-# import here would be a cycle).
 _BuilderResult: TypeAlias = (
     "CanonicalEmailContract | CanonicalUUIDContract | CanonicalDateContract"
-    " | CanonicalPhoneContract | CanonicalURLContract"
+    " | CanonicalPhoneContract | CanonicalURLContract | CanonicalBooleanContract"
+    " | CanonicalIPContract | CanonicalMoneyContract | CanonicalGeolocationContract"
+    " | CanonicalCountryContract"
 )
 Builder = Callable[[dict[str, Any]], _BuilderResult]
 

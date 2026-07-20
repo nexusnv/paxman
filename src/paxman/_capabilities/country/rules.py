@@ -13,7 +13,6 @@ traceable to every citing rule.
 from __future__ import annotations
 
 from collections.abc import Mapping
-from types import MappingProxyType
 
 from paxman._capabilities._shared.evidence import make_evidence_for
 from paxman._provenance import Authority
@@ -40,32 +39,30 @@ _MISSING = R.PAXMAN_SPEC_COUNTRY.section("missing value policy")
 # - Paxman-defined policy rules reference the recorded policy authorities
 #   (Law 14) so amendments are traceable to every citing rule.
 # - External-spec rules cite the specification directly.
-_RULE_AUTHORITIES: Mapping[str, Authority | None] = MappingProxyType(
-    {
-        # --- dispatch invariants (cite MANDATE SPI, never None) ---
-        "not_a_country_contract": R.MANDATE.section(
-            "§5.1 (capability handles only its own contract kind)"
-        ),
-        "not_a_string_value": R.MANDATE.section(
-            "§5.1 (canonicalize(value, contract): value is None or str)"
-        ),
-        # --- recognition / canonicalization (ISO 3166-1 + recorded policy) ---
-        "trimmed_whitespace": R.PAXMAN_SPEC_COUNTRY.section("whitespace-trim policy"),
-        "recognized_alpha2": _ALPHA2,
-        "recognized_alpha3": _ALPHA3,
-        "recognized_numeric": _NUMERIC,
-        "recognized_name": _NAME,
-        "canonicalized_country": _CANONICAL,
-        "numeric_resolved": _NUMERIC_RESOLVED,
-        "localized_resolved": _LOCALIZED,
-        "historical_resolved": _HISTORICAL,
-        "alias_resolved": _ALIAS,
-        "extra_synonym_resolved": _EXTRA_SYNONYM,
-        "policy_disabled_kind": _KIND_GATING,
-        "missing_value": _MISSING,
-        "unrecognized_format": R.ISO_3166.section("input is not a recognized country token"),
-    }
-)
+_RULE_AUTHORITIES: Mapping[str, Authority | None] = {
+    # --- dispatch invariants (cite MANDATE SPI, never None) ---
+    "not_a_country_contract": R.MANDATE.section(
+        "§5.1 (capability handles only its own contract kind)"
+    ),
+    "not_a_string_value": R.MANDATE.section(
+        "§5.1 (canonicalize(value, contract): value is None or str)"
+    ),
+    # --- recognition / canonicalization (ISO 3166-1 + recorded policy) ---
+    "trimmed_whitespace": R.PAXMAN_SPEC_COUNTRY.section("whitespace-trim policy"),
+    "recognized_alpha2": _ALPHA2,
+    "recognized_alpha3": _ALPHA3,
+    "recognized_numeric": _NUMERIC,
+    "recognized_name": _NAME,
+    "canonicalized_country": _CANONICAL,
+    "numeric_resolved": _NUMERIC_RESOLVED,
+    "localized_resolved": _LOCALIZED,
+    "historical_resolved": _HISTORICAL,
+    "alias_resolved": _ALIAS,
+    "extra_synonym_resolved": _EXTRA_SYNONYM,
+    "policy_disabled_kind": _KIND_GATING,
+    "missing_value": _MISSING,
+    "unrecognized_format": R.ISO_3166.section("input is not a recognized country token"),
+}
 
 
 # Rules whose authority cites the ISO 3166-1 registry. When an engine binds

@@ -13,6 +13,7 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    strip_authority_override,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
@@ -48,14 +49,16 @@ class CanonicalEmailContract:
         Returns:
             A dict compatible with `parse_contract`.
         """
-        return {
-            "kind": self.kind,
-            "lowercase": self.lowercase,
-            "strip_whitespace": self.strip_whitespace,
-            "provider_aliases": self.provider_aliases,
-            "strict": self.strict,
-            "version": self.version,
-        }
+        return strip_authority_override(
+            {
+                "kind": self.kind,
+                "lowercase": self.lowercase,
+                "strip_whitespace": self.strip_whitespace,
+                "provider_aliases": self.provider_aliases,
+                "strict": self.strict,
+                "version": self.version,
+            }
+        )
 
 
 def Email(

@@ -10,6 +10,7 @@ string from `parse_amount` (F1 literal decimals, Q1/Q2/Q3 applied).
 
 from __future__ import annotations
 
+from paxman._capabilities._shared.base import CapabilityBase
 from paxman._capabilities.money.contract import CanonicalMoneyContract
 from paxman._capabilities.money.grammar import parse_amount, recognize_money
 from paxman._capabilities.money.rules import _evidence
@@ -21,7 +22,7 @@ from paxman._core.status import Status
 from paxman._errors import ContractError
 
 
-class MoneyCapability:
+class MoneyCapability(CapabilityBase):
     """A pure deterministic transformation that canonicalizes money strings."""
 
     name: str = "money_canonicalization"

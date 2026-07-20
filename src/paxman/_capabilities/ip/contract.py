@@ -14,6 +14,7 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    strip_authority_override,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
@@ -39,14 +40,16 @@ class CanonicalIPContract:
 
     def as_dict(self) -> dict[str, Any]:
         """Return the Dict DSL form of this contract."""
-        return {
-            "kind": self.kind,
-            "allow_ipv4": self.allow_ipv4,
-            "allow_ipv6": self.allow_ipv6,
-            "preserve_zone_id": self.preserve_zone_id,
-            "version": self.version,
-            "version_field": self.version_field,
-        }
+        return strip_authority_override(
+            {
+                "kind": self.kind,
+                "allow_ipv4": self.allow_ipv4,
+                "allow_ipv6": self.allow_ipv6,
+                "preserve_zone_id": self.preserve_zone_id,
+                "version": self.version,
+                "version_field": self.version_field,
+            }
+        )
 
 
 def IP(

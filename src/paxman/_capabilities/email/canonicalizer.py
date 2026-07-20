@@ -49,13 +49,16 @@ fail this gate; v2.x may extend the gate to admit them.
 from __future__ import annotations
 
 import re
+from collections.abc import Sequence
 
 import attrs
 
+from paxman._capabilities._shared.base import CapabilityBase
 from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._capabilities.email.grammar import recognize
 from paxman._capabilities.email.parser import _validate_dot_atom_domain, _validate_dot_atom_local
 from paxman._capabilities.email.rules import _evidence
+from paxman._core.classification import ValidationResult
 from paxman._core.contracts import Contract
 from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
@@ -148,7 +151,7 @@ def provider_equivalence(
         dot_ev = (_evidence("stripped_dots_in_local_part"),) if "." in local else ()
         if "+" in gmail_local:
             gmail_local = gmail_local.split("+", 1)[0]
-            tag_ev = (_evidence("stripped_plus_tag"),)
+            tag_ev: tuple[Evidence, ...] = (_evidence("stripped_plus_tag"),)
         else:
             tag_ev = ()
         gmail_domain = _GMAIL_SUFFIX
@@ -176,7 +179,7 @@ def provider_equivalence(
 
 
 def generate_interpretations(
-    reps: list[object], contract: CanonicalEmailContract
+    reps: Sequence[object], contract: CanonicalEmailContract
 ) -> list[_Candidate]:
     """Map grammar recognitions to candidate canonical forms (resolver).
 
@@ -311,7 +314,7 @@ def classify(
     )
 
 
-class EmailCapability:
+class EmailCapability(CapabilityBase):
     """A pure deterministic transformation that canonicalizes emails.
 
     `Capability` (from `paxman._capabilities.protocol`) is a structural
@@ -402,3 +405,36 @@ class EmailCapability:
         return CapabilityResult(
             status=status, value=rendered, evidence=evidence, candidates=cands_out
         )
+
+    def validate(self, value: str, contract: object) -> ValidationResult:
+        """Post-canonicalization policy check (Law 4) for emails.
+
+        The canonical form has already been lowercased, stripped, and
+        resolved, so this re-checks only the structural invariants that no
+        valid mailbox may violate: a single ``@`` with non-empty local and
+        domain parts, and (under ``strict``) ASCII-only with no internal
+        whitespace. Inputs that reach here already passed the dot-atom gate
+        in :func:`resolve_and_validate`, so this is a narrow policy guard
+        restored from the email contract validation removed in Task 1.
+
+        Args:
+            value: The canonicalized email string (post-canonicalize).
+            contract: A ``CanonicalEmailContract`` declaring the policy.
+
+        Returns:
+            A ``ValidationResult`` marking the value valid or invalid.
+        """
+        if "@" not in value:
+            return ValidationResult(is_valid=False)
+        local, _, domain = value.partition("@")
+        if not local or not domain:
+            return ValidationResult(is_valid=False)
+        if isinstance(contract, CanonicalEmailContract) and contract.strict:
+            if " " in local or " " in domain:
+                return ValidationResult(is_valid=False)
+            try:
+                local.encode("ascii")
+                domain.encode("ascii")
+            except UnicodeEncodeError:
+                return ValidationResult(is_valid=False)
+        return ValidationResult(is_valid=True)

@@ -7,6 +7,7 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    strip_authority_override,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
@@ -32,16 +33,18 @@ class CanonicalURLContract:
     authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, object]:
-        return {
-            "kind": self.kind,
-            "scheme_allow": list(self.scheme_allow) if self.scheme_allow is not None else None,
-            "strip_userinfo": self.strip_userinfo,
-            "strip_fragment": self.strip_fragment,
-            "sort_query": self.sort_query,
-            "whatwg": self.whatwg,
-            "version": self.version,
-            "version_field": self.version_field,
-        }
+        return strip_authority_override(
+            {
+                "kind": self.kind,
+                "scheme_allow": list(self.scheme_allow) if self.scheme_allow is not None else None,
+                "strip_userinfo": self.strip_userinfo,
+                "strip_fragment": self.strip_fragment,
+                "sort_query": self.sort_query,
+                "whatwg": self.whatwg,
+                "version": self.version,
+                "version_field": self.version_field,
+            }
+        )
 
 
 def URL(

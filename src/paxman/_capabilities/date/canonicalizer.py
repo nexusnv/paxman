@@ -18,6 +18,7 @@ from email.utils import parsedate_to_datetime
 
 import attrs
 
+from paxman._capabilities._shared.base import CapabilityBase
 from paxman._capabilities.date.calendar import _valid_calendar_date
 from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._capabilities.date.grammar import _ORDINAL_WORDS, RecognizedRep, recognize
@@ -269,7 +270,7 @@ def _interpretations_from_reps(
             a = int(caps["n1"])
             b = int(caps["n2"])
             y_str = caps["n3"]
-            yy = int(y_str) if len(y_str) == 2 else None
+            yy_raw = int(y_str) if len(y_str) == 2 else None
             year = int(y_str) if len(y_str) == 4 else None
             for ordering in _orderings_for(contract.locale):
                 month = a if ordering == "MD" else b
@@ -277,10 +278,10 @@ def _interpretations_from_reps(
                 candidates.append(
                     _Candidate(
                         year=year,
-                        yy=yy,
+                        yy=yy_raw,
                         month=month,
                         day=day,
-                        century_ambiguous=(yy is not None),
+                        century_ambiguous=(yy_raw is not None),
                         rule="parsed_numeric_date",
                         ordering=ordering,
                     )
@@ -462,6 +463,9 @@ def resolve_and_validate(
                     continue
                 survivors.append(_Survivor(year, c.month, c.day, c.rule, c.ordering, True))
         else:
+            if c.year is None:
+                drop_reasons.add("invalid_calendar_date")
+                continue
             if not _valid_calendar_date(c.year, c.month, c.day):
                 drop_reasons.add("invalid_calendar_date")
                 continue
@@ -529,7 +533,7 @@ def classify(
     return Status.AMBIGUOUS, None, tuple(_evidence(rule) for rule in rules), rendered
 
 
-class DateCapability:
+class DateCapability(CapabilityBase):
     """A pure deterministic transformation that canonicalizes dates.
 
     Mandate alignment:

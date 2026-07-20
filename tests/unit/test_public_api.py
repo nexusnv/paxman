@@ -60,7 +60,6 @@ class TestPublicAPI:
             "ContractError",
             "Email",
             "Date",
-            "Edition",
             "UUID",
             "Phone",
             "URL",
@@ -68,7 +67,6 @@ class TestPublicAPI:
             "FrozenRegistryError",
             "Geolocation",
             "IP",
-            "Latest",
             "UnsupportedContractError",
             "VersionMismatchError",
             "Boolean",
@@ -76,13 +74,17 @@ class TestPublicAPI:
             "CanonicalMoneyContract",
             "Country",
             "CanonicalCountryContract",
-            "Engine",
-            "ComplianceProfile",
-            "canonicalize_with",
             "annotations",
         }
         actual = {n for n in dir(paxman) if not n.startswith("_")}
         assert actual == expected
+
+    def test_removed_selection_surface_not_public(self) -> None:
+        # The authority-edition SELECTION surface was removed from the public
+        # API (only 2/10 capabilities read the engine; exactly one edition is
+        # bundled). The engine stays an internal carrier for replay.
+        for removed in ("Edition", "Latest", "Engine", "ComplianceProfile", "canonicalize_with"):
+            assert not hasattr(paxman, removed)
 
     def test_canonicalize_end_to_end(self, monkeypatch: pytest.MonkeyPatch) -> None:
         from paxman import _orchestrator_runtime

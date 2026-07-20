@@ -12,13 +12,24 @@ from typing import Any, Protocol
 
 
 class Contract(Protocol):
-    """Structural shape every contract value-object satisfies."""
+    """Structural shape every contract value-object satisfies.
 
-    kind: str
-    version_field: int
-    # Concern-3 escape hatch: a contract may pin a specific authority edition
-    # for a single canonicalize call (same semantics as the per-domain
-    # authority_override_field()). None means "no pin; use the engine binding".
-    authority_override: Any | None
+    All members are read-only properties: the concrete ``Canonical*Contract``
+    types are ``@attrs.frozen``, and mypy's attrs plugin types frozen fields
+    as read-only. A Protocol with settable variables would not match.
+    """
 
-    def as_dict(self) -> dict[str, Any]: ...
+    @property
+    def kind(self) -> str:
+        raise NotImplementedError
+
+    @property
+    def version_field(self) -> int:
+        raise NotImplementedError
+
+    @property
+    def authority_override(self) -> Any | None:
+        raise NotImplementedError
+
+    def as_dict(self) -> dict[str, Any]:
+        raise NotImplementedError

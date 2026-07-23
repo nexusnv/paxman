@@ -89,6 +89,9 @@ jobs:
       - name: Format check (ruff format --check)
         run: uv run ruff format --check .
 
+      - name: Import boundary check (import-linter)
+        run: uv run lint-imports
+
       - name: Static analysis (README↔quickstart parity, capability section, paxman.normalize substring, retired vocabulary)
         run: |
           uv run python scripts/check_readme_quickstart.py
@@ -270,6 +273,9 @@ jobs:
 
       - name: Format check (ruff format --check)
         run: uv run ruff format --check .
+
+      - name: Import boundary check (import-linter)
+        run: uv run lint-imports
 
       - name: Type check (mypy src/paxman)
         run: uv run mypy src/paxman

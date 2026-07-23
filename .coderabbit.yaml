@@ -80,59 +80,55 @@ reviews:
       instructions: >-
         When reviewing Python code for Paxman v2 (a deterministic canonicalization engine):
 
-        1. Constitutional authority: MANDATE.md is the source of truth for every design decision in this file.
-        Every code review must answer: which of the 13 laws (MANDATE.md §7) does this change uphold, and does it
-        violate any? Flag any change that is silent on which laws it touches.
-
-        2. Capability purity (mandate Law 8a): a capability may only depend on inputs that are explicitly
+        1. Capability purity (mandate Law 8a): a capability may only depend on inputs that are explicitly
         versioned and participate in replay. No `import requests`, no `import urllib`, no `open(`, no `os.`, no
         `time.`, no `random.`, no `secrets.`, no `datetime.` of any kind (a capability must not read the wall
         clock, the timezone DB, or perform any calendar math), no network calls, no filesystem reads, no
         environment lookups inside `src/paxman/_capabilities/`. Pure functions of `(value, contract)` only. Flag
         any of these.
 
-        3. Vocabulary (mandate §6.3): the words `heuristic`, `confidence`, `best match`, `probably`, and
+        2. Vocabulary (mandate §6.3): the words `heuristic`, `confidence`, `best match`, `probably`, and
         `approximate` are RETIRED. Their adopted replacements are `resolver`, `dispatcher`, `registry`, `matcher`,
         `capability resolution`, `matching rule`. Flag any use of the retired words in code, comments, or
         docstrings — including in test files, which must demonstrate the new vocabulary.
 
-        4. API naming: the public API is `paxman.canonicalize`, `paxman.replay`, `paxman.register_capability`. The
+        3. API naming: the public API is `paxman.canonicalize`, `paxman.replay`, `paxman.register_capability`. The
         v1.x API name `paxman.normalize` is GONE (it raises `AttributeError` intentionally in `paxman/__init__.py`).
         Flag any `def normalize` or `paxman.normalize` reference in `src/paxman/` or `tests/`. Likewise, the v1.x
         submodules `paxman.api`, `paxman.testing`, `paxman.contract`, `paxman.planner`, `paxman.executor`,
         `paxman.reconciler`, `paxman.artifact`, `paxman.providers` are GONE — flag any import from them.
 
-        5. Status, not confidence: outcomes are the five-value `Status` enum (`CANONICALIZED`, `INVALID`,
+        4. Status, not confidence: outcomes are the five-value `Status` enum (`CANONICALIZED`, `INVALID`,
         `MISSING`, `AMBIGUOUS`, `UNSUPPORTED`). Confidence scores, probability bands, "best match", and ranking
         are forbidden (mandate Law 3). Flag any float, band, or score on an artifact or capability result.
 
-        6. Immutability (mandate Law 13): `ExecutionArtifact` is `@attrs.frozen`. Every field on every artifact
+        5. Immutability (mandate Law 13): `ExecutionArtifact` is `@attrs.frozen`. Every field on every artifact
         is set at construction and cannot be reassigned. Flag any `artifact.<field> = ...` or any code that
         builds an artifact via a non-frozen class.
 
-        7. Replay (mandate Law 12): `replay(artifact, contract) == artifact` byte-for-byte. The `replay_hash`
+        6. Replay (mandate Law 12): `replay(artifact, contract) == artifact` byte-for-byte. The `replay_hash`
         must be independently re-computed from the artifact's canonical bytes at verification time, not
         re-read from the stored value. Flag any `_compute_replay_hash(artifact)` that returns
         `artifact.replay_hash` directly.
 
-        8. Idempotence (mandate Law 2): `canonicalize(canonicalize(x), contract) == canonicalize(x, contract)`.
+        7. Idempotence (mandate Law 2): `canonicalize(canonicalize(x), contract) == canonicalize(x, contract)`.
         Capability implementations must be fixed points of themselves (e.g. lower-casing is a fixed point of
         lower-casing).
 
-        9. Contract = what, not how (mandate Law 5): contract fields are policy declarations
+        8. Contract = what, not how (mandate Law 5): contract fields are policy declarations
         (`lowercase=True/False`, `provider_aliases="none"/"gmail"`, `locale="US"/"EU"/"ISO"`, etc.). Flag any
         contract field that describes an algorithm (e.g. `auto_detect`, `infer_provider`, `use_llm`).
 
-        10. Data classes: use `attrs` (`@attrs.frozen` for value types). `attrs>=26.1.0` is the ONLY runtime
+        9. Data classes: use `attrs` (`@attrs.frozen` for value types). `attrs>=26.1.0` is the ONLY runtime
         dependency (see pyproject.toml). The v1.x pydantic dependency is GONE. Flag any pydantic import or any
         non-attrs mutable dataclass in `src/paxman/`.
 
-        11. Errors: exceptions are reserved for calls that *cannot proceed* (broken contract, version
+        10. Errors: exceptions are reserved for calls that *cannot proceed* (broken contract, version
         mismatch, frozen registry, internal invariant violation). The five `Status` values are *outcomes* on a
         successfully-returned artifact, not exceptions. Flag any place that raises for a recoverable
         canonicalization outcome (an `Invalid` input is a Status, not a raise).
 
-        12. No `as any` / `# type: ignore` / `# noqa` for type-error suppression. Use the typed alternative
+        11. No `as any` / `# type: ignore` / `# noqa` for type-error suppression. Use the typed alternative
         (a `Protocol`, a `TypeAlias`, a real annotation). The mypy config intentionally permits a few codes;
         do NOT add `# type: ignore` to widen that.
     - path: tests/**/*.py

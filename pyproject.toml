@@ -167,3 +167,108 @@ fail-under = 100
 verbose = 1
 ignore-init-module = true
 
+# ---------------------------------------------------------------------------
+# Import-linter — architectural import boundary enforcement.
+# Uses grimp (bundled) to build an import graph and check contracts.
+# Catches violations like domain packages importing core, or domains
+# importing sibling domains.
+# ---------------------------------------------------------------------------
+[tool.importlinter]
+root_package = "paxman"
+
+[[tool.importlinter.contracts]]
+id = "pipeline-no-concrete-capabilities"
+name = "Pipeline must not import concrete domain canonicalizers"
+type = "forbidden"
+source_modules = [
+    "paxman._core.engine",
+    "paxman._core.replay",
+]
+forbidden_modules = [
+    "paxman._capabilities.email.canonicalizer",
+    "paxman._capabilities.date.canonicalizer",
+    "paxman._capabilities.uuid.canonicalizer",
+    "paxman._capabilities.phone.canonicalizer",
+    "paxman._capabilities.url.canonicalizer",
+    "paxman._capabilities.boolean.canonicalizer",
+    "paxman._capabilities.ip.canonicalizer",
+    "paxman._capabilities.money.canonicalizer",
+    "paxman._capabilities.geolocation.canonicalizer",
+    "paxman._capabilities.country.canonicalizer",
+]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+id = "capabilities-no-sibling-domains"
+name = "Capability domain packages must not directly import sibling domains"
+type = "forbidden"
+source_modules = [
+    "paxman._capabilities.email",
+    "paxman._capabilities.date",
+    "paxman._capabilities.uuid",
+    "paxman._capabilities.phone",
+    "paxman._capabilities.url",
+    "paxman._capabilities.boolean",
+    "paxman._capabilities.ip",
+    "paxman._capabilities.money",
+    "paxman._capabilities.geolocation",
+    "paxman._capabilities.country",
+]
+forbidden_modules = [
+    "paxman._capabilities.email",
+    "paxman._capabilities.date",
+    "paxman._capabilities.uuid",
+    "paxman._capabilities.phone",
+    "paxman._capabilities.url",
+    "paxman._capabilities.boolean",
+    "paxman._capabilities.ip",
+    "paxman._capabilities.money",
+    "paxman._capabilities.geolocation",
+    "paxman._capabilities.country",
+]
+allow_indirect_imports = true
+
+
+[[tool.importlinter.contracts]]
+id = "errors-is-leaf"
+name = "_errors must be a leaf module (no internal imports)"
+type = "forbidden"
+source_modules = [
+    "paxman._errors",
+]
+forbidden_modules = [
+    "paxman._capabilities",
+    "paxman._core",
+    "paxman._dsl",
+    "paxman._registry",
+    "paxman._types",
+    "paxman._provenance",
+]
+
+[[tool.importlinter.contracts]]
+id = "types-is-leaf"
+name = "_types must be a leaf module (no internal imports)"
+type = "forbidden"
+source_modules = [
+    "paxman._types",
+]
+forbidden_modules = [
+    "paxman._capabilities",
+    "paxman._core",
+    "paxman._dsl",
+    "paxman._registry",
+    "paxman._errors",
+    "paxman._provenance",
+]
+
+# ---------------------------------------------------------------------------
+# pydeps — dependency visualization.
+# Generates SVG dependency graphs for architecture review.
+# Usage: uv run pydeps src/paxman --max-bacon=2
+# ---------------------------------------------------------------------------
+[tool.pydeps]
+# Show only direct dependencies (max depth 2)
+max_bacon = 2
+# Exclude external packages from visualization
+cluster = false
+

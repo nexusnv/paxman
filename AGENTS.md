@@ -53,6 +53,7 @@ jobs in `.github/workflows/ci.yml` exactly:
 ```bash
 uv run ruff check .                                      # lint
 uv run ruff format --check .                             # format check (not auto-fix)
+uv run lint-imports                                      # import boundary check
 uv run mypy src/paxman                                   # type check
 uv run python scripts/check_readme_quickstart.py         # README ↔ quickstart parity
 uv run python scripts/check_capability_section_isolation.py

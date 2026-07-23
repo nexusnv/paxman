@@ -235,12 +235,12 @@ class CountryCapability(CapabilityBase):
         if r is not None:
             return r
         assert isinstance(contract, CanonicalCountryContract)
-        assert isinstance(value, str)
 
         # Missing value -> MISSING (spec §3.5).
         r = reject_missing(value, _ev, "missing_value")
         if r is not None:
             return r
+        assert isinstance(value, str)
 
         # Trim leading/trailing ASCII whitespace (record if changed).
         stripped_evidence: tuple[Evidence, ...] = ()

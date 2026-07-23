@@ -110,6 +110,30 @@ class Engine:
         merged.update({a.name: a for a in authorities})
         return cls(merged)
 
+    @classmethod
+    def with_authorities(cls, bindings: dict[str, Selector]) -> Engine:
+        """Create an Engine with specific authority editions pinned.
+
+        Starts from :meth:`default` and applies each binding, resolving
+        selectors to concrete editions. This is the convenience constructor
+        for pinning specific editions without building the full override chain.
+
+        Args:
+            bindings: A mapping of authority names to selectors (:class:`Latest`,
+                :class:`Edition`, or ``None`` for default).
+
+        Returns:
+            A new Engine with the specified authorities pinned.
+
+        Raises:
+            UnknownAuthorityEdition: If a binding names an unknown authority or
+                an edition that does not exist.
+        """
+        engine = cls.default()
+        for name, selector in bindings.items():
+            engine = engine.override(name, selector)
+        return engine
+
     def authority(self, name: str) -> Authority:
         """Return the concrete :class:`Authority` bound for ``name``.
 

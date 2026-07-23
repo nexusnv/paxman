@@ -60,10 +60,14 @@ class MoneyCapability(CapabilityBase):
         if r is not None:
             return r
         assert isinstance(contract, CanonicalMoneyContract)
-        assert isinstance(value, str)
 
         # Missing/whitespace-only value -> INVALID (spec: empty input rejected).
-        if value is None or value.strip(" \t\r\n\f\v") == "":
+        if value is None:
+            return CapabilityResult(
+                status=Status.INVALID, evidence=(_evidence("missing_value", engine=engine),)
+            )
+        assert isinstance(value, str)
+        if value.strip(" \t\r\n\f\v") == "":
             return CapabilityResult(
                 status=Status.INVALID, evidence=(_evidence("missing_value", engine=engine),)
             )

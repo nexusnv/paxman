@@ -35,6 +35,7 @@ class TestPublicAPI:
         expected = {
             "Any",
             "canonicalize",
+            "canonicalize_with",
             "replay",
             "register_capability",
             "ExecutionArtifact",
@@ -74,6 +75,9 @@ class TestPublicAPI:
             "CanonicalMoneyContract",
             "Country",
             "CanonicalCountryContract",
+            "Engine",
+            "Edition",
+            "Latest",
             "annotations",
         }
         actual = {n for n in dir(paxman) if not n.startswith("_")}
@@ -83,7 +87,7 @@ class TestPublicAPI:
         # The authority-edition SELECTION surface was removed from the public
         # API (only 2/10 capabilities read the engine; exactly one edition is
         # bundled). The engine stays an internal carrier for replay.
-        for removed in ("Edition", "Latest", "Engine", "ComplianceProfile", "canonicalize_with"):
+        for removed in ("ComplianceProfile",):
             assert not hasattr(paxman, removed)
 
     def test_canonicalize_end_to_end(self, monkeypatch: pytest.MonkeyPatch) -> None:

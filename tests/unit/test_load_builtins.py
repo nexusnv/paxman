@@ -16,11 +16,28 @@ from paxman._registry.capability_registry import CapabilityRegistry
 
 
 class TestBuiltinCapabilities:
+    # Independent expected set — must match discovery.py's builtin_capabilities().
+    # If a capability is added or removed, update this set AND the count.
+    _EXPECTED_NAMES: frozenset[str] = frozenset(
+        {
+            "email_canonicalization",
+            "uuid_canonicalization",
+            "date_canonicalization",
+            "phone_canonicalization",
+            "url_canonicalization",
+            "boolean_canonicalization",
+            "ip_canonicalization",
+            "money_canonicalization",
+            "geolocation_canonicalization",
+            "country_canonicalization",
+        }
+    )
+
     def test_returns_all_builtin_capabilities(self) -> None:
         result = builtin_capabilities()
         assert isinstance(result, list)
-        assert len(result) == len(builtin_capabilities())
-        assert {c.name for c in result} == {c.name for c in builtin_capabilities()}
+        assert len(result) == len(self._EXPECTED_NAMES)
+        assert {c.name for c in result} == self._EXPECTED_NAMES
         assert len({type(c) for c in result}) == len(result)
 
     def test_returns_fresh_instances_on_each_call(self) -> None:

@@ -187,7 +187,7 @@ src/paxman/
 │   ├── discovery.py            #   builtin_capabilities() — source of truth
 │   ├── _shared/                #   shared recognition/evidence/contract scaffold (de-duplicated from domains)
 │   │   ├── __init__.py         #     package marker (empty)
-│   │   │   ├── base.py             #     CapabilityBase — uniform validate hook + make_can_handle / dispatch-reject helpers all 10 capabilities inherit
+│   │   ├── base.py             #     CapabilityBase — uniform validate hook + make_can_handle / dispatch-reject helpers all 10 capabilities inherit
 │   │   ├── grammar.py          #     Grammar/RecognizedRep/make_grammar/recognize_grammars
 │   │   ├── evidence.py         #     make_evidence / make_evidence_for (engine-aware)
 │   │   └── contract.py         #     authority_override_field / _authority_override_from_spec

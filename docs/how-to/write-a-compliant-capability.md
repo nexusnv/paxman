@@ -120,11 +120,11 @@ class XCapability(CapabilityBase):
 
 
 # Register BEFORE the first canonicalize call (built-ins are auto-registered).
-register_capability(XCapability())
+paxman.register_capability(XCapability())
 
 result = paxman.canonicalize("a b/c", CanonicalXContract())
 assert result.status is Status.CANONICALIZED
-assert result.value == "a%20b%2Fc"  # "/" is a reserved char -> "%2F"
+assert result.value == "a%20b%2Fc"  # space -> "%20", "/" -> "%2F"
 ```
 
 The capability:

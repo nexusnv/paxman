@@ -24,6 +24,7 @@ from paxman._capabilities.uuid.contract import UUID, CanonicalUUIDContract
 from paxman._core.artifact import ExecutionArtifact
 from paxman._core.classification import ValidationResult
 from paxman._core.engine import canonicalize as _canonicalize
+from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
 from paxman._core.replay import replay as _replay
 from paxman._core.result import CapabilityResult, VersionStamp
@@ -38,6 +39,7 @@ from paxman._errors import (
     UnsupportedContractError,
     VersionMismatchError,
 )
+from paxman._provenance.selection import Edition, Latest
 from paxman._registry.capability_registry import CapabilityRegistry
 
 # Public `Contract` union of concrete value objects (mandate Law 5). The
@@ -61,6 +63,18 @@ else:
 def canonicalize(input_data: object, contract: object) -> ExecutionArtifact:
     """Canonicalize `input_data` against `contract`. See MANDATE §2."""
     return _canonicalize(input_data, contract)
+
+
+def canonicalize_with(input_data: object, contract: object, engine: Engine) -> ExecutionArtifact:
+    """Canonicalize with an explicit Engine binding authority editions.
+
+    Equivalent to ``canonicalize(input_data, contract)`` but binds a specific
+    Engine so the caller controls which concrete authority editions are used
+    (mandate Law 14, Concern 3). The zero-config ``canonicalize()`` uses
+    ``Engine.default()`` internally; this variant lets callers pin specific
+    editions for replay-deterministic testing or audit trails.
+    """
+    return _canonicalize(input_data, contract, engine=engine)
 
 
 def replay(artifact: ExecutionArtifact, contract: object) -> ExecutionArtifact:
@@ -118,11 +132,14 @@ __all__ = [
     "ContractError",
     "Country",
     "Date",
+    "Edition",
     "Email",
+    "Engine",
     "Evidence",
     "ExecutionArtifact",
     "FrozenRegistryError",
     "Geolocation",
+    "Latest",
     "Money",
     "PaxmanError",
     "Phone",
@@ -133,6 +150,7 @@ __all__ = [
     "VersionStamp",
     "__version__",
     "canonicalize",
+    "canonicalize_with",
     "parse_contract",
     "register_capability",
     "replay",

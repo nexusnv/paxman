@@ -137,11 +137,13 @@ ignore = ["RUF009"]
 
 # ---------------------------------------------------------------------------
 # Mypy (type check)
-# Full type-safety: no error codes are disabled. The ``_ContractLike`` Protocol
-# uses structural typing (a Protocol with ``...`` method bodies) which mypy
-# handles natively; ``_StubContract`` satisfies it structurally. The concrete
-# ``Canonical*Contract`` types declare ``authority_override: Any | None`` via
-# the shared ``authority_override_field()`` factory.
+# Moderate type-safety: ``disallow_untyped_defs`` is on, but several error
+# codes are intentionally allowed (see AGENTS.md). The ``_ContractLike``
+# Protocol uses structural typing (a Protocol with ``...`` method bodies)
+# which mypy handles natively; ``_StubContract`` satisfies it structurally.
+# The concrete ``Canonical*Contract`` types declare
+# ``authority_override: Any | None`` via the shared
+# ``authority_override_field()`` factory.
 # ---------------------------------------------------------------------------
 [tool.mypy]
 python_version = "3.11"

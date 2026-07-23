@@ -129,7 +129,7 @@ delegate to it**:
   `recognize_grammars` from `_shared.grammar`; keeps only its `GRAMMARS`
   tuple and a thin `recognize(value, contract) -> list[RecognizedRep]`
   that calls `recognize_grammars(GRAMMARS, value, contract, CanonicalXContract)`.
-- `rules.py` builds `_evidence` via `make_evidence(_RULE_AUTHORITIES)`
+- `rules.py` builds `_evidence` via `rule_authorities(_RULE_AUTHORITIES)`
   (or `make_evidence_for(..., authority_name, registry_rules=...)` for the
   engine-aware capabilities).
 - `contract.py` declares `authority_override: Any = authority_override_field()`

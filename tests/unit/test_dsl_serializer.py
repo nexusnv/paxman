@@ -16,6 +16,8 @@ def test_serialize_email() -> None:
         "provider_aliases": "gmail",
         "strict": False,
         "output_format": "email",
+        "include_grammar": (),
+        "exclude_grammar": (),
         "version": 1,
     }
     # Round-trips back to an equivalent contract via parse_contract.
@@ -30,6 +32,8 @@ def test_serialize_uuid() -> None:
         "kind": "canonical_uuid",
         "version": "4",
         "output_format": "hex",
+        "include_grammar": (),
+        "exclude_grammar": (),
         "version_field": 1,
     }
     # Round-trips back to an equivalent contract via parse_contract.
@@ -47,6 +51,8 @@ def test_serialize_date() -> None:
         "language": "en",
         "two_digit_year": None,
         "output_format": "iso",
+        "include_grammar": (),
+        "exclude_grammar": (),
         "version_field": 1,
     }
     # Round-trips back to an equivalent contract via parse_contract.

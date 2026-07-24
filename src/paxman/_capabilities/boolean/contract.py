@@ -48,6 +48,9 @@ class CanonicalBooleanContract:
     version: int = 1
     version_field: int = 1
 
+    include_grammar: tuple[str, ...] = ()
+    exclude_grammar: tuple[str, ...] = ()
+
     authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
@@ -60,6 +63,8 @@ class CanonicalBooleanContract:
                 "case_sensitive": self.case_sensitive,
                 "output_format": self.output_format,
                 "version": self.version,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -70,6 +75,8 @@ def Boolean(
     accept_words: bool = True,
     case_sensitive: bool = False,
     output_format: Literal["truefalse"] = "truefalse",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalBooleanContract:
     """Domain-type sugar: declare a boolean contract in user vocabulary.
@@ -90,6 +97,8 @@ def Boolean(
         accept_words=accept_words,
         case_sensitive=case_sensitive,
         output_format=output_format,
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
@@ -116,6 +125,8 @@ def _build_boolean(spec: dict[str, Any]) -> CanonicalBooleanContract:
         accept_words=_require_bool("accept_words", spec.get("accept_words", True)),
         case_sensitive=_require_bool("case_sensitive", spec.get("case_sensitive", False)),
         output_format=output_format,
+        include_grammar=tuple(spec.get("include_grammar", ())),
+        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
         authority_override=authority_override,
     )
 

@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import re
-
 from paxman._capabilities._shared.grammar import (
     Grammar,
     Provenance,
@@ -28,9 +26,7 @@ def test_make_grammar_compiles_and_anchors():
 
 
 def test_recognize_grammars_returns_rep_with_raw_captures():
-    reps = recognize_grammars(
-        _fake_grammars(), "abcd1234-abcd-1234-abcd-1234567890ab"
-    )
+    reps = recognize_grammars(_fake_grammars(), "abcd1234-abcd-1234-abcd-1234567890ab")
     assert len(reps) == 1
     rep = reps[0]
     assert isinstance(rep, RecognizedRep)
@@ -44,7 +40,9 @@ def test_recognize_grammars_no_match_returns_empty():
 
 
 def test_recognize_grammars_strip_true_trims_input():
-    g = make_grammar("ws", Provenance(name="Fake spec §2 (whitespace tolerated)"), r"^(?P<value>abc)$")
+    g = make_grammar(
+        "ws", Provenance(name="Fake spec §2 (whitespace tolerated)"), r"^(?P<value>abc)$"
+    )
     assert recognize_grammars((g,), "  abc  ") == []
     reps = recognize_grammars((g,), "  abc  ", strip=True)
     assert len(reps) == 1
@@ -54,13 +52,12 @@ def test_recognize_grammars_strip_true_trims_input():
 def test_recognize_grammars_strip_charset_is_narrow():
     # A narrow ASCII charset must NOT strip a non-breaking space (\u00a0),
     # preserving country's determinism (full str.strip() WOULD remove it).
-    g = make_grammar("ws", Provenance(name="Fake spec §2 (whitespace tolerated)"), r"^(?P<value>abc)$")
+    g = make_grammar(
+        "ws", Provenance(name="Fake spec §2 (whitespace tolerated)"), r"^(?P<value>abc)$"
+    )
     # ASCII spaces are stripped by the narrow charset → matches.
     reps = recognize_grammars((g,), "  abc  ", strip=" \t\r\n\f\v")
     assert len(reps) == 1
     assert reps[0].raw == "abc"
     # A non-breaking space is NOT in the narrow charset → preserved → no match.
-    assert (
-        recognize_grammars((g,), "abc\u00a0", strip=" \t\r\n\f\v")
-        == []
-    )
+    assert recognize_grammars((g,), "abc\u00a0", strip=" \t\r\n\f\v") == []

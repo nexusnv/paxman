@@ -46,9 +46,7 @@ class TestGrammarCatalogue:
     def test_every_grammar_records_provenance(self) -> None:
         for grammar in GRAMMARS:
             assert grammar.provenance.name
-            assert any(
-                token in grammar.provenance.name for token in ("RFC", "Paxman", "spec", "§")
-            )
+            assert any(token in grammar.provenance.name for token in ("RFC", "Paxman", "spec", "§"))
 
 
 class TestAddrSpecGrammar:

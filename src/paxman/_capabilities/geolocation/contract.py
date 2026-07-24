@@ -125,6 +125,9 @@ class CanonicalGeolocationContract:
     version: int = attrs.field(default=1, validator=_validate_v1)
     version_field: int = attrs.field(default=1, validator=_validate_v1)
 
+    include_grammar: tuple[str, ...] = ()
+    exclude_grammar: tuple[str, ...] = ()
+
     authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
@@ -139,6 +142,8 @@ class CanonicalGeolocationContract:
                 "precision": self.precision,
                 "version": self.version,
                 "version_field": self.version_field,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -150,6 +155,8 @@ def Geolocation(
     require_hemisphere: bool = True,
     output_format: Literal["decimal"] = "decimal",
     precision: int = 6,
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalGeolocationContract:
     """Domain-type sugar: declare a geolocation contract in user vocabulary.
@@ -189,6 +196,8 @@ def Geolocation(
         require_hemisphere=_require_bool("require_hemisphere", require_hemisphere),
         output_format=output_format,
         precision=_require_precision("precision", precision),
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
@@ -251,6 +260,8 @@ def _build_geolocation(spec: dict[str, Any]) -> CanonicalGeolocationContract:
         ),
         output_format=output_format,
         precision=_require_precision("precision", spec.get("precision", 6)),
+        include_grammar=tuple(spec.get("include_grammar", ())),
+        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
         authority_override=_authority_override_from_spec(spec),
     )
 

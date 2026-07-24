@@ -491,6 +491,9 @@ class CanonicalCountryContract:
     version: int = attrs.field(default=1, validator=_validate_v1)
     version_field: int = attrs.field(default=1, validator=_validate_v1)
 
+    include_grammar: tuple[str, ...] = ()
+    exclude_grammar: tuple[str, ...] = ()
+
     authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
@@ -508,6 +511,8 @@ class CanonicalCountryContract:
                 "output_format": self.output_format,
                 "version": self.version,
                 "version_field": self.version_field,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -522,6 +527,8 @@ def Country(
     historical_names: bool = False,
     extra_synonyms: Mapping[str, str] | None = None,
     output_format: Literal["alpha2", "alpha3", "numeric"] = "alpha2",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalCountryContract:
     """Domain-type sugar: declare a country contract in user vocabulary.
@@ -557,6 +564,8 @@ def Country(
         historical_names=_require_bool("historical_names", historical_names),
         extra_synonyms=dict(extra_synonyms) if extra_synonyms is not None else {},
         output_format=output_format,
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
@@ -600,6 +609,8 @@ def _build_country(spec: dict[str, Any]) -> CanonicalCountryContract:
         historical_names=_require_bool("historical_names", spec.get("historical_names", False)),
         extra_synonyms=dict(extra),
         output_format=output_format,
+        include_grammar=tuple(spec.get("include_grammar", ())),
+        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
         authority_override=_authority_override_from_spec(spec),
     )
 

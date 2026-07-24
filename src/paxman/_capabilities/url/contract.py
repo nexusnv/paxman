@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any, Literal, cast
 
 import attrs
@@ -43,6 +44,9 @@ class CanonicalURLContract:
         default="normalized", validator=_validate_output_format_url
     )
 
+    include_grammar: tuple[str, ...] = ()
+    exclude_grammar: tuple[str, ...] = ()
+
     authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, object]:
@@ -57,6 +61,8 @@ class CanonicalURLContract:
                 "output_format": self.output_format,
                 "version": self.version,
                 "version_field": self.version_field,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -69,6 +75,8 @@ def URL(
     sort_query: bool = False,
     whatwg: bool = False,
     output_format: Literal["normalized"] = "normalized",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalURLContract:
     """Domain-type sugar for declaring a URL contract (mirrors Phone()/Date())."""
@@ -79,6 +87,8 @@ def URL(
         sort_query=sort_query,
         whatwg=whatwg,
         output_format=output_format,
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
@@ -118,6 +128,8 @@ def _build_url(spec: dict[str, object]) -> CanonicalURLContract:
         return bool(v)
 
     output_format = cast(Literal["normalized"], spec.get("output_format", "normalized"))
+    inc = cast(Iterable[str], spec.get("include_grammar", ()))
+    exc = cast(Iterable[str], spec.get("exclude_grammar", ()))
     return CanonicalURLContract(
         scheme_allow=allow,
         strip_userinfo=_bool("strip_userinfo", False),
@@ -127,6 +139,8 @@ def _build_url(spec: dict[str, object]) -> CanonicalURLContract:
         output_format=output_format,
         version=version,
         version_field=version_field,
+        include_grammar=tuple(inc),
+        exclude_grammar=tuple(exc),
         authority_override=_authority_override_from_spec(spec),
     )
 

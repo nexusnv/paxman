@@ -6,6 +6,7 @@ reorganisation into ``paxman._capabilities.date``.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any, Literal, cast
 
 import attrs
@@ -59,6 +60,9 @@ class CanonicalDateContract:
     kind: str = "canonical_date"
     version_field: int = 1
 
+    include_grammar: tuple[str, ...] = ()
+    exclude_grammar: tuple[str, ...] = ()
+
     authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, object]:
@@ -71,6 +75,8 @@ class CanonicalDateContract:
                 "two_digit_year": self.two_digit_year,
                 "output_format": self.output_format,
                 "version_field": self.version_field,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -81,6 +87,8 @@ def Date(
     language: str = "en",
     two_digit_year: TwoDigitYearPolicy | None = None,
     output_format: Literal["iso", "compact"] = "iso",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalDateContract:
     """Domain-type sugar: declare a date contract in user vocabulary.
@@ -100,6 +108,8 @@ def Date(
             "language": language,
             "two_digit_year": two_digit_year,
             "output_format": output_format,
+            "include_grammar": include_grammar,
+            "exclude_grammar": exclude_grammar,
             "authority_override": authority_override,
         }
     )
@@ -145,11 +155,15 @@ def _build_date(spec: dict[str, object]) -> CanonicalDateContract:
         )
     authority_override = _authority_override_from_spec(spec)
     output_format = cast(Literal["iso", "compact"], output_format)
+    inc = cast(Iterable[str], spec.get("include_grammar", ()))
+    exc = cast(Iterable[str], spec.get("exclude_grammar", ()))
     return CanonicalDateContract(
         locale=locale,
         language=language,
         two_digit_year=two_digit_year,
         output_format=output_format,
+        include_grammar=tuple(inc),
+        exclude_grammar=tuple(exc),
         authority_override=authority_override,
     )
 

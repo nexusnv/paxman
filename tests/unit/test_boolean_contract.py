@@ -37,6 +37,8 @@ def test_as_dict_round_trip() -> None:
         "accept_words": True,
         "case_sensitive": False,
         "output_format": "truefalse",
+        "include_grammar": (),
+        "exclude_grammar": (),
         "version": 1,
     }
     assert parse_contract(spec) == c

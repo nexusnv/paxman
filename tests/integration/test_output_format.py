@@ -30,6 +30,7 @@ from paxman import (
     canonicalize,
     replay,
 )
+from paxman._core.artifact import ExecutionArtifact
 from paxman._core.status import Status
 from paxman._errors import ContractError
 
@@ -38,9 +39,9 @@ from paxman._errors import ContractError
 # ---------------------------------------------------------------------------
 
 
-def _ok(artifact: object) -> None:
+def _ok(artifact: ExecutionArtifact) -> None:
     """Assert the artifact was canonicalized successfully."""
-    assert artifact.status is Status.CANONICALIZED  # type: ignore[union-attr]
+    assert artifact.status is Status.CANONICALIZED
 
 
 # ---------------------------------------------------------------------------

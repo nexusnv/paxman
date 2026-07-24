@@ -31,6 +31,8 @@ from paxman._capabilities.date.contract import CanonicalDateContract
 from paxman._capabilities.date.grammar import _ORDINAL_WORDS, RecognizedRep, recognize
 from paxman._capabilities.date.i18n import MONTH_NAMES, WEEKDAY_NAMES
 from paxman._capabilities.date.parser import (
+    _COMPACT_DATE_RE,
+    _COMPACT_DATETIME_RE,
     _ISO_DATE_RE,
     _ISO_DATETIME_RE,
     _ISO_NAIVE_DATETIME_RE,
@@ -575,7 +577,7 @@ class DateCapability(CapabilityBase):
         if contract.output_format == "iso":
             return result
         if result.status == Status.CANONICALIZED and result.value is not None:
-            compact_value = result.value.replace("-", "")
+            compact_value = result.value.replace("-", "").replace(":", "")
             return CapabilityResult(
                 status=result.status,
                 value=compact_value,
@@ -583,7 +585,9 @@ class DateCapability(CapabilityBase):
                 candidates=result.candidates,
             )
         if result.status == Status.AMBIGUOUS and result.candidates is not None:
-            compact_candidates = tuple(c.replace("-", "") for c in result.candidates)
+            compact_candidates = tuple(
+                c.replace("-", "").replace(":", "") for c in result.candidates
+            )
             return CapabilityResult(
                 status=result.status,
                 value=result.value,
@@ -706,6 +710,43 @@ class DateCapability(CapabilityBase):
             return CapabilityResult(
                 status=Status.AMBIGUOUS,
                 evidence=(_evidence("ambiguous_naive_datetime"),),
+            )
+
+        # Compact forms (output_format="compact" re-parsability, Law 8a).
+        # YYYYMMDDTHHMMSSZ — compact datetime with UTC timezone.
+        if _COMPACT_DATETIME_RE.match(value):
+            iso_form = (
+                f"{value[:4]}-{value[4:6]}-{value[6:8]}T"
+                f"{value[9:11]}:{value[11:13]}:{value[13:15]}Z"
+            )
+            try:
+                dt = datetime.fromisoformat(iso_form.replace("Z", "+00:00"))
+            except ValueError:
+                return CapabilityResult(
+                    status=Status.INVALID,
+                    evidence=(_evidence("invalid_iso_format"),),
+                )
+            return CapabilityResult(
+                status=Status.CANONICALIZED,
+                value=_render_datetime(dt),
+                evidence=(
+                    _evidence("parsed_compact_datetime"),
+                    _evidence("normalized_to_utc"),
+                ),
+            )
+        # YYYYMMDD — compact date.
+        if _COMPACT_DATE_RE.match(value):
+            try:
+                dt = datetime.strptime(value, "%Y%m%d")
+            except ValueError:
+                return CapabilityResult(
+                    status=Status.INVALID,
+                    evidence=(_evidence("invalid_calendar_date"),),
+                )
+            return CapabilityResult(
+                status=Status.CANONICALIZED,
+                value=_render_date(dt),
+                evidence=(_evidence("parsed_compact_date"),),
             )
 
         # US/EU numeric: MM/DD/YYYY or DD/MM/YYYY

@@ -475,13 +475,6 @@ def test_date_format_iso_vs_compact(value: str) -> None:
         return
     compact = canonicalize(value, Date(output_format="compact"))
     assert compact.status is Status.CANONICALIZED
-    # ISO uses "YYYY-MM-DD"; compact uses "YYYYMMDD". Both are distinct.
     assert iso.value != compact.value
-    # The ISO form (YYYY-MM-DD) is a valid input; re-canonicalizing it
-    # with the same format reproduces the same value (idempotency).
     assert canonicalize(iso.value, Date(output_format="iso")).value == iso.value
-    # The compact form (YYYYMMDD) is a valid serialization output but is
-    # NOT a re-parsable date input. Verifying that the compact output is
-    # a well-formed 8-digit string confirms it is a valid canonical form.
-    assert len(compact.value) == 8
-    assert compact.value.isdigit()
+    assert canonicalize(compact.value, Date(output_format="compact")).value == compact.value

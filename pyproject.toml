@@ -104,7 +104,7 @@ target-version = "py311"
 # ruff does not flag example-only imports/ordering inside notebook cells.
 # Use extend-exclude to preserve Ruff's built-in default excludes
 # (.git, *.pyc, venvs, etc.) rather than replacing them.
-extend-exclude = ["playground"]
+extend-exclude = ["playground", "*.md"]
 
 [tool.ruff.lint]
 select = [

@@ -35,7 +35,7 @@ def test_recognize_decimal_pair_returns_single_rep() -> None:
     assert isinstance(rep, RecognizedRep)
     assert rep.grammar_id == "geo_decimal_pair"
     assert rep.shape == "geo_decimal_pair"
-    assert rep.source != ""
+    assert rep.provenance.name != ""
 
 
 def test_recognize_decimal_pair_shape() -> None:
@@ -66,9 +66,9 @@ def test_recognize_unknown_returns_none() -> None:
     assert recognize("abc", CanonicalGeolocationContract()) == []
 
 
-def test_grammars_have_provenance_source() -> None:
+def test_grammars_have_provenance() -> None:
     for g in GRAMMARS:
-        assert g.source != ""
+        assert g.provenance.name != ""
 
 
 def test_split_sign_plain_positive() -> None:

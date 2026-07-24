@@ -19,11 +19,25 @@ from __future__ import annotations
 
 from paxman._capabilities._shared.grammar import (
     Grammar,
+    Provenance,
     RecognizedRep,
     make_grammar,
     recognize_grammars,
 )
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
+
+_E164_PROVENANCE = Provenance(
+    name="RFC 3966 §3 / ITU-T E.164",
+    version="global form: +<cc><national>; ASCII digits only",
+)
+_NATIONAL_PROVENANCE = Provenance(
+    name="ITU-T E.164",
+    version="national-number pattern (separated form; requires >=7 ASCII digits)",
+)
+_DIGITS_ONLY_PROVENANCE = Provenance(
+    name="ITU-T E.164",
+    version="ASCII digits only, no separators; leading digit 1-9",
+)
 
 
 def recognize(value: str, contract: object) -> list[RecognizedRep]:
@@ -33,7 +47,9 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
     is matched untrimmed — phone recognition does not strip or lowercase
     before matching (preserving the original semantics).
     """
-    return recognize_grammars(GRAMMARS, value, contract, CanonicalPhoneContract)
+    if not isinstance(contract, CanonicalPhoneContract):
+        return []
+    return recognize_grammars(GRAMMARS, value)
 
 
 # The canonical grammar set (Layer 1). The three grammars are mutually
@@ -46,18 +62,17 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
 GRAMMARS: tuple[Grammar, ...] = (
     make_grammar(
         "e164",
-        "RFC 3966 §3 / ITU-T E.164 (global form: +<cc><national>; ASCII digits only)",
+        _E164_PROVENANCE,
         r"^\+(?P<cc_first>[0-9])(?P<national>[0-9]+)$",
     ),
     make_grammar(
         "national",
-        "ITU-T E.164 national-number pattern (separated form; requires >=7 ASCII digits)",
+        _NATIONAL_PROVENANCE,
         r"^(?P<national>(?=(?:[^0-9]*[0-9]){7})[0-9(][0-9 \-().]*[ \-().][0-9 \-().]*[0-9])$",
     ),
     make_grammar(
         "digits_only",
-        "ITU-T E.164 (ASCII digits only, no separators; leading digit 1-9 so "
-        "00-prefixed international strings are not matched)",
+        _DIGITS_ONLY_PROVENANCE,
         r"^(?P<national>[1-9][0-9]{6,14})$",
     ),
 )

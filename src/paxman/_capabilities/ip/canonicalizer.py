@@ -22,6 +22,7 @@ from paxman._capabilities._shared.base import (
     reject_missing,
     reject_non_string,
 )
+from paxman._capabilities._shared.grammar import Provenance
 from paxman._capabilities.ip.contract import CanonicalIPContract
 from paxman._capabilities.ip.grammar import RecognizedRep, recognize
 from paxman._capabilities.ip.rules import _evidence
@@ -39,7 +40,7 @@ class _Candidate:
     value: str
     family: str | None
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -49,7 +50,7 @@ class _Survivor:
 
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -78,17 +79,17 @@ def generate_interpretations(
             )
             canonical = str(parsed)  # dotted-decimal, no leading zeros
             rule = "canonicalized_ipv4"
-            source = "RFC 4291 §2.2"
+            provenance = Provenance(name="RFC 4291 §2.2")
         else:
             parsed = ipaddress.IPv6Address(addr)
             canonical = str(parsed)  # RFC 5952 lowercase compressed
             rule = "canonicalized_ipv6"
-            source = "RFC 5952"
+            provenance = Provenance(name="RFC 5952")
             if is_zone and zone is not None:
                 if contract.preserve_zone_id:
                     canonical = f"{canonical}%{zone.lower()}"
                     rule = "canonicalized_ipv6_zone"
-                    source = "RFC 4007 §11 + RFC 5952 §4.3"
+                    provenance = Provenance(name="RFC 4007 §11 + RFC 5952 §4.3")
                 else:
                     # zone stripped by policy; canonical stays the bare addr
                     pass
@@ -99,7 +100,7 @@ def generate_interpretations(
             value=canonical,
             family=reps[0].shape,
             rule=rule,
-            source=source,
+            provenance=provenance,
             evidence=(_evidence(rule, f"{addr!r} -> {canonical!r}"),),
         )
     )
@@ -126,7 +127,7 @@ def resolve_and_validate(
         if is_ipv6 and not contract.allow_ipv6:
             drop_reasons.append("policy_disabled_family")
             continue
-        survivors.append(_Survivor(c.value, c.rule, c.source, c.evidence))
+        survivors.append(_Survivor(c.value, c.rule, c.provenance, c.evidence))
     return survivors, drop_reasons
 
 

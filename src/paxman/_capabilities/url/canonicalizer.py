@@ -12,6 +12,7 @@ from paxman._capabilities._shared.base import (
     reject_contract,
     reject_non_string,
 )
+from paxman._capabilities._shared.grammar import Provenance
 from paxman._capabilities.url.contract import CanonicalURLContract
 from paxman._capabilities.url.grammar import RecognizedRep, recognize
 from paxman._capabilities.url.parser import default_port_for_scheme
@@ -39,7 +40,7 @@ _SCHEME_RE = re.compile(r"[A-Za-z][A-Za-z0-9+.-]*$")
 class _Candidate:
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -288,7 +289,7 @@ def generate_interpretations(
             _Candidate(
                 value=value,
                 rule=ev[-1].rule,
-                source="RFC 3986 §6.2.2",
+                provenance=Provenance(name="RFC 3986 §6.2.2"),
                 evidence=tuple(ev),
             )
         )

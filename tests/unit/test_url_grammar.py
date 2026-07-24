@@ -75,7 +75,7 @@ def test_recognize_delegates_to_shared_scaffold():
     rep = reps[0]
     assert rep.grammar_id == "absolute"
     assert rep.raw == "https://Example.COM/a"
-    assert rep.source.startswith("RFC 3986 §3")
+    assert rep.provenance.name.startswith("RFC 3986 §3")
     # url never strips: a whitespace-prefixed value is NOT coerced to absolute;
     # it falls through to path_relative (the original behavior, preserved).
     ws = recognize("  https://Example.COM/a  ", URL())

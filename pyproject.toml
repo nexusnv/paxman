@@ -249,6 +249,7 @@ source_modules = [
     "paxman._errors",
 ]
 forbidden_modules = [
+    "paxman",
     "paxman._capabilities",
     "paxman._core",
     "paxman._dsl",
@@ -265,6 +266,7 @@ source_modules = [
     "paxman._types",
 ]
 forbidden_modules = [
+    "paxman",
     "paxman._capabilities",
     "paxman._core",
     "paxman._dsl",
@@ -281,6 +283,6 @@ forbidden_modules = [
 [tool.pydeps]
 # Show only direct dependencies (max depth 2)
 max_bacon = 2
-# Exclude external packages from visualization
+# Disable clustering of external packages in the graph
 cluster = false
 

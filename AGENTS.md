@@ -13,6 +13,13 @@ Paxman is a **deterministic canonicalization engine** for Python. It rewrites
 equivalent representations of *known* information into a single canonical form
 and refuses to guess when the input does not determine a unique result.
 
+**⚠️ Active Development — No Backward Compatibility:** Paxman v2 is in active
+development. There is no v2 release yet, and v1 is not a concern of v2. In any
+implementation or design planning, **never concern yourself with backward
+compatibility**. Doing so creates redundant mechanisms that circumvent
+compatibility issues that do not exist and never will. This development has
+only one path: **forward**. Until v2 is released, there is no looking backward.
+
 - **Language:** Python 3.11–3.13 (`requires-python = ">=3.11"`).
 - **Package manager / runner:** [`uv`](https://docs.astral.sh/uv/) (`uv sync`, `uv run`).
 - **Build backend:** Hatchling.

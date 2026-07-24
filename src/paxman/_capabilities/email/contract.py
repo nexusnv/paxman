@@ -50,6 +50,9 @@ class CanonicalEmailContract:
     version: int = 1
     version_field: int = 1
 
+    include_grammar: tuple[str, ...] = ()
+    exclude_grammar: tuple[str, ...] = ()
+
     authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
@@ -71,6 +74,8 @@ class CanonicalEmailContract:
                 "strict": self.strict,
                 "output_format": self.output_format,
                 "version": self.version,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -82,6 +87,8 @@ def Email(
     lowercase: bool = True,
     strip_whitespace: bool = True,
     output_format: Literal["email"] = "email",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalEmailContract:
     """Domain-type sugar: declare an email contract in user vocabulary.
@@ -120,6 +127,8 @@ def Email(
         provider_aliases=provider_aliases,
         strict=strict,
         output_format=output_format,
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
@@ -151,6 +160,8 @@ def _build_email(spec: dict[str, Any]) -> CanonicalEmailContract:
         provider_aliases=cast(ProviderAliasesPolicy, provider_aliases),
         strict=_require_bool("strict", spec.get("strict", False)),
         output_format=cast(Literal["email"], output_format),
+        include_grammar=tuple(spec.get("include_grammar", ())),
+        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
         authority_override=_authority_override_from_spec(spec),
     )
 

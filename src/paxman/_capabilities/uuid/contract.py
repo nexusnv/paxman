@@ -67,6 +67,9 @@ class CanonicalUUIDContract:
     )
     kind: str = "canonical_uuid"
     version_field: int = 1
+    include_grammar: tuple[str, ...] = ()
+    exclude_grammar: tuple[str, ...] = ()
+
     authority_override: Any = authority_override_field()
 
     def __attrs_post_init__(self) -> None:
@@ -83,6 +86,8 @@ class CanonicalUUIDContract:
                 "version": self.version,
                 "output_format": self.output_format,
                 "version_field": self.version_field,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -91,6 +96,8 @@ def UUID(
     *,
     version: Literal["any", "1", "3", "4", "5", "7"] = "any",
     output_format: Literal["hex"] = "hex",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalUUIDContract:
     """Domain-type sugar: declare a UUID contract in user vocabulary.
@@ -99,7 +106,11 @@ def UUID(
     Mirrors the `Email()` factory pattern.
     """
     return CanonicalUUIDContract(
-        version=version, output_format=output_format, authority_override=authority_override
+        version=version,
+        output_format=output_format,
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
+        authority_override=authority_override,
     )
 
 
@@ -119,6 +130,8 @@ def _build_uuid(spec: dict[str, Any]) -> CanonicalUUIDContract:
     return CanonicalUUIDContract(
         version=cast(Literal["any", "1", "3", "4", "5", "7"], version),
         output_format=cast(Literal["hex"], output_format),
+        include_grammar=tuple(spec.get("include_grammar", ())),
+        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
         authority_override=authority_override,
     )
 

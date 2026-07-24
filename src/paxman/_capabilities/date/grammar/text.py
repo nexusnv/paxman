@@ -38,6 +38,14 @@ def _weekday_alternation(language: str) -> str:
     return "|".join(re.escape(name) for name in names)
 
 
+# Module-level language state keyed by grammar id.  The caller
+# (date/grammar/__init__.py) writes the contract language here before
+# invoking ``recognize_fn``; the closure reads it back.  Shared mutable
+# state is acceptable for single-threaded use (same constraint as the
+# previous closure-attribute approach).
+_LANGUAGE_STATE: dict[str, str] = {}
+
+
 def _make_language_grammar(
     grammar_id: str,
     provenance: Provenance,
@@ -48,7 +56,7 @@ def _make_language_grammar(
     _cache: dict[str, re.Pattern[str]] = {}
 
     def recognize_fn(value: str) -> Mapping[str, str] | None:
-        language = getattr(recognize_fn, "_language", "en")
+        language = _LANGUAGE_STATE.get(grammar_id, "en")
         if language not in _cache:
             try:
                 _cache[language] = re.compile(pattern_fn(language), re.IGNORECASE)
@@ -59,7 +67,6 @@ def _make_language_grammar(
             return None
         return MappingProxyType({k: v for k, v in match.groupdict().items() if v is not None})
 
-    recognize_fn._language = "en"  # type: ignore[attr-defined]
     return parser_grammar(grammar_id, provenance, recognize_fn, shape=shape)
 
 

@@ -47,6 +47,9 @@ class CanonicalPhoneContract:
         default="e164", validator=_validate_output_format_phone
     )
 
+    include_grammar: tuple[str, ...] = ()
+    exclude_grammar: tuple[str, ...] = ()
+
     authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
@@ -65,6 +68,8 @@ class CanonicalPhoneContract:
                 "country": self.country,
                 "output_format": self.output_format,
                 "version": self.version,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -73,6 +78,8 @@ def Phone(
     *,
     country: str = "US",
     output_format: Literal["e164"] = "e164",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalPhoneContract:
     """Domain-type sugar: declare a phone contract in user vocabulary.
@@ -95,6 +102,8 @@ def Phone(
     return CanonicalPhoneContract(
         country=country,
         output_format=output_format,
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
@@ -118,6 +127,8 @@ def _build_phone(spec: dict[str, Any]) -> CanonicalPhoneContract:
     return CanonicalPhoneContract(
         country=country,
         output_format=output_format,
+        include_grammar=tuple(spec.get("include_grammar", ())),
+        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
         authority_override=authority_override,
     )
 

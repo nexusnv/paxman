@@ -37,6 +37,8 @@ def test_as_dict_round_trip() -> None:
         "allow_ipv6": True,
         "preserve_zone_id": True,
         "output_format": "normalized",
+        "include_grammar": (),
+        "exclude_grammar": (),
         "version": 1,
         "version_field": 1,
     }

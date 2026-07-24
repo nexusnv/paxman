@@ -17,6 +17,7 @@ from paxman._capabilities._shared.grammar import (
     Grammar,
     Provenance,
     RecognizedRep,
+    _select_grammars,
     make_grammar,
     recognize_grammars,
 )
@@ -48,7 +49,8 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
     """
     if not isinstance(contract, CanonicalEmailContract):
         return []
-    return recognize_grammars(GRAMMARS, value)
+    selected = _select_grammars(GRAMMARS, contract.include_grammar, contract.exclude_grammar)
+    return recognize_grammars(selected, value)
 
 
 # The canonical grammar set (Layer 1). Order is not significant.

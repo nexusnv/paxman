@@ -51,6 +51,9 @@ class CanonicalIPContract:
     version: int = 1
     version_field: int = 1
 
+    include_grammar: tuple[str, ...] = ()
+    exclude_grammar: tuple[str, ...] = ()
+
     authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
@@ -64,6 +67,8 @@ class CanonicalIPContract:
                 "output_format": self.output_format,
                 "version": self.version,
                 "version_field": self.version_field,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -74,6 +79,8 @@ def IP(
     allow_ipv6: bool = True,
     preserve_zone_id: bool = True,
     output_format: Literal["normalized"] = "normalized",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalIPContract:
     """Domain-type sugar: declare an IP contract in user vocabulary.
@@ -94,6 +101,8 @@ def IP(
         allow_ipv6=allow_ipv6,
         preserve_zone_id=preserve_zone_id,
         output_format=output_format,
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
@@ -131,6 +140,8 @@ def _build_ip(spec: dict[str, Any]) -> CanonicalIPContract:
         allow_ipv6=_require_bool("allow_ipv6", spec.get("allow_ipv6", True)),
         preserve_zone_id=_require_bool("preserve_zone_id", spec.get("preserve_zone_id", True)),
         output_format=output_format,
+        include_grammar=tuple(spec.get("include_grammar", ())),
+        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
         authority_override=_authority_override_from_spec(spec),
     )
 

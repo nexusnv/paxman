@@ -51,6 +51,8 @@ def test_as_dict_round_trip() -> None:
         "require_hemisphere": False,
         "output_format": "decimal",
         "precision": 3,
+        "include_grammar": (),
+        "exclude_grammar": (),
         "version": 1,
         "version_field": 1,
     }

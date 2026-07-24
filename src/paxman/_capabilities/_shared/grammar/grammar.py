@@ -46,9 +46,7 @@ def make_grammar(
         match = compiled.fullmatch(value)
         if match is None:
             return None
-        return MappingProxyType(
-            {k: v for k, v in match.groupdict().items() if v is not None}
-        )
+        return MappingProxyType({k: v for k, v in match.groupdict().items() if v is not None})
 
     return Grammar(id=id, provenance=provenance, recognize_fn=recognize_fn, shape=shape)
 

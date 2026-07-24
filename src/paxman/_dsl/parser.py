@@ -99,6 +99,10 @@ def _parse_string_dsl(spec: str) -> dict[str, Any]:
     kwargs: dict[str, Any] = {}
     for kw in tree.body.keywords:
         assert kw.arg is not None  # guarded above
+        if kw.arg in kwargs:
+            raise ContractError(
+                f"duplicate keyword argument {kw.arg!r} in string contract DSL: {spec!r}"
+            )
         try:
             kwargs[kw.arg] = ast.literal_eval(kw.value)
         except (ValueError, TypeError) as exc:

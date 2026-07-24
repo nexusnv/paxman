@@ -132,12 +132,12 @@ class TestDateCapability:
         assert r.status is Status.CANONICALIZED
         assert r.value == "1900-01-01T00:00:00Z"
 
-    def test_compact_integer_is_not_a_timestamp(self) -> None:
-        # A compact integer that is not a recognised date shape is claimed but
-        # not recognised -> INVALID (Decision A), not UNSUPPORTED.
+    def test_compact_integer_is_compact_date(self) -> None:
+        # An 8-digit compact integer (YYYYMMDD) is now a valid compact date
+        # input for idempotency (Law 8a). It canonicalizes to ISO form.
         r = _cap().canonicalize("20250101", _contract())
-        assert r.status is Status.INVALID
-        assert r.evidence[0].rule == "unrecognized_format"
+        assert r.status is Status.CANONICALIZED
+        assert r.value == "2025-01-01"
 
     def test_unrecognized_format_is_invalid(self) -> None:
         # A string with no recognised date shape is claimed but not recognised

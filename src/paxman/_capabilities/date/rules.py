@@ -42,6 +42,9 @@ _RULE_AUTHORITIES: Mapping[str, Authority | None] = {
     ),
     "normalized_to_utc": R.RFC_3339.section("§4.1 (instant equivalence) + §4.2 (Z designator)"),
     "no_transformation_needed": R.ISO_8601.section("§5.2.1 / RFC 3339 (input already canonical)"),
+    "output_format_compact": R.PAXMAN_SPEC_DATE.section(
+        "output_format='compact' compact date/datetime rendering"
+    ),
     # multilingual enumeration model
     "parsed_text_month_date": R.PAXMAN_SPEC_DATE.section(
         "full/abbrev month name in declared language; Law 14 declared Paxman policy"

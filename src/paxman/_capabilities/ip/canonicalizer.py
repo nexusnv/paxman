@@ -168,7 +168,9 @@ class IPCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalIPContract, accept_none=True)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"normalized"})
+
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         r = reject_contract(contract, CanonicalIPContract, _evidence, "not_a_ip_contract")

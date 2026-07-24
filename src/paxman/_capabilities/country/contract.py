@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Literal, cast
 
 import attrs
 
@@ -410,6 +410,16 @@ def _validate_bool(inst: object, attr: object, value: object) -> None:
         raise ContractError(f"contract field {name!r} must be a bool, got {type(value).__name__}")
 
 
+def _validate_output_format(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported formats."""
+    _SUPPORTED = frozenset({"alpha2", "alpha3", "numeric"})
+    if not isinstance(value, str) or value not in _SUPPORTED:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_SUPPORTED)}, got {value!r}"
+        )
+
+
 def _validate_v1(inst: object, attr: object, value: object) -> None:
     """Attrs validator: version fields must be int 1 (only v1 supported)."""
     if not isinstance(value, int) or isinstance(value, bool) or value != 1:
@@ -449,6 +459,7 @@ class CanonicalCountryContract:
 
     Fields are policy declarations (mandate Law 7 — Explicit Over Clever).
     `extra_synonyms` is a caller-supplied, replayable alias map (Law 8a).
+    `output_format` declares the canonical output form (alpha2, alpha3, or numeric).
     """
 
     allow_alpha3: bool = attrs.field(default=True, validator=_validate_bool)
@@ -469,6 +480,9 @@ class CanonicalCountryContract:
         # is not hashable, but it stays in __eq__ so two contracts with
         # different synonym maps remain distinct (mandate Law 5 equality).
         hash=False,
+    )
+    output_format: Literal["alpha2", "alpha3", "numeric"] = attrs.field(
+        default="alpha2", validator=_validate_output_format
     )
     kind: str = attrs.field(
         default="canonical_country",
@@ -491,6 +505,7 @@ class CanonicalCountryContract:
                 "localized_names": self.localized_names,
                 "historical_names": self.historical_names,
                 "extra_synonyms": dict(self.extra_synonyms),
+                "output_format": self.output_format,
                 "version": self.version,
                 "version_field": self.version_field,
             }
@@ -506,6 +521,7 @@ def Country(
     localized_names: bool = False,
     historical_names: bool = False,
     extra_synonyms: Mapping[str, str] | None = None,
+    output_format: Literal["alpha2", "alpha3", "numeric"] = "alpha2",
     authority_override: Any | None = None,
 ) -> CanonicalCountryContract:
     """Domain-type sugar: declare a country contract in user vocabulary.
@@ -521,13 +537,16 @@ def Country(
             Default False (keeps default surface stable).
         extra_synonyms: caller-supplied {alias: alpha2} map (replayable,
             Law 8a). Default None (empty).
+        output_format: the canonical output form. Default "alpha2".
+            Supported: "alpha2", "alpha3", "numeric".
 
     Returns:
         A frozen CanonicalCountryContract instance.
 
     Raises:
-        ContractError: if a flag argument is not a bool, or if an
-            `extra_synonyms` target is not a valid alpha-2 code.
+        ContractError: if a flag argument is not a bool, if an
+            `extra_synonyms` target is not a valid alpha-2 code, or if
+            `output_format` is not one of the supported formats.
     """
     return CanonicalCountryContract(
         allow_alpha3=_require_bool("allow_alpha3", allow_alpha3),
@@ -537,6 +556,7 @@ def Country(
         localized_names=_require_bool("localized_names", localized_names),
         historical_names=_require_bool("historical_names", historical_names),
         extra_synonyms=dict(extra_synonyms) if extra_synonyms is not None else {},
+        output_format=output_format,
         authority_override=authority_override,
     )
 
@@ -565,6 +585,12 @@ def _build_country(spec: dict[str, Any]) -> CanonicalCountryContract:
     extra = spec.get("extra_synonyms", {})
     if not isinstance(extra, dict):
         raise ContractError("extra_synonyms must be a dict")
+    output_format = spec.get("output_format", "alpha2")
+    _SUPPORTED_OUTPUT_FORMATS = frozenset({"alpha2", "alpha3", "numeric"})
+    if not isinstance(output_format, str) or output_format not in _SUPPORTED_OUTPUT_FORMATS:
+        supported = sorted(_SUPPORTED_OUTPUT_FORMATS)
+        raise ContractError(f"output_format must be one of {supported}, got {output_format!r}")
+    output_format = cast(Literal["alpha2", "alpha3", "numeric"], output_format)
     return CanonicalCountryContract(
         allow_alpha3=_require_bool("allow_alpha3", spec.get("allow_alpha3", True)),
         allow_name=_require_bool("allow_name", spec.get("allow_name", True)),
@@ -573,6 +599,7 @@ def _build_country(spec: dict[str, Any]) -> CanonicalCountryContract:
         localized_names=_require_bool("localized_names", spec.get("localized_names", False)),
         historical_names=_require_bool("historical_names", spec.get("historical_names", False)),
         extra_synonyms=dict(extra),
+        output_format=output_format,
         authority_override=_authority_override_from_spec(spec),
     )
 

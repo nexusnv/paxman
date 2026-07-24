@@ -25,6 +25,17 @@ from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 
 _UUID_VERSIONS_ALLOWED = frozenset({"any", "1", "3", "4", "5", "7"})
+_UUID_OUTPUT_FORMATS_ALLOWED = frozenset({"hex"})
+
+
+def _validate_output_format_uuid(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported UUID formats."""
+    if not isinstance(value, str) or value not in _UUID_OUTPUT_FORMATS_ALLOWED:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_UUID_OUTPUT_FORMATS_ALLOWED)}, "
+            f"got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -51,6 +62,9 @@ class CanonicalUUIDContract:
     """
 
     version: Literal["any", "1", "3", "4", "5", "7"] = "any"
+    output_format: Literal["hex"] = attrs.field(
+        default="hex", validator=_validate_output_format_uuid
+    )
     kind: str = "canonical_uuid"
     version_field: int = 1
     authority_override: Any = authority_override_field()
@@ -67,6 +81,7 @@ class CanonicalUUIDContract:
             {
                 "kind": self.kind,
                 "version": self.version,
+                "output_format": self.output_format,
                 "version_field": self.version_field,
             }
         )
@@ -75,6 +90,7 @@ class CanonicalUUIDContract:
 def UUID(
     *,
     version: Literal["any", "1", "3", "4", "5", "7"] = "any",
+    output_format: Literal["hex"] = "hex",
     authority_override: Any | None = None,
 ) -> CanonicalUUIDContract:
     """Domain-type sugar: declare a UUID contract in user vocabulary.
@@ -82,7 +98,9 @@ def UUID(
     Returns a `CanonicalUUIDContract` value object; does NOT subclass it.
     Mirrors the `Email()` factory pattern.
     """
-    return CanonicalUUIDContract(version=version, authority_override=authority_override)
+    return CanonicalUUIDContract(
+        version=version, output_format=output_format, authority_override=authority_override
+    )
 
 
 def _build_uuid(spec: dict[str, Any]) -> CanonicalUUIDContract:
@@ -91,9 +109,16 @@ def _build_uuid(spec: dict[str, Any]) -> CanonicalUUIDContract:
         raise ContractError(
             f"invalid uuid version: {version!r}; allowed: {sorted(_UUID_VERSIONS_ALLOWED)}"
         )
+    output_format = spec.get("output_format", "hex")
+    if not isinstance(output_format, str) or output_format not in _UUID_OUTPUT_FORMATS_ALLOWED:
+        raise ContractError(
+            f"output_format must be one of {sorted(_UUID_OUTPUT_FORMATS_ALLOWED)}, "
+            f"got {output_format!r}"
+        )
     authority_override = _authority_override_from_spec(spec)
     return CanonicalUUIDContract(
         version=cast(Literal["any", "1", "3", "4", "5", "7"], version),
+        output_format=cast(Literal["hex"], output_format),
         authority_override=authority_override,
     )
 

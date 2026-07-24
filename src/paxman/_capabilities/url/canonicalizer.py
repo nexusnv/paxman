@@ -349,7 +349,9 @@ class URLCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalURLContract, accept_none=False)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"normalized"})
+
+    def _canonicalize(
         self, value: object, contract: object, engine: Engine | None = None
     ) -> CapabilityResult:
         r = reject_contract(contract, CanonicalURLContract, _evidence, "not_a_url_contract")

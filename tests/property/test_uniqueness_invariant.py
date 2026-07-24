@@ -15,6 +15,7 @@ from paxman._registry.capability_registry import CapabilityRegistry
 
 class _A:
     name = "A"
+    supported_output_formats: frozenset[str] = frozenset()
 
     def can_handle(self, contract: object, value: object) -> bool:
         return True
@@ -25,6 +26,7 @@ class _A:
 
 class _B:
     name = "B"
+    supported_output_formats: frozenset[str] = frozenset()
 
     def can_handle(self, contract: object, value: object) -> bool:
         return True

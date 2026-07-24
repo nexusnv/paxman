@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal, cast
 
 import attrs
 
@@ -11,6 +11,16 @@ from paxman._capabilities._shared.contract import (
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
+
+
+def _validate_output_format_url(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported formats."""
+    _SUPPORTED = frozenset({"normalized"})
+    if not isinstance(value, str) or value not in _SUPPORTED:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_SUPPORTED)}, got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -29,6 +39,9 @@ class CanonicalURLContract:
     kind: str = "canonical_url"
     version: int = 1
     version_field: int = 1  # required by the Contract Protocol (mirrors CanonicalPhoneContract)
+    output_format: Literal["normalized"] = attrs.field(
+        default="normalized", validator=_validate_output_format_url
+    )
 
     authority_override: Any = authority_override_field()
 
@@ -41,6 +54,7 @@ class CanonicalURLContract:
                 "strip_fragment": self.strip_fragment,
                 "sort_query": self.sort_query,
                 "whatwg": self.whatwg,
+                "output_format": self.output_format,
                 "version": self.version,
                 "version_field": self.version_field,
             }
@@ -54,6 +68,7 @@ def URL(
     strip_fragment: bool = True,
     sort_query: bool = False,
     whatwg: bool = False,
+    output_format: Literal["normalized"] = "normalized",
     authority_override: Any | None = None,
 ) -> CanonicalURLContract:
     """Domain-type sugar for declaring a URL contract (mirrors Phone()/Date())."""
@@ -63,6 +78,7 @@ def URL(
         strip_fragment=strip_fragment,
         sort_query=sort_query,
         whatwg=whatwg,
+        output_format=output_format,
         authority_override=authority_override,
     )
 
@@ -101,12 +117,14 @@ def _build_url(spec: dict[str, object]) -> CanonicalURLContract:
             raise ContractError(f"canonical_url: '{key}' must be a bool")
         return bool(v)
 
+    output_format = cast(Literal["normalized"], spec.get("output_format", "normalized"))
     return CanonicalURLContract(
         scheme_allow=allow,
         strip_userinfo=_bool("strip_userinfo", False),
         strip_fragment=_bool("strip_fragment", True),
         sort_query=_bool("sort_query", False),
         whatwg=_bool("whatwg", False),
+        output_format=output_format,
         version=version,
         version_field=version_field,
         authority_override=_authority_override_from_spec(spec),

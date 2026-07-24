@@ -196,9 +196,11 @@ class UUIDCapability(CapabilityBase):
 
     name: str = "uuid_canonicalization"
 
+    supported_output_formats: frozenset[str] = frozenset({"hex"})
+
     can_handle: CanHandle = make_can_handle(CanonicalUUIDContract, accept_none=False)
 
-    def canonicalize(
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         # Defensive type-check (mirrors email's pattern).

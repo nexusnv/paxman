@@ -7,7 +7,7 @@ form is, never *how* it is produced.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal, cast
 
 import attrs
 
@@ -18,6 +18,18 @@ from paxman._capabilities._shared.contract import (
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
+
+_SUPPORTED_IP_OUTPUT_FORMATS = frozenset({"normalized"})
+
+
+def _validate_output_format_ip(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported formats."""
+    if not isinstance(value, str) or value not in _SUPPORTED_IP_OUTPUT_FORMATS:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_SUPPORTED_IP_OUTPUT_FORMATS)},"
+            f" got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -32,6 +44,9 @@ class CanonicalIPContract:
     allow_ipv4: bool = True
     allow_ipv6: bool = True
     preserve_zone_id: bool = True
+    output_format: Literal["normalized"] = attrs.field(
+        default="normalized", validator=_validate_output_format_ip
+    )
     kind: str = "canonical_ip"
     version: int = 1
     version_field: int = 1
@@ -46,6 +61,7 @@ class CanonicalIPContract:
                 "allow_ipv4": self.allow_ipv4,
                 "allow_ipv6": self.allow_ipv6,
                 "preserve_zone_id": self.preserve_zone_id,
+                "output_format": self.output_format,
                 "version": self.version,
                 "version_field": self.version_field,
             }
@@ -57,6 +73,7 @@ def IP(
     allow_ipv4: bool = True,
     allow_ipv6: bool = True,
     preserve_zone_id: bool = True,
+    output_format: Literal["normalized"] = "normalized",
     authority_override: Any | None = None,
 ) -> CanonicalIPContract:
     """Domain-type sugar: declare an IP contract in user vocabulary.
@@ -66,6 +83,8 @@ def IP(
         allow_ipv6: accept IPv6 inputs. Default True.
         preserve_zone_id: keep the `%zone` scope identifier on link-local
             addresses (RFC 4007), lowercased. Default True.
+        output_format: the canonical output form. Default "normalized".
+            Supported: "normalized".
 
     Returns:
         A frozen CanonicalIPContract instance.
@@ -74,6 +93,7 @@ def IP(
         allow_ipv4=allow_ipv4,
         allow_ipv6=allow_ipv6,
         preserve_zone_id=preserve_zone_id,
+        output_format=output_format,
         authority_override=authority_override,
     )
 
@@ -99,10 +119,18 @@ def _require_v1(field: str, value: object) -> int:
 def _build_ip(spec: dict[str, Any]) -> CanonicalIPContract:
     _require_v1("version", spec.get("version", 1))
     _require_v1("version_field", spec.get("version_field", 1))
+    output_format = spec.get("output_format", "normalized")
+    if not isinstance(output_format, str) or output_format not in _SUPPORTED_IP_OUTPUT_FORMATS:
+        raise ContractError(
+            f"output_format must be one of {sorted(_SUPPORTED_IP_OUTPUT_FORMATS)},"
+            f" got {output_format!r}"
+        )
+    output_format = cast(Literal["normalized"], output_format)
     return CanonicalIPContract(
         allow_ipv4=_require_bool("allow_ipv4", spec.get("allow_ipv4", True)),
         allow_ipv6=_require_bool("allow_ipv6", spec.get("allow_ipv6", True)),
         preserve_zone_id=_require_bool("preserve_zone_id", spec.get("preserve_zone_id", True)),
+        output_format=output_format,
         authority_override=_authority_override_from_spec(spec),
     )
 

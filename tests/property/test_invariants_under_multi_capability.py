@@ -90,6 +90,8 @@ def test_no_two_builtins_claim_the_same_pair() -> None:
 class _Claimant:
     """A capability that claims every (contract, value) pair."""
 
+    supported_output_formats: frozenset[str] = frozenset()
+
     def __init__(self, name: str) -> None:
         self.name = name
 

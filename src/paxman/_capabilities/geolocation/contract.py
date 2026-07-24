@@ -11,7 +11,7 @@ declares the policy; the capability applies it (Law 7 — Explicit Over Clever).
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal, cast
 
 import attrs
 
@@ -87,6 +87,16 @@ def _validate_v1(inst: object, attr: object, value: object) -> None:
         raise ContractError(f"contract field {name!r} must be int 1, got {value!r}")
 
 
+def _validate_output_format_geolocation(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported formats."""
+    _SUPPORTED = frozenset({"decimal"})
+    if not isinstance(value, str) or value not in _SUPPORTED:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_SUPPORTED)}, got {value!r}"
+        )
+
+
 @attrs.frozen
 class CanonicalGeolocationContract:
     """The geolocation contract.
@@ -104,8 +114,8 @@ class CanonicalGeolocationContract:
         default="lat_lon", validator=_make_str_in_validator(_COORDINATE_ORDERS)
     )
     require_hemisphere: bool = attrs.field(default=True, validator=_validate_bool)
-    output_format: str = attrs.field(
-        default="decimal", validator=_make_str_in_validator(_OUTPUT_FORMATS)
+    output_format: Literal["decimal"] = attrs.field(
+        default="decimal", validator=_validate_output_format_geolocation
     )
     precision: int = attrs.field(default=6, validator=_validate_precision)
     kind: str = attrs.field(
@@ -138,7 +148,7 @@ def Geolocation(
     datum: str = "WGS84",
     coordinate_order: str = "lat_lon",
     require_hemisphere: bool = True,
-    output_format: str = "decimal",
+    output_format: Literal["decimal"] = "decimal",
     precision: int = 6,
     authority_override: Any | None = None,
 ) -> CanonicalGeolocationContract:
@@ -169,11 +179,15 @@ def Geolocation(
             a recognized value, or if `precision` is not an int in 0..12, or if a
             flag argument is not a bool.
     """
+    output_format = cast(
+        Literal["decimal"],
+        _require_str_in("output_format", output_format, _OUTPUT_FORMATS),
+    )
     return CanonicalGeolocationContract(
         datum=_require_str_in("datum", datum, _DATUMS),
         coordinate_order=_require_str_in("coordinate_order", coordinate_order, _COORDINATE_ORDERS),
         require_hemisphere=_require_bool("require_hemisphere", require_hemisphere),
-        output_format=_require_str_in("output_format", output_format, _OUTPUT_FORMATS),
+        output_format=output_format,
         precision=_require_precision("precision", precision),
         authority_override=authority_override,
     )
@@ -223,6 +237,10 @@ def _require_v1(field: str, value: object) -> int:
 def _build_geolocation(spec: dict[str, Any]) -> CanonicalGeolocationContract:
     _require_v1("version", spec.get("version", 1))
     _require_v1("version_field", spec.get("version_field", 1))
+    output_format = cast(
+        Literal["decimal"],
+        _require_str_in("output_format", spec.get("output_format", "decimal"), _OUTPUT_FORMATS),
+    )
     return CanonicalGeolocationContract(
         datum=_require_str_in("datum", spec.get("datum", "WGS84"), _DATUMS),
         coordinate_order=_require_str_in(
@@ -231,9 +249,7 @@ def _build_geolocation(spec: dict[str, Any]) -> CanonicalGeolocationContract:
         require_hemisphere=_require_bool(
             "require_hemisphere", spec.get("require_hemisphere", True)
         ),
-        output_format=_require_str_in(
-            "output_format", spec.get("output_format", "decimal"), _OUTPUT_FORMATS
-        ),
+        output_format=output_format,
         precision=_require_precision("precision", spec.get("precision", 6)),
         authority_override=_authority_override_from_spec(spec),
     )

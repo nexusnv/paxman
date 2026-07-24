@@ -6,7 +6,7 @@ form is (which country code to apply), never *how* it is produced.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal, cast
 
 import attrs
 
@@ -17,6 +17,16 @@ from paxman._capabilities._shared.contract import (
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
+
+
+def _validate_output_format_phone(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported formats."""
+    _SUPPORTED = frozenset({"e164"})
+    if not isinstance(value, str) or value not in _SUPPORTED:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_SUPPORTED)}, got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -32,6 +42,10 @@ class CanonicalPhoneContract:
     kind: str = "canonical_phone"
     version: int = 1
     version_field: int = 1
+
+    output_format: Literal["e164"] = attrs.field(
+        default="e164", validator=_validate_output_format_phone
+    )
 
     authority_override: Any = authority_override_field()
 
@@ -49,12 +63,18 @@ class CanonicalPhoneContract:
             {
                 "kind": self.kind,
                 "country": self.country,
+                "output_format": self.output_format,
                 "version": self.version,
             }
         )
 
 
-def Phone(*, country: str = "US", authority_override: Any | None = None) -> CanonicalPhoneContract:
+def Phone(
+    *,
+    country: str = "US",
+    output_format: Literal["e164"] = "e164",
+    authority_override: Any | None = None,
+) -> CanonicalPhoneContract:
     """Domain-type sugar: declare a phone contract in user vocabulary.
 
     MANDATE §4: the contract is the user's language; the capability is
@@ -67,11 +87,16 @@ def Phone(*, country: str = "US", authority_override: Any | None = None) -> Cano
         country: ISO 3166-1 alpha-2 country code used to expand national
             numbers into E.164. Declared policy; never inferred (Law 7).
             Default "US".
+        output_format: the canonical output form. Default "e164".
 
     Returns:
         A frozen CanonicalPhoneContract instance.
     """
-    return CanonicalPhoneContract(country=country, authority_override=authority_override)
+    return CanonicalPhoneContract(
+        country=country,
+        output_format=output_format,
+        authority_override=authority_override,
+    )
 
 
 def _build_phone(spec: dict[str, Any]) -> CanonicalPhoneContract:
@@ -83,8 +108,18 @@ def _build_phone(spec: dict[str, Any]) -> CanonicalPhoneContract:
     from paxman._capabilities.phone.parser import _cc_for_country
 
     _cc_for_country(country)  # raises ContractError if unknown
+    output_format = spec.get("output_format", "e164")
+    _SUPPORTED_OUTPUT_FORMATS = frozenset({"e164"})
+    if not isinstance(output_format, str) or output_format not in _SUPPORTED_OUTPUT_FORMATS:
+        supported = sorted(_SUPPORTED_OUTPUT_FORMATS)
+        raise ContractError(f"output_format must be one of {supported}, got {output_format!r}")
     authority_override = _authority_override_from_spec(spec)
-    return CanonicalPhoneContract(country=country, authority_override=authority_override)
+    output_format = cast(Literal["e164"], output_format)
+    return CanonicalPhoneContract(
+        country=country,
+        output_format=output_format,
+        authority_override=authority_override,
+    )
 
 
 register_contract("canonical_phone", _build_phone)

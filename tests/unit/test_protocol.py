@@ -13,6 +13,7 @@ from paxman._core.status import Status
 
 class _Good:
     name: str = "good"
+    supported_output_formats: frozenset[str] = frozenset()
 
     def can_handle(self, contract: Contract, value: object) -> bool:
         return isinstance(contract, CanonicalEmailContract) and isinstance(value, str)

@@ -65,6 +65,6 @@ def test_recognize_none_returns_empty() -> None:
     assert recognize("", Country()) == []
 
 
-def test_grammars_carry_source() -> None:
+def test_grammars_carry_provenance() -> None:
     for g in GRAMMARS:
-        assert g.source
+        assert g.provenance.name

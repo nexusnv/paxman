@@ -1,22 +1,15 @@
 """Tests for the date grammar recognition layer (Layer 1).
 
-These tests pin the bracket-notation grammars: each grammar must match its
-intended inputs and yield the correct RAW string captures (no semantic
-meaning is assigned at this layer), and unrecognised inputs must yield ``[]``.
+These tests pin the grammar rules: each grammar must match its intended
+inputs and yield the correct RAW string captures (no semantic meaning is
+assigned at this layer), and unrecognised inputs must yield ``[]``.
 """
 
 from __future__ import annotations
 
-import pytest
-
+from paxman._capabilities._shared.grammar import Grammar, Provenance, RecognizedRep
 from paxman._capabilities.date.contract import CanonicalDateContract
-from paxman._capabilities.date.grammar import (
-    GRAMMARS,
-    Grammar,
-    RecognizedRep,
-    compile_grammar,
-    recognize,
-)
+from paxman._capabilities.date.grammar import GRAMMARS, recognize
 
 
 def _contract(language: str = "en", locale: str = "ISO") -> CanonicalDateContract:
@@ -39,10 +32,8 @@ class TestGrammarCatalogue:
         for grammar in GRAMMARS:
             assert isinstance(grammar, Grammar)
             assert grammar.id
-            assert grammar.source
-            assert grammar.pattern
-            assert grammar.compiled is not None
-            assert grammar.field_roles
+            assert isinstance(grammar.provenance, Provenance)
+            assert grammar.provenance.name
 
     def test_grammar_ids_are_unique(self) -> None:
         ids = [g.id for g in GRAMMARS]
@@ -51,12 +42,11 @@ class TestGrammarCatalogue:
     def test_numeric_slash_carries_numeric_triple_shape(self) -> None:
         grammar = next(g for g in GRAMMARS if g.id == "numeric_slash")
         assert grammar.shape == "numeric_triple"
-        assert grammar.field_roles == {"N1": "n1", "N2": "n2", "N3": "n3"}
 
-    def test_every_grammar_records_provenance_source(self) -> None:
-        # Law 14: every grammar carries a non-empty source.
+    def test_every_grammar_records_provenance(self) -> None:
+        # Law 14: every grammar carries a non-empty provenance.
         for grammar in GRAMMARS:
-            assert grammar.source
+            assert grammar.provenance.name
 
 
 class TestIsoDateGrammar:
@@ -64,7 +54,7 @@ class TestIsoDateGrammar:
         reps = recognize("2026-07-16", _contract())
         rep = _rep_by_id(reps, "iso_date")
         assert rep is not None
-        assert rep.source == "ISO 8601"
+        assert rep.provenance.name == "ISO 8601"
         assert rep.captures == {"year": "2026", "month": "07", "day": "16"}
 
 
@@ -101,6 +91,10 @@ class TestTextMonthGrammars:
         assert rep is not None
         assert rep.captures["year"] == "26"
 
+    def test_case_insensitive_month_names(self) -> None:
+        reps = recognize("16 JULY 2026", _contract())
+        assert _rep_by_id(reps, "text_month_dmy") is not None
+
 
 class TestNumericSlashGrammar:
     def test_numeric_slash_yields_n1_n2_n3(self) -> None:
@@ -124,7 +118,7 @@ class TestRfc2822Grammar:
         assert len(reps) == 1
         rep = reps[0]
         assert rep.grammar_id == "rfc2822_date"
-        assert rep.source == "RFC 2822 §3.3"
+        assert rep.provenance.name == "RFC 2822 §3.3"
         assert rep.captures == {
             "weekday": "Thursday",
             "day": "16",
@@ -145,7 +139,8 @@ class TestOrdinalGrammar:
         reps = recognize("Thursday, the 3rd of July, 2026", _contract())
         rep = _rep_by_id(reps, "ordinal_of_month")
         assert rep is not None
-        assert rep.source == "paxman spec/date (ordinal day form, natural language)"
+        assert rep.provenance.name == "paxman spec/date"
+        assert rep.provenance.version == "ordinal day form, natural language"
         assert rep.captures == {
             "weekday": "Thursday",
             "ordinal": "3rd",
@@ -193,27 +188,12 @@ class TestUnrecognized:
         assert recognize("", _contract()) == []
 
 
-class TestCompileGrammar:
-    def test_unsupported_language_raises(self) -> None:
-        with pytest.raises(ValueError):
-            compile_grammar("[DAY] [MONTH(lang)] [YEAR]", "fr")
-
-    def test_compiled_regex_fullmatches_intended_input(self) -> None:
-        rx = compile_grammar("[DAY] [MONTH(lang)] [YEAR]", "en")
-        assert rx.fullmatch("16 July 2026") is not None
-        assert rx.fullmatch("16-Jul-2026") is None
-
-    def test_case_insensitive_month_names(self) -> None:
-        reps = recognize("16 JULY 2026", _contract())
-        assert _rep_by_id(reps, "text_month_dmy") is not None
-
-
 class TestTextMonthMdyCommaGrammar:
     def test_matches_and_yields_raw_captures(self) -> None:
         reps = recognize("July 16, 2026", _contract())
         rep = _rep_by_id(reps, "text_month_mdy_comma")
         assert rep is not None
-        assert rep.source == "CLDR month names"
+        assert rep.provenance.name == "CLDR month names"
         assert rep.captures == {"month": "July", "day": "16", "year": "2026"}
 
     def test_does_not_match_day_month_order(self) -> None:
@@ -227,7 +207,8 @@ class TestOrdinalOfMonthNoWkdayGrammar:
         reps = recognize("the 3rd of July, 2026", _contract())
         rep = _rep_by_id(reps, "ordinal_of_month_nowkday")
         assert rep is not None
-        assert rep.source == "paxman spec/date (ordinal day form, natural language)"
+        assert rep.provenance.name == "paxman spec/date"
+        assert rep.provenance.version == "ordinal day form, natural language"
         assert rep.captures == {"ordinal": "3rd", "month": "July", "year": "2026"}
 
     def test_does_not_match_without_leading_the(self) -> None:
@@ -241,7 +222,7 @@ class TestTextMonthDmyOrdGrammar:
         reps = recognize("16th July 2026", _contract())
         rep = _rep_by_id(reps, "text_month_dmy_ord")
         assert rep is not None
-        assert rep.source == "CLDR month names"
+        assert rep.provenance.name == "CLDR month names"
         assert rep.captures == {"ordinal": "16th", "month": "July", "year": "2026"}
 
     def test_does_not_match_bare_day(self) -> None:
@@ -255,7 +236,8 @@ class TestNumericSlashYmdGrammar:
         reps = recognize("2026/07/16", _contract())
         rep = _rep_by_id(reps, "numeric_slash_ymd")
         assert rep is not None
-        assert rep.source == "ISO 8601 (slash ordering)"
+        assert rep.provenance.name == "ISO 8601"
+        assert rep.provenance.version == "slash ordering"
         assert rep.captures == {"year": "2026", "month": "07", "day": "16"}
 
     def test_does_not_match_two_digit_leading_group(self) -> None:
@@ -272,7 +254,7 @@ class TestTextMonthDmyEraGrammar:
         reps = recognize("16 July 2026 AD", _contract())
         rep = _rep_by_id(reps, "text_month_dmy_era")
         assert rep is not None
-        assert rep.source == "CLDR month names"
+        assert rep.provenance.name == "CLDR month names"
         assert rep.captures == {"day": "16", "month": "July", "year": "2026"}
 
     def test_does_not_match_without_era_suffix(self) -> None:
@@ -287,7 +269,7 @@ class TestTextMonthMdyOrdGrammar:
         reps = recognize("July 16th, 2026", _contract())
         rep = _rep_by_id(reps, "text_month_mdy_ord")
         assert rep is not None
-        assert rep.source == "CLDR month names"
+        assert rep.provenance.name == "CLDR month names"
         assert rep.captures == {"month": "July", "ordinal": "16th", "year": "2026"}
 
     def test_does_not_match_bare_day(self) -> None:
@@ -301,7 +283,7 @@ class TestTextMonthDmyMixedsepGrammar:
         reps = recognize("16-Jul 2026", _contract())
         rep = _rep_by_id(reps, "text_month_dmy_mixedsep")
         assert rep is not None
-        assert rep.source == "CLDR month names"
+        assert rep.provenance.name == "CLDR month names"
         assert rep.captures == {"day": "16", "month": "Jul", "year": "2026"}
 
     def test_does_not_match_space_separator(self) -> None:
@@ -315,7 +297,7 @@ class TestTextMonthMdySlashGrammar:
         reps = recognize("July/16 2026", _contract())
         rep = _rep_by_id(reps, "text_month_mdy_slash")
         assert rep is not None
-        assert rep.source == "CLDR month names"
+        assert rep.provenance.name == "CLDR month names"
         assert rep.captures == {"month": "July", "day": "16", "year": "2026"}
 
     def test_does_not_match_dash_separator(self) -> None:

@@ -26,9 +26,11 @@ from paxman._capabilities._shared.base import (
     reject_contract,
     reject_non_string,
 )
+from paxman._capabilities._shared.grammar import RecognizedRep
 from paxman._capabilities.date.calendar import _valid_calendar_date
 from paxman._capabilities.date.contract import CanonicalDateContract
-from paxman._capabilities.date.grammar import _ORDINAL_WORDS, RecognizedRep, recognize
+from paxman._capabilities.date.grammar import recognize
+from paxman._capabilities.date.grammar.text import _ORDINAL_WORDS
 from paxman._capabilities.date.i18n import MONTH_NAMES, WEEKDAY_NAMES
 from paxman._capabilities.date.parser import (
     _COMPACT_DATE_RE,

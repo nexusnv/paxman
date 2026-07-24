@@ -104,6 +104,8 @@ reviews:
         (a capability must not read the wall clock, the timezone DB, or perform any calendar math),
         no network calls, no filesystem reads, no environment lookups inside
         `src/paxman/_capabilities/`. Pure functions of `(value, contract)` only. Flag any of these.
+        Exception: `src/paxman/_capabilities/date/` may use `datetime` for calendar math on
+        already-parsed integers (reading the wall clock is still forbidden).
 
         2. Vocabulary (mandate §6.3): the words `heuristic`, `confidence`, `best match`,
         `probably`, and `approximate` are RETIRED. Their adopted replacements are `resolver`,
@@ -175,7 +177,7 @@ reviews:
 
         4. Replay tests must verify byte-equality of the rehydrated artifact to the original
         (`assert rehydrated == artifact` AND
-        `assert rehydrated.canonical_bytes() == art.canonical_bytes()`). Flag any replay test that
+        `assert rehydrated.canonical_bytes() == artifact.canonical_bytes()`). Flag any replay test that
         checks only a subset of fields.
 
         5. No vendored test data. v2 has no `tests/fixtures/`, no PII, no third-party corpora. If a
@@ -295,9 +297,11 @@ reviews:
 
         6. Each domain package follows the same internal shape: `contract.py` (the `Canonical*Contract`
         value object, with a `kind` string like `canonical_email` / `canonical_url`), `parser.py`,
-        `rules.py`, `grammar.py`, and `canonicalizer.py` (the `canonicalize` logic). Mirror this
-        layout for new domains. The `money` and `date` capabilities are intentional escapes from the
-        shared grammar seam — see `CODING_GUIDELINES.md` §10 for why.
+        `rules.py`, a grammar seam (`grammar.py`, or a `grammar/` package when a domain needs a
+        multi-module catalogue as `date/` does), and `canonicalizer.py` (the `canonicalize` logic).
+        Mirror this layout for new domains. Grammar recognition returns structured provenance and is
+        filtered by the contract's grammar include/exclude policy. The `money` capability is an
+        intentional escape from the shared grammar seam — see `CODING_GUIDELINES.md` §10 for why.
     - path: src/paxman/_dsl/parser.py
       instructions: >-
         When reviewing the DSL parser:

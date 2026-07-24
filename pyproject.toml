@@ -180,53 +180,65 @@ root_package = "paxman"
 id = "pipeline-no-concrete-capabilities"
 name = "Pipeline must not import concrete domain canonicalizers"
 type = "forbidden"
+allow_indirect_imports = true
 source_modules = [
     "paxman._core.engine",
     "paxman._core.replay",
 ]
 forbidden_modules = [
-    "paxman._capabilities.email.canonicalizer",
-    "paxman._capabilities.date.canonicalizer",
-    "paxman._capabilities.uuid.canonicalizer",
-    "paxman._capabilities.phone.canonicalizer",
-    "paxman._capabilities.url.canonicalizer",
-    "paxman._capabilities.boolean.canonicalizer",
-    "paxman._capabilities.ip.canonicalizer",
-    "paxman._capabilities.money.canonicalizer",
-    "paxman._capabilities.geolocation.canonicalizer",
-    "paxman._capabilities.country.canonicalizer",
+    "paxman._capabilities.*.canonicalizer",
 ]
-allow_indirect_imports = true
 
 [[tool.importlinter.contracts]]
 id = "capabilities-no-sibling-domains"
-name = "Capability domain packages must not directly import sibling domains"
+name = "Capability domain packages must not import sibling domains"
 type = "forbidden"
+allow_indirect_imports = true
 source_modules = [
-    "paxman._capabilities.email",
-    "paxman._capabilities.date",
-    "paxman._capabilities.uuid",
-    "paxman._capabilities.phone",
-    "paxman._capabilities.url",
     "paxman._capabilities.boolean",
+    "paxman._capabilities.country",
+    "paxman._capabilities.date",
+    "paxman._capabilities.email",
+    "paxman._capabilities.geolocation",
     "paxman._capabilities.ip",
     "paxman._capabilities.money",
-    "paxman._capabilities.geolocation",
-    "paxman._capabilities.country",
+    "paxman._capabilities.phone",
+    "paxman._capabilities.url",
+    "paxman._capabilities.uuid",
 ]
 forbidden_modules = [
-    "paxman._capabilities.email",
-    "paxman._capabilities.date",
-    "paxman._capabilities.uuid",
-    "paxman._capabilities.phone",
-    "paxman._capabilities.url",
     "paxman._capabilities.boolean",
+    "paxman._capabilities.country",
+    "paxman._capabilities.date",
+    "paxman._capabilities.email",
+    "paxman._capabilities.geolocation",
     "paxman._capabilities.ip",
     "paxman._capabilities.money",
-    "paxman._capabilities.geolocation",
-    "paxman._capabilities.country",
+    "paxman._capabilities.phone",
+    "paxman._capabilities.url",
+    "paxman._capabilities.uuid",
 ]
-allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+id = "capabilities-no-dsl"
+name = "Capability domain packages must not import _dsl"
+type = "forbidden"
+allow_indirect_imports = false
+source_modules = [
+    "paxman._capabilities.boolean",
+    "paxman._capabilities.country",
+    "paxman._capabilities.date",
+    "paxman._capabilities.email",
+    "paxman._capabilities.geolocation",
+    "paxman._capabilities.ip",
+    "paxman._capabilities.money",
+    "paxman._capabilities.phone",
+    "paxman._capabilities.url",
+    "paxman._capabilities.uuid",
+]
+forbidden_modules = [
+    "paxman._dsl",
+]
 
 
 [[tool.importlinter.contracts]]

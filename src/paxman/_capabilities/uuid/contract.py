@@ -45,17 +45,19 @@ class CanonicalUUIDContract:
     Mandate alignment:
     - Law 5: the contract declares the policy (which UUID versions to
       accept); the capability applies it.
-    - Law 7: explicit over clever. `version` is the only policy lever;
-      an unknown version raises `ContractError` at construction (see
-      `__attrs_post_init__`), never a silent `INVALID`.
+    - Law 7: explicit over clever. `version`, `include_grammar`, and
+      `exclude_grammar` are the policy levers; an unknown version raises
+      `ContractError` at construction (see `__attrs_post_init__`), never
+      a silent `INVALID`.
     - Law 13: the contract is `@attrs.frozen` — immutable by mandate.
     - Law 14: every capability rule that fires cites a source via
       `_RULE_AUTHORITIES`; `Evidence.authority` is populated from it.
 
     The canonical form is the RFC 4122 §3 representation: 32 lowercase
     hex characters in 8-4-4-4-12 grouping, total 36 characters. The
-    `version` field is the only policy lever; a contract that says
-    `version="4"` rejects v1, v3, v5, and v7 inputs with `Status.INVALID`.
+    `version`, `include_grammar`, and `exclude_grammar` fields control
+    recognition policy; a contract that says `version="4"` rejects
+    v1, v3, v5, and v7 inputs with `Status.INVALID`.
     When `version="any"` (the default) only the *form* is validated —
     the variant nibble is intentionally not constrained (per the
     documented `version="any"` form-only contract).

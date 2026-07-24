@@ -40,9 +40,9 @@ packages = ["src/paxman"]
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
-    "pytest-cov>=6.0.0",
     "hypothesis>=6.161.1",
-    "ruff>=0.15.21",
+    "pytest-cov>=7.1.0",
+    "ruff>=0.16.0",
     "mypy>=2.3.0",
     "interrogate>=1.7.0",
     "nbformat>=5.10.4",
@@ -55,7 +55,7 @@ dev = [
 playground = [
     # Notebook smoke tests (playground/): execute .ipynb top-to-bottom in CI.
     "jupyter>=1.1.1",
-    "nbconvert>=7.16.0",
+    "nbconvert>=7.17.1",
 ]
 
 # ---------------------------------------------------------------------------

@@ -1,5 +1,8 @@
 """Tests for the shared Provenance value object."""
 
+import attrs
+import pytest
+
 from paxman._capabilities._shared.grammar.provenance import Provenance
 
 
@@ -21,11 +24,8 @@ def test_provenance_full():
 
 def test_provenance_is_frozen():
     p = Provenance(name="test")
-    try:
+    with pytest.raises(attrs.exceptions.FrozenInstanceError):
         p.name = "other"
-        assert False, "should be frozen"
-    except AttributeError:
-        pass
 
 
 def test_provenance_equality():
@@ -42,4 +42,11 @@ def test_provenance_inequality():
 
 def test_provenance_str_representation():
     p = Provenance(name="ISO 8601", version="2024")
-    assert "ISO 8601" in repr(p)
+    assert repr(p) == "Provenance(name='ISO 8601', version='2024', citation=None)"
+
+
+def test_provenance_hashability():
+    a = Provenance(name="ISO 8601", version="2024")
+    b = Provenance(name="ISO 8601", version="2024")
+    assert hash(a) == hash(b)
+    assert hash(a) == hash(a)

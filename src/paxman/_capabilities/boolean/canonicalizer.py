@@ -163,7 +163,9 @@ class BooleanCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalBooleanContract, accept_none=True)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"truefalse"})
+
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         """Canonicalize a boolean-shaped input into "true" or "false".

@@ -40,6 +40,16 @@ from paxman._core.provenance import Evidence
 from paxman._core.result import CapabilityResult
 from paxman._core.status import Status
 
+# Reverse mappings for output format conversion (alpha2 -> alpha3, alpha2 -> numeric).
+# Built once at import from the forward mappings; frozen for runtime immutability
+# (Law 1 + Law 2 — deterministic, replay-safe).
+_ALPHA2_TO_ALPHA3: Mapping[str, str] = MappingProxyType(
+    {v: k for k, v in _ALPHA3_TO_ALPHA2.items()}
+)
+_ALPHA2_TO_NUMERIC: Mapping[str, str] = MappingProxyType(
+    {v: k for k, v in _NUMERIC_TO_ALPHA2.items()}
+)
+
 # Case-folded index over the CLDR localized table. CLDR keys mix scripts and
 # cases (e.g. "États-Unis", "Deutschland", "Россия", "日本"); case folding makes
 # the Latin-script entries case-insensitive without disturbing non-Latin
@@ -166,6 +176,30 @@ def _mk(value: str, rule: str, engine: Engine | None = None) -> _Candidate:
     return _Candidate(value=value, rule=rule, evidence=(_evidence(rule, value, engine),))
 
 
+def _convert_output_format(
+    alpha2_code: str, output_format: str, engine: Engine | None = None
+) -> tuple[str, Evidence]:
+    """Convert an alpha-2 code to the requested output format.
+
+    Returns the converted value and an evidence entry documenting the
+    format conversion (or identity if already alpha2).
+    """
+    if output_format == "alpha2":
+        return alpha2_code, _evidence("canonicalized_country", alpha2_code, engine)
+    elif output_format == "alpha3":
+        alpha3 = _ALPHA2_TO_ALPHA3.get(alpha2_code)
+        if alpha3 is None:
+            raise ValueError(f"no alpha-3 mapping for {alpha2_code!r}")
+        return alpha3, _evidence("output_format_alpha3", alpha3, engine)
+    elif output_format == "numeric":
+        numeric = _ALPHA2_TO_NUMERIC.get(alpha2_code)
+        if numeric is None:
+            raise ValueError(f"no numeric mapping for {alpha2_code!r}")
+        return numeric, _evidence("output_format_numeric", numeric, engine)
+    else:
+        raise AssertionError(f"unsupported output_format: {output_format!r}")
+
+
 def resolve_and_validate(
     candidates: list[_Candidate], contract: CanonicalCountryContract
 ) -> tuple[list[_Survivor], list[str]]:
@@ -221,7 +255,9 @@ class CountryCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalCountryContract, accept_none=True)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"alpha2", "alpha3", "numeric"})
+
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
 
@@ -276,6 +312,40 @@ class CountryCapability(CapabilityBase):
         status, rendered, evidence, cands_out = classify(cands, survs, drops)
         if stripped_evidence:
             evidence = stripped_evidence + evidence
+
         return CapabilityResult(
             status=status, value=rendered, evidence=evidence, candidates=cands_out
         )
+
+    def _apply_output_format(
+        self, result: CapabilityResult, contract: Contract, engine: Engine | None = None
+    ) -> CapabilityResult:
+        """Convert CANONICALIZED values and AMBIGUOUS candidates to the requested format."""
+        # Non-formattable statuses pass through untouched — the contract may
+        # not even be the right type (e.g. INVALID from a wrong-contract call).
+        if result.status not in (Status.CANONICALIZED, Status.AMBIGUOUS):
+            return result
+        assert isinstance(contract, CanonicalCountryContract)
+        if result.status == Status.CANONICALIZED and result.value is not None:
+            converted, format_evidence = _convert_output_format(
+                result.value, contract.output_format, engine
+            )
+            return CapabilityResult(
+                status=result.status,
+                value=converted,
+                evidence=(*result.evidence, format_evidence),
+                candidates=result.candidates,
+            )
+        if result.status == Status.AMBIGUOUS and result.candidates is not None:
+            converted_candidates = []
+            for cand_alpha2 in result.candidates:
+                conv, _ = _convert_output_format(cand_alpha2, contract.output_format, engine)
+                converted_candidates.append(conv)
+            fmt_rule = "output_format_" + contract.output_format
+            return CapabilityResult(
+                status=result.status,
+                value=result.value,
+                evidence=(*result.evidence, _evidence(fmt_rule, engine=engine)),
+                candidates=tuple(converted_candidates),
+            )
+        return result

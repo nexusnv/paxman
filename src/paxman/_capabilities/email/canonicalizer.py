@@ -338,7 +338,9 @@ class EmailCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalEmailContract, accept_none=False)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"email"})
+
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         r = reject_contract(contract, CanonicalEmailContract, _evidence, "not_an_email_contract")

@@ -62,6 +62,9 @@ _RULE_AUTHORITIES: Mapping[str, Authority | None] = {
     "policy_disabled_kind": _KIND_GATING,
     "missing_value": _MISSING,
     "unrecognized_format": R.ISO_3166.section("input is not a recognized country token"),
+    # --- output format conversion ---
+    "output_format_alpha3": R.ISO_3166.section("alpha-3 output format conversion"),
+    "output_format_numeric": R.ISO_3166.section("numeric output format conversion"),
 }
 
 

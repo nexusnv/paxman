@@ -21,6 +21,7 @@ from paxman._registry.capability_registry import CapabilityRegistry
 
 class _AlwaysTrue:
     name: str = "A"
+    supported_output_formats: frozenset[str] = frozenset()
 
     def can_handle(self, contract: CanonicalEmailContract, value: object) -> bool:
         return True
@@ -31,6 +32,7 @@ class _AlwaysTrue:
 
 class _AlsoAlwaysTrue:
     name: str = "B"
+    supported_output_formats: frozenset[str] = frozenset()
 
     def can_handle(self, contract: CanonicalEmailContract, value: object) -> bool:
         return True
@@ -56,6 +58,7 @@ class TestRegister:
         # Now register a duplicate of "A"
         class _Dup:
             name: str = "A"
+            supported_output_formats: frozenset[str] = frozenset()
 
             def can_handle(self, contract: Any, value: Any) -> bool:
                 return True

@@ -185,7 +185,9 @@ class PhoneCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalPhoneContract, accept_none=False)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"e164"})
+
+    def _canonicalize(
         self, value: object, contract: object, engine: Engine | None = None
     ) -> CapabilityResult:
         r = reject_contract(contract, CanonicalPhoneContract, _evidence, "not_a_phone_contract")

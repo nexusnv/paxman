@@ -88,6 +88,7 @@ class TestLoadBuiltins:
         # user's same-name capability.
         class MyEmailCap:
             name = "email_canonicalization"
+            supported_output_formats: frozenset[str] = frozenset()
 
             def can_handle(self, contract: object, value: object) -> bool:
                 return False

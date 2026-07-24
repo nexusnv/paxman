@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import Any, Protocol, runtime_checkable
 
-from paxman._capabilities._shared.base import CanHandle
+from paxman._capabilities._shared.base import CanHandle, OutputFormats
 
 # Law 4 (capability boundaries): a capability transforms (contract,
 # value); it does not orchestrate. Law 8a (pure functions):
@@ -43,6 +43,12 @@ class Capability(Protocol):
     # (`can_handle: CanHandle = make_can_handle(...)`), so mypy's
     # conformance check sees two identical Callable shapes.
     can_handle: CanHandle
+
+    # The set of output formats this capability can produce (e.g.
+    # frozenset({"alpha2", "alpha3", "numeric"}) for country). Each
+    # capability declares its supported formats; the contract's
+    # `output_format` field must be one of these.
+    supported_output_formats: OutputFormats
 
     def canonicalize(
         self, value: Any, contract: Contract, engine: Engine | None = None

@@ -15,6 +15,7 @@ from __future__ import annotations
 import re
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
+from typing import Any
 
 import attrs
 
@@ -40,7 +41,10 @@ from paxman._capabilities.date.parser import (
     _is_epoch,
 )
 from paxman._capabilities.date.rules import _evidence
-from paxman._capabilities.date.value import _render_date, _render_datetime
+from paxman._capabilities.date.value import (
+    _render_date,
+    _render_datetime,
+)
 from paxman._core.contracts import Contract
 from paxman._core.engine_env import Engine
 from paxman._core.provenance import Evidence
@@ -549,9 +553,46 @@ class DateCapability(CapabilityBase):
 
     name: str = "date_canonicalization"
 
+    supported_output_formats: frozenset[str] = frozenset({"iso", "compact"})
+
     can_handle: CanHandle = make_can_handle(CanonicalDateContract, accept_none=False)
 
-    def canonicalize(
+    def _apply_output_format(
+        self, result: CapabilityResult, contract: Contract, engine: Any | None = None
+    ) -> CapabilityResult:
+        """Apply the contract's output_format to a canonicalized result.
+
+        Converts ISO format (``YYYY-MM-DD`` / ``YYYY-MM-DDTHH:MM:SSZ``) to
+        compact format (``YYYYMMDD`` / ``YYYYMMDDTHHMMSSZ``) when the contract
+        requests ``output_format="compact"``. Only applies to CANONICALIZED
+        results with a non-None value, or AMBIGUOUS results with candidates.
+        """
+        # Non-formattable statuses pass through untouched — the contract may
+        # not even be the right type (e.g. INVALID from a wrong-contract call).
+        if result.status not in (Status.CANONICALIZED, Status.AMBIGUOUS):
+            return result
+        assert isinstance(contract, CanonicalDateContract)
+        if contract.output_format == "iso":
+            return result
+        if result.status == Status.CANONICALIZED and result.value is not None:
+            compact_value = result.value.replace("-", "")
+            return CapabilityResult(
+                status=result.status,
+                value=compact_value,
+                evidence=(*result.evidence, _evidence("output_format_compact")),
+                candidates=result.candidates,
+            )
+        if result.status == Status.AMBIGUOUS and result.candidates is not None:
+            compact_candidates = tuple(c.replace("-", "") for c in result.candidates)
+            return CapabilityResult(
+                status=result.status,
+                value=result.value,
+                evidence=(*result.evidence, _evidence("output_format_compact")),
+                candidates=compact_candidates,
+            )
+        return result
+
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         """Canonicalize a date string according to the contract's locale policy.
@@ -789,9 +830,10 @@ class DateCapability(CapabilityBase):
         if candidates:
             survivors, drop_reasons = resolve_and_validate(candidates, contract)
             status, rendered, evidence, cands = classify(candidates, survivors, drop_reasons)
-            return CapabilityResult(
+            result = CapabilityResult(
                 status=status, value=rendered, evidence=evidence, candidates=cands
             )
+            return result
 
         return CapabilityResult(
             status=Status.INVALID,

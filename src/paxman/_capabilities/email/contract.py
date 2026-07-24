@@ -6,7 +6,7 @@ form is, never *how* it is produced.
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import attrs
 
@@ -18,6 +18,16 @@ from paxman._capabilities._shared.contract import (
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 from paxman._types.common import ProviderAliasesPolicy
+
+
+def _validate_output_format_email(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported formats."""
+    _SUPPORTED = frozenset({"email"})
+    if not isinstance(value, str) or value not in _SUPPORTED:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_SUPPORTED)}, got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -33,6 +43,9 @@ class CanonicalEmailContract:
     strip_whitespace: bool = True
     provider_aliases: ProviderAliasesPolicy = "none"
     strict: bool = False
+    output_format: Literal["email"] = attrs.field(
+        default="email", validator=_validate_output_format_email
+    )
     kind: str = "canonical_email"
     version: int = 1
     version_field: int = 1
@@ -56,6 +69,7 @@ class CanonicalEmailContract:
                 "strip_whitespace": self.strip_whitespace,
                 "provider_aliases": self.provider_aliases,
                 "strict": self.strict,
+                "output_format": self.output_format,
                 "version": self.version,
             }
         )
@@ -67,6 +81,7 @@ def Email(
     provider_aliases: ProviderAliasesPolicy = "none",
     lowercase: bool = True,
     strip_whitespace: bool = True,
+    output_format: Literal["email"] = "email",
     authority_override: Any | None = None,
 ) -> CanonicalEmailContract:
     """Domain-type sugar: declare an email contract in user vocabulary.
@@ -93,6 +108,8 @@ def Email(
         lowercase: lowercase the local part and the domain. Default True.
         strip_whitespace: strip leading/trailing ASCII whitespace.
             Default True.
+        output_format: the canonical output form. Default "email".
+            Supported: "email".
 
     Returns:
         A frozen CanonicalEmailContract instance.
@@ -102,6 +119,7 @@ def Email(
         strip_whitespace=strip_whitespace,
         provider_aliases=provider_aliases,
         strict=strict,
+        output_format=output_format,
         authority_override=authority_override,
     )
 
@@ -125,11 +143,14 @@ def _build_email(spec: dict[str, Any]) -> CanonicalEmailContract:
             f"invalid provider_aliases: {provider_aliases!r}; "
             f"allowed: {sorted(_VALID_PROVIDER_ALIASES)}"
         )
+    output_format = spec.get("output_format", "email")
+    _validate_output_format_email(None, None, output_format)
     return CanonicalEmailContract(
         lowercase=_require_bool("lowercase", spec.get("lowercase", True)),
         strip_whitespace=_require_bool("strip_whitespace", spec.get("strip_whitespace", True)),
         provider_aliases=cast(ProviderAliasesPolicy, provider_aliases),
         strict=_require_bool("strict", spec.get("strict", False)),
+        output_format=cast(Literal["email"], output_format),
         authority_override=_authority_override_from_spec(spec),
     )
 

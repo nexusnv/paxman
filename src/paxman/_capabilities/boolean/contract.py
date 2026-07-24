@@ -6,7 +6,7 @@ form is, never *how* it is produced.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal, cast
 
 import attrs
 
@@ -17,6 +17,16 @@ from paxman._capabilities._shared.contract import (
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
+
+
+def _validate_output_format_boolean(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported formats."""
+    _SUPPORTED = frozenset({"truefalse"})
+    if not isinstance(value, str) or value not in _SUPPORTED:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_SUPPORTED)}, got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -31,6 +41,9 @@ class CanonicalBooleanContract:
     accept_numeric: bool = True
     accept_words: bool = True
     case_sensitive: bool = False
+    output_format: Literal["truefalse"] = attrs.field(
+        default="truefalse", validator=_validate_output_format_boolean
+    )
     kind: str = "canonical_boolean"
     version: int = 1
     version_field: int = 1
@@ -45,6 +58,7 @@ class CanonicalBooleanContract:
                 "accept_numeric": self.accept_numeric,
                 "accept_words": self.accept_words,
                 "case_sensitive": self.case_sensitive,
+                "output_format": self.output_format,
                 "version": self.version,
             }
         )
@@ -55,6 +69,7 @@ def Boolean(
     accept_numeric: bool = True,
     accept_words: bool = True,
     case_sensitive: bool = False,
+    output_format: Literal["truefalse"] = "truefalse",
     authority_override: Any | None = None,
 ) -> CanonicalBooleanContract:
     """Domain-type sugar: declare a boolean contract in user vocabulary.
@@ -65,6 +80,7 @@ def Boolean(
             Default True.
         case_sensitive: match tokens case-insensitively when False.
             Default False.
+        output_format: the canonical output form. Default "truefalse".
 
     Returns:
         A frozen CanonicalBooleanContract instance.
@@ -73,6 +89,7 @@ def Boolean(
         accept_numeric=accept_numeric,
         accept_words=accept_words,
         case_sensitive=case_sensitive,
+        output_format=output_format,
         authority_override=authority_override,
     )
 
@@ -86,10 +103,19 @@ def _require_bool(field: str, value: object) -> bool:
 
 def _build_boolean(spec: dict[str, Any]) -> CanonicalBooleanContract:
     authority_override = _authority_override_from_spec(spec)
+    output_format = spec.get("output_format", "truefalse")
+    _SUPPORTED_OUTPUT_FORMATS = frozenset({"truefalse"})
+    if not isinstance(output_format, str) or output_format not in _SUPPORTED_OUTPUT_FORMATS:
+        raise ContractError(
+            f"output_format must be one of {sorted(_SUPPORTED_OUTPUT_FORMATS)},"
+            f" got {output_format!r}"
+        )
+    output_format = cast(Literal["truefalse"], output_format)
     return CanonicalBooleanContract(
         accept_numeric=_require_bool("accept_numeric", spec.get("accept_numeric", True)),
         accept_words=_require_bool("accept_words", spec.get("accept_words", True)),
         case_sensitive=_require_bool("case_sensitive", spec.get("case_sensitive", False)),
+        output_format=output_format,
         authority_override=authority_override,
     )
 

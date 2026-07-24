@@ -345,7 +345,9 @@ class GeolocationCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalGeolocationContract, accept_none=True)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"decimal"})
+
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         """Canonicalize a geolocation string into "<lat>,<lon>".

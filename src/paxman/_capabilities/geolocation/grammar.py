@@ -21,13 +21,17 @@ from decimal import Decimal
 
 from paxman._capabilities._shared.grammar import (
     Grammar,
+    Provenance,
     RecognizedRep,
     make_grammar,
     recognize_grammars,
 )
 from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
 
-_GRAMMAR_SOURCE = "paxman spec/geolocation §3.1 (closed coordinate shape vocabulary)"
+_GRAMMAR_SOURCE = Provenance(
+    name="paxman spec/geolocation §3.1",
+    version="closed coordinate shape vocabulary",
+)
 
 # A numeric axis: optional sign, digits, optional decimal point. Tolerant of
 # leading/trailing whitespace around each token (handled by the resolver's
@@ -172,4 +176,4 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
     """
     if not isinstance(contract, CanonicalGeolocationContract):
         return []
-    return recognize_grammars(GRAMMARS, value, contract, CanonicalGeolocationContract)
+    return recognize_grammars(GRAMMARS, value)

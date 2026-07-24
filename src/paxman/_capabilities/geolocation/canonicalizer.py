@@ -26,6 +26,7 @@ from paxman._capabilities._shared.base import (
     reject_missing,
     reject_non_string,
 )
+from paxman._capabilities._shared.grammar import Provenance
 from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
 from paxman._capabilities.geolocation.grammar import (
     RecognizedRep,
@@ -53,7 +54,7 @@ class _Candidate:
 
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -275,7 +276,7 @@ def generate_interpretations(
         _Candidate(
             value=canonical,
             rule="canonicalized_geolocation",
-            source="ISO 6709 (geographic point coord) + WGS84 datum",
+            provenance=Provenance(name="ISO 6709 (geographic point coord) + WGS84 datum"),
             evidence=tuple(evidence),
         )
     ]

@@ -15,11 +15,25 @@ from __future__ import annotations
 
 from paxman._capabilities._shared.grammar import (
     Grammar,
+    Provenance,
     RecognizedRep,
     make_grammar,
     recognize_grammars,
 )
 from paxman._capabilities.url.contract import CanonicalURLContract
+
+_ABSOLUTE_PROVENANCE = Provenance(
+    name="RFC 3986 §3",
+    version="scheme '[A-Za-z][A-Za-z0-9+.-]*://' then hier-part",
+)
+_AUTHORITY_RELATIVE_PROVENANCE = Provenance(
+    name="RFC 3986 §3",
+    version="scheme-relative '//' authority form, no scheme",
+)
+_PATH_RELATIVE_PROVENANCE = Provenance(
+    name="RFC 3986 §3",
+    version="relative reference: no authority, path begins",
+)
 
 # Disjoint by construction:
 #   absolute            requires a `scheme://` prefix
@@ -29,17 +43,17 @@ from paxman._capabilities.url.contract import CanonicalURLContract
 GRAMMARS: tuple[Grammar, ...] = (
     make_grammar(
         "absolute",
-        "RFC 3986 §3 (scheme '[A-Za-z][A-Za-z0-9+.-]*://' then hier-part)",
+        _ABSOLUTE_PROVENANCE,
         r"^(?P<scheme>[A-Za-z][A-Za-z0-9+.\-]*)://(?P<authority>[^/?#]*)(?P<pathqf>.*)$",
     ),
     make_grammar(
         "authority_relative",
-        "RFC 3986 §3 (scheme-relative '//' authority form, no scheme)",
+        _AUTHORITY_RELATIVE_PROVENANCE,
         r"^//(?P<authority>[^/?#]*)(?P<pathqf>.*)$",
     ),
     make_grammar(
         "path_relative",
-        "RFC 3986 §3 (relative reference: no authority, path begins)",
+        _PATH_RELATIVE_PROVENANCE,
         r"^(?!//)(?![A-Za-z][A-Za-z0-9+.\-]*:)(?P<pathqf>.*)$",
     ),
 )
@@ -53,4 +67,6 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
     ``re.fullmatch`` so a trailing newline or any unconsumed tail is rejected
     (§3.2.3 form is preserved whole, never partially consumed).
     """
-    return recognize_grammars(GRAMMARS, value, contract, CanonicalURLContract)
+    if not isinstance(contract, CanonicalURLContract):
+        return []
+    return recognize_grammars(GRAMMARS, value)

@@ -18,13 +18,17 @@ from __future__ import annotations
 
 from paxman._capabilities._shared.grammar import (
     Grammar,
+    Provenance,
     RecognizedRep,
     make_grammar,
     recognize_grammars,
 )
 from paxman._capabilities.country.contract import CanonicalCountryContract
 
-_GRAMMAR_SOURCE = "paxman spec/country §3.2 (closed country shape vocabulary)"
+_GRAMMAR_SOURCE = Provenance(
+    name="paxman spec/country §3.2",
+    version="closed country shape vocabulary",
+)
 
 GRAMMARS: tuple[Grammar, ...] = (
     make_grammar("country_alpha2", _GRAMMAR_SOURCE, r"^(?P<tok>[A-Za-z]{2})$", shape="alpha2"),
@@ -50,7 +54,7 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
     """Recognise the country shape ``value`` full-matches.
 
     Delegates to the shared scaffold with the country contract type. A leading/
-    trailing ASCII-whitespace trim (``" \t\r\n\f\v"``) is applied before matching
+    trailing ASCII-whitespace trim (``" \\t\\r\\n\\f\\v"``) is applied before matching
     — spec §3.2, deterministic and idempotent. A non-country contract returns no
     matches.
 
@@ -62,6 +66,6 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
         A list of RecognizedRep (possibly empty when the input names no known
         country shape).
     """
-    return recognize_grammars(
-        GRAMMARS, value, contract, CanonicalCountryContract, strip=" \t\r\n\f\v"
-    )
+    if not isinstance(contract, CanonicalCountryContract):
+        return []
+    return recognize_grammars(GRAMMARS, value, strip=" \t\r\n\f\v")

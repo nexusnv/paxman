@@ -19,6 +19,7 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
     strip_authority_override,
 )
 from paxman._errors import ContractError
@@ -69,8 +70,8 @@ class CanonicalUUIDContract:
     )
     kind: str = "canonical_uuid"
     version_field: int = 1
-    include_grammar: tuple[str, ...] = ()
-    exclude_grammar: tuple[str, ...] = ()
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -132,8 +133,8 @@ def _build_uuid(spec: dict[str, Any]) -> CanonicalUUIDContract:
     return CanonicalUUIDContract(
         version=cast(Literal["any", "1", "3", "4", "5", "7"], version),
         output_format=cast(Literal["hex"], output_format),
-        include_grammar=tuple(spec.get("include_grammar", ())),
-        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
+        include_grammar=spec.get("include_grammar", ()),
+        exclude_grammar=spec.get("exclude_grammar", ()),
         authority_override=authority_override,
     )
 

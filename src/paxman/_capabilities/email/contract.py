@@ -13,6 +13,8 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
+    require_bool,
     strip_authority_override,
 )
 from paxman._errors import ContractError
@@ -50,8 +52,8 @@ class CanonicalEmailContract:
     version: int = 1
     version_field: int = 1
 
-    include_grammar: tuple[str, ...] = ()
-    exclude_grammar: tuple[str, ...] = ()
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -136,15 +138,6 @@ def Email(
 _VALID_PROVIDER_ALIASES = {"none", "gmail"}
 
 
-def _require_bool(field: str, value: object) -> bool:
-    """Validate that a contract field is a real bool. Non-bool values
-    (including truthy strings) raise `ContractError` rather than being
-    silently coerced. Mandate Law 7 — explicit over clever."""
-    if not isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be a bool, got {type(value).__name__}")
-    return value
-
-
 def _build_email(spec: dict[str, Any]) -> CanonicalEmailContract:
     provider_aliases = spec.get("provider_aliases", "none")
     if provider_aliases not in _VALID_PROVIDER_ALIASES:
@@ -155,13 +148,13 @@ def _build_email(spec: dict[str, Any]) -> CanonicalEmailContract:
     output_format = spec.get("output_format", "email")
     _validate_output_format_email(None, None, output_format)
     return CanonicalEmailContract(
-        lowercase=_require_bool("lowercase", spec.get("lowercase", True)),
-        strip_whitespace=_require_bool("strip_whitespace", spec.get("strip_whitespace", True)),
+        lowercase=require_bool("lowercase", spec.get("lowercase", True)),
+        strip_whitespace=require_bool("strip_whitespace", spec.get("strip_whitespace", True)),
         provider_aliases=cast(ProviderAliasesPolicy, provider_aliases),
-        strict=_require_bool("strict", spec.get("strict", False)),
+        strict=require_bool("strict", spec.get("strict", False)),
         output_format=cast(Literal["email"], output_format),
-        include_grammar=tuple(spec.get("include_grammar", ())),
-        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
+        include_grammar=spec.get("include_grammar", ()),
+        exclude_grammar=spec.get("exclude_grammar", ()),
         authority_override=_authority_override_from_spec(spec),
     )
 

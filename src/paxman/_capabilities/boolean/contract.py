@@ -13,6 +13,8 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
+    require_bool,
     strip_authority_override,
 )
 from paxman._errors import ContractError
@@ -48,8 +50,8 @@ class CanonicalBooleanContract:
     version: int = 1
     version_field: int = 1
 
-    include_grammar: tuple[str, ...] = ()
-    exclude_grammar: tuple[str, ...] = ()
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -103,13 +105,6 @@ def Boolean(
     )
 
 
-def _require_bool(field: str, value: object) -> bool:
-    """Validate that a contract field is a real bool (Law 7 — explicit)."""
-    if not isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be a bool, got {type(value).__name__}")
-    return value
-
-
 def _build_boolean(spec: dict[str, Any]) -> CanonicalBooleanContract:
     authority_override = _authority_override_from_spec(spec)
     output_format = spec.get("output_format", "truefalse")
@@ -121,12 +116,12 @@ def _build_boolean(spec: dict[str, Any]) -> CanonicalBooleanContract:
         )
     output_format = cast(Literal["truefalse"], output_format)
     return CanonicalBooleanContract(
-        accept_numeric=_require_bool("accept_numeric", spec.get("accept_numeric", True)),
-        accept_words=_require_bool("accept_words", spec.get("accept_words", True)),
-        case_sensitive=_require_bool("case_sensitive", spec.get("case_sensitive", False)),
+        accept_numeric=require_bool("accept_numeric", spec.get("accept_numeric", True)),
+        accept_words=require_bool("accept_words", spec.get("accept_words", True)),
+        case_sensitive=require_bool("case_sensitive", spec.get("case_sensitive", False)),
         output_format=output_format,
-        include_grammar=tuple(spec.get("include_grammar", ())),
-        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
+        include_grammar=spec.get("include_grammar", ()),
+        exclude_grammar=spec.get("exclude_grammar", ()),
         authority_override=authority_override,
     )
 

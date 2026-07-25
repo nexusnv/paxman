@@ -13,6 +13,7 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
     strip_authority_override,
 )
 from paxman._errors import ContractError
@@ -47,8 +48,8 @@ class CanonicalPhoneContract:
         default="e164", validator=_validate_output_format_phone
     )
 
-    include_grammar: tuple[str, ...] = ()
-    exclude_grammar: tuple[str, ...] = ()
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -127,8 +128,8 @@ def _build_phone(spec: dict[str, Any]) -> CanonicalPhoneContract:
     return CanonicalPhoneContract(
         country=country,
         output_format=output_format,
-        include_grammar=tuple(spec.get("include_grammar", ())),
-        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
+        include_grammar=spec.get("include_grammar", ()),
+        exclude_grammar=spec.get("exclude_grammar", ()),
         authority_override=authority_override,
     )
 

@@ -158,12 +158,13 @@ class TestContractGrammarFields:
         assert c.include_grammar == ()
         assert c.exclude_grammar == ()
 
-    def test_money_defaults(self) -> None:
+    def test_money_no_grammar_selectors(self) -> None:
+        """Money intentionally does not support grammar selectors (bracket-notation recognition)."""
         from paxman._capabilities.money.contract import CanonicalMoneyContract
 
         c = CanonicalMoneyContract(currency="USD")
-        assert c.include_grammar == ()
-        assert c.exclude_grammar == ()
+        assert not hasattr(c, "include_grammar")
+        assert not hasattr(c, "exclude_grammar")
 
     def test_date_defaults(self) -> None:
         from paxman._capabilities.date.contract import CanonicalDateContract

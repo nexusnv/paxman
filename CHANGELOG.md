@@ -15,9 +15,10 @@ semantic versioning; entries are grouped by release.
   `url`, `boolean`, `ip`, `geolocation`, `country` now delegate to the shared
   `recognize_grammars` function for grammar-based recognition.
 
-- **Migrated date capability** to the shared grammar package while preserving
-  its bracket-notation grammar language. Date now uses a `grammar/` sub-package
-  with `iso_8601.py`, `numeric.py`, and `text.py` grammar modules.
+- **Reorganized date capability** into its own `grammar/` sub-package (with
+  `iso_8601.py`, `numeric.py`, and `text.py` grammar modules) while preserving
+  its bracket-notation grammar language. Date intentionally does NOT use the
+  shared `recognize_grammars` function — see CODING_GUIDELINES.md for why.
 
 - **Added grammar selection fields** (`include_grammar`, `exclude_grammar`) to
   all contracts, allowing callers to filter which grammars are applied during

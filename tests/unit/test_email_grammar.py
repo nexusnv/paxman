@@ -91,7 +91,7 @@ class TestVerbalAtDotAddrSpecGrammar:
         reps = recognize("azahari at gmail dot com", _contract())
         rep = _rep_by_id(reps, "verbal_at_dot_addr_spec")
         assert rep is not None
-        assert rep.provenance.name == "RFC 5322 §3.4.1"
+        assert rep.provenance.name == "Paxman spoken-form recognition"
         assert rep.captures == {"local": "azahari", "mid": "gmail", "tld": "com"}
 
     def test_verbal_at_dot_does_not_match_clean_addr_spec(self) -> None:

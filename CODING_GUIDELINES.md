@@ -137,7 +137,8 @@ delegate to it**:
 
 Contracts can include `include_grammar` and `exclude_grammar` fields to
 filter which grammars are applied during recognition. The shared
-`recognize_grammars` function applies these filters before matching.
+`_select_grammars` function applies these filters before passing the
+resulting tuple to `recognize_grammars` for matching.
 
 The **eight regex-grammar domains** (`country`, `boolean`, `url`, `ip`,
 `phone`, `geolocation`, `email`, `uuid`) follow this pattern and are the

@@ -331,7 +331,7 @@ src/paxman/
     └── common.py               #   ProviderAliasesPolicy, etc.
 ```
 
-**Total: ~75 Python source files across the packages above (including the
+**Total: ~127 Python source files across `src/paxman/` (including the
 `_provenance/` package with its specs and registries sub-packages, and the
 `_capabilities/_shared/` package).**
 
@@ -600,9 +600,11 @@ engine knowing the domain.
 **Shared grammar package:** The `recognize_grammars` function and associated
 types (`Grammar`, `RecognizedRep`, `Provenance`) live in
 `_capabilities/_shared/grammar/`. Most capabilities delegate to this shared
-package for grammar-based recognition, with date being the primary exception
-(due to its bracket-notation grammar language). The shared package provides
-the `include_grammar` and `exclude_grammar` fields on contracts for grammar
+package for grammar-based recognition. Both `date` and `money` are
+intentional exceptions — `date` uses its own `grammar/` sub-package (bracket-
+notation grammar language with per-language compilation), and `money` uses
+its own bracket-notation recognition. The shared package provides the
+`include_grammar` and `exclude_grammar` fields on contracts for grammar
 selection filtering.
 
 Each capability shares the same four-stage shape, split so that recognition

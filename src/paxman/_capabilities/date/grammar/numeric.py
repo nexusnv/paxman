@@ -40,9 +40,9 @@ def _recognize_ymd(value: str) -> Mapping[str, str] | None:
     return MappingProxyType({k: v for k, v in match.groupdict().items() if v is not None})
 
 
-NUMERIC_SLASH = parser_grammar(
+NUMERIC_SLASH: Grammar = parser_grammar(
     "numeric_slash", _PAXMAN_DATE_SPEC, _recognize_numeric_slash, shape="numeric_triple"
 )
-NUMERIC_SLASH_YMD = parser_grammar("numeric_slash_ymd", _ISO_8601_SLASH, _recognize_ymd)
+NUMERIC_SLASH_YMD: Grammar = parser_grammar("numeric_slash_ymd", _ISO_8601_SLASH, _recognize_ymd)
 
 NUMERIC_GRAMMARS: tuple[Grammar, ...] = (NUMERIC_SLASH, NUMERIC_SLASH_YMD)

@@ -46,8 +46,6 @@ def test_as_dict_round_trip() -> None:
         "allow_code": True,
         "strip_spaces": True,
         "output_format": "iso4217",
-        "include_grammar": (),
-        "exclude_grammar": (),
         "version": 1,
         "version_field": 1,
     }

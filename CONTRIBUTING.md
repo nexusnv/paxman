@@ -49,6 +49,7 @@ The full CI gate (the same checks `ci.yml` runs):
 ```bash
 uv run ruff check .
 uv run ruff format --check .
+uv run lint-imports
 uv run mypy src/paxman
 uv run python scripts/check_readme_quickstart.py
 uv run python scripts/check_capability_section_isolation.py

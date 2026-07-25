@@ -106,14 +106,25 @@ tests/
 src/paxman/
   _capabilities/        # the ONLY extension point — one package per domain
     protocol.py         # Capability protocol (can_handle / canonicalize)
-    email/  date/  uuid/  # each: contract.py, rules.py, grammar.py,
-                         #        canonicalizer.py, parser.py
+    discovery.py        # builtin_capabilities() — source of truth
+    _iso3166.py         # shared ISO 3166-1:2020 dataset
+    _shared/            # shared recognition/evidence/contract scaffold
+      grammar/          # Grammar, RecognizedRep, recognize_grammars
+      evidence.py       # make_evidence / make_evidence_for
+      contract.py       # authority_override_field
+    email/  date/  uuid/ phone/ url/ boolean/ ip/ money/ geolocation/ country/
   _core/                # engine.py (canonicalize), replay.py, artifact.py,
-                        # status.py, provenance.py, result.py, contracts.py
+                        # status.py, provenance.py, result.py, contracts.py,
+                        # engine_env.py (Engine), validation.py, classification.py
+  _provenance/          # authority editions, evidence, bundled datasets
+    specs/              # RFC/ISO spec definitions
+    registries/         # ISO 3166, ISO 4217, CLDR, ITU E.164
+    behaviour/          # documented platform behavior
   _dsl/                 # contract DSL parser + serializer
   _registry/            # capability_registry.py (freezes on first canonicalize)
+                        # contract_registry.py (kind → builder dispatch)
   _types/               # shared value types
-  _errors/              # exception hierarchy (DiagnosticCode)
+  _errors/              # exception hierarchy
   _orchestrator_runtime.py
   __init__.py           # public API surface
 ```
@@ -121,11 +132,13 @@ src/paxman/
 **Public API** (top-level, in `paxman/__init__.py`):
 
 - `paxman.canonicalize(input_data, contract) -> ExecutionArtifact`
+- `paxman.canonicalize_with(input_data, contract, engine) -> ExecutionArtifact`
 - `paxman.replay(artifact, contract) -> ExecutionArtifact`
 - `paxman.register_capability(cap)` — must be called **before** the first
   `canonicalize` in the process (the registry freezes afterward and raises
   `FrozenRegistryError`).
-- Contracts: `Email`, `Date`, `UUID` (and their `Canonical*` forms).
+- Contracts: `Email`, `Date`, `UUID`, `Boolean`, `IP`, `URL`, `Phone`,
+  `Money`, `Geolocation`, `Country` (and their `Canonical*` forms).
   `parse_contract` for the DSL. Errors re-exported from `_errors`.
 - `Engine` — the immutable `name -> Authority` binding that selects concrete
   authority editions (Concern 3). `Engine.default()` resolves active editions
@@ -133,8 +146,6 @@ src/paxman/
   pins specific editions; `canonicalize_with(input, contract, engine)` is the
   engine-pinned entry point. A contract's `authority_override` pins one edition
   for a single call. `Edition(id)` / `Latest` are the selection values.
-  `UnknownAuthorityEdition` is raised when a pin names an invalid or
-  non-multiple-edition authority.
 
 **Hard boundaries:**
 

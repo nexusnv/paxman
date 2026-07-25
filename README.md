@@ -92,6 +92,7 @@ print(result.status.name, "->", result.value)  # CANONICALIZED -> MYR:12.50
 Install with `git clone https://github.com/nexusnv/paxman.git && cd paxman && uv sync`, then `uv run python quickstart.py`.
 
 - `canonicalize(input_data, contract) -> ExecutionArtifact` — produce a canonical artifact.
+- `canonicalize_with(input_data, contract, engine) -> ExecutionArtifact` — produce a canonical artifact with a specific Engine binding.
 - `replay(artifact, contract) -> ExecutionArtifact` — rehydrate the artifact from the stored form, without re-execution.
 - `Email(*, strict=False, provider_aliases="none", lowercase=True, strip_whitespace=True) -> CanonicalEmailContract` — declare the email contract (your vocabulary, not Paxman's).
 

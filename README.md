@@ -94,7 +94,16 @@ Install with `git clone https://github.com/nexusnv/paxman.git && cd paxman && uv
 - `canonicalize(input_data, contract) -> ExecutionArtifact` — produce a canonical artifact.
 - `canonicalize_with(input_data, contract, engine) -> ExecutionArtifact` — produce a canonical artifact with a specific Engine binding.
 - `replay(artifact, contract) -> ExecutionArtifact` — rehydrate the artifact from the stored form, without re-execution.
-- `Email(*, strict=False, provider_aliases="none", lowercase=True, strip_whitespace=True) -> CanonicalEmailContract` — declare the email contract (your vocabulary, not Paxman's).
+- `Email(*, strict=False, provider_aliases="none", lowercase=True, strip_whitespace=True, output_format="email", include_grammar=(), exclude_grammar=(), authority_override=None) -> CanonicalEmailContract` — declare the email contract.
+- `Date(*, locale="ISO", language="en", two_digit_year=None, output_format="iso", include_grammar=(), exclude_grammar=(), authority_override=None) -> CanonicalDateContract` — declare the date contract.
+- `UUID(*, version="any", output_format="hex", include_grammar=(), exclude_grammar=(), authority_override=None) -> CanonicalUUIDContract` — declare the UUID contract.
+- `Phone(*, country="US", output_format="e164", include_grammar=(), exclude_grammar=(), authority_override=None) -> CanonicalPhoneContract` — declare the phone contract.
+- `URL(*, scheme_allow=None, strip_userinfo=False, strip_fragment=True, sort_query=False, whatwg=False, output_format="normalized", include_grammar=(), exclude_grammar=(), authority_override=None) -> CanonicalURLContract` — declare the URL contract.
+- `Boolean(*, accept_numeric=True, accept_words=True, case_sensitive=False, output_format="truefalse", include_grammar=(), exclude_grammar=(), authority_override=None) -> CanonicalBooleanContract` — declare the boolean contract.
+- `IP(*, allow_ipv4=True, allow_ipv6=True, preserve_zone_id=True, output_format="normalized", include_grammar=(), exclude_grammar=(), authority_override=None) -> CanonicalIPContract` — declare the IP contract.
+- `Money(*, currency, allow_symbol=True, allow_code=True, strip_spaces=True, output_format="iso4217", authority_override=None) -> CanonicalMoneyContract` — declare the money contract (currency is required).
+- `Geolocation(*, datum="WGS84", coordinate_order="lat_lon", require_hemisphere=True, output_format="decimal", precision=6, include_grammar=(), exclude_grammar=(), authority_override=None) -> CanonicalGeolocationContract` — declare the geolocation contract.
+- `Country(*, allow_alpha3=True, allow_name=True, allow_synonym=True, allow_numeric=True, localized_names=False, historical_names=False, extra_synonyms=None, output_format="alpha2", include_grammar=(), exclude_grammar=(), authority_override=None) -> CanonicalCountryContract` — declare the country contract.
 
 ## Status
 

@@ -121,7 +121,7 @@ runs, and confirm the relevant coverage gate still passes.
 
 The recognition/evidence/contract boilerplate that was verbatim-duplicated
 across the capability domains now lives in
-`src/paxman/_capabilities/_shared/` (`grammar.py`, `evidence.py`,
+`src/paxman/_capabilities/_shared/` (`grammar/`, `evidence.py`,
 `contract.py`). **The canonical pattern for a regex-grammar capability is to
 delegate to it**:
 
@@ -135,9 +135,14 @@ delegate to it**:
 - `contract.py` declares `authority_override: Any = authority_override_field()`
   and reads it in the builder via `_authority_override_from_spec(spec)`.
 
-The **six regex-grammar domains** (`country`, `boolean`, `url`, `ip`,
-`phone`, `geolocation`) follow this pattern and are the baseline to copy
-when adding or migrating a standard capability.
+Contracts can include `include_grammar` and `exclude_grammar` fields to
+filter which grammars are applied during recognition. The shared
+`_select_grammars` function applies these filters before passing the
+resulting tuple to `recognize_grammars` for matching.
+
+The **eight regex-grammar domains** (`country`, `boolean`, `url`, `ip`,
+`phone`, `geolocation`, `email`, `uuid`) follow this pattern and are the
+baseline to copy when adding or migrating a standard capability.
 
 **`money` and `date` are INTENTIONAL escapes from this seam — do not treat
 them as the pattern, and do not "helpfully" migrate them onto
@@ -158,11 +163,12 @@ migration:
   Forcing it through `recognize_grammars` would either explode the grammar
   tuple across languages or contaminate the shared scaffold with a date-only
   compile callback — defeating the seam's purpose. Date keeps its local
-  `Grammar`/`RecognizedRep` and adopts only `authority_override_field()`
+  `grammar/` sub-package (with `iso_8601.py`, `numeric.py`, `text.py`
+  grammar modules) and adopts only `authority_override_field()`
   plus `make_evidence`.
 
 If you are adding a *new* capability and it recognizes input with anchored
-regexes (the normal case), follow the six regex-grammar domains, not money/date.
+regexes (the normal case), follow the eight regex-grammar domains, not money/date.
 If your new capability needs bracket notation, per-language compilation, or a
 structured parser rather than grammar matching, document that divergence in the
 module docstring so a future session does not mistake it for a missed migration.

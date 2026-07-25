@@ -47,3 +47,34 @@ def _render_datetime(dt: datetime) -> str:
     if dt.microsecond:
         base += f".{dt.microsecond:06d}"
     return base + "Z"
+
+
+def _render_date_compact(dt: datetime) -> str:
+    """Render a date-only compact string ``YYYYMMDD`` (ISO 8601 basic format).
+
+    Args:
+        dt: A datetime whose date portion is rendered.
+
+    Returns:
+        The compact ISO 8601 date string without separators.
+    """
+    return f"{dt.year:04d}{dt.month:02d}{dt.day:02d}"
+
+
+def _render_datetime_compact(dt: datetime) -> str:
+    """Render a datetime in compact RFC 3339 UTC form ``YYYYMMDDTHHMMSSZ``.
+
+    Always normalises to UTC and appends the ``Z`` designator.
+    Microseconds are included only when non-zero.
+
+    Args:
+        dt: A timezone-aware datetime.
+
+    Returns:
+        The compact RFC 3339 canonical string without date/time separators.
+    """
+    dt = dt.astimezone(UTC)
+    base = f"{dt.year:04d}{dt.month:02d}{dt.day:02d}T{dt.hour:02d}{dt.minute:02d}{dt.second:02d}"
+    if dt.microsecond:
+        base += f".{dt.microsecond:06d}"
+    return base + "Z"

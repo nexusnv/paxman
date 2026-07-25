@@ -54,6 +54,7 @@ class TestOrchestrator:
 
         class _A:
             name: str = "A"
+            supported_output_formats: frozenset[str] = frozenset()
 
             def can_handle(self, contract: Contract, value: object) -> bool:
                 return True
@@ -63,6 +64,7 @@ class TestOrchestrator:
 
         class _B:
             name: str = "B"
+            supported_output_formats: frozenset[str] = frozenset()
 
             def can_handle(self, contract: Contract, value: object) -> bool:
                 return True

@@ -32,7 +32,7 @@ interpretation. Default passes; the engine dispatches to it.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, cast
+from typing import Any, TypeAlias, cast
 
 from paxman._core.classification import ValidationResult
 from paxman._core.contracts import Contract
@@ -46,6 +46,12 @@ from paxman._core.status import Status
 # produced by a factory and checked against the Capability Protocol;
 # `Any` keeps both sides of the conformance check identical.
 CanHandle = Callable[[Any, Any], bool]
+
+# Shared type for a capability's declared output formats. Each capability
+# enumerates the output formats it can produce (e.g. alpha2, alpha3, numeric
+# for country). The default is an empty frozenset; subclasses override with
+# their specific formats.
+OutputFormats: TypeAlias = frozenset[str]
 
 # Whitespace characters stripped by the canonicalizers' missing-value check
 # (ASCII whitespace only — Unicode whitespace is intentionally left intact so
@@ -128,8 +134,13 @@ def reject_missing(
 class CapabilityBase:
     """Base for capabilities: uniform ``validate`` hook + Protocol surface.
 
-    Subclasses set ``name`` and implement ``can_handle`` / ``canonicalize``
+    Subclasses set ``name`` and implement ``can_handle`` / ``_canonicalize``
     (and optionally ``validate`` for contract-specific strictness policy).
+
+    The ``canonicalize`` method is a **template method** — it calls
+    ``_canonicalize`` (domain-specific logic) and then ``_apply_output_format``
+    (format conversion). Capabilities override ``_canonicalize``; format
+    conversion is enforced by the base class and cannot be forgotten.
     """
 
     name: str
@@ -141,11 +152,39 @@ class CapabilityBase:
     # by this Callable attribute shape (self is bound away at the call site).
     can_handle: CanHandle
 
+    # The set of output formats this capability can produce. Subclasses
+    # override with their specific formats (e.g. frozenset({"alpha2", "alpha3"})).
+    # The default is empty; the contract's output_format field must be one
+    # of these at canonicalization time (validated at contract construction).
+    supported_output_formats: OutputFormats = frozenset()
+
     def canonicalize(
         self, value: Any, contract: Contract, engine: Any | None = None
-    ) -> object:  # pragma: no cover
-        """Canonicalize ``value`` against ``contract`` (domain-specific)."""
+    ) -> CapabilityResult:
+        """Template method: delegate to ``_canonicalize``, then apply format conversion.
+
+        Capabilities must override ``_canonicalize``, NOT this method.
+        Format conversion is applied automatically and cannot be forgotten.
+        """
+        result = self._canonicalize(value, contract, engine)
+        return self._apply_output_format(result, contract, engine)
+
+    def _canonicalize(
+        self, value: Any, contract: Contract, engine: Any | None = None
+    ) -> CapabilityResult:  # pragma: no cover
+        """Domain-specific canonicalization logic. Override this in subclasses."""
         raise NotImplementedError
+
+    def _apply_output_format(
+        self, result: CapabilityResult, contract: Contract, engine: Any | None = None
+    ) -> CapabilityResult:
+        """Apply the contract's output_format to a canonicalization result.
+
+        Default: no-op (single-format capabilities don't need to override).
+        Capabilities with multiple output formats (country, date) override
+        this to convert CANONICALIZED values and AMBIGUOUS candidates.
+        """
+        return result
 
     def validate(self, value: str, contract: Contract) -> ValidationResult:
         """Post-canonicalization policy check (Law 4). Default: passes.

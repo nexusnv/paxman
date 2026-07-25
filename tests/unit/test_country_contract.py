@@ -52,6 +52,9 @@ def test_as_dict_round_trip() -> None:
         "localized_names": True,
         "historical_names": False,
         "extra_synonyms": {},
+        "output_format": "alpha2",
+        "include_grammar": (),
+        "exclude_grammar": (),
         "version": 1,
         "version_field": 1,
     }

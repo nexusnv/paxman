@@ -7,17 +7,32 @@ form is, never *how* it is produced.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal, cast
 
 import attrs
 
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
+    require_bool,
+    require_v1,
     strip_authority_override,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
+
+_SUPPORTED_IP_OUTPUT_FORMATS = frozenset({"normalized"})
+
+
+def _validate_output_format_ip(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported formats."""
+    if not isinstance(value, str) or value not in _SUPPORTED_IP_OUTPUT_FORMATS:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_SUPPORTED_IP_OUTPUT_FORMATS)},"
+            f" got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -32,9 +47,15 @@ class CanonicalIPContract:
     allow_ipv4: bool = True
     allow_ipv6: bool = True
     preserve_zone_id: bool = True
+    output_format: Literal["normalized"] = attrs.field(
+        default="normalized", validator=_validate_output_format_ip
+    )
     kind: str = "canonical_ip"
     version: int = 1
     version_field: int = 1
+
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -46,8 +67,11 @@ class CanonicalIPContract:
                 "allow_ipv4": self.allow_ipv4,
                 "allow_ipv6": self.allow_ipv6,
                 "preserve_zone_id": self.preserve_zone_id,
+                "output_format": self.output_format,
                 "version": self.version,
                 "version_field": self.version_field,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -57,6 +81,9 @@ def IP(
     allow_ipv4: bool = True,
     allow_ipv6: bool = True,
     preserve_zone_id: bool = True,
+    output_format: Literal["normalized"] = "normalized",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalIPContract:
     """Domain-type sugar: declare an IP contract in user vocabulary.
@@ -66,6 +93,8 @@ def IP(
         allow_ipv6: accept IPv6 inputs. Default True.
         preserve_zone_id: keep the `%zone` scope identifier on link-local
             addresses (RFC 4007), lowercased. Default True.
+        output_format: the canonical output form. Default "normalized".
+            Supported: "normalized".
 
     Returns:
         A frozen CanonicalIPContract instance.
@@ -74,35 +103,30 @@ def IP(
         allow_ipv4=allow_ipv4,
         allow_ipv6=allow_ipv6,
         preserve_zone_id=preserve_zone_id,
+        output_format=output_format,
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
 
-def _require_bool(field: str, value: object) -> bool:
-    """Validate that a contract field is a real bool (Law 7 — explicit)."""
-    if not isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be a bool, got {type(value).__name__}")
-    return value
-
-
-def _require_v1(field: str, value: object) -> int:
-    """Validate that a contract version field is the supported v1 (Law 7)."""
-    if not isinstance(value, int) or isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be int 1, got {type(value).__name__}")
-    if value != 1:
-        raise ContractError(
-            f"contract field {field!r} must be 1 (only v1 is supported), got {value}"
-        )
-    return value
-
-
 def _build_ip(spec: dict[str, Any]) -> CanonicalIPContract:
-    _require_v1("version", spec.get("version", 1))
-    _require_v1("version_field", spec.get("version_field", 1))
+    require_v1("version", spec.get("version", 1))
+    require_v1("version_field", spec.get("version_field", 1))
+    output_format = spec.get("output_format", "normalized")
+    if not isinstance(output_format, str) or output_format not in _SUPPORTED_IP_OUTPUT_FORMATS:
+        raise ContractError(
+            f"output_format must be one of {sorted(_SUPPORTED_IP_OUTPUT_FORMATS)},"
+            f" got {output_format!r}"
+        )
+    output_format = cast(Literal["normalized"], output_format)
     return CanonicalIPContract(
-        allow_ipv4=_require_bool("allow_ipv4", spec.get("allow_ipv4", True)),
-        allow_ipv6=_require_bool("allow_ipv6", spec.get("allow_ipv6", True)),
-        preserve_zone_id=_require_bool("preserve_zone_id", spec.get("preserve_zone_id", True)),
+        allow_ipv4=require_bool("allow_ipv4", spec.get("allow_ipv4", True)),
+        allow_ipv6=require_bool("allow_ipv6", spec.get("allow_ipv6", True)),
+        preserve_zone_id=require_bool("preserve_zone_id", spec.get("preserve_zone_id", True)),
+        output_format=output_format,
+        include_grammar=spec.get("include_grammar", ()),
+        exclude_grammar=spec.get("exclude_grammar", ()),
         authority_override=_authority_override_from_spec(spec),
     )
 

@@ -35,7 +35,9 @@ class MoneyCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalMoneyContract, accept_none=True)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"iso4217"})
+
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         """Canonicalize a money string into "<ISO4217>:<amount>".

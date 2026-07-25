@@ -11,14 +11,19 @@ declares the policy; the capability applies it (Law 7 — Explicit Over Clever).
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Literal, cast
 
 import attrs
 
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
+    require_bool,
+    require_v1,
     strip_authority_override,
+    validate_bool,
+    validate_v1,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
@@ -58,13 +63,6 @@ def _make_str_in_validator(allowed: frozenset[str]) -> Callable[[object, object,
     return _validator
 
 
-def _validate_bool(inst: object, attr: object, value: object) -> None:
-    """Attrs validator: policy fields must be real bools (Law 7 — explicit)."""
-    if not isinstance(value, bool):
-        name = getattr(attr, "name", attr)
-        raise ContractError(f"contract field {name!r} must be a bool, got {type(value).__name__}")
-
-
 def _validate_precision(inst: object, attr: object, value: object) -> None:
     """Attrs validator: precision must be an int in 0..12 (Law 7 — explicit)."""
     if not isinstance(value, int) or isinstance(value, bool):
@@ -80,11 +78,14 @@ def _validate_precision(inst: object, attr: object, value: object) -> None:
         )
 
 
-def _validate_v1(inst: object, attr: object, value: object) -> None:
-    """Attrs validator: version fields must be int 1 (only v1 is supported)."""
-    if not isinstance(value, int) or isinstance(value, bool) or value != 1:
+def _validate_output_format_geolocation(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported formats."""
+    _SUPPORTED = frozenset({"decimal"})
+    if not isinstance(value, str) or value not in _SUPPORTED:
         name = getattr(attr, "name", attr)
-        raise ContractError(f"contract field {name!r} must be int 1, got {value!r}")
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_SUPPORTED)}, got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -103,17 +104,20 @@ class CanonicalGeolocationContract:
     coordinate_order: str = attrs.field(
         default="lat_lon", validator=_make_str_in_validator(_COORDINATE_ORDERS)
     )
-    require_hemisphere: bool = attrs.field(default=True, validator=_validate_bool)
-    output_format: str = attrs.field(
-        default="decimal", validator=_make_str_in_validator(_OUTPUT_FORMATS)
+    require_hemisphere: bool = attrs.field(default=True, validator=validate_bool)
+    output_format: Literal["decimal"] = attrs.field(
+        default="decimal", validator=_validate_output_format_geolocation
     )
     precision: int = attrs.field(default=6, validator=_validate_precision)
     kind: str = attrs.field(
         default="canonical_geolocation",
         validator=attrs.validators.matches_re(r"^canonical_geolocation$"),
     )
-    version: int = attrs.field(default=1, validator=_validate_v1)
-    version_field: int = attrs.field(default=1, validator=_validate_v1)
+    version: int = attrs.field(default=1, validator=validate_v1)
+    version_field: int = attrs.field(default=1, validator=validate_v1)
+
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -129,6 +133,8 @@ class CanonicalGeolocationContract:
                 "precision": self.precision,
                 "version": self.version,
                 "version_field": self.version_field,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -138,8 +144,10 @@ def Geolocation(
     datum: str = "WGS84",
     coordinate_order: str = "lat_lon",
     require_hemisphere: bool = True,
-    output_format: str = "decimal",
+    output_format: Literal["decimal"] = "decimal",
     precision: int = 6,
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalGeolocationContract:
     """Domain-type sugar: declare a geolocation contract in user vocabulary.
@@ -169,12 +177,18 @@ def Geolocation(
             a recognized value, or if `precision` is not an int in 0..12, or if a
             flag argument is not a bool.
     """
+    output_format = cast(
+        Literal["decimal"],
+        _require_str_in("output_format", output_format, _OUTPUT_FORMATS),
+    )
     return CanonicalGeolocationContract(
         datum=_require_str_in("datum", datum, _DATUMS),
         coordinate_order=_require_str_in("coordinate_order", coordinate_order, _COORDINATE_ORDERS),
-        require_hemisphere=_require_bool("require_hemisphere", require_hemisphere),
-        output_format=_require_str_in("output_format", output_format, _OUTPUT_FORMATS),
+        require_hemisphere=require_bool("require_hemisphere", require_hemisphere),
+        output_format=output_format,
         precision=_require_precision("precision", precision),
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
@@ -185,13 +199,6 @@ def _require_str_in(field: str, value: object, allowed: frozenset[str]) -> str:
         raise ContractError(
             f"contract field {field!r} must be one of {sorted(allowed)}, got {value!r}"
         )
-    return value
-
-
-def _require_bool(field: str, value: object) -> bool:
-    """Validate that a contract field is a real bool (Law 7 — explicit)."""
-    if not isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be a bool, got {type(value).__name__}")
     return value
 
 
@@ -209,32 +216,23 @@ def _require_precision(field: str, value: object) -> int:
     return value
 
 
-def _require_v1(field: str, value: object) -> int:
-    """Validate that a contract version field is the supported v1 (Law 7)."""
-    if not isinstance(value, int) or isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be int 1, got {type(value).__name__}")
-    if value != 1:
-        raise ContractError(
-            f"contract field {field!r} must be 1 (only v1 is supported), got {value}"
-        )
-    return value
-
-
 def _build_geolocation(spec: dict[str, Any]) -> CanonicalGeolocationContract:
-    _require_v1("version", spec.get("version", 1))
-    _require_v1("version_field", spec.get("version_field", 1))
+    require_v1("version", spec.get("version", 1))
+    require_v1("version_field", spec.get("version_field", 1))
+    output_format = cast(
+        Literal["decimal"],
+        _require_str_in("output_format", spec.get("output_format", "decimal"), _OUTPUT_FORMATS),
+    )
     return CanonicalGeolocationContract(
         datum=_require_str_in("datum", spec.get("datum", "WGS84"), _DATUMS),
         coordinate_order=_require_str_in(
             "coordinate_order", spec.get("coordinate_order", "lat_lon"), _COORDINATE_ORDERS
         ),
-        require_hemisphere=_require_bool(
-            "require_hemisphere", spec.get("require_hemisphere", True)
-        ),
-        output_format=_require_str_in(
-            "output_format", spec.get("output_format", "decimal"), _OUTPUT_FORMATS
-        ),
+        require_hemisphere=require_bool("require_hemisphere", spec.get("require_hemisphere", True)),
+        output_format=output_format,
         precision=_require_precision("precision", spec.get("precision", 6)),
+        include_grammar=spec.get("include_grammar", ()),
+        exclude_grammar=spec.get("exclude_grammar", ()),
         authority_override=_authority_override_from_spec(spec),
     )
 

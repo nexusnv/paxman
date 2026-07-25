@@ -12,24 +12,41 @@ reviews:
     - label: Documentation
       instructions: >-
         Apply whenever project documentation (README.md, MANDATE.md, ARCHITECTURE.md, AGENTS.md,
-        CONTRIBUTING.md, SECURITY.md, or any markdown under docs/) is updated by the PR/MR. Note that
-        PROPOSED_STRUCTURE.md and RETRACTION.md do NOT exist in this repository.
-    - label: Spec
-      instructions: Apply when the PR/MR modifies or adds a design specification under `.superpowers/specs/`.
-    - label: Implementation Plan
-      instructions: Apply when the PR/MR modifies or adds an implementation plan under `.superpowers/plans/`.
+        CONTRIBUTING.md, SECURITY.md, CODING_GUIDELINES.md, or any markdown under docs/) is updated
+        by the PR/MR. Note that PROPOSED_STRUCTURE.md and RETRACTION.md do NOT exist in this
+        repository.
     - label: Mandate
       instructions: Apply when the PR/MR modifies MANDATE.md, the constitutional boundary of Paxman (the 13 laws). Any change to MANDATE.md is a constitutional amendment and must be reviewed against every other law.
     - label: Public API
-      instructions: Apply when the PR/MR adds, renames, or removes symbols exported from the `paxman` package. The v2 public API is `paxman.canonicalize`, `paxman.replay`, and `paxman.register_capability` (plus the value-type re-exports, the five `Canonical*Contract` contracts and their short aliases `Email`/`UUID`/`Date`/`Phone`/`URL`, and the error types). New public symbols require a design spec under `.superpowers/specs/` and an implementation plan under `.superpowers/plans/` (one of each per change).
+      instructions: >-
+        Apply when the PR/MR adds, renames, or removes symbols exported from the `paxman` package.
+        The v2 public API is `paxman.canonicalize`, `paxman.canonicalize_with`, `paxman.replay`,
+        and `paxman.register_capability` (plus the value-type re-exports, the ten `Canonical*Contract`
+        contracts and their short aliases `Email`/`UUID`/`Date`/`Phone`/`URL`/`Boolean`/`IP`/`Money`/
+        `Geolocation`/`Country`, the `Engine`/`Edition`/`Latest` types, and the error types).
     - label: Canonicalization
       instructions: Apply when the PR/MR touches `src/paxman/_core/engine.py`, `src/paxman/_core/artifact.py`, `src/paxman/_core/replay.py`, `src/paxman/_core/contracts.py`, `src/paxman/_core/classification.py`, `src/paxman/_core/validation.py`, `src/paxman/_orchestrator_runtime.py`, or `src/paxman/__init__.py` in any way that could affect canonicalization, determinism, or replay.
     - label: Capability SPI
-      instructions: Apply when the PR/MR touches `src/paxman/_capabilities/protocol.py`, `src/paxman/_registry/capability_registry.py`, `src/paxman/_capabilities/discovery.py`, or any built-in capability under `src/paxman/_capabilities/<domain>/canonicalizer.py`. The Capability Protocol is the only extension point of Paxman (mandate §5.1, Law 6, Law 11). New capabilities must be pure functions of (value, contract) — no I/O, no time, no randomness, no network.
+      instructions: >-
+        Apply when the PR/MR touches `src/paxman/_capabilities/protocol.py`,
+        `src/paxman/_registry/capability_registry.py`, `src/paxman/_capabilities/discovery.py`,
+        or any built-in capability under `src/paxman/_capabilities/<domain>/canonicalizer.py`. The
+        Capability Protocol is the only extension point of Paxman (mandate §5.1, Law 6, Law 11).
+        New capabilities must be pure functions of (value, contract) — no I/O, no time, no
+        randomness, no network.
     - label: Contract
-      instructions: Apply when the PR/MR touches `src/paxman/_registry/contract_registry.py`, `src/paxman/_dsl/parser.py`, or any `src/paxman/_capabilities/<domain>/contract.py`. The contract declares *what* the canonical form is, never *how* it is produced (mandate Law 5). Adding a new contract `kind` requires a design spec and an implementation plan.
+      instructions: >-
+        Apply when the PR/MR touches `src/paxman/_dsl/parser.py`, or any
+        `src/paxman/_capabilities/<domain>/contract.py`. The contract declares *what* the canonical
+        form is, never *how* it is produced (mandate Law 5).
     - label: Replay / Determinism
-      instructions: Apply when the PR/MR touches replay, artifact serialization, hash computation, the orchestrator, the registry, or any capability in any way that could affect determinism or replay byte-equality. The replay invariant (mandate Law 12) is `replay(artifact, contract) == artifact` byte-for-byte, and the determinism invariant (mandate Law 1) requires the same `(input, contract, capabilities, configuration, version)` to always produce the same artifact.
+      instructions: >-
+        Apply when the PR/MR touches replay, artifact serialization, hash computation, the
+        orchestrator, the registry, or any capability in any way that could affect determinism or
+        replay byte-equality. The replay invariant (mandate Law 12) is
+        `replay(artifact, contract) == artifact` byte-for-byte, and the determinism invariant
+        (mandate Law 1) requires the same `(input, contract, capabilities, configuration, version)`
+        to always produce the same artifact.
   path_filters:
     - "!*.xc*/**"
     - "!node_modules/**"
@@ -44,33 +61,34 @@ reviews:
     - "!.hypothesis/**"
     - "!.codegraph/**"
     - "!.worktrees/**"
-    - "!.sisyphus/**"
     - "!uv.lock"
   path_instructions:
     - path: MANDATE.md
       instructions: >-
         When reviewing MANDATE.md:
 
-        1. MANDATE.md is the constitutional boundary of Paxman (the 13 laws in §7 plus the three invariants in §1.2 and the
-        formal canonicalization definition in §2). Every architectural decision, every pull request, and every new
-        abstraction is         evaluated against it. Where MANDATE.md conflicts with README.md, a design
-        spec, an implementation plan, or any other document, MANDATE.md wins.
+        1. MANDATE.md is the constitutional boundary of Paxman (the 13 laws in §7 plus the three
+        invariants in §1.2 and the formal canonicalization definition in §2). Every architectural
+        decision, every pull request, and every new abstraction is evaluated against it. Where
+        MANDATE.md conflicts with README.md, a design spec, an implementation plan, or any other
+        document, MANDATE.md wins.
 
-        2. MANDATE.md is amendable, not appendable. Adding a new law is an amendment to §7. A new amendment must (a) be
-        compatible with every existing law and invariant, and (b) carry an explicit "Provenance" entry in §11 noting
-        when and why it was added. Flag any edit that silently weakens a law or removes it without an amendment.
+        2. MANDATE.md is amendable, not appendable. Adding a new law is an amendment to §7. A new
+        amendment must (a) be compatible with every existing law and invariant, and (b) carry an
+        explicit "Provenance" entry in §11 noting when and why it was added. Flag any edit that
+        silently weakens a law or removes it without an amendment.
 
-        3. Laws 1–13 are the floor, not the ceiling. Do not suggest weakening a law to accommodate a PR — the law
-        wins.
+        3. Laws 1–13 are the floor, not the ceiling. Do not suggest weakening a law to accommodate
+        a PR — the law wins.
 
-        4. The retired vocabulary list in §6.3 (`heuristic`, `confidence`, `best match`, `probably`, `approximate`) and
-        the adopted vocabulary (`resolver`, `dispatcher`, `registry`, `matcher`, `capability resolution`) is
-        normative. Edits to MANDATE.md that change the vocabulary are constitutional amendments and must carry
-        the §11 provenance note.
+        4. The retired vocabulary list in §6.3 (`heuristic`, `confidence`, `best match`, `probably`,
+        `approximate`) and the adopted vocabulary (`resolver`, `dispatcher`, `registry`, `matcher`,
+        `capability resolution`) is normative. Edits to MANDATE.md that change the vocabulary are
+        constitutional amendments and must carry the §11 provenance note.
 
-        5. The closing sentence in §10.4 ("Paxman would rather reject a value than silently canonicalize it
-        incorrectly") is the contributor principle. It is the single sentence every contributor sees before writing
-        code. Do not weaken it.
+        5. The closing sentence in §10.4 ("Paxman would rather reject a value than silently
+        canonicalize it incorrectly") is the contributor principle. It is the single sentence every
+        contributor sees before writing code. Do not weaken it.
     - path: PROPOSED_STRUCTURE.md
       instructions: >-
         REMOVED: PROPOSED_STRUCTURE.md does not exist in this repository. The
@@ -80,287 +98,282 @@ reviews:
       instructions: >-
         When reviewing Python code for Paxman v2 (a deterministic canonicalization engine):
 
-        1. Capability purity (mandate Law 8a): a capability may only depend on inputs that are explicitly
-        versioned and participate in replay. No `import requests`, no `import urllib`, no `open(`, no `os.`, no
-        `time.`, no `random.`, no `secrets.`, no `datetime.` of any kind (a capability must not read the wall
-        clock, the timezone DB, or perform any calendar math), no network calls, no filesystem reads, no
-        environment lookups inside `src/paxman/_capabilities/`. Pure functions of `(value, contract)` only. Flag
-        any of these.
+        1. Capability purity (mandate Law 8a): a capability may only depend on inputs that are
+        explicitly versioned and participate in replay. No `import requests`, no `import urllib`,
+        no `open(`, no `os.`, no `time.`, no `random.`, no `secrets.`, no `datetime.` of any kind
+        (a capability must not read the wall clock, the timezone DB, or perform any calendar math),
+        no network calls, no filesystem reads, no environment lookups inside
+        `src/paxman/_capabilities/`. Pure functions of `(value, contract)` only. Flag any of these.
+        Exception: `src/paxman/_capabilities/date/` may use `datetime` for calendar math on
+        already-parsed integers (reading the wall clock is still forbidden).
 
-        2. Vocabulary (mandate §6.3): the words `heuristic`, `confidence`, `best match`, `probably`, and
-        `approximate` are RETIRED. Their adopted replacements are `resolver`, `dispatcher`, `registry`, `matcher`,
-        `capability resolution`, `matching rule`. Flag any use of the retired words in code, comments, or
-        docstrings — including in test files, which must demonstrate the new vocabulary.
+        2. Vocabulary (mandate §6.3): the words `heuristic`, `confidence`, `best match`,
+        `probably`, and `approximate` are RETIRED. Their adopted replacements are `resolver`,
+        `dispatcher`, `registry`, `matcher`, `capability resolution`, `matching rule`. Flag any use
+        of the retired words in code, comments, or docstrings — including in test files, which must
+        demonstrate the new vocabulary.
 
-        3. API naming: the public API is `paxman.canonicalize`, `paxman.replay`, `paxman.register_capability`. The
-        v1.x API name `paxman.normalize` is GONE (it raises `AttributeError` intentionally in `paxman/__init__.py`).
-        Flag any `def normalize` or `paxman.normalize` reference in `src/paxman/` or `tests/`. Likewise, the v1.x
-        submodules `paxman.api`, `paxman.testing`, `paxman.contract`, `paxman.planner`, `paxman.executor`,
-        `paxman.reconciler`, `paxman.artifact`, `paxman.providers` are GONE — flag any import from them.
+        3. API naming: the public API is `paxman.canonicalize`, `paxman.replay`,
+        `paxman.register_capability`. The v1.x API name `paxman.normalize` is GONE (it raises
+        `AttributeError` intentionally in `paxman/__init__.py`). Flag any `def normalize` or
+        `paxman.normalize` reference in `src/paxman/` or `tests/`. Likewise, the v1.x submodules
+        `paxman.api`, `paxman.testing`, `paxman.contract`, `paxman.planner`, `paxman.executor`,
+        `paxman.reconciler`, `paxman.artifact`, `paxman.providers` are GONE — flag any import
+        from them.
 
-        4. Status, not confidence: outcomes are the five-value `Status` enum (`CANONICALIZED`, `INVALID`,
-        `MISSING`, `AMBIGUOUS`, `UNSUPPORTED`). Confidence scores, probability bands, "best match", and ranking
-        are forbidden (mandate Law 3). Flag any float, band, or score on an artifact or capability result.
+        4. Status, not confidence: outcomes are the five-value `Status` enum (`CANONICALIZED`,
+        `INVALID`, `MISSING`, `AMBIGUOUS`, `UNSUPPORTED`). Confidence scores, probability bands,
+        "best match", and ranking are forbidden (mandate Law 3). Flag any float, band, or score
+        on an artifact or capability result.
 
-        5. Immutability (mandate Law 13): `ExecutionArtifact` is `@attrs.frozen`. Every field on every artifact
-        is set at construction and cannot be reassigned. Flag any `artifact.<field> = ...` or any code that
-        builds an artifact via a non-frozen class.
+        5. Immutability (mandate Law 13): `ExecutionArtifact` is `@attrs.frozen`. Every field on
+        every artifact is set at construction and cannot be reassigned. Flag any
+        `artifact.<field> = ...` or any code that builds an artifact via a non-frozen class.
 
-        6. Replay (mandate Law 12): `replay(artifact, contract) == artifact` byte-for-byte. The `replay_hash`
-        must be independently re-computed from the artifact's canonical bytes at verification time, not
-        re-read from the stored value. Flag any `_compute_replay_hash(artifact)` that returns
-        `artifact.replay_hash` directly.
+        6. Replay (mandate Law 12): `replay(artifact, contract) == artifact` byte-for-byte. The
+        `replay_hash` must be independently re-computed from the artifact's canonical bytes at
+        verification time, not re-read from the stored value. Flag any
+        `_compute_replay_hash(artifact)` that returns `artifact.replay_hash` directly.
 
-        7. Idempotence (mandate Law 2): `canonicalize(canonicalize(x), contract) == canonicalize(x, contract)`.
-        Capability implementations must be fixed points of themselves (e.g. lower-casing is a fixed point of
-        lower-casing).
+        7. Idempotence (mandate Law 2): `canonicalize(canonicalize(x), contract) == canonicalize(x,
+        contract)`. Capability implementations must be fixed points of themselves (e.g. lower-casing
+        is a fixed point of lower-casing).
 
         8. Contract = what, not how (mandate Law 5): contract fields are policy declarations
-        (`lowercase=True/False`, `provider_aliases="none"/"gmail"`, `locale="US"/"EU"/"ISO"`, etc.). Flag any
-        contract field that describes an algorithm (e.g. `auto_detect`, `infer_provider`, `use_llm`).
+        (`lowercase=True/False`, `provider_aliases="none"/"gmail"`, `locale="US"/"EU"/"ISO"`, etc.).
+        Flag any contract field that describes an algorithm (e.g. `auto_detect`,
+        `infer_provider`, `use_llm`).
 
-        9. Data classes: use `attrs` (`@attrs.frozen` for value types). `attrs>=26.1.0` is the ONLY runtime
-        dependency (see pyproject.toml). The v1.x pydantic dependency is GONE. Flag any pydantic import or any
-        non-attrs mutable dataclass in `src/paxman/`.
+        9. Data classes: use `attrs` (`@attrs.frozen` for value types). `attrs>=26.1.0` is the
+        ONLY runtime dependency (see pyproject.toml). The v1.x pydantic dependency is GONE. Flag
+        any pydantic import or any non-attrs mutable dataclass in `src/paxman/`.
 
         10. Errors: exceptions are reserved for calls that *cannot proceed* (broken contract, version
-        mismatch, frozen registry, internal invariant violation). The five `Status` values are *outcomes* on a
-        successfully-returned artifact, not exceptions. Flag any place that raises for a recoverable
-        canonicalization outcome (an `Invalid` input is a Status, not a raise).
+        mismatch, frozen registry, internal invariant violation). The five `Status` values are
+        *outcomes* on a successfully-returned artifact, not exceptions. Flag any place that raises
+        for a recoverable canonicalization outcome (an `Invalid` input is a Status, not a raise).
 
-        11. No `as any` / `# type: ignore` / `# noqa` for type-error suppression. Use the typed alternative
-        (a `Protocol`, a `TypeAlias`, a real annotation). The mypy config intentionally permits a few codes;
-        do NOT add `# type: ignore` to widen that.
+        11. No `as any` / `# type: ignore` / `# noqa` for type-error suppression. Use the typed
+        alternative (a `Protocol`, a `TypeAlias`, a real annotation). The mypy config intentionally
+        permits a few codes; do NOT add `# type: ignore` to widen that.
     - path: tests/**/*.py
       instructions: >-
         When reviewing test code under `tests/`:
 
-        1. Three directories only: `tests/unit/`, `tests/property/`, `tests/integration/`. There is no
-        `tests/fixtures/`, no `tests/benchmark/`, no `tests/public_api/`. Flag any new test directory not in
-        this list.
+        1. Three directories only: `tests/unit/`, `tests/property/`, `tests/integration/`. There is
+        no `tests/fixtures/`, no `tests/benchmark/`, no `tests/public_api/`. Flag any new test
+        directory not in this list.
 
-        2. Test markers: the only markers declared in `pyproject.toml`'s `[tool.pytest.ini_options].markers` are
-        `property` and `integration`. New markers must be added to `pyproject.toml` first or pytest's
-        `--strict-markers` rejects them.
+        2. Test markers: the only markers declared in `pyproject.toml`'s
+        `[tool.pytest.ini_options].markers` are `property` and `integration`. New markers must be
+        added to `pyproject.toml` first or pytest's `--strict-markers` rejects them.
 
         3. Property tests: must use Hypothesis. The property tests in `tests/property/` are the
         mechanical evidence for MANDATE.md §1.2's three invariants and Laws 2, 12, 13 (e.g.
-        `test_replay_invariant`, `test_idempotence_invariant`, `test_artifact_immutability_invariant`,
-        `test_canonicalization_invariant`, `test_uniqueness_invariant`, plus per-capability invariant tests). Flag
-        any PR that drops or weakens any of these.
+        `test_replay_invariant`, `test_idempotence_invariant`,
+        `test_artifact_immutability_invariant`, `test_canonicalization_invariant`,
+        `test_uniqueness_invariant`, plus per-capability invariant tests). Flag any PR that drops
+        or weakens any of these.
 
         4. Replay tests must verify byte-equality of the rehydrated artifact to the original
-        (`assert rehydrated == artifact` AND `assert rehydrated.canonical_bytes() == art.canonical_bytes()`).
-        Flag any replay test that checks only a subset of fields.
+        (`assert rehydrated == artifact` AND
+        `assert rehydrated.canonical_bytes() == artifact.canonical_bytes()`). Flag any replay test that
+        checks only a subset of fields.
 
-        5. No vendored test data. v2 has no `tests/fixtures/`, no PII, no third-party corpora. If a test
-        needs data, it must be generated inline (Hypothesis strategies) or in a one-off local fixture inside
-        the test file. Flag any test that reads from a path not under `tests/`.
+        5. No vendored test data. v2 has no `tests/fixtures/`, no PII, no third-party corpora. If a
+        test needs data, it must be generated inline (Hypothesis strategies) or in a one-off local
+        fixture inside the test file. Flag any test that reads from a path not under `tests/`.
 
-        6. The Capability Protocol test must verify that two independent implementations of the same capability
-        produce the same canonical value (mandate §5.1 litmus test). The EmailCapability test must verify
-        every policy combination and verify idempotence. Each new capability domain
-        (`_capabilities/<domain>/`) ships unit tests under `tests/unit/test_<domain>_*.py` and, where
-        applicable, property/integration coverage.
+        6. The Capability Protocol test must verify that two independent implementations of the same
+        capability produce the same canonical value (mandate §5.1 litmus test). The EmailCapability
+        test must verify every policy combination and verify idempotence. Each new capability domain
+        (`_capabilities/<domain>/`) ships unit tests under `tests/unit/test_<domain>_*.py` and,
+        where applicable, property/integration coverage.
 
-        7. Do not delete or weaken a failing test to make the suite pass. A determinism violation is a hard
-        test failure, not a flake.
+        7. Do not delete or weaken a failing test to make the suite pass. A determinism violation is
+        a hard test failure, not a flake.
 
-        8. Coverage gate: CI enforces **per-subpackage** line coverage ≥90% for each `_*` package under
-        `src/paxman/` (including `_capabilities/url` once added). New code must ship with tests that keep its
-        subpackage ≥90%. Flag any new module without accompanying tests.
+        8. Coverage gate: CI enforces **per-subpackage** line coverage ≥90% for each `_*` package
+        under `src/paxman/`. New code must ship with tests keeping its subpackage ≥90%. Flag any new
+        module without accompanying tests.
     - path: src/paxman/_core/engine.py
       instructions: >-
         When reviewing the engine (the pipeline Paxman owns, mandate Law 6):
 
-        1. The pipeline walks the stages owned by the engine: it inspects the contract, resolves claimants
-        via the registry, dispatches to the winning capability's `canonicalize`, validates the result, and
-        classifies the outcome. Users register capabilities (the `execute`/`canonicalize` stage); they may
-        NOT rearrange the other stages. Flag any user-facing hook into a non-`canonicalize` stage.
+        1. The pipeline walks the stages owned by the engine: it inspects the contract, resolves
+        claimants via the registry, dispatches to the winning capability's `canonicalize`, validates
+        the result, and classifies the outcome. Users register capabilities (the
+        `execute`/`canonicalize` stage); they may NOT rearrange the other stages. Flag any
+        user-facing hook into a non-`canonicalize` stage.
 
-        2. The engine catches `ContractError` (raised by `parse_contract` / the contract registry) and yields
-        `Status.UNSUPPORTED` rather than raising. Flag any re-raise of `ContractError` for a malformed
-        contract that is in scope (an unknown `kind` is an `UNSUPPORTED` outcome, not a runtime error).
+        2. The engine catches `ContractError` (raised by `parse_contract` / the contract registry)
+        and yields `Status.UNSUPPORTED` rather than raising. Flag any re-raise of `ContractError`
+        for a malformed contract that is in scope (an unknown `kind` is an `UNSUPPORTED` outcome,
+        not a runtime error).
 
         3. The engine calls `registry.freeze()` implicitly on the first `canonicalize` via
-        `load_builtins`. The freeze is idempotent. Flag any explicit freeze that races with an in-flight call.
+        `load_builtins`. The freeze is idempotent. Flag any explicit freeze that races with an
+        in-flight call.
 
-        4. The multi-claimant case yields `Status.AMBIGUOUS` with an `Evidence` entry listing all claimants
-        (mandate §5.4, Law 4). Flag any code path that picks a single capability from a multi-claimant set.
+        4. The multi-claimant case yields `Status.AMBIGUOUS` with an `Evidence` entry listing all
+        claimants (mandate §5.4, Law 4). Flag any code path that picks a single capability from a
+        multi-claimant set.
 
-        5. The engine is a pure function of `(input, contract, frozen_registry, paxman_version)`. Flag
-        any read of `time`, `os.urandom`, `uuid.uuid4`, or any other non-deterministic source inside
-        `canonicalize`.
+        5. The engine is a pure function of `(input, contract, frozen_registry, paxman_version)`.
+        Flag any read of `time`, `os.urandom`, `uuid.uuid4`, or any other non-deterministic source
+        inside `canonicalize`.
     - path: src/paxman/_core/artifact.py
       instructions: >-
         When reviewing `ExecutionArtifact`:
 
-        1. The class is `@attrs.frozen`. Every field is set at construction. `replay_hash` is computed in
-        `__attrs_post_init__` via `object.__setattr__` (the one permitted mutation). Flag any code path that
-        bypasses `__setattr__` enforcement.
+        1. The class is `@attrs.frozen`. Every field is set at construction. `replay_hash` is
+        computed in `__attrs_post_init__` via `object.__setattr__` (the one permitted mutation).
+        Flag any code path that bypasses `__setattr__` enforcement.
 
-        2. `canonical_bytes()` produces a deterministic JSON serialization: `sort_keys=True`, no whitespace,
-        `ensure_ascii=False`, UTF-8 encoded. The `replay_hash` is `sha256(canonical_bytes())`. Flag any
-        change to the serialization that breaks byte-equality across runs.
+        2. `canonical_bytes()` produces a deterministic JSON serialization: `sort_keys=True`, no
+        whitespace, `ensure_ascii=False`, UTF-8 encoded. The `replay_hash` is
+        `sha256(canonical_bytes())`. Flag any change to the serialization that breaks byte-equality
+        across runs.
 
-        3. The artifact must not embed secrets, raw input, or any external state. Flag any field that carries
-        a URL, an environment variable name, or a raw input payload.
+        3. The artifact must not embed secrets, raw input, or any external state. Flag any field
+        that carries a URL, an environment variable name, or a raw input payload.
 
-        4. The contract is stored on the artifact in addition to the parsed view, so `replay(artifact,
-        contract)` does not need the caller's original contract dict. The stored form must round-trip
-        through `parse_contract`.
+        4. The contract is stored on the artifact in addition to the parsed view, so
+        `replay(artifact, contract)` does not need the caller's original contract dict. The stored
+        form must round-trip through `parse_contract`.
     - path: src/paxman/_core/replay.py
       instructions: >-
         When reviewing the replay path (mandate Law 12):
 
-        1. `replay(artifact, contract)` verifies, in order: (a) `paxman_version` matches, (b) `contract_version`
-        matches, (c) `capabilities_hash` matches the current frozen registry, (d) `replay_hash` matches
-        `sha256(artifact.canonical_bytes())`. Each mismatch raises a specific exception
-        (`VersionMismatchError` for (a)–(c), `CanonicalizationError` for (d)). Flag any "verification" that
-        re-reads the stored value rather than recomputing it.
+        1. `replay(artifact, contract)` verifies, in order: (a) `paxman_version` matches,
+        (b) `contract_version` matches, (c) `capabilities_hash` matches the current frozen registry,
+        (d) `replay_hash` matches `sha256(artifact.canonical_bytes())`. Each mismatch raises a
+        specific exception (`VersionMismatchError` for (a)–(c), `CanonicalizationError` for (d)).
+        Flag any "verification" that re-reads the stored value rather than recomputing it.
 
-        2. The function returns the artifact, byte-equal, or raises. There is no `Status` on the replay path.
-        Flag any code path that returns a `Status`-bearing artifact instead of raising.
+        2. The function returns the artifact, byte-equal, or raises. There is no `Status` on the
+        replay path. Flag any code path that returns a `Status`-bearing artifact instead of raising.
 
-        3. Replay must not re-execute any capability. The engine, the registry, the contract parser, and
-        the validators are all in scope; capabilities and their `canonicalize` methods are NOT. Flag any
-        `capability.canonicalize(...)` call inside `replay`.
+        3. Replay must not re-execute any capability. The engine, the registry, the contract parser,
+        and the validators are all in scope; capabilities and their `canonicalize` methods are NOT.
+        Flag any `capability.canonicalize(...)` call inside `replay`.
     - path: src/paxman/_capabilities/**
       instructions: >-
         When reviewing the Capability SPI and any built-in capability (per-domain packages under
-        `src/paxman/_capabilities/<domain>/` — currently email, uuid, date, phone, url):
+        `src/paxman/_capabilities/<domain>/` — currently boolean, country, date, email, geolocation,
+        ip, money, phone, url, uuid):
 
-        1. The `Capability` Protocol (`src/paxman/_capabilities/protocol.py`) has exactly two methods:
-        `can_handle(contract, value) -> bool` and `canonicalize(value, contract) -> CapabilityResult`. The
-        Protocol deliberately omits control-flow verbs: no `next`, `execute`, `pipeline`, `stage`, `context
-        switching`, `branching`. Flag any addition to the Protocol that introduces orchestration.
+        1. The `Capability` Protocol (`src/paxman/_capabilities/protocol.py`) has two required
+        methods: `can_handle(contract, value) -> bool` and `canonicalize(value, contract, *,
+        engine=None) -> CapabilityResult`. The Protocol also declares `supported_output_formats` as
+        an attribute. The Protocol deliberately omits control-flow verbs: no `next`, `execute`,
+        `pipeline`, `stage`, `context switching`, `branching`. Flag any addition to the Protocol
+        that introduces orchestration.
 
-        2. A capability is a pure function of `(value, contract)` (mandate Law 8a). No `import requests`,
-        no `open(`, no `os.`, no `time.`, no `random.`, no `secrets.`, no environment reads, no filesystem.
-        Flag any of these in any file under `src/paxman/_capabilities/` (the date capability's use of
-        `datetime` for calendar math on parsed integers is allowed; reading the wall clock is not).
+        2. A capability is a pure function of `(value, contract)` (mandate Law 8a). No
+        `import requests`, no `open(`, no `os.`, no `time.`, no `random.`, no `secrets.`, no
+        environment reads, no filesystem. Flag any of these in any file under
+        `src/paxman/_capabilities/` (the date capability's use of `datetime` for calendar math on
+        parsed integers is allowed; reading the wall clock is not).
 
-        3. Two independent implementations of the same capability, given the same `(value, contract)` and the
-        same MANDATE.md anchors, MUST produce the same canonical value (mandate §5.1 litmus test). Flag any
-        capability that depends on a global, a module-level cache, or a hidden state.
+        3. Two independent implementations of the same capability, given the same `(value, contract)`
+        and the same MANDATE.md anchors, MUST produce the same canonical value (mandate §5.1 litmus
+        test). Flag any capability that depends on a global, a module-level cache, or a hidden state.
 
-        4. The CapabilityRegistry (`src/paxman/_registry/capability_registry.py`) exposes `register(capability)`,
-        `resolve_all(contract, value)`, `load_builtins(...)`, `freeze()`, and `capabilities_hash()`. After
-        `freeze()`, `register` raises `FrozenRegistryError`. A duplicate name at `register` time raises
-        `ConfigurationError`. Flag any registry method that ranks capabilities, scores them, or picks a "best"
-        one (mandate Law 3 — never guess).
+        4. The CapabilityRegistry (`src/paxman/_registry/capability_registry.py`) exposes
+        `register(capability)`, `resolve_all(contract, value)`, `load_builtins(...)`, `freeze()`,
+        and `capabilities_hash()`. After `freeze()`, `register` raises `FrozenRegistryError`. A
+        duplicate name at `register` time raises `ConfigurationError`. Flag any registry method that
+        ranks capabilities, scores them, or picks a "best" one (mandate Law 3 — never guess).
 
         5. Built-in capabilities are per-domain classes (e.g. `EmailCapability`, `URLCapability`) in
         `src/paxman/_capabilities/<domain>/canonicalizer.py`. They are auto-wired by
-        `builtin_capabilities()` in `src/paxman/_capabilities/discovery.py`, which the engine calls on the
-        first `canonicalize`. There is NO `_capabilities/builtins/` directory. Adding a new built-in means
-        (a) implementing the capability class in the domain package and (b) appending it to the list returned
-        by `builtin_capabilities()`. Flag any placeholder capability that is not yet implemented, and any
-        built-in that is not registered through `discovery.builtin_capabilities()`.
+        `builtin_capabilities()` in `src/paxman/_capabilities/discovery.py`, which the engine calls
+        on the first `canonicalize`. There is NO `_capabilities/builtins/` directory. Adding a new
+        built-in means (a) implementing the capability class in the domain package and (b) appending
+        it to the list returned by `builtin_capabilities()`. Flag any placeholder capability that is
+        not yet implemented, and any built-in that is not registered through
+        `discovery.builtin_capabilities()`.
 
         6. Each domain package follows the same internal shape: `contract.py` (the `Canonical*Contract`
         value object, with a `kind` string like `canonical_email` / `canonical_url`), `parser.py`,
-        `rules.py`, `grammar.py`, and `canonicalizer.py` (the `canonicalize` logic). Mirror this layout for
-        new domains.
-    - path: src/paxman/_registry/contract_registry.py
+        `rules.py`, a grammar seam (`grammar.py`, or a `grammar/` package when a domain needs a
+        multi-module catalogue as `date/` does), and `canonicalizer.py` (the `canonicalize` logic).
+        Mirror this layout for new domains. Grammar recognition returns structured provenance and is
+        filtered by the contract's grammar include/exclude policy. The `money` capability is an
+        intentional escape from the shared grammar seam — see `CODING_GUIDELINES.md` §10 for why.
+    - path: src/paxman/_dsl/parser.py
       instructions: >-
-        When reviewing the contract layer:
+        When reviewing the DSL parser:
 
-        1. Contract kinds are a closed set dispatched by `src/paxman/_registry/contract_registry.py`:
-        `canonical_email`, `canonical_uuid`, `canonical_date`, `canonical_phone`, `canonical_url`. Each
-        capability domain registers a builder at import time; the DSL parser (`src/paxman/_dsl/parser.py`)
-        asks this registry by `kind` and never names a concrete contract class. Adding a new `kind` requires
-        a design spec under `.superpowers/specs/` and an implementation plan under `.superpowers/plans/`.
-        Flag any new `kind` without those documents.
+        1. `parse_contract` accepts a `ContractSpec` (a dict with `kind` and optional `fields`) and
+        returns a `Canonical*Contract` value object. The contract kinds are a closed set: email, uuid,
+        date, phone, url, boolean, ip, money, geolocation, country. Adding a new `kind` requires
+        implementing the capability first.
 
-        2. Contract fields are policy declarations (mandate Law 5 — "what, not how"). Flag any field that
-        describes an algorithm (`auto_detect`, `infer_provider`, `use_llm`).
+        2. Contract fields are policy declarations (mandate Law 5 — "what, not how"). Flag any field
+        that describes an algorithm (`auto_detect`, `infer_provider`, `use_llm`).
 
-        3. `parse_contract` raises `ContractError` on malformed input. The engine catches `ContractError`
-        and yields `Status.UNSUPPORTED`. Flag any `parse_contract` call site that does not tolerate an
-        unknown `kind` becoming an `UNSUPPORTED` outcome.
+        3. `parse_contract` raises `ContractError` on malformed input. The engine catches
+        `ContractError` and yields `Status.UNSUPPORTED`. Flag any `parse_contract` call site that
+        does not tolerate an unknown `kind` becoming an `UNSUPPORTED` outcome.
 
-        4. The contract carries a `version_field` (int) used by replay. Bumping it is a breaking change to
-        the contract vocabulary. Flag any new contract value object that omits `version_field`.
+        4. The contract carries a `version_field` (int) used by replay. Bumping it is a breaking
+        change to the contract vocabulary. Flag any new contract value object that omits
+        `version_field`.
     - path: src/paxman/__init__.py
       instructions: >-
         When reviewing the public API:
 
-        1. The v2 public surface is exactly: `paxman.canonicalize`, `paxman.replay`, `paxman.register_capability`,
-        plus the value-type re-exports. The exported contracts are the five `Canonical*Contract` value objects
-        (and their short aliases `Email`, `UUID`, `Date`, `Phone`, `URL`) plus the `Contract` union. The
-        exported errors are `PaxmanError`, `CanonicalizationError`, `ConfigurationError`, `ContractError`,
-        `FrozenRegistryError`, `UnsupportedContractError`, `VersionMismatchError`. The v1.x submodule
-        `paxman.api` and `paxman.testing` are GONE. Flag any import from `paxman.api` or `paxman.testing`.
-        `canonicalize`/`replay` are re-exported from `_core/engine.py` and `_core/replay.py`; the
-        `_orchestrator_runtime.py` helper exists only to break the import cycle with `paxman/__init__.py`.
+        1. The v2 public surface is exactly: `paxman.canonicalize`, `paxman.canonicalize_with`,
+        `paxman.replay`, `paxman.register_capability`, plus the value-type re-exports. The exported contracts are the
+        ten `Canonical*Contract` value objects (and their short aliases `Email`, `UUID`, `Date`,
+        `Phone`, `URL`, `Boolean`, `IP`, `Money`, `Geolocation`, `Country`) plus the `Contract`
+        union. The exported errors are `PaxmanError`, `CanonicalizationError`, `ConfigurationError`,
+        `ContractError`, `FrozenRegistryError`, `UnsupportedContractError`, `VersionMismatchError`.
+        The exported types include         `Engine`, `Edition`, `Latest`, `Capability`, `CapabilityResult`, `Status`,
+        `VersionStamp`, `ExecutionArtifact`, `Evidence`, `ValidationResult`. The v1.x submodules
+        `paxman.api` and `paxman.testing` are GONE. Flag any import from `paxman.api` or
+        `paxman.testing`. `canonicalize`/`replay` are re-exported from `_core/engine.py` and
+        `_core/replay.py`; the `_orchestrator_runtime.py` helper exists only to break the import
+        cycle with `paxman/__init__.py`.
 
-        2. New public symbols require a design spec under `.superpowers/specs/` and an implementation
-        plan under `.superpowers/plans/`. Flag any new export in `__all__` that lacks both.
+        2. New public symbols require discussion and approval. Flag any new export in `__all__` that
+        appears without prior discussion in the PR description.
 
-        3. `register_capability` is a thin wrapper over the default registry in `paxman._orchestrator_runtime`.
-        It must NOT auto-register any built-in on `import paxman` — built-ins load on the first
-        `canonicalize` via `discovery.builtin_capabilities()`. Flag any module-level side effect in
-        `_capabilities/<domain>/__init__.py` that auto-registers on import.
+        3. `register_capability` is a thin wrapper over the default registry in
+        `paxman._orchestrator_runtime`. It must NOT auto-register any built-in on `import paxman` —
+        built-ins load on the first `canonicalize` via `discovery.builtin_capabilities()`. Flag any
+        module-level side effect in `_capabilities/<domain>/__init__.py` that auto-registers on
+        import.
     - path: pyproject.toml
       instructions: >-
         When reviewing pyproject.toml:
 
-        1. The runtime dependency set is exactly `attrs>=26.1.0` (the `@attrs.frozen` value-type backbone for
-        every value type under `src/paxman/`). There are NO other runtime dependencies. The v1.x 4-package
-        core cap is GONE. Flag any addition to `[project].dependencies` beyond `attrs`.
+        1. The runtime dependency set is exactly `attrs>=26.1.0` (the `@attrs.frozen` value-type
+        backbone for every value type under `src/paxman/`). There are NO other runtime dependencies.
+        The v1.x 4-package core cap is GONE. Flag any addition to `[project].dependencies` beyond
+        `attrs`.
 
-        2. v2 has a conservative `[tool.ruff]` config (select: E, F, W, I, B, UP, RUF; line-length 100; S101/B011
-        ignored in tests) and a moderate `[tool.mypy]` config (`disallow_untyped_defs`, `warn_unused_ignores`,
-        `warn_redundant_casts`; not full `--strict`). The CI runs ruff, mypy, and a set of repo-parity scripts
-        as required gates. Adding stricter configs (e.g. `--strict` mypy) requires a design spec.
+        2. v2 has a conservative `[tool.ruff]` config (select: E, F, W, I, B, UP, RUF; line-length
+        100; S101/B011 ignored in tests) and a moderate `[tool.mypy]` config
+        (`disallow_untyped_defs`, `warn_unused_ignores`, `warn_redundant_casts`; not full
+        `--strict`). The CI runs ruff, mypy, and a set of repo-parity scripts as required gates.
+        Adding stricter configs (e.g. `--strict` mypy) requires discussion.
 
-        3. The `hatchling` build backend and the `[tool.hatch.build.targets.wheel]` section pointing at
-        `src/paxman` are the build settings. Do not change them.
+        3. The `hatchling` build backend and the `[tool.hatch.build.targets.wheel]` section pointing
+        at `src/paxman` are the build settings. Do not change them.
 
-        4. There is no Makefile or pre-commit config in v2. The CI workflow (`.github/workflows/ci.yml`)
-        runs eight jobs: `unit tests` (matrix on py3.11/3.12/3.13), `lint` (ruff check + ruff format
-        --check + repo-parity scripts on py3.12), `typecheck` (mypy on py3.12), `property tests` (Hypothesis
-        on py3.12), `coverage + per-subsystem threshold` (per-subpackage ≥90% via coverage on py3.12),
-        `integration tests` (end-to-end on py3.12), `lint + format + typecheck + import` (combined static
-        gate on py3.12), and `interrogate - 100% docstring coverage on public surface` (interrogate on
-        `src/paxman/__init__.py`, approved via `.superpowers/specs/2026-07-16-ci-static-docstring-gates-design.md`).
-        A per-subpackage coverage gate IS enforced — new `_*` subpackages must ship with tests keeping them
-        ≥90%. Adding security scanning, pyright, bandit, pip-audit, import-linter, or a build-wheel job to
-        CI requires a design spec.
+        4. There is no Makefile or pre-commit config in v2. The CI workflow
+        (`.github/workflows/ci.yml`) runs jobs including: unit tests (matrix on py3.11/3.12/3.13),
+        lint (ruff check + ruff format --check + repo-parity scripts), typecheck (mypy), property
+        tests (Hypothesis), coverage + per-subpackage threshold (≥90%), integration tests
+        (end-to-end), and build verification. A per-subpackage coverage gate IS enforced — new `_*`
+        subpackages must ship with tests keeping them ≥90%. Adding security scanning, pyright,
+        bandit, pip-audit, import-linter, or additional CI jobs requires discussion.
 
-        5. The package version is `0.0.0.dev0` until the first release; do not bump it without a release
-        process being defined.
-    - path: .superpowers/specs/**/*.md
-      instructions: >-
-        When reviewing design specifications under `.superpowers/specs/`:
-
-        1. Specs are the v2 design artefacts. They are anchored to MANDATE.md: every design decision in a
-        spec must trace to a section or law in MANDATE.md, or be marked as a candidate for drift. Flag any
-        spec section that introduces a concept not in MANDATE.md without marking it as drift.
-
-        2. The user has directed that there be at most ONE design spec and ONE implementation plan per
-        capability in v2. Multiple specs for the same capability are not allowed.
-
-        3. Specs must be precise enough to be implemented against. Flag hand-wavy language (`"etc."`,
-        `"and so on"`, `"TBD"`) in normative sections.
-
-        4. Specs may evolve freely (unlike MANDATE.md, which is amendable, not appendable). Version-bump
-        the spec title or add a "Changelog" section when behavior changes.
-    - path: .superpowers/plans/**/*.md
-      instructions: >-
-        When reviewing implementation plans under `.superpowers/plans/`:
-
-        1. Plans are TDD-first: each task is "write failing test, run it RED, implement, run GREEN, commit".
-        Flag any plan that does not have this structure.
-
-        2. There must be at most ONE implementation plan per design spec in v2. Flag any second plan
-        for the same spec.
-
-        3. Plans must reference their design spec by path. Flag any plan that does not.
-
-        4. Plans must include an end-to-end manual verification step (a `uv run python -c '...'` block) that
-        the implementer runs after all tasks complete. Flag any plan that omits this.
+        5. The package version is `0.0.0.dev0` until the first release; do not bump it without a
+        release process being defined.
     - path: RETRACTION.md
       instructions: >-
         REMOVED: RETRACTION.md does not exist in this repository. There is no
@@ -371,22 +384,23 @@ reviews:
 
         1. The project uses GitHub-flavored Markdown.
 
-        2. Wrap inline code with single backticks; use fenced blocks (```python, ```bash, ```yaml) for
-        multi-line snippets. Specify a language on every fenced block.
+        2. Wrap inline code with single backticks; use fenced blocks (```python, ```bash, ```yaml)
+        for multi-line snippets. Specify a language on every fenced block.
 
-        3. Internal links must be relative paths that exist in the repo. Flag absolute `file://` links and
-        links to deleted files. The v1.x paths are gone: `docs/adr/`, `examples/`, `playground/`, `Makefile`,
-        `mkdocs.yml`, `PROPOSED_STRUCTURE.md`, and `RETRACTION.md` must NOT be linked. Current doc roots are
-        `docs/` (reference/about/concepts/getting-started/how-to/releases/capabilities), `ARCHITECTURE.md`,
-        `MANDATE.md`, `AGENTS.md`, `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, and the
-        `.superpowers/{specs,plans}/` directories.
+        3. Internal links must be relative paths that exist in the repo. Flag absolute `file://`
+        links and links to deleted files. The v1.x paths are gone: `docs/adr/`, `examples/`,
+        `Makefile`, `mkdocs.yml`, `PROPOSED_STRUCTURE.md`, `RETRACTION.md`, and `playground/`
+        must NOT be linked. Current doc roots are `docs/` (reference/about/concepts/getting-started/
+        how-to/releases/capabilities), `ARCHITECTURE.md`, `MANDATE.md`, `AGENTS.md`,
+        `CODING_GUIDELINES.md`, `README.md`, `CONTRIBUTING.md`, and `SECURITY.md`.
 
         4. Headings must be in title case with a blank line before and after.
 
-        5. The vocabulary in MANDATE.md §6.3 is normative. Flag any use of `heuristic`, `confidence`,
-        `best match`, `probably`, or `approximate` in any markdown file under the project — including in
-        examples, rationale sections, and "alternatives considered" callouts. The adopted vocabulary
-        (`resolver`, `dispatcher`, `registry`, `matcher`, `capability resolution`) is preferred.
+        5. The vocabulary in MANDATE.md §6.3 is normative. Flag any use of `heuristic`,
+        `confidence`, `best match`, `probably`, or `approximate` in any markdown file under the
+        project — including in examples, rationale sections, and "alternatives considered" callouts.
+        The adopted vocabulary (`resolver`, `dispatcher`, `registry`, `matcher`, `capability
+        resolution`) is preferred.
   auto_review:
     ignore_title_keywords:
       - WIP

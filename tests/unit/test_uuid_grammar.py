@@ -37,13 +37,10 @@ class TestUUIDGrammar:
         ids = [g.id for g in GRAMMARS]
         assert len(ids) == len(set(ids))
 
-    def test_every_grammar_records_provenance_source(self) -> None:
-        # Law 14: every grammar carries a citation-backed source (an
-        # authoritative spec section, a documented provider behavior, or an
-        # explicit Paxman policy reference) — not a bare description.
+    def test_every_grammar_records_provenance(self) -> None:
         for grammar in GRAMMARS:
-            assert grammar.source
-            assert any(token in grammar.source for token in ("RFC", "Paxman", "spec", "§"))
+            assert grammar.provenance.name
+            assert any(token in grammar.provenance.name for token in ("RFC", "Paxman", "spec", "§"))
 
 
 class TestCanonicalUUIDGrammar:
@@ -51,9 +48,7 @@ class TestCanonicalUUIDGrammar:
         reps = recognize("550e8400-e29b-41d4-a716-446655440000", _contract())
         rep = _rep_by_id(reps, "canonical_uuid")
         assert rep is not None
-        assert rep.source == (
-            "RFC 4122 §3 (the canonical form is 36 chars; 8-4-4-4-12 grouping; lowercase hex)"
-        )
+        assert rep.provenance.name == "RFC 4122 §3"
         assert rep.captures == {"value": "550e8400-e29b-41d4-a716-446655440000"}
 
     def test_canonical_uuid_rejects_32_hex(self) -> None:

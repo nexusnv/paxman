@@ -6,13 +6,14 @@ reorganisation into ``paxman._capabilities.date``.
 
 from __future__ import annotations
 
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import attrs
 
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
     strip_authority_override,
 )
 from paxman._capabilities.date.i18n import SUPPORTED_LANGUAGES
@@ -23,6 +24,18 @@ from paxman._registry.contract_registry import register_contract
 # policy is declared, so a 2-digit year enumerates every plausible century
 # (Don't Guess -> AMBIGUOUS). ``"pivot:YYYY"`` expands ``YY`` via a pivot year.
 TwoDigitYearPolicy = Literal["reject", "require_four_digit_year"] | str
+
+_DATE_OUTPUT_FORMATS_ALLOWED = frozenset({"iso", "compact"})
+
+
+def _validate_output_format_date(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported date formats."""
+    if not isinstance(value, str) or value not in _DATE_OUTPUT_FORMATS_ALLOWED:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_DATE_OUTPUT_FORMATS_ALLOWED)}, "
+            f"got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -41,8 +54,14 @@ class CanonicalDateContract:
     locale: Literal["ISO", "US", "EU"] = "ISO"
     language: str = "en"
     two_digit_year: TwoDigitYearPolicy | None = None
+    output_format: Literal["iso", "compact"] = attrs.field(
+        default="iso", validator=_validate_output_format_date
+    )
     kind: str = "canonical_date"
     version_field: int = 1
+
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -54,7 +73,10 @@ class CanonicalDateContract:
                 "locale": self.locale,
                 "language": self.language,
                 "two_digit_year": self.two_digit_year,
+                "output_format": self.output_format,
                 "version_field": self.version_field,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -64,6 +86,9 @@ def Date(
     locale: Literal["ISO", "US", "EU"] = "ISO",
     language: str = "en",
     two_digit_year: TwoDigitYearPolicy | None = None,
+    output_format: Literal["iso", "compact"] = "iso",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalDateContract:
     """Domain-type sugar: declare a date contract in user vocabulary.
@@ -73,13 +98,18 @@ def Date(
     still honored exactly (Law 7 — no auto_detect of the input, only a fixed
     default). ``language`` selects the month/weekday-name table (default
     ``"en"``); ``two_digit_year`` selects the century policy (default ``None``,
-    i.e. Don't Guess -> AMBIGUOUS for 2-digit years).
+    i.e. Don't Guess -> AMBIGUOUS for 2-digit years). ``output_format``
+    selects the canonical output form (default ``"iso"`` for ``YYYY-MM-DD``;
+    ``"compact"`` for ``YYYYMMDD``).
     """
     return _build_date(
         {
             "locale": locale,
             "language": language,
             "two_digit_year": two_digit_year,
+            "output_format": output_format,
+            "include_grammar": include_grammar,
+            "exclude_grammar": exclude_grammar,
             "authority_override": authority_override,
         }
     )
@@ -117,11 +147,21 @@ def _build_date(spec: dict[str, object]) -> CanonicalDateContract:
     if two_digit_year is not None and not isinstance(two_digit_year, str):
         raise ContractError(f"invalid two_digit_year: {two_digit_year!r}; expected string")
     _validate_two_digit_year(two_digit_year)
+    output_format = spec.get("output_format", "iso")
+    if not isinstance(output_format, str) or output_format not in _DATE_OUTPUT_FORMATS_ALLOWED:
+        raise ContractError(
+            f"output_format must be one of {sorted(_DATE_OUTPUT_FORMATS_ALLOWED)}, "
+            f"got {output_format!r}"
+        )
     authority_override = _authority_override_from_spec(spec)
+    output_format = cast(Literal["iso", "compact"], output_format)
     return CanonicalDateContract(
         locale=locale,
         language=language,
         two_digit_year=two_digit_year,
+        output_format=output_format,
+        include_grammar=cast(tuple[str, ...], spec.get("include_grammar", ())),
+        exclude_grammar=cast(tuple[str, ...], spec.get("exclude_grammar", ())),
         authority_override=authority_override,
     )
 

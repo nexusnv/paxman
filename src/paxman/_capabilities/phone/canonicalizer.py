@@ -18,6 +18,7 @@ from paxman._capabilities._shared.base import (
     reject_contract,
     reject_non_string,
 )
+from paxman._capabilities._shared.grammar import Provenance
 from paxman._capabilities.phone.contract import CanonicalPhoneContract
 from paxman._capabilities.phone.grammar import RecognizedRep, recognize
 from paxman._capabilities.phone.parser import _cc_for_country
@@ -36,14 +37,14 @@ class _Candidate:
     """A single enumerated reading of a phone-shaped input.
 
     ``value`` is the fully-reconstructed candidate E.164 string. ``rule`` /
-    ``source`` carry the originating grammar's id and Law-14 provenance.
+    ``provenance`` carry the originating grammar's id and Law-14 provenance.
     ``evidence`` is the tuple of ``Evidence`` accumulated for the
     transformations that produced this candidate.
     """
 
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -53,7 +54,7 @@ class _Survivor:
 
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -78,7 +79,7 @@ def generate_interpretations(
                 _Candidate(
                     f"+{rep.captures['cc_first']}{rep.captures['national']}",
                     "e164",
-                    rep.source,
+                    rep.provenance,
                     (_evidence("no_transformation_needed"),),
                 )
             )
@@ -89,7 +90,7 @@ def generate_interpretations(
                 _Candidate(
                     f"+{cc}{national}",
                     rep.grammar_id,
-                    rep.source,
+                    rep.provenance,
                     (_evidence("cc_prepended"),),
                 )
             )
@@ -118,7 +119,7 @@ def resolve_and_validate(
         if body[0] == "0":  # leading-zero country code is invalid
             drop_reasons.append("grammar_rejected")
             continue
-        survivors.append(_Survivor(c.value, c.rule, c.source, c.evidence))
+        survivors.append(_Survivor(c.value, c.rule, c.provenance, c.evidence))
     return survivors, drop_reasons
 
 
@@ -185,7 +186,9 @@ class PhoneCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalPhoneContract, accept_none=False)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"e164"})
+
+    def _canonicalize(
         self, value: object, contract: object, engine: Engine | None = None
     ) -> CapabilityResult:
         r = reject_contract(contract, CanonicalPhoneContract, _evidence, "not_a_phone_contract")

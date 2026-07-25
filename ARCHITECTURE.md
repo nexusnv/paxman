@@ -92,12 +92,23 @@ writing, the public surface is:
 
 ```python
 from paxman import (
-    # the three user-facing verbs
-    canonicalize, replay, register_capability,
-    # the contract vocabulary
-    Email, CanonicalEmailContract, Contract, parse_contract,
+    # the four user-facing verbs
+    canonicalize, canonicalize_with, replay, register_capability,
+    # the contract vocabulary (10 domain pairs + union type)
+    Boolean, CanonicalBooleanContract,
+    Country, CanonicalCountryContract,
+    Date, CanonicalDateContract,
+    Email, CanonicalEmailContract,
+    Geolocation, CanonicalGeolocationContract,
+    IP, CanonicalIPContract,
+    Money, CanonicalMoneyContract,
+    Phone, CanonicalPhoneContract,
+    URL, CanonicalURLContract,
+    UUID, CanonicalUUIDContract,
+    Contract,  # union of all Canonical*Contract types
+    parse_contract,
     # the Engine: bind concrete authority editions (Concern 3)
-    Engine, ComplianceProfile, canonicalize_with,
+    Engine, Edition, Latest,
     # the type vocabulary
     Capability, CapabilityRegistry, ExecutionArtifact,
     CapabilityResult, Evidence, Status, ValidationResult, VersionStamp,
@@ -124,22 +135,24 @@ editions. It has three layers:
 
 - **Foundation (C):** `Engine(authorities)` binds explicit editions; this is
   what replay reconstructs from the recorded artifact.
-- **Sugar (B):** `Engine.with_authorities({"ISO 3166-1": "2024"})` pins
-  specific editions via a `ComplianceProfile` (an organization's adopted
-  profile). `Engine.default()` resolves every authority to its active
+- **Sugar (B):** `Engine.with_authorities({"ISO 3166-1": Edition("2024")})` pins
+  specific editions. `Engine.default()` resolves every authority to its active
   edition — this is what the zero-config `paxman.canonicalize` uses, so the
   default path is unchanged.
 - **Escape hatch (A):** a contract's `authority_override` pins one edition
   for a single call (testing), layered on top of the engine.
 
+The selection values are `Edition(id)` for a specific edition and `Latest`
+for the most recent available edition.
+
 ```python
-from paxman import canonicalize, replay, Country, Engine
+from paxman import canonicalize, replay, Country, Engine, Edition
 
 # Zero-config: active editions, identical to paxman.canonicalize(...)
 r = canonicalize("malaysia", Country(allow_name=True))
 
 # Pin a non-default edition for one call via the Engine.
-eng = Engine.with_authorities({"ISO 3166-1": "2024"})
+eng = Engine.with_authorities({"ISO 3166-1": Edition("2024")})
 from paxman import canonicalize_with
 r = canonicalize_with("malaysia", Country(allow_name=True), eng)
 assert {a.name: a.edition for a in r.authorities}["ISO 3166-1"] == "2024"
@@ -162,6 +175,7 @@ standard`/`taxonomy` authorities accept `supports_multiple_editions=True`.
 src/paxman/
 ├── __init__.py                 # the public surface above
 ├── _orchestrator_runtime.py    # the module-level default registry holder
+├── py.typed                    # PEP 561 typed marker
 ├── _errors/                    # the exception hierarchy (package)
 │   ├── __init__.py             #   re-exports the exception vocabulary
 │   └── exceptions.py           #   PaxmanError + sub-hierarchies
@@ -169,14 +183,15 @@ src/paxman/
 │   ├── __init__.py             #   package marker (empty)
 │   ├── engine.py               #   the pipeline: inspect → resolve → execute
 │   │                           #     → canonicalize → validate → classify
+│   ├── engine_env.py           #   Engine — immutable name → Authority binding
 │   ├── validation.py           #   post-capability policy gate
 │   ├── classification.py       #   the classify() function + ValidationResult
 │   ├── artifact.py             #   ExecutionArtifact (immutable, Law 13)
 │   ├── replay.py               #   byte-equal rehydration (first-class module)
-│   ├── provenance.py           #   re-export shim (14 lines) pointing at _provenance/evidence.py; NOT a parallel impl
+│   ├── provenance.py           #   re-export shim pointing at _provenance/evidence.py; NOT a parallel impl
 │   ├── result.py               #   CapabilityResult, VersionStamp
 │   ├── status.py               #   Status enum (five outcomes)
-│   └── contracts.py            #   the structural Contract Protocol + _StubContract (moved from engine.py)
+│   └── contracts.py            #   the structural Contract Protocol + _StubContract
 ├── _registry/                  # the two registries (resolver + dispatch)
 │   ├── __init__.py             #   package marker (empty)
 │   ├── capability_registry.py  #   CapabilityRegistry — the resolver/dispatcher
@@ -185,12 +200,19 @@ src/paxman/
 │   ├── __init__.py             #   re-exports domain contract vocabulary
 │   ├── protocol.py             #   Capability Protocol (Law 8a: pure)
 │   ├── discovery.py            #   builtin_capabilities() — source of truth
+│   ├── _iso3166.py             #   shared ISO 3166-1:2020 dataset (country + phone)
 │   ├── _shared/                #   shared recognition/evidence/contract scaffold (de-duplicated from domains)
 │   │   ├── __init__.py         #     package marker (empty)
-│   │   ├── base.py             #     CapabilityBase — uniform validate hook + make_can_handle / dispatch-reject helpers all 10 capabilities inherit
-│   │   ├── grammar.py          #     Grammar/RecognizedRep/make_grammar/recognize_grammars
+│   │   ├── base.py             #     CapabilityBase — uniform validate hook + make_can_handle / dispatch-reject helpers
+│   │   ├── contract.py         #     authority_override_field / _authority_override_from_spec
 │   │   ├── evidence.py         #     make_evidence / make_evidence_for (engine-aware)
-│   │   └── contract.py         #     authority_override_field / _authority_override_from_spec
+│   │   ├── CLASSIFY_SEAM.md    #     documentation for the classification seam
+│   │   └── grammar/            #     shared grammar package (sub-package)
+│   │       ├── __init__.py     #       re-exports Grammar, RecognizedRep, make_grammar, recognize_grammars
+│   │       ├── grammar.py      #       Grammar value object + make_grammar
+│   │       ├── provenance.py   #       Provenance value object
+│   │       ├── recognition.py  #       recognize_grammars — the main recognition function
+│   │       └── recognized_rep.py #     RecognizedRep value object
 │   ├── email/                  #   EmailCapability (shipped built-in)
 │   │   ├── __init__.py         #     re-exports CanonicalEmailContract, Email, GRAMMARS, recognize
 │   │   ├── contract.py         #     CanonicalEmailContract + Email()
@@ -208,12 +230,17 @@ src/paxman/
 │   ├── date/                   #   DateCapability (shipped built-in)
 │   │   ├── __init__.py         #     re-exports CanonicalDateContract, Date, GRAMMARS, recognize
 │   │   ├── contract.py         #     CanonicalDateContract + Date()
-│   │   ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
 │   │   ├── canonicalizer.py    #     DateCapability
 │   │   ├── parser.py
 │   │   ├── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 │   │   ├── value.py            #     date value objects
-│   │   └── calendar.py         #     calendar / locale helpers
+│   │   ├── calendar.py         #     calendar / locale helpers
+│   │   ├── i18n.py             #     internationalization support
+│   │   └── grammar/            #     date-specific grammar sub-package
+│   │       ├── __init__.py     #       re-exports GRAMMARS, recognize
+│   │       ├── iso_8601.py     #       ISO 8601 grammar
+│   │       ├── numeric.py      #       numeric date grammars
+│   │       └── text.py         #       text-based date grammars
 │   ├── phone/                  #   PhoneCapability (shipped built-in)
 │   │   ├── __init__.py         #     re-exports CanonicalPhoneContract, Phone, GRAMMARS, recognize
 │   │   ├── contract.py         #     CanonicalPhoneContract + Phone()
@@ -221,42 +248,80 @@ src/paxman/
 │   │   ├── canonicalizer.py    #     PhoneCapability
 │   │   ├── parser.py
 │   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
-│   └── url/                    #   URLCapability (shipped built-in)
-│       ├── __init__.py         #     re-exports CanonicalURLContract, URL, GRAMMARS, recognize
-│       ├── contract.py         #     CanonicalURLContract + URL()
-│       ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
-│       ├── canonicalizer.py    #     URLCapability
-│       ├── parser.py
-│       └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
+│   ├── url/                    #   URLCapability (shipped built-in)
+│   │   ├── __init__.py         #     re-exports CanonicalURLContract, URL, GRAMMARS, recognize
+│   │   ├── contract.py         #     CanonicalURLContract + URL()
+│   │   ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
+│   │   ├── canonicalizer.py    #     URLCapability
+│   │   ├── parser.py
+│   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 │   ├── boolean/                #   BooleanCapability (shipped built-in)
-│   │   ├── __init__.py         #     re-exports Boolean, CanonicalBooleanContract, BooleanCapability, GRAMMARS, recognize, _RULE_PROVENANCE
+│   │   ├── __init__.py         #     re-exports Boolean, CanonicalBooleanContract, BooleanCapability, GRAMMARS, recognize
 │   │   ├── contract.py         #     CanonicalBooleanContract + Boolean()
 │   │   ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
 │   │   ├── canonicalizer.py    #     BooleanCapability
 │   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
-│   └── ip/                     #   IPCapability (shipped built-in)
-│       ├── __init__.py         #     re-exports IP, CanonicalIPContract, IPCapability, GRAMMARS, recognize, _RULE_PROVENANCE
-│       ├── contract.py         #     CanonicalIPContract + IP()
+│   ├── ip/                     #   IPCapability (shipped built-in)
+│   │   ├── __init__.py         #     re-exports IP, CanonicalIPContract, IPCapability, GRAMMARS, recognize
+│   │   ├── contract.py         #     CanonicalIPContract + IP()
+│   │   ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
+│   │   ├── canonicalizer.py    #     IPCapability
+│   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
+│   ├── money/                  #   MoneyCapability (shipped built-in)
+│   │   ├── __init__.py         #     re-exports Money, CanonicalMoneyContract, MoneyCapability, GRAMMARS, recognize
+│   │   ├── contract.py         #     CanonicalMoneyContract + Money()
+│   │   ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
+│   │   ├── canonicalizer.py    #     MoneyCapability
+│   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
+│   ├── geolocation/            #   GeolocationCapability (shipped built-in)
+│   │   ├── __init__.py         #     re-exports Geolocation, CanonicalGeolocationContract, GRAMMARS, recognize
+│   │   ├── contract.py         #     CanonicalGeolocationContract + Geolocation()
+│   │   ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
+│   │   ├── canonicalizer.py    #     GeolocationCapability
+│   │   └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
+│   └── country/                #   CountryCapability (shipped built-in)
+│       ├── __init__.py         #     re-exports Country, CanonicalCountryContract, GRAMMARS, recognize
+│       ├── contract.py         #     CanonicalCountryContract + Country()
 │       ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
-│       ├── canonicalizer.py    #     IPCapability
-│       └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
-│   └── money/                  #   MoneyCapability (shipped built-in)
-│       ├── __init__.py         #     re-exports Money, CanonicalMoneyContract, MoneyCapability, GRAMMARS, recognize, _RULE_PROVENANCE
-│       ├── contract.py         #     CanonicalMoneyContract + Money()
-│       ├── grammar.py          #     Layer 1 recognition: GRAMMARS + recognize() (raw captures only)
-│       ├── canonicalizer.py    #     MoneyCapability
+│       ├── canonicalizer.py    #     CountryCapability
+│       ├── policy.py           #     country-specific policy
 │       └── rules.py            #     _RULE_PROVENANCE manifest (Law 14) + fired-rule helper
 ├── _provenance/                 # the provenance package (Law 14 source citations + bundled datasets)
 │   ├── __init__.py             #   package marker (empty)
 │   ├── authority.py            #   Authority — structured Law 14 citation
-│   ├── selection.py            #   Latest / Selector / NormalizedSelector
+│   ├── selection.py            #   Edition / Latest / Selector
 │   ├── evidence.py             #   Evidence record + _evidence helper (the single source of truth)
-│   ├── registries/             #   bundled versioned datasets: iso_3166, iso_4217, cldr, itu_e164
-│   ├── specs/                  #   per-RFC resolver modules (rfc_5321, rfc_5322, rfc_4122, rfc_3986, rfc_3339, rfc_5952, …) — Law 14 source #1
-│   ├── behaviour/              #   documented platform behavior (e.g. google_help) — Law 14 source #2
+│   ├── specs/                  #   per-RFC/ISO resolver modules — Law 14 source #1
+│   │   ├── __init__.py
+│   │   ├── ieee_1003_1.py      #     POSIX definitions
+│   │   ├── iso_8601.py         #     ISO 8601 date/time
+│   │   ├── rfc_1035.py         #     DNS
+│   │   ├── rfc_2822.py         #     email headers
+│   │   ├── rfc_3339.py         #     date/time on the internet
+│   │   ├── rfc_3966.py         #     telephone URIs
+│   │   ├── rfc_3986.py         #     URIs
+│   │   ├── rfc_4007.py         #     IPv6 scoped addressing
+│   │   ├── rfc_4122.py         #     UUIDs
+│   │   ├── rfc_4291.py         #     IP addressing
+│   │   ├── rfc_5321.py         #     SMTP
+│   │   ├── rfc_5322.py         #     email message format
+│   │   ├── rfc_5952.py         #     IPv6 address representation
+│   │   └── whatwg_url.py       #     WHATWG URL standard
+│   ├── registries/             #   bundled versioned datasets — Law 14 source #1
+│   │   ├── __init__.py
+│   │   ├── cldr.py             #     Unicode CLDR
+│   │   ├── iso_3166.py         #     ISO 3166-1 country codes
+│   │   ├── iso_4217.py         #     ISO 4217 currency codes
+│   │   └── itu_e164.py         #     ITU-T E.164 phone codes
+│   ├── behaviour/              #   documented platform behavior — Law 14 source #2
+│   │   ├── __init__.py
+│   │   └── google_help.py      #     Gmail address behavior
 │   ├── policy/                 #   declared Paxman policy — Law 14 source #3
+│   │   └── __init__.py
 │   ├── standards/              #   standards metadata
+│   │   └── __init__.py
 │   └── taxonomies/             #   taxonomy metadata
+│       └── __init__.py
 ├── _dsl/                       # the contract DSL (Dict ↔ value object)
 │   ├── __init__.py             #   re-exports parse_contract
 │   ├── parser.py               #   parse_contract — kind dispatch
@@ -266,9 +331,9 @@ src/paxman/
     └── common.py               #   ProviderAliasesPolicy, etc.
 ```
 
-**Total: 42 Python source files across the packages above (excluding the
-`_provenance/` package and `_capabilities/_shared/base.py`, which are
-documented in the tree above).**
+**Total: ~127 Python source files across `src/paxman/` (including the
+`_provenance/` package with its specs and registries sub-packages, and the
+`_capabilities/_shared/` package).**
 
 This shape is the concrete form of two mandate boundaries. **Mandate §4.4**
 (capabilities own domain knowledge): every domain's `contract.py`,
@@ -531,6 +596,16 @@ Ships ten built-ins today: `EmailCapability`, `UUIDCapability`,
 capability package self-registers its contract builder via `register_contract`
 so `_dsl/parser.parse_contract` can dispatch on the contract `kind` without the
 engine knowing the domain.
+
+**Shared grammar package:** The `recognize_grammars` function and associated
+types (`Grammar`, `RecognizedRep`, `Provenance`) live in
+`_capabilities/_shared/grammar/`. Most capabilities delegate to this shared
+package for grammar-based recognition. Both `date` and `money` are
+intentional exceptions — `date` uses its own `grammar/` sub-package (bracket-
+notation grammar language with per-language compilation), and `money` uses
+its own bracket-notation recognition. The shared package provides the
+`include_grammar` and `exclude_grammar` fields on contracts for grammar
+selection filtering.
 
 Each capability shares the same four-stage shape, split so that recognition
 is **separate from** resolution (mandate Law 14 — a rule must derive its

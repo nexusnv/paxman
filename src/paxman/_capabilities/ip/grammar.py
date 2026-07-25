@@ -21,7 +21,9 @@ from __future__ import annotations
 
 from paxman._capabilities._shared.grammar import (
     Grammar,
+    Provenance,
     RecognizedRep,
+    _select_grammars,
     make_grammar,
     recognize_grammars,
 )
@@ -48,10 +50,16 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
         A list of RecognizedRep (possibly empty when the input names no
         known IP shape).
     """
-    return recognize_grammars(GRAMMARS, value, contract, CanonicalIPContract)
+    if not isinstance(contract, CanonicalIPContract):
+        return []
+    selected = _select_grammars(GRAMMARS, contract.include_grammar, contract.exclude_grammar)
+    return recognize_grammars(selected, value)
 
 
-_GRAMMAR_SOURCE = "paxman spec/ip §3.2 (closed IP shape vocabulary)"
+_GRAMMAR_SOURCE = Provenance(
+    name="paxman spec/ip §3.2",
+    version="closed IP shape vocabulary",
+)
 
 # Anchored shape classifiers. These only ROUTE to the resolver; the resolver
 # uses `ipaddress` to validate and to produce the canonical form. The ipv6

@@ -22,7 +22,14 @@ def test_factory_explicit_country():
 def test_as_dict_roundtrip():
     c = Phone(country="DE")
     d = c.as_dict()
-    assert d == {"kind": "canonical_phone", "country": "DE", "version": 1}
+    assert d == {
+        "kind": "canonical_phone",
+        "country": "DE",
+        "output_format": "e164",
+        "include_grammar": (),
+        "exclude_grammar": (),
+        "version": 1,
+    }
 
 
 def test_build_unknown_country_raises():

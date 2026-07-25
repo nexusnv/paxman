@@ -15,7 +15,9 @@ from __future__ import annotations
 
 from paxman._capabilities._shared.grammar import (
     Grammar,
+    Provenance,
     RecognizedRep,
+    _select_grammars,
     make_grammar,
     recognize_grammars,
 )
@@ -25,7 +27,10 @@ from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 # group of equivalent boolean tokens. `recognize` tries every grammar and
 # returns all full-matches. Order is not significant.
 # Provenance: declared Paxman policy (paxman spec/boolean §3.2).
-_GRAMMAR_SOURCE = "paxman spec/boolean §3.2 (closed boolean token vocabulary)"
+_GRAMMAR_SOURCE = Provenance(
+    name="paxman spec/boolean §3.2",
+    version="closed boolean token vocabulary",
+)
 
 GRAMMARS: tuple[Grammar, ...] = (
     make_grammar("bool_true_words", _GRAMMAR_SOURCE, r"^(?P<token>true|t|yes|y|on|enabled)$"),
@@ -45,6 +50,9 @@ def recognize(value: str, contract: object) -> list[RecognizedRep]:
     transform, recorded by the canonicalizer as evidence). Delegates to the
     shared scaffold with the boolean contract type.
     """
-    if isinstance(contract, CanonicalBooleanContract) and not contract.case_sensitive:
+    if not isinstance(contract, CanonicalBooleanContract):
+        return []
+    if not contract.case_sensitive:
         value = value.lower()
-    return recognize_grammars(GRAMMARS, value, contract, CanonicalBooleanContract)
+    selected = _select_grammars(GRAMMARS, contract.include_grammar, contract.exclude_grammar)
+    return recognize_grammars(selected, value)

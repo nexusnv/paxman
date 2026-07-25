@@ -9,14 +9,18 @@ Over Clever).
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal, cast
 
 import attrs
 
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    require_bool,
+    require_v1,
     strip_authority_override,
+    validate_bool,
+    validate_v1,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
@@ -221,6 +225,9 @@ _ISO4217_CODES: frozenset[str] = frozenset(
 )
 
 
+_SUPPORTED_MONEY_OUTPUT_FORMATS: frozenset[str] = frozenset({"iso4217"})
+
+
 def _validate_currency(inst: object, attr: object, value: str) -> None:
     """Attrs validator: currency must be a recognized 3-letter ISO 4217 code."""
     if not isinstance(value, str) or len(value) != 3 or not value.isalpha():
@@ -229,18 +236,14 @@ def _validate_currency(inst: object, attr: object, value: str) -> None:
         raise ContractError(f"unknown ISO 4217 currency code: {value!r}")
 
 
-def _validate_bool(inst: object, attr: object, value: object) -> None:
-    """Attrs validator: policy fields must be real bools (Law 7 — explicit)."""
-    if not isinstance(value, bool):
+def _validate_output_format_money(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported money formats."""
+    if not isinstance(value, str) or value not in _SUPPORTED_MONEY_OUTPUT_FORMATS:
         name = getattr(attr, "name", attr)
-        raise ContractError(f"contract field {name!r} must be a bool, got {type(value).__name__}")
-
-
-def _validate_v1(inst: object, attr: object, value: object) -> None:
-    """Attrs validator: version fields must be int 1 (only v1 is supported)."""
-    if not isinstance(value, int) or isinstance(value, bool) or value != 1:
-        name = getattr(attr, "name", attr)
-        raise ContractError(f"contract field {name!r} must be int 1, got {value!r}")
+        raise ContractError(
+            f"contract field {name!r} must be one of"
+            f" {sorted(_SUPPORTED_MONEY_OUTPUT_FORMATS)}, got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -255,15 +258,18 @@ class CanonicalMoneyContract:
     """
 
     currency: str = attrs.field(validator=_validate_currency)
-    allow_symbol: bool = attrs.field(default=True, validator=_validate_bool)
-    allow_code: bool = attrs.field(default=True, validator=_validate_bool)
-    strip_spaces: bool = attrs.field(default=True, validator=_validate_bool)
+    allow_symbol: bool = attrs.field(default=True, validator=validate_bool)
+    allow_code: bool = attrs.field(default=True, validator=validate_bool)
+    strip_spaces: bool = attrs.field(default=True, validator=validate_bool)
+    output_format: Literal["iso4217"] = attrs.field(
+        default="iso4217", validator=_validate_output_format_money
+    )
     kind: str = attrs.field(
         default="canonical_money",
         validator=attrs.validators.matches_re(r"^canonical_money$"),
     )
-    version: int = attrs.field(default=1, validator=_validate_v1)
-    version_field: int = attrs.field(default=1, validator=_validate_v1)
+    version: int = attrs.field(default=1, validator=validate_v1)
+    version_field: int = attrs.field(default=1, validator=validate_v1)
 
     authority_override: Any = authority_override_field()
 
@@ -276,6 +282,7 @@ class CanonicalMoneyContract:
                 "allow_symbol": self.allow_symbol,
                 "allow_code": self.allow_code,
                 "strip_spaces": self.strip_spaces,
+                "output_format": self.output_format,
                 "version": self.version,
                 "version_field": self.version_field,
             }
@@ -288,6 +295,7 @@ def Money(
     allow_symbol: bool = True,
     allow_code: bool = True,
     strip_spaces: bool = True,
+    output_format: Literal["iso4217"] = "iso4217",
     authority_override: Any | None = None,
 ) -> CanonicalMoneyContract:
     """Domain-type sugar: declare a money contract in user vocabulary.
@@ -299,6 +307,8 @@ def Money(
         allow_code: accept ISO codes ("MYR") in input, validating against
             `currency`. Default True.
         strip_spaces: trim ASCII whitespace around the amount. Default True.
+        output_format: the canonical output form. Default "iso4217".
+            Supported: "iso4217".
 
     Returns:
         A frozen CanonicalMoneyContract instance.
@@ -316,29 +326,12 @@ def Money(
         raise ContractError(f"unknown ISO 4217 currency code: {currency!r}")
     return CanonicalMoneyContract(
         currency=cur,
-        allow_symbol=_require_bool("allow_symbol", allow_symbol),
-        allow_code=_require_bool("allow_code", allow_code),
-        strip_spaces=_require_bool("strip_spaces", strip_spaces),
+        allow_symbol=require_bool("allow_symbol", allow_symbol),
+        allow_code=require_bool("allow_code", allow_code),
+        strip_spaces=require_bool("strip_spaces", strip_spaces),
+        output_format=output_format,
         authority_override=authority_override,
     )
-
-
-def _require_bool(field: str, value: object) -> bool:
-    """Validate that a contract field is a real bool (Law 7 — explicit)."""
-    if not isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be a bool, got {type(value).__name__}")
-    return value
-
-
-def _require_v1(field: str, value: object) -> int:
-    """Validate that a contract version field is the supported v1 (Law 7)."""
-    if not isinstance(value, int) or isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be int 1, got {type(value).__name__}")
-    if value != 1:
-        raise ContractError(
-            f"contract field {field!r} must be 1 (only v1 is supported), got {value}"
-        )
-    return value
 
 
 def _build_money(spec: dict[str, Any]) -> CanonicalMoneyContract:
@@ -350,13 +343,21 @@ def _build_money(spec: dict[str, Any]) -> CanonicalMoneyContract:
     cur = currency.upper()
     if cur not in _ISO4217_CODES:
         raise ContractError(f"unknown ISO 4217 currency code: {currency!r}")
-    _require_v1("version", spec.get("version", 1))
-    _require_v1("version_field", spec.get("version_field", 1))
+    require_v1("version", spec.get("version", 1))
+    require_v1("version_field", spec.get("version_field", 1))
+    output_format = spec.get("output_format", "iso4217")
+    if not isinstance(output_format, str) or output_format not in _SUPPORTED_MONEY_OUTPUT_FORMATS:
+        raise ContractError(
+            f"output_format must be one of"
+            f" {sorted(_SUPPORTED_MONEY_OUTPUT_FORMATS)}, got {output_format!r}"
+        )
+    output_format = cast(Literal["iso4217"], output_format)
     return CanonicalMoneyContract(
         currency=cur,
-        allow_symbol=_require_bool("allow_symbol", spec.get("allow_symbol", True)),
-        allow_code=_require_bool("allow_code", spec.get("allow_code", True)),
-        strip_spaces=_require_bool("strip_spaces", spec.get("strip_spaces", True)),
+        allow_symbol=require_bool("allow_symbol", spec.get("allow_symbol", True)),
+        allow_code=require_bool("allow_code", spec.get("allow_code", True)),
+        strip_spaces=require_bool("strip_spaces", spec.get("strip_spaces", True)),
+        output_format=output_format,
         authority_override=_authority_override_from_spec(spec),
     )
 

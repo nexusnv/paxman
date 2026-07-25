@@ -36,21 +36,17 @@ class TestGrammarCatalogue:
         for grammar in GRAMMARS:
             assert isinstance(grammar, Grammar)
             assert grammar.id
-            assert grammar.source
-            assert grammar.pattern
-            assert grammar.compiled is not None
+            assert grammar.provenance.name
+            assert grammar.recognize_fn is not None
 
     def test_grammar_ids_are_unique(self) -> None:
         ids = [g.id for g in GRAMMARS]
         assert len(ids) == len(set(ids))
 
-    def test_every_grammar_records_provenance_source(self) -> None:
-        # Law 14: every grammar carries a citation-backed source (an
-        # authoritative spec section, a documented provider behavior, or an
-        # explicit Paxman policy reference) — not a bare description.
+    def test_every_grammar_records_provenance(self) -> None:
         for grammar in GRAMMARS:
-            assert grammar.source
-            assert any(token in grammar.source for token in ("RFC", "Paxman", "spec", "§"))
+            assert grammar.provenance.name
+            assert any(token in grammar.provenance.name for token in ("RFC", "Paxman", "spec", "§"))
 
 
 class TestAddrSpecGrammar:
@@ -58,7 +54,7 @@ class TestAddrSpecGrammar:
         reps = recognize("John.Doe@Example.COM", _contract())
         rep = _rep_by_id(reps, "addr_spec")
         assert rep is not None
-        assert rep.source == "RFC 5322 §3.4.1 (addr-spec)"
+        assert rep.provenance.name == "RFC 5322 §3.4.1"
         assert rep.captures == {"local": "John.Doe", "domain": "Example.COM"}
 
     def test_addr_spec_rejects_internal_whitespace(self) -> None:
@@ -76,9 +72,7 @@ class TestWsPaddedAddrSpecGrammar:
         reps = recognize("azahari @ gmail.com", _contract())
         rep = _rep_by_id(reps, "ws_padded_addr_spec")
         assert rep is not None
-        assert rep.source == (
-            "RFC 5322 §3.4.1 + §1.3/§3.2.2 (CFWS/whitespace tolerated; obfuscation tolerance)"
-        )
+        assert rep.provenance.name == "RFC 5322 §3.4.1 + §1.3/§3.2.2"
         assert rep.captures == {"local": "azahari ", "domain": " gmail.com"}
 
     def test_ws_padded_also_matches_clean_addr_spec(self) -> None:
@@ -97,10 +91,7 @@ class TestVerbalAtDotAddrSpecGrammar:
         reps = recognize("azahari at gmail dot com", _contract())
         rep = _rep_by_id(reps, "verbal_at_dot_addr_spec")
         assert rep is not None
-        assert rep.source == (
-            "RFC 5322 §3.4.1 (addr-spec is the canonical target) — Paxman "
-            "recognition grammar for spoken 'at'/'dot' obfuscation"
-        )
+        assert rep.provenance.name == "Paxman spoken-form recognition"
         assert rep.captures == {"local": "azahari", "mid": "gmail", "tld": "com"}
 
     def test_verbal_at_dot_does_not_match_clean_addr_spec(self) -> None:
@@ -113,7 +104,7 @@ class TestQuotedLocalAddrSpecGrammar:
         reps = recognize('"x y"@z.com', _contract())
         rep = _rep_by_id(reps, "quoted_local_addr_spec")
         assert rep is not None
-        assert rep.source == "RFC 5322 §3.2.4 (quoted local part)"
+        assert rep.provenance.name == "RFC 5322 §3.2.4"
         assert rep.captures == {"local": '"x y"', "domain": "z.com"}
 
     def test_quoted_local_does_not_match_clean_addr_spec(self) -> None:

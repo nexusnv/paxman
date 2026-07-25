@@ -12,6 +12,11 @@ _ISO_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 _ISO_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$")
 _ISO_NAIVE_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$")
 
+# Compact forms (output_format="compact") — YYYYMMDD and YYYYMMDDTHHMMSSZ.
+# These are re-parsable for idempotency (Law 8a).
+_COMPACT_DATE_RE = re.compile(r"^\d{8}$")
+_COMPACT_DATETIME_RE = re.compile(r"^\d{8}T\d{6}Z$")
+
 _NUMERIC_4YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})$")
 _NUMERIC_2YEAR_RE = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{2})$")
 _SLASH_YEAR_FIRST_RE = re.compile(r"^\d{4}/\d{2}/\d{2}$")

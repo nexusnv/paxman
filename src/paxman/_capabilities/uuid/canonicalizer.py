@@ -44,6 +44,7 @@ from paxman._capabilities._shared.base import (
     reject_contract,
     reject_non_string,
 )
+from paxman._capabilities._shared.grammar import Provenance
 from paxman._capabilities.uuid.contract import CanonicalUUIDContract
 from paxman._capabilities.uuid.grammar import RecognizedRep, recognize
 from paxman._capabilities.uuid.parser import CANONICAL_CHARS, CANONICAL_LENGTH, HYPHEN_POSITIONS
@@ -60,14 +61,14 @@ class _Candidate:
     """A single enumerated reading of a uuid-shaped input.
 
     ``value`` is the fully-reconstructed candidate canonical form.
-    ``rule`` / ``source`` carry the originating grammar's id and Law-14
+    ``rule`` / ``provenance`` carry the originating grammar's id and Law-14
     provenance. ``evidence`` is the tuple of ``Evidence`` accumulated for
     the transformations that produced this candidate.
     """
 
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -77,7 +78,7 @@ class _Survivor:
 
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -99,7 +100,7 @@ def generate_interpretations(
                 _Candidate(
                     rep.captures["value"],
                     "canonical_uuid",
-                    rep.source,
+                    rep.provenance,
                     (_evidence("no_transformation_needed"),),
                 )
             )
@@ -139,7 +140,7 @@ def resolve_and_validate(
         if contract.version != "any" and version_nibble != contract.version:
             drop_reasons.append("version_mismatch")
             continue
-        survivors.append(_Survivor(c.value, c.rule, c.source, c.evidence))
+        survivors.append(_Survivor(c.value, c.rule, c.provenance, c.evidence))
     return survivors, drop_reasons
 
 
@@ -196,9 +197,11 @@ class UUIDCapability(CapabilityBase):
 
     name: str = "uuid_canonicalization"
 
+    supported_output_formats: frozenset[str] = frozenset({"hex"})
+
     can_handle: CanHandle = make_can_handle(CanonicalUUIDContract, accept_none=False)
 
-    def canonicalize(
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         # Defensive type-check (mirrors email's pattern).

@@ -21,6 +21,7 @@ from paxman._capabilities._shared.base import (
     reject_missing,
     reject_non_string,
 )
+from paxman._capabilities._shared.grammar import Provenance
 from paxman._capabilities.boolean.contract import CanonicalBooleanContract
 from paxman._capabilities.boolean.grammar import RecognizedRep, recognize
 from paxman._capabilities.boolean.rules import _evidence
@@ -60,7 +61,7 @@ class _Candidate:
     value: str
     token: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -70,7 +71,7 @@ class _Survivor:
 
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -87,7 +88,7 @@ def generate_interpretations(
                 value=canonical,
                 token=token,
                 rule="matched_boolean_token",
-                source=rep.source,
+                provenance=rep.provenance,
                 evidence=(_evidence("matched_boolean_token", f"{token!r} -> {canonical!r}"),),
             )
         )
@@ -111,7 +112,7 @@ def resolve_and_validate(
         # it unconditionally preserves idempotence (mandate Law 2) even when
         # the contract disables word or numeric inputs.
         if c.token == c.value:
-            survivors.append(_Survivor(c.value, c.rule, c.source, c.evidence))
+            survivors.append(_Survivor(c.value, c.rule, c.provenance, c.evidence))
             continue
         is_numeric = c.token in _NUMERIC_TOKENS
         if is_numeric and not contract.accept_numeric:
@@ -120,7 +121,7 @@ def resolve_and_validate(
         if not is_numeric and not contract.accept_words:
             drop_reasons.append("policy_disabled_token")
             continue
-        survivors.append(_Survivor(c.value, c.rule, c.source, c.evidence))
+        survivors.append(_Survivor(c.value, c.rule, c.provenance, c.evidence))
     return survivors, drop_reasons
 
 
@@ -163,7 +164,9 @@ class BooleanCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalBooleanContract, accept_none=True)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"truefalse"})
+
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         """Canonicalize a boolean-shaped input into "true" or "false".

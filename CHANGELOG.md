@@ -5,6 +5,25 @@ semantic versioning; entries are grouped by release.
 
 ## [Unreleased]
 
+### Grammar refactoring
+
+- **Created shared grammar package** (`_capabilities/_shared/grammar/`) with
+  `Grammar`, `RecognizedRep`, `Provenance`, and `recognize_grammars` functions.
+  This consolidates the recognition logic previously duplicated across domains.
+
+- **Migrated eight capabilities to shared grammar**: `email`, `uuid`, `phone`,
+  `url`, `boolean`, `ip`, `geolocation`, `country` now delegate to the shared
+  `recognize_grammars` function for grammar-based recognition.
+
+- **Reorganized date capability** into its own `grammar/` sub-package (with
+  `iso_8601.py`, `numeric.py`, and `text.py` grammar modules) while preserving
+  its bracket-notation grammar language. Date intentionally does NOT use the
+  shared `recognize_grammars` function — see CODING_GUIDELINES.md for why.
+
+- **Added grammar selection fields** (`include_grammar`, `exclude_grammar`) to
+  all contracts, allowing callers to filter which grammars are applied during
+  recognition.
+
 ### Constitutional — Law 15 (cited named-entity sources adopted in full)
 
 MANDATE Law 15 requires that any capability citing a named-entity enumeration

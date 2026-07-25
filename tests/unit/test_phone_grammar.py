@@ -21,7 +21,7 @@ def test_e164_grammar():
     assert reps[0].grammar_id == "e164"
     assert reps[0].captures["cc_first"] == "1"
     assert reps[0].captures["national"] == "6502530000"
-    assert reps[0].source  # Law 14 provenance present
+    assert reps[0].provenance.name  # Law 14 provenance present
 
 
 def test_national_grammar_requires_separator():

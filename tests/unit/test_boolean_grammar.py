@@ -53,6 +53,6 @@ def test_recognize_rejects_non_boolean_contract() -> None:
     assert recognize("true", object()) == []
 
 
-def test_grammars_have_provenance_source() -> None:
+def test_grammars_have_provenance() -> None:
     for g in GRAMMARS:
-        assert g.source != ""
+        assert g.provenance.name != ""

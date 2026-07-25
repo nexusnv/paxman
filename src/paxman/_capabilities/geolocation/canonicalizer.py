@@ -26,6 +26,7 @@ from paxman._capabilities._shared.base import (
     reject_missing,
     reject_non_string,
 )
+from paxman._capabilities._shared.grammar import Provenance
 from paxman._capabilities.geolocation.contract import CanonicalGeolocationContract
 from paxman._capabilities.geolocation.grammar import (
     RecognizedRep,
@@ -53,7 +54,7 @@ class _Candidate:
 
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -275,7 +276,7 @@ def generate_interpretations(
         _Candidate(
             value=canonical,
             rule="canonicalized_geolocation",
-            source="ISO 6709 (geographic point coord) + WGS84 datum",
+            provenance=Provenance(name="ISO 6709 (geographic point coord) + WGS84 datum"),
             evidence=tuple(evidence),
         )
     ]
@@ -345,7 +346,9 @@ class GeolocationCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalGeolocationContract, accept_none=True)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"decimal"})
+
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         """Canonicalize a geolocation string into "<lat>,<lon>".

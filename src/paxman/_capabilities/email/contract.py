@@ -6,18 +6,30 @@ form is, never *how* it is produced.
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any, Literal, cast
 
 import attrs
 
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
+    require_bool,
     strip_authority_override,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
 from paxman._types.common import ProviderAliasesPolicy
+
+
+def _validate_output_format_email(inst: object, attr: object, value: object) -> None:
+    """Attrs validator: output_format must be one of the supported formats."""
+    _SUPPORTED = frozenset({"email"})
+    if not isinstance(value, str) or value not in _SUPPORTED:
+        name = getattr(attr, "name", attr)
+        raise ContractError(
+            f"contract field {name!r} must be one of {sorted(_SUPPORTED)}, got {value!r}"
+        )
 
 
 @attrs.frozen
@@ -33,9 +45,15 @@ class CanonicalEmailContract:
     strip_whitespace: bool = True
     provider_aliases: ProviderAliasesPolicy = "none"
     strict: bool = False
+    output_format: Literal["email"] = attrs.field(
+        default="email", validator=_validate_output_format_email
+    )
     kind: str = "canonical_email"
     version: int = 1
     version_field: int = 1
+
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -56,7 +74,10 @@ class CanonicalEmailContract:
                 "strip_whitespace": self.strip_whitespace,
                 "provider_aliases": self.provider_aliases,
                 "strict": self.strict,
+                "output_format": self.output_format,
                 "version": self.version,
+                "include_grammar": self.include_grammar,
+                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -67,6 +88,9 @@ def Email(
     provider_aliases: ProviderAliasesPolicy = "none",
     lowercase: bool = True,
     strip_whitespace: bool = True,
+    output_format: Literal["email"] = "email",
+    include_grammar: tuple[str, ...] = (),
+    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalEmailContract:
     """Domain-type sugar: declare an email contract in user vocabulary.
@@ -93,6 +117,8 @@ def Email(
         lowercase: lowercase the local part and the domain. Default True.
         strip_whitespace: strip leading/trailing ASCII whitespace.
             Default True.
+        output_format: the canonical output form. Default "email".
+            Supported: "email".
 
     Returns:
         A frozen CanonicalEmailContract instance.
@@ -102,20 +128,14 @@ def Email(
         strip_whitespace=strip_whitespace,
         provider_aliases=provider_aliases,
         strict=strict,
+        output_format=output_format,
+        include_grammar=include_grammar,
+        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
 
 _VALID_PROVIDER_ALIASES = {"none", "gmail"}
-
-
-def _require_bool(field: str, value: object) -> bool:
-    """Validate that a contract field is a real bool. Non-bool values
-    (including truthy strings) raise `ContractError` rather than being
-    silently coerced. Mandate Law 7 — explicit over clever."""
-    if not isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be a bool, got {type(value).__name__}")
-    return value
 
 
 def _build_email(spec: dict[str, Any]) -> CanonicalEmailContract:
@@ -125,11 +145,16 @@ def _build_email(spec: dict[str, Any]) -> CanonicalEmailContract:
             f"invalid provider_aliases: {provider_aliases!r}; "
             f"allowed: {sorted(_VALID_PROVIDER_ALIASES)}"
         )
+    output_format = spec.get("output_format", "email")
+    _validate_output_format_email(None, None, output_format)
     return CanonicalEmailContract(
-        lowercase=_require_bool("lowercase", spec.get("lowercase", True)),
-        strip_whitespace=_require_bool("strip_whitespace", spec.get("strip_whitespace", True)),
+        lowercase=require_bool("lowercase", spec.get("lowercase", True)),
+        strip_whitespace=require_bool("strip_whitespace", spec.get("strip_whitespace", True)),
         provider_aliases=cast(ProviderAliasesPolicy, provider_aliases),
-        strict=_require_bool("strict", spec.get("strict", False)),
+        strict=require_bool("strict", spec.get("strict", False)),
+        output_format=cast(Literal["email"], output_format),
+        include_grammar=spec.get("include_grammar", ()),
+        exclude_grammar=spec.get("exclude_grammar", ()),
         authority_override=_authority_override_from_spec(spec),
     )
 

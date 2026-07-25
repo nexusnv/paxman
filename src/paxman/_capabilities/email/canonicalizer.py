@@ -60,6 +60,7 @@ from paxman._capabilities._shared.base import (
     reject_contract,
     reject_non_string,
 )
+from paxman._capabilities._shared.grammar import Provenance
 from paxman._capabilities.email.contract import CanonicalEmailContract
 from paxman._capabilities.email.grammar import recognize
 from paxman._capabilities.email.parser import _validate_dot_atom_domain, _validate_dot_atom_local
@@ -79,7 +80,7 @@ class _Candidate:
     """A single enumerated reading of an email-shaped input.
 
     ``value`` is the fully-reconstructed candidate mailbox
-    (``local@domain``). ``rule`` / ``source`` carry the originating
+    (``local@domain``).     ``rule`` / ``provenance`` carry the originating
     grammar's id and Law-14 provenance. ``evidence`` is the tuple of
     ``Evidence`` accumulated for the transformations that produced this
     candidate (lowercasing, provider-equivalence, etc.).
@@ -87,7 +88,7 @@ class _Candidate:
 
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -97,7 +98,7 @@ class _Survivor:
 
     value: str
     rule: str
-    source: str
+    provenance: Provenance
     evidence: tuple[Evidence, ...]
 
 
@@ -136,7 +137,7 @@ def provider_equivalence(
     contract: CanonicalEmailContract,
     base_evidence: tuple[Evidence, ...],
     rule: str,
-    source: str,
+    provenance: Provenance,
 ) -> list[_Candidate]:
     """Enumerate provider-equivalence candidates for a (local, domain) pair.
 
@@ -152,7 +153,7 @@ def provider_equivalence(
         # dot-atom gate and the input is rejected (Identity: canonicalize
         # only, never guess or normalize).
         if not _validate_dot_atom_local(local):
-            return [_Candidate(f"{local}@{domain}", rule, source, base_evidence)]
+            return [_Candidate(f"{local}@{domain}", rule, provenance, base_evidence)]
         gmail_local = local.replace(".", "")
         dot_ev = (_evidence("stripped_dots_in_local_part"),) if "." in local else ()
         if "+" in gmail_local:
@@ -167,21 +168,21 @@ def provider_equivalence(
                 _Candidate(
                     f"{gmail_local}@{gmail_domain}",
                     rule,
-                    source,
+                    provenance,
                     base_evidence + syn_ev + dot_ev + tag_ev,
                 )
             ]
         if contract.provider_aliases == "none":
             return [
-                _Candidate(f"{local}@{domain}", rule, source, base_evidence),
+                _Candidate(f"{local}@{domain}", rule, provenance, base_evidence),
                 _Candidate(
                     f"{gmail_local}@{gmail_domain}",
                     rule,
-                    source,
+                    provenance,
                     base_evidence + syn_ev + dot_ev + tag_ev,
                 ),
             ]
-    return [_Candidate(f"{local}@{domain}", rule, source, base_evidence)]
+    return [_Candidate(f"{local}@{domain}", rule, provenance, base_evidence)]
 
 
 def generate_interpretations(
@@ -204,7 +205,7 @@ def generate_interpretations(
             domain = rep.captures["domain"]
             local, domain, ev = _lowercase_evidence(local, domain, contract)
             candidates.extend(
-                provider_equivalence(local, domain, contract, ev, "addr_spec", rep.source)
+                provider_equivalence(local, domain, contract, ev, "addr_spec", rep.provenance)
             )
         elif gid == "ws_padded_addr_spec":
             local = rep.captures["local"]
@@ -220,7 +221,7 @@ def generate_interpretations(
                 ws_ev = (*ws_ev, *lower_ev)
                 candidates.extend(
                     provider_equivalence(
-                        local, domain, contract, ws_ev, "ws_padded_addr_spec", rep.source
+                        local, domain, contract, ws_ev, "ws_padded_addr_spec", rep.provenance
                     )
                 )
             else:
@@ -229,7 +230,7 @@ def generate_interpretations(
                 local, domain, ev = _lowercase_evidence(local, domain, contract)
                 candidates.extend(
                     provider_equivalence(
-                        local, domain, contract, ev, "ws_padded_addr_spec", rep.source
+                        local, domain, contract, ev, "ws_padded_addr_spec", rep.provenance
                     )
                 )
         elif gid == "verbal_at_dot_addr_spec":
@@ -244,7 +245,7 @@ def generate_interpretations(
             ev = (*ev, *lower_ev)
             candidates.extend(
                 provider_equivalence(
-                    local, domain, contract, ev, "verbal_at_dot_addr_spec", rep.source
+                    local, domain, contract, ev, "verbal_at_dot_addr_spec", rep.provenance
                 )
             )
         elif gid == "quoted_local_addr_spec":
@@ -254,7 +255,7 @@ def generate_interpretations(
             # resolve_and_validate and is rejected with grammar_rejected,
             # rather than silently lowercasing an out-of-scope form into a hit.
             value = f"{rep.captures['local']}@{rep.captures['domain']}"
-            candidates.append(_Candidate(value, "quoted_local_addr_spec", rep.source, ()))
+            candidates.append(_Candidate(value, "quoted_local_addr_spec", rep.provenance, ()))
     return candidates
 
 
@@ -269,7 +270,7 @@ def resolve_and_validate(
         if not _validate_dot_atom_local(local) or not _validate_dot_atom_domain(domain):
             drop_reasons.append("grammar_rejected")
             continue
-        survivors.append(_Survivor(c.value, c.rule, c.source, c.evidence))
+        survivors.append(_Survivor(c.value, c.rule, c.provenance, c.evidence))
     return survivors, drop_reasons
 
 
@@ -338,7 +339,9 @@ class EmailCapability(CapabilityBase):
 
     can_handle: CanHandle = make_can_handle(CanonicalEmailContract, accept_none=False)
 
-    def canonicalize(
+    supported_output_formats: frozenset[str] = frozenset({"email"})
+
+    def _canonicalize(
         self, value: object, contract: Contract, engine: Engine | None = None
     ) -> CapabilityResult:
         r = reject_contract(contract, CanonicalEmailContract, _evidence, "not_an_email_contract")

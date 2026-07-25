@@ -14,6 +14,9 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
+    require_bool,
+    require_v1,
     strip_authority_override,
 )
 from paxman._errors import ContractError
@@ -51,8 +54,8 @@ class CanonicalIPContract:
     version: int = 1
     version_field: int = 1
 
-    include_grammar: tuple[str, ...] = ()
-    exclude_grammar: tuple[str, ...] = ()
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -107,27 +110,9 @@ def IP(
     )
 
 
-def _require_bool(field: str, value: object) -> bool:
-    """Validate that a contract field is a real bool (Law 7 — explicit)."""
-    if not isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be a bool, got {type(value).__name__}")
-    return value
-
-
-def _require_v1(field: str, value: object) -> int:
-    """Validate that a contract version field is the supported v1 (Law 7)."""
-    if not isinstance(value, int) or isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be int 1, got {type(value).__name__}")
-    if value != 1:
-        raise ContractError(
-            f"contract field {field!r} must be 1 (only v1 is supported), got {value}"
-        )
-    return value
-
-
 def _build_ip(spec: dict[str, Any]) -> CanonicalIPContract:
-    _require_v1("version", spec.get("version", 1))
-    _require_v1("version_field", spec.get("version_field", 1))
+    require_v1("version", spec.get("version", 1))
+    require_v1("version_field", spec.get("version_field", 1))
     output_format = spec.get("output_format", "normalized")
     if not isinstance(output_format, str) or output_format not in _SUPPORTED_IP_OUTPUT_FORMATS:
         raise ContractError(
@@ -136,12 +121,12 @@ def _build_ip(spec: dict[str, Any]) -> CanonicalIPContract:
         )
     output_format = cast(Literal["normalized"], output_format)
     return CanonicalIPContract(
-        allow_ipv4=_require_bool("allow_ipv4", spec.get("allow_ipv4", True)),
-        allow_ipv6=_require_bool("allow_ipv6", spec.get("allow_ipv6", True)),
-        preserve_zone_id=_require_bool("preserve_zone_id", spec.get("preserve_zone_id", True)),
+        allow_ipv4=require_bool("allow_ipv4", spec.get("allow_ipv4", True)),
+        allow_ipv6=require_bool("allow_ipv6", spec.get("allow_ipv6", True)),
+        preserve_zone_id=require_bool("preserve_zone_id", spec.get("preserve_zone_id", True)),
         output_format=output_format,
-        include_grammar=tuple(spec.get("include_grammar", ())),
-        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
+        include_grammar=spec.get("include_grammar", ()),
+        exclude_grammar=spec.get("exclude_grammar", ()),
         authority_override=_authority_override_from_spec(spec),
     )
 

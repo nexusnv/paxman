@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Iterable
 from typing import Any, Literal, cast
 
 import attrs
@@ -8,6 +7,7 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
     strip_authority_override,
 )
 from paxman._errors import ContractError
@@ -44,8 +44,8 @@ class CanonicalURLContract:
         default="normalized", validator=_validate_output_format_url
     )
 
-    include_grammar: tuple[str, ...] = ()
-    exclude_grammar: tuple[str, ...] = ()
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -128,8 +128,8 @@ def _build_url(spec: dict[str, object]) -> CanonicalURLContract:
         return bool(v)
 
     output_format = cast(Literal["normalized"], spec.get("output_format", "normalized"))
-    inc = cast(Iterable[str], spec.get("include_grammar", ()))
-    exc = cast(Iterable[str], spec.get("exclude_grammar", ()))
+    inc: tuple[str, ...] = tuple(spec.get("include_grammar", ()))  # type: ignore[arg-type]
+    exc: tuple[str, ...] = tuple(spec.get("exclude_grammar", ()))  # type: ignore[arg-type]
     return CanonicalURLContract(
         scheme_allow=allow,
         strip_userinfo=_bool("strip_userinfo", False),
@@ -139,8 +139,8 @@ def _build_url(spec: dict[str, object]) -> CanonicalURLContract:
         output_format=output_format,
         version=version,
         version_field=version_field,
-        include_grammar=tuple(inc),
-        exclude_grammar=tuple(exc),
+        include_grammar=inc,
+        exclude_grammar=exc,
         authority_override=_authority_override_from_spec(spec),
     )
 

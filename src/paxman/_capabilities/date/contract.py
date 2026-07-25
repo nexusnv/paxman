@@ -6,7 +6,6 @@ reorganisation into ``paxman._capabilities.date``.
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from typing import Any, Literal, cast
 
 import attrs
@@ -14,6 +13,7 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
     strip_authority_override,
 )
 from paxman._capabilities.date.i18n import SUPPORTED_LANGUAGES
@@ -60,8 +60,8 @@ class CanonicalDateContract:
     kind: str = "canonical_date"
     version_field: int = 1
 
-    include_grammar: tuple[str, ...] = ()
-    exclude_grammar: tuple[str, ...] = ()
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -155,15 +155,15 @@ def _build_date(spec: dict[str, object]) -> CanonicalDateContract:
         )
     authority_override = _authority_override_from_spec(spec)
     output_format = cast(Literal["iso", "compact"], output_format)
-    inc = cast(Iterable[str], spec.get("include_grammar", ()))
-    exc = cast(Iterable[str], spec.get("exclude_grammar", ()))
+    inc: tuple[str, ...] = tuple(spec.get("include_grammar", ()))  # type: ignore[arg-type]
+    exc: tuple[str, ...] = tuple(spec.get("exclude_grammar", ()))  # type: ignore[arg-type]
     return CanonicalDateContract(
         locale=locale,
         language=language,
         two_digit_year=two_digit_year,
         output_format=output_format,
-        include_grammar=tuple(inc),
-        exclude_grammar=tuple(exc),
+        include_grammar=inc,
+        exclude_grammar=exc,
         authority_override=authority_override,
     )
 

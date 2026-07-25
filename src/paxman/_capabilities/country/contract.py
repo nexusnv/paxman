@@ -27,7 +27,12 @@ from paxman._capabilities._iso3166 import (
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
+    grammar_selector_converter,
+    require_bool,
+    require_v1,
     strip_authority_override,
+    validate_bool,
+    validate_v1,
 )
 from paxman._errors import ContractError
 from paxman._registry.contract_registry import register_contract
@@ -403,13 +408,6 @@ _HISTORICAL_TO_ALPHA2: Mapping[str, str] = MappingProxyType(
 )
 
 
-def _validate_bool(inst: object, attr: object, value: object) -> None:
-    """Attrs validator: policy fields must be real bools (Law 7 — explicit)."""
-    if not isinstance(value, bool):
-        name = getattr(attr, "name", attr)
-        raise ContractError(f"contract field {name!r} must be a bool, got {type(value).__name__}")
-
-
 def _validate_output_format(inst: object, attr: object, value: object) -> None:
     """Attrs validator: output_format must be one of the supported formats."""
     _SUPPORTED = frozenset({"alpha2", "alpha3", "numeric"})
@@ -418,13 +416,6 @@ def _validate_output_format(inst: object, attr: object, value: object) -> None:
         raise ContractError(
             f"contract field {name!r} must be one of {sorted(_SUPPORTED)}, got {value!r}"
         )
-
-
-def _validate_v1(inst: object, attr: object, value: object) -> None:
-    """Attrs validator: version fields must be int 1 (only v1 supported)."""
-    if not isinstance(value, int) or isinstance(value, bool) or value != 1:
-        name = getattr(attr, "name", attr)
-        raise ContractError(f"contract field {name!r} must be int 1, got {value!r}")
 
 
 def _validate_extra_synonyms(inst: object, attr: object, value: Mapping[str, str]) -> None:
@@ -462,16 +453,16 @@ class CanonicalCountryContract:
     `output_format` declares the canonical output form (alpha2, alpha3, or numeric).
     """
 
-    allow_alpha3: bool = attrs.field(default=True, validator=_validate_bool)
-    allow_name: bool = attrs.field(default=True, validator=_validate_bool)
-    allow_synonym: bool = attrs.field(default=True, validator=_validate_bool)
+    allow_alpha3: bool = attrs.field(default=True, validator=validate_bool)
+    allow_name: bool = attrs.field(default=True, validator=validate_bool)
+    allow_synonym: bool = attrs.field(default=True, validator=validate_bool)
     # Expansion axes (opt-in where noted). Numeric (ISO 3166-1 M49) is on by
     # default because it is an official ISO shape (Tier 1). Localized (CLDR)
     # and historical names are OFF by default to keep the default data
     # footprint small and the default behaviour stable (Law 7 — explicit).
-    allow_numeric: bool = attrs.field(default=True, validator=_validate_bool)
-    localized_names: bool = attrs.field(default=False, validator=_validate_bool)
-    historical_names: bool = attrs.field(default=False, validator=_validate_bool)
+    allow_numeric: bool = attrs.field(default=True, validator=validate_bool)
+    localized_names: bool = attrs.field(default=False, validator=validate_bool)
+    historical_names: bool = attrs.field(default=False, validator=validate_bool)
     extra_synonyms: Mapping[str, str] = attrs.field(
         factory=dict,
         validator=_validate_extra_synonyms,
@@ -488,11 +479,11 @@ class CanonicalCountryContract:
         default="canonical_country",
         validator=attrs.validators.matches_re(r"^canonical_country$"),
     )
-    version: int = attrs.field(default=1, validator=_validate_v1)
-    version_field: int = attrs.field(default=1, validator=_validate_v1)
+    version: int = attrs.field(default=1, validator=validate_v1)
+    version_field: int = attrs.field(default=1, validator=validate_v1)
 
-    include_grammar: tuple[str, ...] = ()
-    exclude_grammar: tuple[str, ...] = ()
+    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
+    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
 
     authority_override: Any = authority_override_field()
 
@@ -556,12 +547,12 @@ def Country(
             `output_format` is not one of the supported formats.
     """
     return CanonicalCountryContract(
-        allow_alpha3=_require_bool("allow_alpha3", allow_alpha3),
-        allow_name=_require_bool("allow_name", allow_name),
-        allow_synonym=_require_bool("allow_synonym", allow_synonym),
-        allow_numeric=_require_bool("allow_numeric", allow_numeric),
-        localized_names=_require_bool("localized_names", localized_names),
-        historical_names=_require_bool("historical_names", historical_names),
+        allow_alpha3=require_bool("allow_alpha3", allow_alpha3),
+        allow_name=require_bool("allow_name", allow_name),
+        allow_synonym=require_bool("allow_synonym", allow_synonym),
+        allow_numeric=require_bool("allow_numeric", allow_numeric),
+        localized_names=require_bool("localized_names", localized_names),
+        historical_names=require_bool("historical_names", historical_names),
         extra_synonyms=dict(extra_synonyms) if extra_synonyms is not None else {},
         output_format=output_format,
         include_grammar=include_grammar,
@@ -570,27 +561,9 @@ def Country(
     )
 
 
-def _require_bool(field: str, value: object) -> bool:
-    """Validate that a contract field is a real bool (Law 7 — explicit)."""
-    if not isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be a bool, got {type(value).__name__}")
-    return value
-
-
-def _require_v1(field: str, value: object) -> int:
-    """Validate that a contract version field is the supported v1 (Law 7)."""
-    if not isinstance(value, int) or isinstance(value, bool):
-        raise ContractError(f"contract field {field!r} must be int 1, got {type(value).__name__}")
-    if value != 1:
-        raise ContractError(
-            f"contract field {field!r} must be 1 (only v1 is supported), got {value}"
-        )
-    return value
-
-
 def _build_country(spec: dict[str, Any]) -> CanonicalCountryContract:
-    _require_v1("version", spec.get("version", 1))
-    _require_v1("version_field", spec.get("version_field", 1))
+    require_v1("version", spec.get("version", 1))
+    require_v1("version_field", spec.get("version_field", 1))
     extra = spec.get("extra_synonyms", {})
     if not isinstance(extra, dict):
         raise ContractError("extra_synonyms must be a dict")
@@ -601,16 +574,16 @@ def _build_country(spec: dict[str, Any]) -> CanonicalCountryContract:
         raise ContractError(f"output_format must be one of {supported}, got {output_format!r}")
     output_format = cast(Literal["alpha2", "alpha3", "numeric"], output_format)
     return CanonicalCountryContract(
-        allow_alpha3=_require_bool("allow_alpha3", spec.get("allow_alpha3", True)),
-        allow_name=_require_bool("allow_name", spec.get("allow_name", True)),
-        allow_synonym=_require_bool("allow_synonym", spec.get("allow_synonym", True)),
-        allow_numeric=_require_bool("allow_numeric", spec.get("allow_numeric", True)),
-        localized_names=_require_bool("localized_names", spec.get("localized_names", False)),
-        historical_names=_require_bool("historical_names", spec.get("historical_names", False)),
+        allow_alpha3=require_bool("allow_alpha3", spec.get("allow_alpha3", True)),
+        allow_name=require_bool("allow_name", spec.get("allow_name", True)),
+        allow_synonym=require_bool("allow_synonym", spec.get("allow_synonym", True)),
+        allow_numeric=require_bool("allow_numeric", spec.get("allow_numeric", True)),
+        localized_names=require_bool("localized_names", spec.get("localized_names", False)),
+        historical_names=require_bool("historical_names", spec.get("historical_names", False)),
         extra_synonyms=dict(extra),
         output_format=output_format,
-        include_grammar=tuple(spec.get("include_grammar", ())),
-        exclude_grammar=tuple(spec.get("exclude_grammar", ())),
+        include_grammar=spec.get("include_grammar", ()),
+        exclude_grammar=spec.get("exclude_grammar", ()),
         authority_override=_authority_override_from_spec(spec),
     )
 

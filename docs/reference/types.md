@@ -8,7 +8,7 @@ Types you pass **to** `paxman.canonicalize()`.
 
 ### The Contract
 
-Paxman ships ten built-in contract types. Each is a frozen `@attrs.frozen` value object. You declare policy fields (which forms to accept, how to format the output); the capability applies them. Every contract shares three fixed fields (`kind`, `version`, `version_field`) plus a grammar-selector pair (`include_grammar`, `exclude_grammar`) and an `authority_override` escape hatch for testing.
+Paxman ships ten built-in contract types. Each is a frozen `@attrs.frozen` value object. You declare policy fields (which forms to accept, how to format the output); the capability applies them. Every contract satisfies the `Contract` Protocol, which requires `kind`, `version_field`, and `authority_override` properties plus an `as_dict()` method. Most contracts also carry a `version` field and a grammar-selector pair (`include_grammar`, `exclude_grammar`).
 
 The user-facing factory for each contract is a plain function (`Email()`, `Date()`, `UUID()`, etc.) that returns the corresponding `Canonical*Contract`. Use the factories; they validate inputs and match the documented defaults.
 

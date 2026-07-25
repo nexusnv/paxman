@@ -36,7 +36,7 @@ assert result.value == "user@example.com"
 
 See [How-to: Canonicalize a value](../how-to/canonicalize-a-value.md).
 
-### `canonicalize_with`
+### Canonicalize With
 
 ```python
 def canonicalize_with(input_data: object, contract: object, engine: Engine) -> ExecutionArtifact
@@ -132,7 +132,7 @@ See [How-to: Write a compliant capability](../how-to/write-a-compliant-capabilit
 
 `parse_contract()` is a *contract helper*, not one of the four public verbs (`canonicalize`, `canonicalize_with`, `replay`, `register_capability`). It is a convenience for turning the Dict DSL into a contract value object. It is re-exported from `paxman` and is used by callers that store contracts as JSON and reconstruct them at load time.
 
-### `parse_contract`
+### Parse Contract
 
 ```python
 def parse_contract(spec: Any) -> Contract
@@ -665,7 +665,7 @@ class CanonicalCountryContract:
     allow_numeric: bool = True
     localized_names: bool = False
     historical_names: bool = False
-    extra_synonyms: Mapping[str, str] = {}
+    extra_synonyms: Mapping[str, str]  # accepts None or dict; frozen to MappingProxyType
     output_format: Literal["alpha2", "alpha3", "numeric"] = "alpha2"
     kind: str = "canonical_country"
     version: int = 1

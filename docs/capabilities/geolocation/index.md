@@ -98,7 +98,7 @@ result = paxman.canonicalize(
 ```
 
 - `result.status` is `Status.CANONICALIZED`
-- `result.value` is approximately `"33.448389,-112.074000"`
+- `result.value` is `"33.448389,-112.074000"`
 - `result.evidence` includes `Evidence(rule="recognized_dms", ...)` and `Evidence(rule="dms_to_decimal", ...)`
 
 ### Example 3: Ambiguous Hemisphere

@@ -40,8 +40,8 @@ packages = ["src/paxman"]
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
+    "hypothesis>=6.161.1",
     "pytest-cov>=7.1.0",
-    "hypothesis>=6.156.6",
     "ruff>=0.16.0",
     "mypy>=2.3.0",
     "interrogate>=1.7.0",

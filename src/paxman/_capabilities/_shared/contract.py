@@ -150,13 +150,14 @@ def make_output_format_validator(allowed: frozenset[str]) -> Any:
 # ---------------------------------------------------------------------------
 
 
-def grammar_selector_converter(value: tuple[str, ...] | list[str] | str | None) -> tuple[str, ...]:
+def grammar_selector_converter(value: tuple[str, ...] | list[str] | None) -> tuple[str, ...]:
     """Convert and validate grammar selector input to an immutable tuple of strings.
 
-    Accepts tuples, lists, a single string (treated as one element), or ``None``.
-    Raises ``ContractError`` for invalid inputs (non-string elements, non-sequence
-    types). Used as an ``attrs.field(converter=...)`` on ``include_grammar`` and
-    ``exclude_grammar`` across all 10 capability contracts.
+    Accepts tuples, lists, or ``None``. Bare strings are rejected with
+    ``ContractError`` (use a one-element tuple instead). Raises ``ContractError``
+    for non-string elements or non-sequence types. Used as an
+    ``attrs.field(converter=...)`` on ``include_grammar`` and ``exclude_grammar``
+    across all 10 capability contracts.
     """
     if value is None:
         return ()

@@ -16,7 +16,6 @@ import attrs
 from paxman._capabilities._shared.contract import (
     _authority_override_from_spec,
     authority_override_field,
-    grammar_selector_converter,
     require_bool,
     require_v1,
     strip_authority_override,
@@ -272,9 +271,6 @@ class CanonicalMoneyContract:
     version: int = attrs.field(default=1, validator=validate_v1)
     version_field: int = attrs.field(default=1, validator=validate_v1)
 
-    include_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
-    exclude_grammar: tuple[str, ...] = attrs.field(default=(), converter=grammar_selector_converter)
-
     authority_override: Any = authority_override_field()
 
     def as_dict(self) -> dict[str, Any]:
@@ -289,8 +285,6 @@ class CanonicalMoneyContract:
                 "output_format": self.output_format,
                 "version": self.version,
                 "version_field": self.version_field,
-                "include_grammar": self.include_grammar,
-                "exclude_grammar": self.exclude_grammar,
             }
         )
 
@@ -302,8 +296,6 @@ def Money(
     allow_code: bool = True,
     strip_spaces: bool = True,
     output_format: Literal["iso4217"] = "iso4217",
-    include_grammar: tuple[str, ...] = (),
-    exclude_grammar: tuple[str, ...] = (),
     authority_override: Any | None = None,
 ) -> CanonicalMoneyContract:
     """Domain-type sugar: declare a money contract in user vocabulary.
@@ -338,8 +330,6 @@ def Money(
         allow_code=require_bool("allow_code", allow_code),
         strip_spaces=require_bool("strip_spaces", strip_spaces),
         output_format=output_format,
-        include_grammar=include_grammar,
-        exclude_grammar=exclude_grammar,
         authority_override=authority_override,
     )
 
@@ -368,8 +358,6 @@ def _build_money(spec: dict[str, Any]) -> CanonicalMoneyContract:
         allow_code=require_bool("allow_code", spec.get("allow_code", True)),
         strip_spaces=require_bool("strip_spaces", spec.get("strip_spaces", True)),
         output_format=output_format,
-        include_grammar=spec.get("include_grammar", ()),
-        exclude_grammar=spec.get("exclude_grammar", ()),
         authority_override=_authority_override_from_spec(spec),
     )
 

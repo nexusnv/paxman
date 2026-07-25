@@ -20,10 +20,10 @@ reviews:
     - label: Public API
       instructions: >-
         Apply when the PR/MR adds, renames, or removes symbols exported from the `paxman` package.
-        The v2 public API is `paxman.canonicalize`, `paxman.replay`, and `paxman.register_capability`
-        (plus the value-type re-exports, the ten `Canonical*Contract` contracts and their short aliases
-        `Email`/`UUID`/`Date`/`Phone`/`URL`/`Boolean`/`IP`/`Money`/`Geolocation`/`Country`, the
-        `Engine` class, and the error types).
+        The v2 public API is `paxman.canonicalize`, `paxman.canonicalize_with`, `paxman.replay`,
+        and `paxman.register_capability` (plus the value-type re-exports, the ten `Canonical*Contract`
+        contracts and their short aliases `Email`/`UUID`/`Date`/`Phone`/`URL`/`Boolean`/`IP`/`Money`/
+        `Geolocation`/`Country`, the `Engine`/`Edition`/`Latest` types, and the error types).
     - label: Canonicalization
       instructions: Apply when the PR/MR touches `src/paxman/_core/engine.py`, `src/paxman/_core/artifact.py`, `src/paxman/_core/replay.py`, `src/paxman/_core/contracts.py`, `src/paxman/_core/classification.py`, `src/paxman/_core/validation.py`, `src/paxman/_orchestrator_runtime.py`, or `src/paxman/__init__.py` in any way that could affect canonicalization, determinism, or replay.
     - label: Capability SPI
@@ -325,13 +325,13 @@ reviews:
       instructions: >-
         When reviewing the public API:
 
-        1. The v2 public surface is exactly: `paxman.canonicalize`, `paxman.replay`,
-        `paxman.register_capability`, plus the value-type re-exports. The exported contracts are the
+        1. The v2 public surface is exactly: `paxman.canonicalize`, `paxman.canonicalize_with`,
+        `paxman.replay`, `paxman.register_capability`, plus the value-type re-exports. The exported contracts are the
         ten `Canonical*Contract` value objects (and their short aliases `Email`, `UUID`, `Date`,
         `Phone`, `URL`, `Boolean`, `IP`, `Money`, `Geolocation`, `Country`) plus the `Contract`
         union. The exported errors are `PaxmanError`, `CanonicalizationError`, `ConfigurationError`,
         `ContractError`, `FrozenRegistryError`, `UnsupportedContractError`, `VersionMismatchError`.
-        The exported types include `Engine`, `Capability`, `CapabilityResult`, `Status`,
+        The exported types include         `Engine`, `Edition`, `Latest`, `Capability`, `CapabilityResult`, `Status`,
         `VersionStamp`, `ExecutionArtifact`, `Evidence`, `ValidationResult`. The v1.x submodules
         `paxman.api` and `paxman.testing` are GONE. Flag any import from `paxman.api` or
         `paxman.testing`. `canonicalize`/`replay` are re-exported from `_core/engine.py` and
@@ -389,10 +389,10 @@ reviews:
 
         3. Internal links must be relative paths that exist in the repo. Flag absolute `file://`
         links and links to deleted files. The v1.x paths are gone: `docs/adr/`, `examples/`,
-        `Makefile`, `mkdocs.yml`, `PROPOSED_STRUCTURE.md`, and `RETRACTION.md` must NOT be linked.
-        Current doc roots are `docs/` (reference/about/concepts/getting-started/how-to/releases/
-        capabilities), `ARCHITECTURE.md`, `MANDATE.md`, `AGENTS.md`, `CODING_GUIDELINES.md`,
-        `README.md`, `CONTRIBUTING.md`, `SECURITY.md`, and `playground/notebooks/`.
+        `Makefile`, `mkdocs.yml`, `PROPOSED_STRUCTURE.md`, `RETRACTION.md`, and `playground/`
+        must NOT be linked. Current doc roots are `docs/` (reference/about/concepts/getting-started/
+        how-to/releases/capabilities), `ARCHITECTURE.md`, `MANDATE.md`, `AGENTS.md`,
+        `CODING_GUIDELINES.md`, `README.md`, `CONTRIBUTING.md`, and `SECURITY.md`.
 
         4. Headings must be in title case with a blank line before and after.
 

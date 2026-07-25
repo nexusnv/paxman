@@ -155,15 +155,13 @@ def _build_date(spec: dict[str, object]) -> CanonicalDateContract:
         )
     authority_override = _authority_override_from_spec(spec)
     output_format = cast(Literal["iso", "compact"], output_format)
-    inc: tuple[str, ...] = tuple(spec.get("include_grammar", ()))  # type: ignore[arg-type]
-    exc: tuple[str, ...] = tuple(spec.get("exclude_grammar", ()))  # type: ignore[arg-type]
     return CanonicalDateContract(
         locale=locale,
         language=language,
         two_digit_year=two_digit_year,
         output_format=output_format,
-        include_grammar=inc,
-        exclude_grammar=exc,
+        include_grammar=cast(tuple[str, ...], spec.get("include_grammar", ())),
+        exclude_grammar=cast(tuple[str, ...], spec.get("exclude_grammar", ())),
         authority_override=authority_override,
     )
 

@@ -33,7 +33,7 @@ _WS_PADDED_PROVENANCE = Provenance(
     version="CFWS/whitespace tolerated; obfuscation tolerance",
 )
 _VERBAL_AT_DOT_PROVENANCE = Provenance(
-    name="RFC 5322 §3.4.1",
+    name="Paxman spoken-form recognition",
     version="Paxman recognition grammar for spoken 'at'/'dot' obfuscation",
 )
 _QUOTED_LOCAL_PROVENANCE = Provenance(

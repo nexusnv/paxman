@@ -287,7 +287,7 @@ class CanonicalGeolocationContract:
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `datum` | `str` | `"WGS84"` | Geodetic datum of the coordinates. Only `"WGS84"` is supported in v2.0.0. |
-| `coordinate_order` | `"lat_lon"` or `"lon_lat"` | `"lat_lon"` | Order of latitude/longitude in input and output. |
+| `coordinate_order` | `"lat_lon"` or `"lon_lat"` | `"lat_lon"` | Order of latitude/longitude in input values. Canonical output is always `"latitude,longitude"` regardless of this setting. |
 | `require_hemisphere` | `bool` | `True` | Require an explicit hemisphere sign (or N/S/E/W) on each coordinate so the canonical form is unambiguous. |
 | `output_format` | `Literal["decimal"]` | `"decimal"` | Canonical output format. Only `"decimal"` (decimal degrees) is supported in v2.0.0. |
 | `precision` | `int` | `6` | Number of decimal places in the canonical output. Must be an int in 0..12. |
@@ -313,7 +313,7 @@ class CanonicalCountryContract:
     allow_numeric: bool = True
     localized_names: bool = False
     historical_names: bool = False
-    extra_synonyms: Mapping[str, str] = {}  # factory=dict, frozen to MappingProxyType
+    extra_synonyms: Mapping[str, str]  # accepts None or dict; frozen to MappingProxyType
     output_format: Literal["alpha2", "alpha3", "numeric"] = "alpha2"
     kind: str = "canonical_country"
     version: int = 1

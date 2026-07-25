@@ -43,7 +43,7 @@ These rules rewrite the input into the canonical form. They are recorded on the 
 | `parsed_iso_datetime` | The input matched `YYYY-MM-DDTHH:MM:SS[.fff](Z\|+HH:MM)` and was normalized to UTC. | RFC 3339 |
 | `parsed_us_numeric` | The input matched `MM/DD/YYYY` under `locale="US"`. | Paxman spec/date (US MM/DD/YYYY reading) |
 | `parsed_eu_numeric` | The input matched `DD/MM/YYYY` under `locale="EU"`. | Paxman spec/date (EU DD/MM/YYYY reading) |
-| `parsed_rfc2822` | The input matched an RFC 2822 form (`1 Jan 2025`, `Tue, 01 Jan 2025 12:00:00 +0000`). | RFC 2822 section 3.3 |
+| `parsed_rfc2822` | The input matched an RFC 2822 form (`1 Jan 2025`, `Wed, 01 Jan 2025 12:00:00 +0000`). | RFC 2822 section 3.3 |
 | `parsed_unix_timestamp` | The input was a Unix epoch timestamp (integer or float seconds). | POSIX/IEEE 1003.1 + RFC 3339 |
 | `normalized_to_utc` | A datetime input with a timezone offset was converted to UTC (`Z` designator). | RFC 3339 section 4.1 + section 4.2 |
 | `parsed_compact_date` | The input matched `YYYYMMDD` (compact date). | ISO 8601 (compact YYYYMMDD re-parsable form) |
@@ -71,6 +71,7 @@ These rules cause the capability to return `Status.INVALID` (or `Status.AMBIGUOU
 | `rejected_two_digit_year` | `two_digit_year="reject"` or `"require_four_digit_year"` and the input has a two-digit year. | Paxman spec/date (`two_digit_year='reject'` policy) |
 | `weekday_contradicts_date` | The input includes a weekday name that does not match the calendar date (e.g. `Tuesday, 01 Jan 2025` when 1 Jan 2025 is a Wednesday). | Paxman spec/date (weekday must match calendar) |
 | `numeric_format_requires_us_or_eu_locale` | A numeric slash form was found but `locale="ISO"` does not unambiguously resolve it. Result is `Status.AMBIGUOUS`. | Paxman spec/date (ISO locale rejects slash forms; Law 7) |
+| `ambiguous_ordering` | The input matched a numeric slash form under `locale="ISO"`, and both MM/DD and DD/MM orderings survive. Result is `Status.AMBIGUOUS`. | Paxman spec/date (MM/DD and DD/MM both survive under locale=ISO; Don't Guess) |
 | `invalid_epoch_value` | A Unix epoch timestamp fell outside the representable datetime range. | POSIX/IEEE 1003.1 (epoch seconds out of representable range) |
 
 ## Worked Examples

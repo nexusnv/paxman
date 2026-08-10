@@ -45,7 +45,7 @@ dev = [
     "ruff>=0.16.0",
     "mypy>=2.3.0",
     "interrogate>=1.7.0",
-    "nbformat>=5.10.4",
+    "nbformat>=5.11.0",
     "import-linter>=2.13",
     "pydeps>=3.0.6",
 ]

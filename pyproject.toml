@@ -47,7 +47,7 @@ dev = [
     "interrogate>=1.7.0",
     "nbformat>=5.10.4",
     "import-linter>=2.13",
-    "pydeps>=3.0.6",
+    "pydeps>=3.0.7",
 ]
 # Optional: only needed for the playground notebook smoke test / local lab.
 # Kept out of the base `dev` group so a normal `uv sync` does not pull the

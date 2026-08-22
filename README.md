@@ -1,3 +1,5 @@
+THIS REPOSITORY HAS BEEN ARCHIVED. PAXMAN PROJECT NOW MOVE TO A NEW REPOSITORY AT https://github.com/nexusnv/paxman-python.
+
 # Paxman
 
 > Paxman is a deterministic canonicalization engine. It transforms equivalent representations of known information into a single canonical form. When the input does not contain enough information to determine a unique result, Paxman reports that fact rather than guessing.
